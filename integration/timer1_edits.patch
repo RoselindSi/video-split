@@ -1,0 +1,65 @@
+diff --git a/main.py b/main.py
+index 3c80e1b..e057909 100644
+--- a/main.py
++++ b/main.py
+@@ -419,6 +419,11 @@ reward_funcs_registry = {
+     "format": format_reward,
+ }
+ 
++# --- multi-segment (approach B) rewards ---
++from src.seg_rewards import SEG_REWARD_FUNCS  # noqa: E402
++
++reward_funcs_registry.update(SEG_REWARD_FUNCS)
++
+ metric_funcs_registry = {
+     "reward_timestep_pair": reward_timestep_pair,
+     "reward_think_length": reward_think_length,
+@@ -439,6 +444,24 @@ def load_json_dataset_tg(
+         examples = []
+         for item in tqdm(data, desc=f"Processing {split_name} items"):
+             video_path = item.get("video")
++
++            # --- multi-segment (approach B) branch ---
++            if isinstance(item.get("solution"), list):
++                if not os.path.isfile(video_path):
++                    continue
++                examples.append({
++                    "task_type": "seg",
++                    "problem": "",            # prompt_type=seg ignores this
++                    "choices": "",
++                    "solution": json.dumps(item["solution"]),  # JSON str: Arrow-safe
++                    "video_path": video_path,
++                    "durations": item.get("duration"),
++                    "video_start": None,
++                    "video_end": None,
++                    "preprocessed_path": "",
++                })
++                continue
++
+             timestamps = item.get("timestamp")
+             sentence = item.get("sentence")
+             duration = item.get("duration")
+diff --git a/src/time_r1/rl/timer1_trainer.py b/src/time_r1/rl/timer1_trainer.py
+index 244084c..4789d46 100644
+--- a/src/time_r1/rl/timer1_trainer.py
++++ b/src/time_r1/rl/timer1_trainer.py
+@@ -66,6 +66,8 @@ Output your thought process within the <think> </think> tags, including analysis
+ 
+ Then, provide the start and end times (in seconds, precise to two decimal places) in the format "start time to end time" within the <answer> </answer> tags. For example: "12.54 to 17.83"."""
+ 
++from src.seg_prompt import QUESTION_TEMPLATE_SEG  # multi-segment (approach B)
++
+ 
+ def nanmin(tensor: torch.Tensor) -> torch.Tensor:
+     """
+@@ -488,7 +490,9 @@ class TimeR1_Trainer(Trainer):
+         return inputs
+ 
+     def make_conversation_video(self, example):
+-        if self.prompt_type == "v1":
++        if self.prompt_type == "seg":
++            prompt_text = QUESTION_TEMPLATE_SEG
++        elif self.prompt_type == "v1":
+             prompt_text = QUESTION_TEMPLATE_TG_v1.replace("[EVENT]", example["problem"])
+         print("question prompt", prompt_text)
+ 
