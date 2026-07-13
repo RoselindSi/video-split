@@ -35,6 +35,7 @@ CUDA_VISIBLE_DEVICES=0 torchrun --nproc_per_node="1" \
     --lora_r 16 \
     --lora_alpha 32 \
     --lora_dropout 0.05 \
+    --lora_target_modules q_proj k_proj v_proj o_proj gate_proj up_proj down_proj \
     --max_prompt_length 8192 \
     --max_completion_length 512 \
     --num_generations 8 \
