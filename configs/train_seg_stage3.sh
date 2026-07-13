@@ -36,6 +36,7 @@ CUDA_VISIBLE_DEVICES=0 torchrun --nproc_per_node="1" \
     --model_name_or_path $BASE_MODEL \
     --train_data_path $TRAIN_DATA \
     --dataset_name seg \
+    --learning_rate 1e-4 \
     --use_peft true \
     --lora_r 16 \
     --lora_alpha 32 \
