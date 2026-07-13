@@ -117,7 +117,10 @@ def iou_seg_reward(completions, solution, **kwargs):
             else:
                 align = 1.0
             total += iou * max(0.0, align)
-        rewards.append(total / len(gts))
+        # divide by max(|GT|, |pred|) not just |GT|: penalizes over-segmentation
+        # too (extra unmatched preds dilute the score), not only missed GT.
+        # Recall-only (/|GT|) let GRPO reward-hack by spamming segments.
+        rewards.append(total / max(len(gts), len(preds)))
     return rewards
 
 

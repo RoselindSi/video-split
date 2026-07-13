@@ -80,6 +80,17 @@ def test_iou_missed_segment_penalized():
     assert 0.30 < r < 0.36, r
 
 
+def test_iou_penalizes_oversegmentation():
+    # perfect 3 segments vs the same 3 + 3 junk extra segments: extras must lower
+    # the score (precision-aware), otherwise GRPO reward-hacks by over-splitting.
+    perfect = _completion([(n, s, e) for n, s, e in GT])
+    over = _completion([(n, s, e) for n, s, e in GT] +
+                       [("x", 30.0, 32.0), ("y", 33.0, 35.0), ("z", 40.0, 42.0)])
+    r_perfect = iou_seg_reward([perfect], [GT], durations=[25.7])[0]
+    r_over = iou_seg_reward([over], [GT], durations=[25.7])[0]
+    assert r_over < r_perfect, (r_over, r_perfect)
+
+
 def test_seq_coverage_and_count():
     perfect = _completion([(n, s, e) for n, s, e in GT])
     r_perfect = seq_reward([perfect], [GT])[0]
