@@ -1,0 +1,32 @@
+diff --git a/main.py b/main.py
+index e057909..71e298e 100644
+--- a/main.py
++++ b/main.py
+@@ -24,8 +24,13 @@ from typing import List, Optional
+ import numpy as np
+ import torch
+ from datasets import Dataset
+-from deepspeed.runtime.fp16.loss_scaler import LossScaler
+-from deepspeed.runtime.zero.config import ZeroStageEnum
++try:
++    # deepspeed is optional: importing it triggers an nvcc-based CUDA check that
++    # fails when no full CUDA toolkit is installed. Only needed for ds checkpoints.
++    from deepspeed.runtime.fp16.loss_scaler import LossScaler
++    from deepspeed.runtime.zero.config import ZeroStageEnum
++except Exception:
++    LossScaler = ZeroStageEnum = None
+ from rouge_score import rouge_scorer
+ from src.time_r1 import TimeR1_Trainer
+ from tqdm import tqdm
+@@ -37,8 +42,9 @@ from transformers import (
+ )
+ from trl import GRPOConfig, ModelConfig, ScriptArguments, TrlParser, get_peft_config
+ 
+-torch.serialization.add_safe_globals([ZeroStageEnum])
+-torch.serialization.add_safe_globals([LossScaler])
++if ZeroStageEnum is not None:
++    torch.serialization.add_safe_globals([ZeroStageEnum])
++    torch.serialization.add_safe_globals([LossScaler])
+ 
+ 
+ @dataclass

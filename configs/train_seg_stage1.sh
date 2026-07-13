@@ -25,11 +25,14 @@ CUDA_VISIBLE_DEVICES=0 torchrun --nproc_per_node="1" \
     --master_addr="127.0.0.1" \
     --master_port="12399" \
     main.py \
-    --deepspeed scripts/zero3_offload.json \
     --output_dir $OUTDIR \
     --model_name_or_path $BASE_MODEL \
     --train_data_path $TRAIN_DATA \
     --dataset_name seg \
+    --use_peft true \
+    --lora_r 16 \
+    --lora_alpha 32 \
+    --lora_dropout 0.05 \
     --max_prompt_length 8192 \
     --max_completion_length 512 \
     --num_generations 8 \
@@ -57,6 +60,10 @@ CUDA_VISIBLE_DEVICES=0 torchrun --nproc_per_node="1" \
 # --- what changed vs Time-R1's scripts/posttrain/train_rl.sh, and why ---
 # model_name_or_path : Qwen2.5-VL-3B -> Time-R1-7B   (start from a grounding prior)
 # train_data_path    : Charades 2k5 -> our seg train split
+# LoRA (use_peft)    : full FT -> LoRA r=16          (fits 1x96GB, no deepspeed/nvcc,
+#                                                     less overfit on 56 videos)
+# --deepspeed        : removed                        (zero3_offload needs CUDA toolkit
+#                                                     to JIT-compile cpu_adam; avoided)
 # max_completion_length: 200 -> 512                  (multi-segment output is longer)
 # reward_funcs       : iou_v2 format -> iou_seg format_seg  (our multi-seg rewards)
 # prompt_type        : v1 -> seg                     (whole-video segmentation prompt)
