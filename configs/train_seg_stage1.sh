@@ -12,6 +12,8 @@
 export WANDB_PROJECT=video-split-seg
 export EXP_NAME=seg_stage1_iou_format
 export PYTHONPATH=".:$PYTHONPATH"
+# fake nvcc so deepspeed's import-time CUDA check passes (we don't use deepspeed ops)
+export CUDA_HOME=${CUDA_HOME:-/workspace/tr1/cudabin}
 export DEBUG_MODE="true"
 export LOG_PATH="./logs/$EXP_NAME/$EXP_NAME.txt"
 
