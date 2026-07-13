@@ -16,7 +16,9 @@ import json
 import re
 
 _SEG_RE = re.compile(
-    r"<seg>\s*<name>(.*?)</name>\s*<span>\s*(\d+\.?\d*)\s+to\s+(\d+\.?\d*)\s*</span>\s*</seg>",
+    # separator between the two times may be "to" or a dash (-, en/em dash),
+    # since models improvise; SFT targets use "to".
+    r"<seg>\s*<name>(.*?)</name>\s*<span>\s*(\d+\.?\d*)\s*(?:to|[-–—])\s*(\d+\.?\d*)\s*</span>\s*</seg>",
     re.S | re.I,
 )
 _STRUCT_RE = re.compile(r"<think>.*?</think>\s*<segments>.*?</segments>", re.S)

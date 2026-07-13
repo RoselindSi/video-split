@@ -37,6 +37,14 @@ def test_parse():
     assert segs == [("a", 1.0, 2.0), ("b", 2.0, 3.5)], segs
 
 
+def test_parse_dash_separator():
+    # models improvise the separator; parser must accept dashes, not just "to"
+    for sep in ["to", "-", "–", "—"]:
+        comp = "<segments><seg><name>a</name><span>1.0 %s 2.0</span></seg></segments>" % sep
+        segs = parse_segments(comp)
+        assert segs == [("a", 1.0, 2.0)], (sep, segs)
+
+
 def test_format():
     good = _completion([("a", 1.0, 2.0), ("b", 2.0, 3.0)])
     bad_struct = "<segments><seg><name>a</name><span>1 to 2</span></seg></segments>"
