@@ -40,7 +40,7 @@ CUDA_VISIBLE_DEVICES=0 torchrun --nproc_per_node="1" \
     --lora_target_modules q_proj k_proj v_proj o_proj gate_proj up_proj down_proj \
     --max_prompt_length 8192 \
     --max_completion_length 512 \
-    --num_generations 8 \
+    --num_generations 4 \
     --per_device_train_batch_size 1 \
     --gradient_accumulation_steps 2 \
     --logging_steps 1 \
@@ -74,4 +74,5 @@ CUDA_VISIBLE_DEVICES=0 torchrun --nproc_per_node="1" \
 # prompt_type        : v1 -> seg                     (whole-video segmentation prompt)
 # attn_implementation: flash_attention_2 -> sdpa     (flash-attn has no Blackwell build yet)
 # num_train_epochs   : 5 -> 3                         (small data, avoid overfit)
-# num_generations    : kept 8 (design target 16; raise if group reward variance collapses)
+# num_generations    : 4 (dropped from 8: OOM at step 14 on a many-segment video,
+#                         real memory not fragmentation; halves rollout memory)

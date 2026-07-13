@@ -122,8 +122,14 @@ def iou_seg_reward(completions, solution, **kwargs):
 
 
 # ------------------------------------------------------------------ name reward
+_SIM_FN = None  # module-level singleton: load the embedding model once, not per step
+
+
 def _default_sim_fn():
-    """Lazy sentence-transformers similarity. Returns fn(a:str, bs:list)->list."""
+    """Lazy, cached sentence-transformers similarity. fn(a:str, bs:list)->list."""
+    global _SIM_FN
+    if _SIM_FN is not None:
+        return _SIM_FN
     from sentence_transformers import SentenceTransformer, util  # lazy
 
     model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -133,7 +139,8 @@ def _default_sim_fn():
         eb = model.encode(bs, convert_to_tensor=True)
         return [float(x) for x in util.cos_sim(ea, eb)[0]]
 
-    return sim
+    _SIM_FN = sim
+    return _SIM_FN
 
 
 def name_seg_reward(completions, solution, sim_fn=None, generic_w=0.5, **kwargs):
