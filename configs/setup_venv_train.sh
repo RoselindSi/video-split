@@ -12,6 +12,7 @@ set -u
 export ROOT=/workspace/tr1
 export UV_PYTHON_INSTALL_DIR=$ROOT/pythons
 export UV_CACHE_DIR=$ROOT/uv_cache
+export CUDA_HOME=${CUDA_HOME:-$ROOT/cudabin}  # fake nvcc for deepspeed import check
 
 command -v uv >/dev/null || { echo "!! uv not found"; exit 1; }
 

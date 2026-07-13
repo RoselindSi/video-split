@@ -1,0 +1,11 @@
+--- a/src/time_r1/rl/timer1_trainer.py
++++ b/src/time_r1/rl/timer1_trainer.py
+@@ -267,6 +267,10 @@
+         if peft_config is not None:
+             model = get_peft_model(model, peft_config)
++            # With PEFT (frozen base) + gradient checkpointing, gradients don't
++            # reach the LoRA adapters unless the input embeddings require grad.
++            if args.gradient_checkpointing:
++                model.enable_input_require_grads()
+
+         print("fix_vit", args.fix_vit)
