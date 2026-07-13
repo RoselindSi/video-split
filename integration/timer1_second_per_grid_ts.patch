@@ -1,0 +1,20 @@
+diff --git a/src/time_r1/rl/timer1_trainer.py b/src/time_r1/rl/timer1_trainer.py
+index 4789d46..960e0e9 100644
+--- a/src/time_r1/rl/timer1_trainer.py
++++ b/src/time_r1/rl/timer1_trainer.py
+@@ -561,6 +561,15 @@ class TimeR1_Trainer(Trainer):
+ 
+         prompt_inputs = super()._prepare_inputs(prompt_inputs)
+ 
++        # transformers >=4.53 expects second_per_grid_ts as a list, but the
++        # Qwen2.5-VL processor returns it as a tensor with return_tensors="pt".
++        if "second_per_grid_ts" in prompt_inputs and torch.is_tensor(
++            prompt_inputs["second_per_grid_ts"]
++        ):
++            prompt_inputs["second_per_grid_ts"] = prompt_inputs[
++                "second_per_grid_ts"
++            ].tolist()
++
+         prompt_ids, prompt_mask = (
+             prompt_inputs["input_ids"],
+             prompt_inputs["attention_mask"],
