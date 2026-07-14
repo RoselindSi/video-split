@@ -1,21 +1,22 @@
 #!/usr/bin/env bash
-# GRPO Stage 3 (approach B): full reward — add sequence-level coherence.
-# reward = iou_seg + name_seg + seq + format_seg
-# seq (coverage / non-overlap / count) is our own addition and the direct fix
-# for the repeated-subtask failure mode seen in the zero-shot baseline.
+# GRPO Stage 3 (approach B): add sequence-level coherence on the CLEAN Stage-1 base.
+# reward = iou_seg + seq + format_seg  (name_seg DROPPED on purpose)
 #
-# Prereq: stage-2 finished and merged:
-#   python $ROOT/vs/src/tools/merge_lora.py \
-#     --base $ROOT/ckpts/seg_stage1_merged \
-#     --adapter $ROOT/time-r1/logs/seg_stage2_add_name \
-#     --out $ROOT/ckpts/seg_stage2_merged
+# Why base = seg_stage1_merged (not stage2): Stage 2's naming regressed on eval
+# (name_sim 0.366 base -> 0.342 S1 -> 0.314 S2) because the model hallucinates
+# objects it cannot visually recognize (cotton swab/needle -> "paper/stick") --
+# a base-model visual limit, not a reward bug. So we defer naming to the stronger
+# Qwen3-VL base and build Stage 3 on the clean boundary model (Stage 1). seq
+# (coverage/non-overlap/count) directly targets the remaining over-segmentation.
+#
+# Prereq: seg_stage1_merged already exists (built for the Stage-1 eval).
 #
 # Run FROM the time-r1 repo root inside venv_train:
 #   source /workspace/tr1/env_train.sh
 #   bash /workspace/tr1/vs/configs/train_seg_stage3.sh
 
 export WANDB_PROJECT=video-split-seg
-export EXP_NAME=seg_stage3_add_seq
+export EXP_NAME=seg_stage3_from_s1_seq
 export PYTHONPATH=".:$PYTHONPATH"
 export CUDA_HOME=${CUDA_HOME:-/workspace/tr1/cudabin}
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
@@ -23,7 +24,7 @@ export DEBUG_MODE="true"
 export LOG_PATH="./logs/$EXP_NAME/$EXP_NAME.txt"
 
 OUTDIR=./logs/$EXP_NAME
-BASE_MODEL="/workspace/tr1/ckpts/seg_stage2_merged"
+BASE_MODEL="/workspace/tr1/ckpts/seg_stage1_merged"
 TRAIN_DATA="/workspace/tr1/data_handtask/train_multiseg_train.json"
 
 CUDA_VISIBLE_DEVICES=0 torchrun --nproc_per_node="1" \
@@ -58,7 +59,7 @@ CUDA_VISIBLE_DEVICES=0 torchrun --nproc_per_node="1" \
     --num_train_epochs 3 \
     --run_name $EXP_NAME \
     --report_to tensorboard \
-    --reward_funcs iou_seg name_seg seq format_seg \
+    --reward_funcs iou_seg seq format_seg \
     --temperature 1.0 \
     --prompt_type seg \
     --is_curriculum_learning false \
