@@ -121,11 +121,13 @@ def main():
     ap.add_argument("--out", default="logs/eval_naming.jsonl")
     ap.add_argument("--total_pixels", type=int, default=3584 * 28 * 28)
     ap.add_argument("--max_new_tokens", type=int, default=512)
+    ap.add_argument("--device_map", default="cuda",
+                    help="'cuda' for single-GPU; 'auto' to shard a big model across GPUs")
     a = ap.parse_args()
 
     proc = AutoProcessor.from_pretrained(a.model_base)
     model = AutoModelForImageTextToText.from_pretrained(
-        a.model_base, dtype=torch.bfloat16, device_map="cuda").eval()
+        a.model_base, dtype=torch.bfloat16, device_map=a.device_map).eval()
     sim = _default_sim_fn()
     rows = json.load(open(a.data))
     os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)
