@@ -128,6 +128,10 @@ def main():
     ap.add_argument("--w_count", type=float, default=0.1)
     ap.add_argument("--oracle_count", action="store_true",
                     help="upper-bound: use GT count + GT active region instead of learned")
+    ap.add_argument("--count_mode", choices=["head", "peaks"], default="head",
+                    help="head=pooled count regression; peaks=count boundary peaks "
+                         ">count_thresh within active region (data-free)")
+    ap.add_argument("--count_thresh", type=float, default=0.5)
     a = ap.parse_args()
 
     tr = torch.load(a.train, weights_only=False)
@@ -172,7 +176,14 @@ def main():
                 act = [i for i in range(len(ap_)) if ap_[i] > 0.5]
                 lo = times[act[0]].item() if act else 0.0
                 hi = times[act[-1]].item() if act else dur
-                k = max(int(round(c.item())), 1)
+                if a.count_mode == "peaks":
+                    npk = sum(1 for i in range(len(bp))
+                              if lo < times[i] < hi and bp[i] > a.count_thresh
+                              and (i == 0 or bp[i] >= bp[i - 1])
+                              and (i == len(bp) - 1 or bp[i] >= bp[i + 1]))
+                    k = npk + 1
+                else:
+                    k = max(int(round(c.item())), 1)
             preds = peaks_topk(bp, times, lo, hi, max(k - 1, 0), a.min_gap_s)
             m = eval_item(preds, x)
             agg.append(m)
