@@ -67,6 +67,24 @@ def decode(prob, times, dur, thresh, min_gap_s):
     return [(pts[k], pts[k + 1]) for k in range(len(pts) - 1)]
 
 
+def decode_topk(prob, times, dur, k_internal, min_gap_s):
+    """Take the top-k_internal boundary peaks by probability (adaptive per video).
+    k_internal = (#segments - 1). Bypasses any fixed threshold."""
+    cand = [i for i in range(len(prob))
+            if (i == 0 or prob[i] >= prob[i - 1])
+            and (i == len(prob) - 1 or prob[i] >= prob[i + 1])]
+    cand.sort(key=lambda i: -prob[i])
+    kept = []
+    for i in cand:
+        if len(kept) >= k_internal:
+            break
+        if all(abs(times[i] - times[j]) >= min_gap_s for j in kept):
+            kept.append(i)
+    bnds = sorted(times[i].item() for i in kept)
+    pts = [0.0] + bnds + [dur]
+    return [(pts[m], pts[m + 1]) for m in range(len(pts) - 1)]
+
+
 def iou(a, b):
     s = max(a[0], b[0]); e = min(a[1], b[1])
     inter = max(0.0, e - s)
@@ -118,6 +136,9 @@ def main():
     ap.add_argument("--thresh", type=float, default=0.3)
     ap.add_argument("--min_gap_s", type=float, default=1.5)
     ap.add_argument("--pos_weight", type=float, default=10.0)
+    ap.add_argument("--oracle_count", action="store_true",
+                    help="decode top-(gt_count-1) peaks using GT segment count "
+                         "(diagnostic upper bound: isolates localization from count)")
     a = ap.parse_args()
 
     tr = torch.load(a.train, weights_only=False)
@@ -152,7 +173,11 @@ def main():
     with torch.no_grad():
         for x in va:
             prob = torch.sigmoid(net(prep(x)))[0].cpu().numpy()
-            preds = decode(prob, x["times"], x["duration"], a.thresh, a.min_gap_s)
+            if a.oracle_count:
+                preds = decode_topk(prob, x["times"], x["duration"],
+                                    max(len(x["segments"]) - 1, 0), a.min_gap_s)
+            else:
+                preds = decode(prob, x["times"], x["duration"], a.thresh, a.min_gap_s)
             m = eval_item(preds, x)
             agg.append(m)
             tag = "  <-- ZERO" if m["f1@0.5"] == 0 else ""
