@@ -67,11 +67,13 @@ def decode(prob, times, dur, thresh, min_gap_s):
     return [(pts[k], pts[k + 1]) for k in range(len(pts) - 1)]
 
 
-def decode_topk(prob, times, dur, k_internal, min_gap_s):
-    """Take the top-k_internal boundary peaks by probability (adaptive per video).
-    k_internal = (#segments - 1). Bypasses any fixed threshold."""
+def decode_topk(prob, times, lo, hi, k_internal, min_gap_s):
+    """Take the top-k_internal boundary peaks by probability within [lo, hi]
+    (adaptive per video). k_internal = (#segments - 1). No fixed threshold.
+    lo/hi are the outer segment bounds (0/dur normally; GT endpoints in oracle)."""
     cand = [i for i in range(len(prob))
-            if (i == 0 or prob[i] >= prob[i - 1])
+            if lo < times[i] < hi
+            and (i == 0 or prob[i] >= prob[i - 1])
             and (i == len(prob) - 1 or prob[i] >= prob[i + 1])]
     cand.sort(key=lambda i: -prob[i])
     kept = []
@@ -81,7 +83,7 @@ def decode_topk(prob, times, dur, k_internal, min_gap_s):
         if all(abs(times[i] - times[j]) >= min_gap_s for j in kept):
             kept.append(i)
     bnds = sorted(times[i].item() for i in kept)
-    pts = [0.0] + bnds + [dur]
+    pts = [lo] + bnds + [hi]
     return [(pts[m], pts[m + 1]) for m in range(len(pts) - 1)]
 
 
@@ -174,8 +176,10 @@ def main():
         for x in va:
             prob = torch.sigmoid(net(prep(x)))[0].cpu().numpy()
             if a.oracle_count:
-                preds = decode_topk(prob, x["times"], x["duration"],
-                                    max(len(x["segments"]) - 1, 0), a.min_gap_s)
+                segs = sorted(x["segments"], key=lambda s: s[1])
+                lo, hi = segs[0][1], segs[-1][2]        # GT active-region endpoints
+                preds = decode_topk(prob, x["times"], lo, hi,
+                                    max(len(segs) - 1, 0), a.min_gap_s)
             else:
                 preds = decode(prob, x["times"], x["duration"], a.thresh, a.min_gap_s)
             m = eval_item(preds, x)
