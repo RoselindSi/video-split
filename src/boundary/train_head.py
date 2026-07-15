@@ -1,17 +1,19 @@
-"""E2 step 2 — train a small supervised temporal boundary head.
+"""E2 step 2 — supervised temporal boundary head (end-to-end, count + endpoints learned).
 
 Input: [T, D] frozen-ViT feature caches (extract_features.py) + GT segments.
-Target: per-timestep soft boundary label (Gaussian bump at each internal segment
-junction). A small dilated 1D-Conv head predicts p(boundary | t); at eval we
-peak-pick boundaries, split [0, duration] into segments, and score against GT
-with the same metrics as eval_hf (f1@iou, boundary_score, count_acc).
+Three learned outputs (all densely/directly supervised, no RL, no oracle):
+  - boundary  p(internal junction | t)  -- soft Gaussian target at segment joins
+  - actionness p(inside active region | t) -- 1 between first_start and last_end
+  - count      #segments                 -- pooled regression
+Decode: active region [lo,hi] from actionness, k from count, top-(k-1) boundary
+peaks within [lo,hi]. --oracle_count keeps the diagnostic upper bound.
 
-Goal of this v1: test whether DENSE supervision (vs GRPO's sparse scalar reward)
-(a) beats S1c on boundaries, and especially (b) fixes the multi-segment
-under-segmentation (gt=7-9 videos that S1c scored 0 on).
+Goal: test whether dense supervision beats S1c end-to-end AND fixes the
+multi-segment under-segmentation that sparse-reward GRPO could not.
 
 Usage (server):
     python -m src.boundary.train_head --train /tmp/feat_train.pt --val /tmp/feat_val.pt
+    python -m src.boundary.train_head ... --oracle_count      # upper-bound diagnostic
 """
 import argparse, statistics
 import numpy as np
@@ -20,15 +22,18 @@ import torch.nn as nn
 
 
 # ----------------------------------------------------------------- labels
-def soft_labels(times, segments, sigma_s=1.0):
-    t = times.numpy()
-    T = len(t)
-    lab = np.zeros(T, dtype=np.float32)
+def soft_boundary(times, segments, sigma_s=1.0):
+    t = times.numpy(); lab = np.zeros(len(t), dtype=np.float32)
     segs = sorted(segments, key=lambda x: x[1])
-    junctions = [segs[i][1] for i in range(1, len(segs))]   # internal starts
-    for b in junctions:
+    for b in [segs[i][1] for i in range(1, len(segs))]:      # internal joins
         lab = np.maximum(lab, np.exp(-((t - b) ** 2) / (2 * sigma_s ** 2)))
-    return lab, junctions
+    return lab
+
+
+def actionness(times, segments):
+    t = times.numpy(); segs = sorted(segments, key=lambda x: x[1])
+    lo, hi = segs[0][1], segs[-1][2]
+    return ((t >= lo) & (t <= hi)).astype(np.float32)
 
 
 # ----------------------------------------------------------------- model
@@ -39,38 +44,22 @@ class BoundaryHead(nn.Module):
         self.blocks = nn.ModuleList([
             nn.Conv1d(d, d, 5, padding=2 * r, dilation=r) for r in (1, 2, 4, 8)])
         self.norm = nn.ModuleList([nn.GroupNorm(8, d) for _ in range(4)])
-        self.out = nn.Conv1d(d, 1, 1)
+        self.bound = nn.Conv1d(d, 1, 1)
+        self.action = nn.Conv1d(d, 1, 1)
+        self.count = nn.Sequential(nn.Linear(d, d), nn.ReLU(), nn.Linear(d, 1))
 
     def forward(self, x):                 # x: [B, T, D_in]
-        h = self.proj(x.transpose(1, 2))  # [B, d, T]
+        h = self.proj(x.transpose(1, 2))
         for conv, gn in zip(self.blocks, self.norm):
             h = h + torch.relu(gn(conv(h)))
-        return self.out(h).squeeze(1)     # [B, T] logits
+        b = self.bound(h).squeeze(1)      # [B, T]
+        a = self.action(h).squeeze(1)     # [B, T]
+        c = self.count(h.mean(-1)).squeeze(-1)   # [B]
+        return b, a, c
 
 
 # ----------------------------------------------------------------- decode + metrics
-def decode(prob, times, dur, thresh, min_gap_s):
-    peaks = []
-    for i in range(len(prob)):
-        if prob[i] < thresh:
-            continue
-        if (i == 0 or prob[i] >= prob[i - 1]) and (i == len(prob) - 1 or prob[i] >= prob[i + 1]):
-            peaks.append(i)
-    # NMS by min gap in seconds, keep higher prob
-    peaks.sort(key=lambda i: -prob[i])
-    kept = []
-    for i in peaks:
-        if all(abs(times[i] - times[j]) >= min_gap_s for j in kept):
-            kept.append(i)
-    bnds = sorted(times[i].item() for i in kept)
-    pts = [0.0] + bnds + [dur]
-    return [(pts[k], pts[k + 1]) for k in range(len(pts) - 1)]
-
-
-def decode_topk(prob, times, lo, hi, k_internal, min_gap_s):
-    """Take the top-k_internal boundary peaks by probability within [lo, hi]
-    (adaptive per video). k_internal = (#segments - 1). No fixed threshold.
-    lo/hi are the outer segment bounds (0/dur normally; GT endpoints in oracle)."""
+def peaks_topk(prob, times, lo, hi, k_internal, min_gap_s):
     cand = [i for i in range(len(prob))
             if lo < times[i] < hi
             and (i == 0 or prob[i] >= prob[i - 1])
@@ -88,15 +77,13 @@ def decode_topk(prob, times, lo, hi, k_internal, min_gap_s):
 
 
 def iou(a, b):
-    s = max(a[0], b[0]); e = min(a[1], b[1])
-    inter = max(0.0, e - s)
+    s = max(a[0], b[0]); e = min(a[1], b[1]); inter = max(0.0, e - s)
     union = (a[1] - a[0]) + (b[1] - b[0]) - inter
     return inter / union if union > 0 else 0.0
 
 
 def greedy_match(preds, gts):
-    pairs = []
-    used = set()
+    pairs = []; used = set()
     for pi, p in enumerate(preds):
         best, bj = 0.0, -1
         for gj, g in enumerate(gts):
@@ -132,70 +119,79 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--train", required=True)
     ap.add_argument("--val", required=True)
-    ap.add_argument("--epochs", type=int, default=200)
-    ap.add_argument("--lr", type=float, default=3e-4)
+    ap.add_argument("--epochs", type=int, default=400)
+    ap.add_argument("--lr", type=float, default=1e-3)
     ap.add_argument("--sigma_s", type=float, default=1.0)
-    ap.add_argument("--thresh", type=float, default=0.3)
-    ap.add_argument("--min_gap_s", type=float, default=1.5)
-    ap.add_argument("--pos_weight", type=float, default=10.0)
+    ap.add_argument("--min_gap_s", type=float, default=2.0)
+    ap.add_argument("--pos_weight", type=float, default=8.0)
+    ap.add_argument("--w_action", type=float, default=1.0)
+    ap.add_argument("--w_count", type=float, default=0.1)
     ap.add_argument("--oracle_count", action="store_true",
-                    help="decode top-(gt_count-1) peaks using GT segment count "
-                         "(diagnostic upper bound: isolates localization from count)")
+                    help="upper-bound: use GT count + GT active region instead of learned")
     a = ap.parse_args()
 
     tr = torch.load(a.train, weights_only=False)
     va = torch.load(a.val, weights_only=False)
     dev = "cuda" if torch.cuda.is_available() else "cpu"
     D = tr[0]["feats"].shape[-1]
-
-    # standardize features with train stats
     allf = torch.cat([x["feats"] for x in tr], 0)
     mu, sd = allf.mean(0), allf.std(0) + 1e-5
-    def prep(x):
-        return ((x["feats"] - mu) / sd).unsqueeze(0).to(dev)   # [1,T,D]
+    prep = lambda x: ((x["feats"] - mu) / sd).unsqueeze(0).to(dev)
 
     net = BoundaryHead(D).to(dev)
     opt = torch.optim.AdamW(net.parameters(), lr=a.lr, weight_decay=1e-4)
     pw = torch.tensor(a.pos_weight, device=dev)
+    bce = nn.functional.binary_cross_entropy_with_logits
 
     for ep in range(a.epochs):
         net.train(); tot = 0.0
         for x in tr:
-            lab, _ = soft_labels(x["times"], x["segments"], a.sigma_s)
-            y = torch.tensor(lab, device=dev).unsqueeze(0)
-            logit = net(prep(x))
-            loss = nn.functional.binary_cross_entropy_with_logits(logit, y, pos_weight=pw)
+            bl = torch.tensor(soft_boundary(x["times"], x["segments"], a.sigma_s), device=dev).unsqueeze(0)
+            al = torch.tensor(actionness(x["times"], x["segments"]), device=dev).unsqueeze(0)
+            cl = torch.tensor([float(len(x["segments"]))], device=dev)
+            b, ac, c = net(prep(x))
+            loss = (bce(b, bl, pos_weight=pw) + a.w_action * bce(ac, al)
+                    + a.w_count * ((c - cl) ** 2).mean())
             opt.zero_grad(); loss.backward(); opt.step()
             tot += loss.item()
-        if (ep + 1) % 50 == 0 or ep == a.epochs - 1:
-            print(f"ep {ep+1} train_loss {tot/len(tr):.4f}")
+        if (ep + 1) % 100 == 0 or ep == a.epochs - 1:
+            print(f"ep {ep+1} loss {tot/len(tr):.4f}")
 
-    # ----- eval on val
-    net.eval(); agg = []; zeros = []
+    net.eval(); agg = []; multi = []; cnt_err = []
     with torch.no_grad():
         for x in va:
-            prob = torch.sigmoid(net(prep(x)))[0].cpu().numpy()
+            b, ac, c = net(prep(x))
+            bp = torch.sigmoid(b)[0].cpu().numpy()
+            ap_ = torch.sigmoid(ac)[0].cpu().numpy()
+            times = x["times"]; dur = x["duration"]
             if a.oracle_count:
                 segs = sorted(x["segments"], key=lambda s: s[1])
-                lo, hi = segs[0][1], segs[-1][2]        # GT active-region endpoints
-                preds = decode_topk(prob, x["times"], lo, hi,
-                                    max(len(segs) - 1, 0), a.min_gap_s)
+                lo, hi = segs[0][1], segs[-1][2]
+                k = len(segs)
             else:
-                preds = decode(prob, x["times"], x["duration"], a.thresh, a.min_gap_s)
+                act = [i for i in range(len(ap_)) if ap_[i] > 0.5]
+                lo = times[act[0]].item() if act else 0.0
+                hi = times[act[-1]].item() if act else dur
+                k = max(int(round(c.item())), 1)
+            preds = peaks_topk(bp, times, lo, hi, max(k - 1, 0), a.min_gap_s)
             m = eval_item(preds, x)
             agg.append(m)
+            cnt_err.append(abs(len(preds) - m["n_gt"]))
             tag = "  <-- ZERO" if m["f1@0.5"] == 0 else ""
             print(f"{x['video'].split('/')[-1]:22s} pred {m['n_pred']:2d} gt {m['n_gt']:2d} "
+                  f"predk {k if not a.oracle_count else m['n_gt']:2d} "
                   f"f1@.5 {m['f1@0.5']:.2f} bound {m['boundary_score']:.2f}{tag}")
             if m["n_gt"] >= 6:
-                zeros.append(m["f1@0.5"])
-    print("\n==== BOUNDARY HEAD (val n=%d) ====" % len(agg))
+                multi.append(m["f1@0.5"])
+    mode = "ORACLE count+endpoints" if a.oracle_count else "END-TO-END (learned count+endpoints)"
+    print(f"\n==== BOUNDARY HEAD [{mode}] (val n=%d) ====" % len(agg))
     for k in ["f1@0.3", "f1@0.5", "f1@0.7", "boundary_score", "count_acc"]:
         print(k.ljust(16), round(statistics.mean([m[k] for m in agg]), 3))
-    if zeros:
-        print(f"multi-seg videos (gt>=6): mean f1@.5 {statistics.mean(zeros):.3f} "
-              f"(S1c scored these ~0 -> key test)")
-    print("\nref S1c: f1@0.5 0.452 / boundary 0.491 / count_acc 0.385")
+    if not a.oracle_count:
+        print("count |pred-gt| mean", round(statistics.mean(cnt_err), 2))
+    if multi:
+        print(f"multi-seg (gt>=6) mean f1@.5 {statistics.mean(multi):.3f}")
+    print("\nref S1c: f1@0.5 0.452 / boundary 0.491 / count_acc 0.385 (multi-seg ~0)")
 
 
 if __name__ == "__main__":
