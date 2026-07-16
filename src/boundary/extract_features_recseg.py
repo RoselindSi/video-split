@@ -67,6 +67,9 @@ def main():
     ap.add_argument("--data", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--fps", type=float, default=2.0)
+    ap.add_argument("--crop", choices=["none", "left", "right"], default="none",
+                    help="packed_mid_stereo is two side-by-side cameras; crop to one "
+                         "half to un-dilute the hand-action signal (boundary features)")
     ap.add_argument("--max_pixels", type=int, default=768 * 28 * 28)
     ap.add_argument("--enc_batch", type=int, default=48, help="frames per ViT call")
     ap.add_argument("--dec_chunk", type=int, default=200, help="frames per decode")
@@ -98,6 +101,9 @@ def main():
         for c0 in range(0, len(cand), a.dec_chunk):
             chunk_idx = cand[c0:c0 + a.dec_chunk]
             frames = vr.get_batch(chunk_idx).asnumpy()
+            if a.crop != "none":
+                W = frames.shape[2]
+                frames = frames[:, :, :W // 2] if a.crop == "left" else frames[:, :, W // 2:]
             for j, f in enumerate(frames):
                 g = gray(f)
                 if float(g.mean()) < a.th_black:
