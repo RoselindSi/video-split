@@ -25,16 +25,23 @@ import torch
 
 
 def change_scores(feats, w):
-    f = torch.nn.functional.normalize(feats.float(), dim=-1).numpy()  # [T,D]
+    """Change score = L2 distance on per-dim STANDARDIZED features.
+
+    Raw Qwen features carry a huge common component (norm ~4900) that dominates
+    cosine (adjacent cos ~1.0, signal washed out). Standardizing (subtract mean,
+    divide std -- exactly what train_head feeds the head) removes it; L2 distance
+    then reflects the real frame-to-frame change that the supervised head sees.
+    """
+    f = feats.float().numpy()
+    f = (f - f.mean(0)) / (f.std(0) + 1e-5)
     T = f.shape[0]
     adj = np.zeros(T)
-    adj[1:] = 1 - np.sum(f[1:] * f[:-1], axis=1)
+    adj[1:] = np.linalg.norm(f[1:] - f[:-1], axis=1)
     win = np.zeros(T)
     for t in range(1, T):
         a = f[max(0, t - w):t].mean(0)
         b = f[t:min(T, t + w)].mean(0)
-        an, bn = a / (np.linalg.norm(a) + 1e-8), b / (np.linalg.norm(b) + 1e-8)
-        win[t] = 1 - float(np.dot(an, bn))
+        win[t] = float(np.linalg.norm(b - a))
     return adj, win
 
 
