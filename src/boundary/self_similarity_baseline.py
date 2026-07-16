@@ -112,9 +112,9 @@ def main():
         pre.append({"adj": smooth(adj, a.smooth_k), "win": smooth(win, a.smooth_k),
                     "times": x["times"].numpy(), "gts": gt_boundaries(x["segments"])})
 
-    # reveal the true signal scale (previous absolute thresholds were mis-scaled)
-    for name, arr in (("adjacent 1-cos", np.concatenate(all_adj)),
-                      ("windowed 1-cos", np.concatenate(all_win))):
+    # reveal the true signal scale (score = L2 on standardized feats, not cosine)
+    for name, arr in (("adjacent L2", np.concatenate(all_adj)),
+                      ("windowed L2", np.concatenate(all_win))):
         ps = {p: round(float(np.percentile(arr, p)), 4) for p in (50, 90, 99)}
         print(f"signal scale [{name}]: p50 {ps[50]} p90 {ps[90]} p99 {ps[99]}")
     print()
@@ -141,8 +141,10 @@ def main():
         pk = sorted(pr["times"][i] for i in idx)
         f5, _, _ = match_f1(pk, pr["gts"], 0.5); rf.append(f5)
     print(f"[random top-k control] F1@0.5s {statistics.mean(rf):.3f}")
-    print("\nGT boundaries = internal segment transitions. head oracle (learned) "
-          "was 0.331 f1@0.5 -- compare whether the training-free signal reaches it.")
+    print("\nNOTE: top-k uses GT boundary count -> this is an ORACLE-COUNT feature "
+          "probe (for comparing feature variants), NOT a deployable baseline.")
+    print("Standardization here is PER-VIDEO; train_head uses TRAIN-GLOBAL mu/sd -- "
+          "keep this in mind when comparing self-sim vs head numbers.")
 
 
 if __name__ == "__main__":
