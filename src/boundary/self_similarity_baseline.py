@@ -53,14 +53,16 @@ def gt_boundaries(segments):
     return b[1:-1] if len(b) > 2 else b       # drop video-edge endpoints
 
 
-def peak_times(score, times, thr, min_gap_s):
+def peak_times_topk(score, times, k, min_gap_s):
+    """Top-k local maxima by score (threshold-free; k from GT count)."""
     cand = [i for i in range(len(score))
-            if score[i] >= thr
-            and (i == 0 or score[i] >= score[i - 1])
+            if (i == 0 or score[i] >= score[i - 1])
             and (i == len(score) - 1 or score[i] >= score[i + 1])]
     cand.sort(key=lambda i: -score[i])
     kept = []
     for i in cand:
+        if len(kept) >= k:
+            break
         if all(abs(times[i] - times[j]) >= min_gap_s for j in kept):
             kept.append(i)
     return sorted(times[i] for i in kept)
@@ -96,29 +98,44 @@ def main():
     va = [x for x in va if x["feats"].dim() == 2 and x["feats"].shape[0] > 2]
 
     pre = []
+    all_adj, all_win = [], []
     for x in va:
         adj, win = change_scores(x["feats"], a.w)
+        all_adj.append(adj[1:]); all_win.append(win[1:])
         pre.append({"adj": smooth(adj, a.smooth_k), "win": smooth(win, a.smooth_k),
                     "times": x["times"].numpy(), "gts": gt_boundaries(x["segments"])})
 
+    # reveal the true signal scale (previous absolute thresholds were mis-scaled)
+    for name, arr in (("adjacent 1-cos", np.concatenate(all_adj)),
+                      ("windowed 1-cos", np.concatenate(all_win))):
+        ps = {p: round(float(np.percentile(arr, p)), 4) for p in (50, 90, 99)}
+        print(f"signal scale [{name}]: p50 {ps[50]} p90 {ps[90]} p99 {ps[99]}")
+    print()
+
+    # threshold-free: take top-(GT count) peaks per video; also a random baseline
     for sig in ("adj", "win"):
-        best = None
-        for thr in np.linspace(0.02, 0.5, 25):
-            f5s, p5s, r5s, f1s = [], [], [], []
-            for pr in pre:
-                pk = peak_times(pr[sig], pr["times"], thr, a.min_gap_s)
-                f5, p5, r5 = match_f1(pk, pr["gts"], 0.5)
-                f10, _, _ = match_f1(pk, pr["gts"], 1.0)
-                f5s.append(f5); p5s.append(p5); r5s.append(r5); f1s.append(f10)
-            m = statistics.mean(f5s)
-            if best is None or m > best[0]:
-                best = (m, thr, statistics.mean(p5s), statistics.mean(r5s),
-                        statistics.mean(f1s))
-        f5, thr, p5, r5, f10 = best
-        print(f"[{sig}] best thr {thr:.3f} | F1@0.5s {f5:.3f} "
-              f"(P {p5:.3f} R {r5:.3f}) | F1@1.0s {f10:.3f}")
-    print("\n(boundary-level detection metric; GT boundaries = internal segment "
-          "transitions. Features are blur-filtered -- see filter_audit.py)")
+        f5s, f10s, r5s = [], [], []
+        for pr in pre:
+            k = len(pr["gts"])
+            pk = peak_times_topk(pr[sig], pr["times"], k, a.min_gap_s)
+            f5, _, r5 = match_f1(pk, pr["gts"], 0.5)
+            f10, _, _ = match_f1(pk, pr["gts"], 1.0)
+            f5s.append(f5); f10s.append(f10); r5s.append(r5)
+        print(f"[{sig} top-k] F1@0.5s {statistics.mean(f5s):.3f} | "
+              f"F1@1.0s {statistics.mean(f10s):.3f} | R@0.5s {statistics.mean(r5s):.3f}")
+
+    # random-peak control: how much does chance get at these densities?
+    rng = np.random.default_rng(0); rf = []
+    for pr in pre:
+        k = len(pr["gts"]); T = len(pr["times"])
+        if T < 2:
+            continue
+        idx = rng.choice(T, size=min(k, T), replace=False)
+        pk = sorted(pr["times"][i] for i in idx)
+        f5, _, _ = match_f1(pk, pr["gts"], 0.5); rf.append(f5)
+    print(f"[random top-k control] F1@0.5s {statistics.mean(rf):.3f}")
+    print("\nGT boundaries = internal segment transitions. head oracle (learned) "
+          "was 0.331 f1@0.5 -- compare whether the training-free signal reaches it.")
 
 
 if __name__ == "__main__":
