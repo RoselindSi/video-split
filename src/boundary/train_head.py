@@ -136,6 +136,16 @@ def main():
 
     tr = torch.load(a.train, weights_only=False)
     va = torch.load(a.val, weights_only=False)
+
+    def drop_empty(items, name):
+        ok = [x for x in items if x["feats"].dim() == 2 and x["feats"].shape[0] > 0]
+        bad = [x.get("recording_id", x.get("video")) for x in items if x not in ok]
+        if bad:
+            print(f"WARNING dropping {len(bad)} empty-feature {name} items: {bad}")
+        return ok
+
+    tr = drop_empty(tr, "train")
+    va = drop_empty(va, "val")
     dev = "cuda" if torch.cuda.is_available() else "cpu"
     D = tr[0]["feats"].shape[-1]
     allf = torch.cat([x["feats"] for x in tr], 0)
