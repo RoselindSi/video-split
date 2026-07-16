@@ -40,8 +40,23 @@ def lap_var(g):
     return float(l.var())
 
 
-def encode_frames(frames, proc, model, max_pixels):
-    """frames: list of HxWx3 uint8 -> [n, D] pooled per-frame features."""
+def pool_patch(patch, H, W, mode):
+    """patch: [H*W, D] tokens of one frame -> pooled vector.
+    global = one mean (D). multi = [global; left; right; center; spatial_max] (5D),
+    keeps local hand-action variation that a single global mean averages away."""
+    if mode == "global":
+        return patch.mean(0)
+    g = patch.view(H, W, -1)
+    glob = g.mean((0, 1))
+    left = g[:, :W // 2].mean((0, 1))
+    right = g[:, W // 2:].mean((0, 1))
+    center = g[H // 4:H - H // 4, W // 4:W - W // 4].mean((0, 1))
+    smax = patch.max(0).values
+    return torch.cat([glob, left, right, center, smax], -1)
+
+
+def encode_frames(frames, proc, model, max_pixels, pool):
+    """frames: list of HxWx3 uint8 -> [n, D_pooled] pooled per-frame features."""
     content = [{"type": "image", "image": Image.fromarray(f), "max_pixels": max_pixels}
                for f in frames]
     content.append({"type": "text", "text": "x"})
@@ -55,8 +70,9 @@ def encode_frames(frames, proc, model, max_pixels):
     lhs = out.last_hidden_state.float()
     feats, off = [], 0
     for gr in grid.tolist():
-        p = gr[0] * gr[1] * gr[2]
-        feats.append(lhs[off:off + p].mean(0))
+        T, H, W = gr
+        p = T * H * W
+        feats.append(pool_patch(lhs[off:off + p], H, W, pool))
         off += p
     return torch.stack(feats).cpu()
 
@@ -70,6 +86,10 @@ def main():
     ap.add_argument("--crop", choices=["none", "left", "right"], default="none",
                     help="packed_mid_stereo is two side-by-side cameras; crop to one "
                          "half to un-dilute the hand-action signal (boundary features)")
+    ap.add_argument("--pool", choices=["global", "multi"], default="global",
+                    help="global=single mean/frame (1152D); multi=concat "
+                         "[global,left,right,center,spatial_max] (5760D) to keep "
+                         "local action variation a global mean averages away")
     ap.add_argument("--max_pixels", type=int, default=768 * 28 * 28)
     ap.add_argument("--enc_batch", type=int, default=48, help="frames per ViT call")
     ap.add_argument("--dec_chunk", type=int, default=200, help="frames per decode")
@@ -121,7 +141,7 @@ def main():
         feats = []
         for b0 in range(0, len(kept_frames), a.enc_batch):
             feats.append(encode_frames(kept_frames[b0:b0 + a.enc_batch],
-                                       proc, model, a.max_pixels))
+                                       proc, model, a.max_pixels, a.pool))
             torch.cuda.empty_cache()
         feats = torch.cat(feats, 0) if feats else torch.zeros(0)
         times = torch.tensor(kept_times)
