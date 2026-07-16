@@ -41,6 +41,12 @@ def win_change(f, w=4):
     return c
 
 
+def smooth(x, k=3):
+    if k <= 1:
+        return x
+    return np.convolve(x, np.ones(k) / k, mode="same")
+
+
 def gt_boundaries(segments):
     ts = set()
     for _, s, e in segments:
@@ -91,6 +97,8 @@ def main():
     ap.add_argument("--val", required=True)
     ap.add_argument("--w", type=int, default=4)
     ap.add_argument("--use", choices=["adj", "win"], default="win")
+    ap.add_argument("--smooth_k", type=int, default=3,
+                    help="match self_similarity_baseline (which smooths k=3)")
     a = ap.parse_args()
 
     va = torch.load(a.val, weights_only=False)
@@ -104,13 +112,13 @@ def main():
     for x in va:
         f = x["feats"]                                  # [T, 5D]
         regs = [f[:, r * D:(r + 1) * D] for r in range(5)]
-        per = [chg(r) for r in regs]                    # 5 x [T]
+        per = [smooth(chg(r), a.smooth_k) for r in regs]   # 5 x [T], smoothed
         rec = {"times": x["times"].numpy(), "gts": gt_boundaries(x["segments"])}
         for ri, name in enumerate(REGION_NAMES):
             rec[name] = per[ri]
         rec["mean5"] = np.mean(per, axis=0)
         rec["max5"] = np.max(per, axis=0)               # max-over-regions
-        rec["concat"] = chg(f)                          # L2 on full 5760
+        rec["concat"] = smooth(chg(f), a.smooth_k)      # L2 on full 5760
         # global + best-local decided after seeing per-region below
         rec["_per"] = per
         pre.append(rec)
