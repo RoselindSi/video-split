@@ -98,6 +98,9 @@ def main():
     ap.add_argument("--filter_static", action="store_true")
     ap.add_argument("--th_static", type=float, default=2.0)
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--checkpoint_every", type=int, default=20,
+                    help="write partial cache to disk every N recordings, so a "
+                         "later hang/crash doesn't lose already-completed work")
     a = ap.parse_args()
 
     proc = AutoProcessor.from_pretrained(a.model_base)
@@ -110,7 +113,12 @@ def main():
         rows = rows[:a.limit]
     cache = []
     for ri, r in enumerate(rows):
-        vr = VideoReader(r["video"])
+        # num_threads=1: decord spawns an internal decode thread pool per
+        # VideoReader; left unbounded, threads accumulate across many
+        # VideoReader() instantiations in this loop (467+ threads observed
+        # after ~1 recording), causing severe slowdown over a long run without
+        # ever raising an error. Capping + explicit del below keeps it bounded.
+        vr = VideoReader(r["video"], num_threads=1)
         n = len(vr); vfps = vr.get_avg_fps()
         step = max(1, int(round(vfps / a.fps)))
         cand = list(range(0, n, step))
@@ -152,10 +160,14 @@ def main():
         print(f"[{ri+1}/{len(rows)}] {r.get('recording_id')} "
               f"cand {len(cand)} kept {len(kept_frames)} "
               f"(black {n_black} blur {n_blur} static {n_static}) "
-              f"feats {tuple(feats.shape)} segs {len(segs)}")
+              f"feats {tuple(feats.shape)} segs {len(segs)}", flush=True)
 
-    os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)
-    torch.save(cache, a.out)
+        del vr, kept_frames, frames  # release decord's per-instance decode threads
+        if (ri + 1) % a.checkpoint_every == 0 or ri == len(rows) - 1:
+            os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)
+            torch.save(cache, a.out)
+            print(f"  [checkpoint] saved {len(cache)}/{len(rows)} -> {a.out}", flush=True)
+
     print(f"\nwrote {len(cache)} recordings -> {a.out}")
 
 
