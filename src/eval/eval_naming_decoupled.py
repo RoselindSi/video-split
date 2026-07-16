@@ -148,7 +148,13 @@ def main():
         inp = proc(text=[text], images=imgs, videos=vids, video_metadata=vmeta,
                    return_tensors="pt").to("cuda")
         with torch.no_grad():
-            gen = model.generate(**inp, max_new_tokens=a.max_new_tokens, do_sample=False)
+            # repetition_penalty/no_repeat_ngram_size: greedy decoding (do_sample=False)
+            # on long structured lists (many segments) can degenerate into repeating
+            # the same line verbatim until max_new_tokens is hit -- observed directly
+            # on a 147-segment recording (36 identical predicted names). This does not
+            # fix visual grounding, only stops the decode-time repetition failure mode.
+            gen = model.generate(**inp, max_new_tokens=a.max_new_tokens, do_sample=False,
+                                 repetition_penalty=1.3, no_repeat_ngram_size=4)
         out = proc.batch_decode(gen[:, inp["input_ids"].shape[1]:],
                                 skip_special_tokens=True)[0]
         pred_names = [m.strip() for m in NAME_RE.findall(out)]
