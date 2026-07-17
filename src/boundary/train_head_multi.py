@@ -132,7 +132,7 @@ def run_seed(tr, va, variant, mu, sd, dev, a, seed):
         r = to_regions(x["feats"]).to(dev)          # move to device BEFORE using
         return (r - mu) / sd                        # mu/sd already on dev; standardize
 
-    best_f5, best_state = -1, None
+    best_f5, best_train_f5 = -1.0, 0.0
     for ep in range(a.epochs):
         net.train()
         for x in tr:
@@ -140,17 +140,21 @@ def run_seed(tr, va, variant, mu, sd, dev, a, seed):
             loss = bce(net(prep(x)), y, pos_weight=pw)
             opt.zero_grad(); loss.backward(); opt.step()
         if (ep + 1) % a.eval_every == 0 or ep == a.epochs - 1:
-            net.eval(); f5 = []
-            with torch.no_grad():
-                for x in va:
+            net.eval()
+            def eval_split(split):
+                f5 = []
+                for x in split:
                     prob = torch.sigmoid(net(prep(x))).cpu().numpy()
                     gts = gt_bounds(x["segments"])
                     pk = topk_peaks(prob, x["times"].numpy(), len(gts), a.min_gap_s)
                     f5.append(bf1(pk, gts, 0.5))
-            m = statistics.mean(f5)
-            if m > best_f5:
-                best_f5 = m
-    return best_f5
+                return statistics.mean(f5)
+            with torch.no_grad():
+                m = eval_split(va)
+                if m > best_f5:
+                    best_f5 = m
+                    best_train_f5 = eval_split(tr[:len(va)])   # train F1 at val-best
+    return best_f5, best_train_f5
 
 
 def main():
@@ -181,15 +185,31 @@ def main():
     mu, sd = allr.mean(0, keepdim=True), allr.std(0, keepdim=True) + 1e-5
     mu, sd = mu.to(dev), sd.to(dev)
 
+    # class-balance diagnostic: with no-blur (long dense sequences ~1200-1400
+    # frames), positive boundary frames are a tiny fraction -> pos_weight/sigma
+    # tuned for the old short (~60-frame) sequences may no longer fit.
+    pos_frac, seq_len = [], []
+    for x in tr:
+        lab = soft_boundary(x["times"], x["segments"], a.sigma_s)
+        pos_frac.append(float((lab > 0.5).mean())); seq_len.append(len(lab))
+    print(f"[diag] seq_len mean {statistics.mean(seq_len):.0f} | "
+          f"positive-frame frac (soft>0.5) mean {statistics.mean(pos_frac):.4f} "
+          f"-> ~1:{1/max(statistics.mean(pos_frac),1e-6):.0f} pos:neg "
+          f"(current pos_weight={a.pos_weight}, sigma_s={a.sigma_s})\n")
+
     variants = (["global", "left", "spatial_max", "mean5", "region_attn", "concat"]
                 if a.variant == "all" else [a.variant])
-    print(f"{'variant':14s} {'seeds F1@0.5 (best-epoch)':30s} {'mean':>7s} {'std':>6s}")
+    print(f"{'variant':14s} {'val F1@0.5 (seeds)':26s} {'val_mean':>8s} "
+          f"{'std':>6s} {'train_f5':>9s}")
     for v in variants:
-        rs = [run_seed(tr, va, v, mu, sd, dev, a, s) for s in a.seeds]
-        print(f"{v:14s} {str([round(r,3) for r in rs]):30s} "
-              f"{statistics.mean(rs):7.3f} {statistics.pstdev(rs):6.3f}")
-    print("\nref: global head oracle ~0.331 (prior run). training-free: "
-          "global 0.195 / max5 0.211. proj/head capacity matched across variants.")
+        res = [run_seed(tr, va, v, mu, sd, dev, a, s) for s in a.seeds]
+        val_rs = [r[0] for r in res]; tr_rs = [r[1] for r in res]
+        print(f"{v:14s} {str([round(r,3) for r in val_rs]):26s} "
+              f"{statistics.mean(val_rs):8.3f} {statistics.pstdev(val_rs):6.3f} "
+              f"{statistics.mean(tr_rs):9.3f}")
+    print("\ntrain_f5 >> val_f5 -> overfit/too little data; both low -> underfit/"
+          "config mismatch. NOTE: 0.331 was OLD data (short blur seqs) -- NOT "
+          "directly comparable; rerun old features through THIS script to compare.")
 
 
 if __name__ == "__main__":
