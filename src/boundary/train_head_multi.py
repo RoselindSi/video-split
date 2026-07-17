@@ -129,8 +129,8 @@ def run_seed(tr, va, variant, mu, sd, dev, a, seed):
     bce = nn.functional.binary_cross_entropy_with_logits
 
     def prep(x):
-        r = to_regions(x["feats"])
-        return ((r - mu) / sd).to(dev)              # standardize per-region-dim
+        r = to_regions(x["feats"]).to(dev)          # move to device BEFORE using
+        return (r - mu) / sd                        # mu/sd already on dev; standardize
 
     best_f5, best_state = -1, None
     for ep in range(a.epochs):
