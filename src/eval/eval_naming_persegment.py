@@ -58,12 +58,28 @@ BASE_INSTRUCTION = (
 # CHANGED (before -> after) rather than concatenating object + task family.
 # Targets the dominant failure (right object, wrong verb: "remove strainer" ->
 # "wash strainer") by making the object-state delta the thing it must produce.
+CONTROLLED_VERBS = (
+    "open, close, remove, insert, replace, unpack, repack, fold, unfold, coil, "
+    "uncoil, extend, retract, fill, empty, tighten, loosen, attach, detach, "
+    "pick up, put down, wipe, clean, rinse, scrub, inspect, rotate, flip, "
+    "slide, press, pour, adjust, wrap, unwrap")
+
+# v2 (P0 fix): the v1 schema let the model write long NARRATIVE sentences for
+# state_before/state_after ("dirty, held over sink with water running from
+# faucet...") which crowded out precise verb choice (e.g. "reach for" instead
+# of a controlled verb) -- verb_acc/obj_f1 came out WORSE than free-text.
+# v2: short schema, canonical_name placed early (survives truncation), an
+# explicit controlled-verb list, and an 8-word cap on before/after so the model
+# can't hide behind prose.
 STRUCTURED_INSTRUCTION = (
-    "Focus ONLY on THIS clip; do NOT summarize the overall procedure. Look at "
-    "the object's state at the START vs the END of the clip and describe the "
-    "single action that caused that change. Output exactly one JSON object:\n"
-    "{\"verb\": \"...\", \"object\": \"...\", \"state_before\": \"...\", "
-    "\"state_after\": \"...\", \"canonical_name\": \"verb + object\"}")
+    "Focus ONLY on THIS clip; do NOT summarize the overall procedure. Pick the "
+    "verb from this list if it fits: " + CONTROLLED_VERBS + ". "
+    "Output exactly one JSON object with SHORT values (a few words each, not "
+    "full sentences):\n"
+    "{\"verb\": \"<one controlled verb>\", \"object\": \"<short noun phrase>\", "
+    "\"canonical_name\": \"<verb + object>\", "
+    "\"before\": \"<state before, max 8 words>\", "
+    "\"after\": \"<state after, max 8 words>\"}")
 
 # JSON name key can drift; grab canonical_name, else fall back to verb+object.
 JSON_NAME_RE = re.compile(r'"canonical_name"\s*:\s*"([^"]*)"', re.I)
