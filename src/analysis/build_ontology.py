@@ -52,6 +52,16 @@ VERB_NORM = {
     "tucking": "tuck", "grasping": "grasp", "grabbing": "grab", "holding": "hold",
     "lifting": "lift", "placing": "place", "putting": "put", "picking": "pick",
     "extending": "extend", "retracting": "retract",
+    "folding": "fold", "coiled": "coil", "sweeping": "sweep", "relocating": "reposition",
+    "relocate": "reposition", "installing": "install", "stacking": "stack",
+    "unstacking": "unstack", "unplugging": "unplug", "plugging": "plug",
+    "storing": "store", "turning": "turn", "arranging": "arrange",
+    "reinstall": "seat", "reinstalling": "seat", "washing": "wash",
+    "peeling": "peel", "manipulating": "manipulate", "displaying": "display",
+    "stowing": "stow", "presenting": "present", "collecting": "collect",
+    "flattening": "flatten", "pressing": "press", "loosening": "loosen",
+    "tightening": "tighten", "threading": "thread", "aligning": "align",
+    "gathering": "gather", "spreading": "spread",
 }
 
 # the canonical verb vocabulary we keep (post-normalization). Keep pairs that
@@ -64,7 +74,11 @@ CANONICAL_VERBS = {
     "wipe", "clean", "rinse", "scrub", "inspect", "rotate", "flip", "slide",
     "press", "pour", "adjust", "wrap", "unwrap", "retrieve", "extract", "pick",
     "put", "place", "hold", "grab", "grasp", "lift", "reposition", "move",
-    "coil", "loop", "thread", "align",
+    "coil", "loop", "thread", "align", "flatten",
+    # added from unresolved-verb audit (real actions the first pass missed)
+    "sweep", "plug", "unplug", "install", "stack", "unstack", "store", "turn",
+    "arrange", "wash", "peel", "manipulate", "display", "stow", "present",
+    "collect", "tape", "gather", "spread",
 }
 
 # PHRASE-level object normalization (phrase -> canonical object). Longest match
@@ -93,7 +107,19 @@ OBJECT_NORM = {
     "tape measure": "tape measure", "telescopic rod": "telescopic rod",
     "dustpan": "dustpan", "pen": "pen", "notebook": "notebook", "sink": "sink",
     "drain": "sink drain", "sink drain": "sink drain",
+    # added from unresolved audit (real objects the first pass missed)
+    "table": "table", "wall": "wall", "screen": "screen", "cabinet": "cabinet",
+    "floor": "floor", "phone case": "phone case", "case": "phone case",
+    "adapter": "adapter", "blade": "blade", "power button": "button",
+    "button": "button", "power bank": "power bank", "power cord": "power cord",
+    "power strip": "power strip", "power adapter": "adapter",
+    "tissue sheet": "tissue", "sheet": "tissue", "tissue pack": "tissue pack",
+    "sink edge": "sink edge", "table edge": "table edge",
+    "phone screen": "screen", "smartphone": "phone",
 }
+# content = substance being moved/removed (NOT the object); keep separate
+CONTENT_NORM = {"dirty water": "dirty water", "water": "water",
+                "debris": "debris", "dust": "dust"}
 # longest phrases first, so "sink drain strainer" matches before "strainer"
 OBJECT_PHRASES = sorted(OBJECT_NORM, key=lambda p: -len(p.split()))
 
@@ -110,6 +136,10 @@ OBJECT_STOP = {
     "running", "folded", "wrapped", "dirty", "clean", "wet", "dry", "closed",
     "item", "object", "thing", "unit", "product", "small", "flat", "new",
     "under", "onto", "into", "position", "window", "compact", "shape", "hand",
+    "pair", "two", "one", "three", "bimanual", "both", "full", "empty",
+    "portable", "disposable", "used", "each", "single", "multiple",
+    # content substances (tracked separately in CONTENT_NORM, not objects)
+    "water", "debris", "dust",
 }
 
 # strict inverses: pure visual state reversal, object-independent -> safe to use
@@ -149,13 +179,12 @@ def extract_verbs(name):
 
 def extract_object(name):
     """Phrase-first, longest-match. Returns (object, tool, container, unresolved).
-    object = canonical entity the action directly acts on (longest OBJECT_NORM
-    phrase found); tool/container pulled out separately; leftover content words
-    that resolve to nothing are returned as `unresolved` for audit."""
-    toks = [w for w in tok(name) if w not in STOPLIST and norm_verb(w) is None]
-    text = " ".join(toks)
+    Match object PHRASES on stoplist-filtered text FIRST (before removing verbs),
+    so noun phrases whose head is a verb-homonym ("tape measure", "power plug")
+    still match; only the LEFTOVER after phrase removal is verb-filtered for the
+    unresolved audit."""
+    text = " ".join(w for w in tok(name) if w not in STOPLIST)
     obj = tool = container = None
-    matched_spans = []
     for phrase in OBJECT_PHRASES:                      # longest first
         if re.search(r"\b" + re.escape(phrase) + r"\b", text):
             canon = OBJECT_NORM[phrase]
@@ -165,9 +194,9 @@ def extract_object(name):
                 container = canon
             elif obj is None:
                 obj = canon
-            matched_spans.append(phrase)
             text = re.sub(r"\b" + re.escape(phrase) + r"\b", " ", text)
-    unresolved = [w for w in text.split() if w not in OBJECT_STOP and len(w) > 2]
+    unresolved = [w for w in text.split()
+                  if w not in OBJECT_STOP and len(w) > 2 and norm_verb(w) is None]
     return obj, tool, container, unresolved
 
 
