@@ -54,18 +54,49 @@ def actionness(times, segments):
     return ((t >= segs[0][1]) & (t <= segs[-1][2])).astype(np.float32)
 
 
+# ---------------- temporal-change features (B3) ----------------
+DELTA_MULT = {"none": 1, "delta1": 2, "delta_sym": 3, "window": 2}
+
+
+def add_delta(src, mode, w=2):
+    """src [T,C] -> [T, C*DELTA_MULT[mode]]. Boundaries need 'what CHANGED', not
+    'what is here'. Parameter-fair: the WIDER input is projected back to the
+    same proj dim before the (identical) temporal head -- see Head.__init__."""
+    if mode == "none":
+        return src
+    T = src.shape[0]
+    back = src.clone(); back[1:] = src[1:] - src[:-1]; back[0] = 0
+    if mode == "delta1":
+        return torch.cat([src, back], -1)
+    if mode == "delta_sym":
+        fwd = src.clone(); fwd[:-1] = src[1:] - src[:-1]; fwd[-1] = 0
+        return torch.cat([src, fwd, back], -1)
+    if mode == "window":                            # mean(t:t+w) - mean(t-w:t)
+        x = src.transpose(0, 1).unsqueeze(0)        # [1,C,T]
+        pad = torch.nn.functional.pad(x, (w, w), mode="replicate")
+        pool = torch.nn.functional.avg_pool1d(pad, kernel_size=w, stride=1)
+        fut = pool[..., w + 1:w + 1 + T]; past = pool[..., :T]
+        wdiff = (fut - past).squeeze(0).transpose(0, 1)   # [T,C]
+        return torch.cat([src, wdiff], -1)
+    raise ValueError(mode)
+
+
 # ---------------- model ----------------
 class Head(nn.Module):
-    def __init__(self, variant, D=1152, proj=256, d=256):
+    def __init__(self, variant, D=1152, proj=256, d=256, delta_mode="none"):
         super().__init__()
         self.variant = variant
+        self.delta_mode = delta_mode
+        mult = DELTA_MULT[delta_mode]
         if variant == "region_attn":
+            assert delta_mode == "none", "delta only for region-select variants"
             self.proj = nn.Linear(D, proj)          # shared across regions
             self.q = nn.Parameter(torch.randn(proj) * 0.02)
         elif variant == "concat":
+            assert delta_mode == "none", "delta only for region-select variants"
             self.proj = nn.Linear(5 * D, proj)      # NOT capacity-matched (ceiling ref)
         else:
-            self.proj = nn.Linear(D, proj)
+            self.proj = nn.Linear(D * mult, proj)   # wider input, SAME proj/head
         self.tin = nn.Conv1d(proj, d, 1)
         self.blocks = nn.ModuleList([nn.Conv1d(d, d, 5, padding=2 * r, dilation=r)
                                      for r in (1, 2, 4, 8)])
@@ -79,10 +110,9 @@ class Head(nn.Module):
             x = (a.unsqueeze(-1) * z).sum(1)        # [T,proj]
         elif self.variant == "concat":
             x = self.proj(regions.reshape(regions.shape[0], -1))   # [T,proj] from 5760
-        elif self.variant == "mean5":
-            x = self.proj(regions.mean(1))          # [T,proj] mean over 5 regions
         else:
-            x = self.proj(regions[:, REGION[self.variant]])   # single region [T,proj]
+            src = regions.mean(1) if self.variant == "mean5" else regions[:, REGION[self.variant]]
+            x = self.proj(add_delta(src, self.delta_mode))         # [T,proj]
         h = self.tin(x.transpose(0, 1).unsqueeze(0))   # [1,d,T]
         for conv, gn in zip(self.blocks, self.norm):
             h = h + torch.relu(gn(conv(h)))
@@ -139,7 +169,7 @@ def bf1(preds, gts, tol):
 
 def run_seed(tr, va, variant, mu, sd, dev, a, seed):
     torch.manual_seed(seed); np.random.seed(seed)
-    net = Head(variant, proj=a.proj).to(dev)
+    net = Head(variant, proj=a.proj, delta_mode=a.delta_mode).to(dev)
     opt = torch.optim.AdamW(net.parameters(), lr=a.lr, weight_decay=1e-4)
     pw = torch.tensor(a.pos_weight, device=dev)
     bce = nn.functional.binary_cross_entropy_with_logits
@@ -211,6 +241,11 @@ def main():
     ap.add_argument("--eval_every", type=int, default=20)
     ap.add_argument("--lr", type=float, default=5e-4)
     ap.add_argument("--proj", type=int, default=256)
+    ap.add_argument("--delta_mode", default="none",
+                    choices=["none", "delta1", "delta_sym", "window"],
+                    help="B3 temporal-change features: delta1=[h, h_t-h_t-1]; "
+                         "delta_sym=[h, fwd-diff, back-diff]; window=[h, "
+                         "mean(t:t+w)-mean(t-w:t)]. Only for region-select variants.")
     ap.add_argument("--sigma_s", type=float, default=1.0)
     ap.add_argument("--min_gap_s", type=float, default=1.0)
     ap.add_argument("--pos_weight", type=float, default=8.0)
@@ -247,7 +282,7 @@ def main():
     variants = (["global", "left", "spatial_max", "mean5", "region_attn", "concat"]
                 if a.variant == "all" else [a.variant])
     print(f"[cfg] sigma_s={a.sigma_s} pos_weight={a.pos_weight} thr={a.thr} "
-          f"min_gap_s={a.min_gap_s}")
+          f"min_gap_s={a.min_gap_s} delta_mode={a.delta_mode}")
     print(f"{'variant':12s} {'val_f5':>7s} {'std':>5s} {'train_f5':>8s} "
           f"{'thr_P':>6s} {'thr_R':>6s} {'pred/gt':>7s} {'meanp':>6s} "
           f"{'nearGT':>7s} {'verdict':>16s}")
