@@ -265,7 +265,8 @@ def main():
     # tokens the mentor flagged as ambiguous: dump raw context before deciding a
     # phrase mapping (don't guess / don't stoplist blindly).
     CONTEXT_TOKENS = {"power", "box", "edge", "surface", "crease", "metal",
-                      "tape", "plug", "socket", "holder"}
+                      "tape", "plug", "socket", "holder",
+                      "tool", "tea", "pack", "basin", "tabletop"}
     # verbs whose object-conditioned collapse we need to see before freezing.
     PAIR_VERBS = {"replace", "reinstall", "install", "seat", "remove"}
 
