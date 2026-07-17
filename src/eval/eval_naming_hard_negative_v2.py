@@ -155,7 +155,24 @@ def main():
             pool_others = sorted(pool[obj] - {correct_verb})
             if len(pool_others) < 3:
                 continue
-            distractors = rng.sample(pool_others, 3)
+            # force-include a real observed inverse of correct_verb as one of
+            # the 3 distractors whenever the object's pool has one available --
+            # otherwise whether we get an inverse-pair item at all is down to
+            # random.sample() luck, which starves the direction-discrimination
+            # analysis of samples (N5 audit: n_inv=6 out of 81, useless power).
+            # Still only drawn from REAL observed (object,verb) pairs, nothing
+            # synthetic.
+            inv_candidates = [v for v in pool_others
+                              if v in STRICT_INVERSE.get(correct_verb, [])
+                              or v in CONTEXTUAL_INVERSE.get(correct_verb, [])]
+            if inv_candidates:
+                forced = rng.choice(inv_candidates)
+                rest = [v for v in pool_others if v != forced]
+                distractors = [forced] + rng.sample(rest, min(2, len(rest)))
+                if len(distractors) < 3:
+                    continue
+            else:
+                distractors = rng.sample(pool_others, 3)
             options = [correct_verb] + distractors
             rng.shuffle(options)
             letters = "ABCD"
