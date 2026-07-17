@@ -157,8 +157,17 @@ def run_seed(tr, va, variant, mu, sd, dev, a, seed):
             out.append(bf1(pk, gts, 0.5)[0])
         return statistics.mean(out)
 
-    def thresh_diag(split):                        # free-count decode diagnostics
-        prec, rec, ratio, mprob = [], [], [], []
+    def thresh_diag(split, window=1.0):
+        """Free-count decode diagnostics, plus near_gt_peaks: mean # predicted
+        peaks within +-window seconds of EACH gt boundary. This distinguishes
+        two different over-prediction failure modes:
+          near_gt_peaks >> 1  -> duplicate peaks clustered around the same true
+                                  boundary (decoding/NMS issue, e.g. min_gap_s
+                                  or sigma_s too narrow for the peak's width)
+          near_gt_peaks ~= 1 but pred/gt >> 1 -> extra peaks scattered AWAY
+                                  from any true boundary (genuine false positives)
+        """
+        prec, rec, ratio, mprob, near = [], [], [], [], []
         for x in split:
             prob = torch.sigmoid(net(prep(x))).cpu().numpy()
             gts = gt_bounds(x["segments"])
@@ -166,8 +175,12 @@ def run_seed(tr, va, variant, mu, sd, dev, a, seed):
             _, pr, rc, npd, ngt = bf1(pk, gts, 0.5)
             prec.append(pr); rec.append(rc); mprob.append(float(prob.mean()))
             ratio.append(npd / max(ngt, 1))
-        return (statistics.mean(prec), statistics.mean(rec),
-                statistics.mean(ratio), statistics.mean(mprob))
+            if gts:
+                near.append(statistics.mean(
+                    sum(1 for p in pk if abs(p - g) <= window) for g in gts))
+        return {"thr_prec": statistics.mean(prec), "thr_rec": statistics.mean(rec),
+                "pred_ratio": statistics.mean(ratio), "mean_prob": statistics.mean(mprob),
+                "near_gt_peaks": statistics.mean(near) if near else 0.0}
 
     best = {"val_f5": -1.0}
     for ep in range(a.epochs):
@@ -181,10 +194,8 @@ def run_seed(tr, va, variant, mu, sd, dev, a, seed):
             with torch.no_grad():
                 m = oracle_f5(va)
                 if m > best["val_f5"]:
-                    pr, rc, ratio, mprob = thresh_diag(va)
-                    best = {"val_f5": m, "train_f5": oracle_f5(tr[:len(va)]),
-                            "thr_prec": pr, "thr_rec": rc,
-                            "pred_ratio": ratio, "mean_prob": mprob}
+                    diag = thresh_diag(va)
+                    best = {"val_f5": m, "train_f5": oracle_f5(tr[:len(va)]), **diag}
     return best
 
 
@@ -238,17 +249,29 @@ def main():
     print(f"[cfg] sigma_s={a.sigma_s} pos_weight={a.pos_weight} thr={a.thr} "
           f"min_gap_s={a.min_gap_s}")
     print(f"{'variant':12s} {'val_f5':>7s} {'std':>5s} {'train_f5':>8s} "
-          f"{'thr_P':>6s} {'thr_R':>6s} {'pred/gt':>7s} {'meanp':>6s}")
+          f"{'thr_P':>6s} {'thr_R':>6s} {'pred/gt':>7s} {'meanp':>6s} "
+          f"{'nearGT':>7s} {'verdict':>16s}")
     for v in variants:
         res = [run_seed(tr, va, v, mu, sd, dev, a, s) for s in a.seeds]
         vf = [r["val_f5"] for r in res]
         agg = lambda k: statistics.mean([r[k] for r in res])
+        ratio, prec, near = agg("pred_ratio"), agg("thr_prec"), agg("near_gt_peaks")
+        if ratio > 1.2:
+            verdict = "dup-near-boundary" if near > 1.3 else "over-pred(scattered)"
+        elif ratio < 0.8:
+            verdict = "under-prediction"
+        else:
+            verdict = "count-balanced"
         print(f"{v:12s} {statistics.mean(vf):7.3f} {statistics.pstdev(vf):5.3f} "
-              f"{agg('train_f5'):8.3f} {agg('thr_prec'):6.2f} {agg('thr_rec'):6.2f} "
-              f"{agg('pred_ratio'):7.2f} {agg('mean_prob'):6.3f}")
-    print("\ntrain_f5>>val_f5 = overfit. thr diag (free-count decode): pred/gt>>1 "
-          "+ thr_P low = over-prediction (pos_weight too high / sigma too wide). "
-          "0.331 was OLD short-blur data, NOT directly comparable.")
+              f"{agg('train_f5'):8.3f} {prec:6.2f} {agg('thr_rec'):6.2f} "
+              f"{ratio:7.2f} {agg('mean_prob'):6.3f} {near:7.2f} {verdict:>16s}")
+    print("\ntrain_f5>>val_f5 = overfit. nearGT = mean predicted peaks within "
+          "+-1s of each GT boundary at threshold decode: >1.3 means duplicate "
+          "peaks clustered on the SAME true boundary (fix: widen min_gap_s or "
+          "narrow sigma_s), ~1 with pred_ratio>>1 means genuine false positives "
+          "scattered away from boundaries (fix: pos_weight/thr). "
+          "0.331 was OLD short-blur data, NOT directly comparable -- see the "
+          "fair-comparison run using this same script on old-data features.")
 
 
 if __name__ == "__main__":
