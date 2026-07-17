@@ -62,6 +62,8 @@ class Head(nn.Module):
         if variant == "region_attn":
             self.proj = nn.Linear(D, proj)          # shared across regions
             self.q = nn.Parameter(torch.randn(proj) * 0.02)
+        elif variant == "concat":
+            self.proj = nn.Linear(5 * D, proj)      # NOT capacity-matched (ceiling ref)
         else:
             self.proj = nn.Linear(D, proj)
         self.tin = nn.Conv1d(proj, d, 1)
@@ -75,6 +77,8 @@ class Head(nn.Module):
             z = self.proj(regions)                  # [T,5,proj]
             a = torch.softmax(z @ self.q, dim=1)    # [T,5]
             x = (a.unsqueeze(-1) * z).sum(1)        # [T,proj]
+        elif self.variant == "concat":
+            x = self.proj(regions.reshape(regions.shape[0], -1))   # [T,proj] from 5760
         else:
             r = REGION[self.variant]
             src = regions.mean(1) if self.variant == "mean5" else regions[:, r]
@@ -154,7 +158,8 @@ def main():
     ap.add_argument("--train", required=True)
     ap.add_argument("--val", required=True)
     ap.add_argument("--variant", default="all",
-                    choices=["all", "global", "left", "spatial_max", "mean5", "region_attn"])
+                    choices=["all", "global", "left", "spatial_max",
+                             "mean5", "region_attn", "concat"])
     ap.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2])
     ap.add_argument("--epochs", type=int, default=300)
     ap.add_argument("--eval_every", type=int, default=20)
@@ -176,7 +181,7 @@ def main():
     mu, sd = allr.mean(0, keepdim=True), allr.std(0, keepdim=True) + 1e-5
     mu, sd = mu.to(dev), sd.to(dev)
 
-    variants = (["global", "left", "spatial_max", "mean5", "region_attn"]
+    variants = (["global", "left", "spatial_max", "mean5", "region_attn", "concat"]
                 if a.variant == "all" else [a.variant])
     print(f"{'variant':14s} {'seeds F1@0.5 (best-epoch)':30s} {'mean':>7s} {'std':>6s}")
     for v in variants:
