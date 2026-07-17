@@ -54,6 +54,22 @@ BASE_INSTRUCTION = (
     "Name the actual object; do NOT use generic words like 'object' or 'item'. "
     "Output exactly one line:\n<seg><name>NAME</name></seg>")
 
+# Structured state-transition output: forces the model to reason about what
+# CHANGED (before -> after) rather than concatenating object + task family.
+# Targets the dominant failure (right object, wrong verb: "remove strainer" ->
+# "wash strainer") by making the object-state delta the thing it must produce.
+STRUCTURED_INSTRUCTION = (
+    "Focus ONLY on THIS clip; do NOT summarize the overall procedure. Look at "
+    "the object's state at the START vs the END of the clip and describe the "
+    "single action that caused that change. Output exactly one JSON object:\n"
+    "{\"verb\": \"...\", \"object\": \"...\", \"state_before\": \"...\", "
+    "\"state_after\": \"...\", \"canonical_name\": \"verb + object\"}")
+
+# JSON name key can drift; grab canonical_name, else fall back to verb+object.
+JSON_NAME_RE = re.compile(r'"canonical_name"\s*:\s*"([^"]*)"', re.I)
+JSON_VERB_RE = re.compile(r'"verb"\s*:\s*"([^"]*)"', re.I)
+JSON_OBJ_RE = re.compile(r'"object"\s*:\s*"([^"]*)"', re.I)
+
 PROMPTS = {
     "local": (
         "The images above show frames from ONE short clip of a person doing a "
@@ -74,40 +90,81 @@ PROMPTS = {
 }
 
 
-def sample_clip_frames(vr, vfps, start, end, context_s, n_frames):
-    lo = max(0.0, start - context_s)
-    hi = end + context_s
-    lo_i, hi_i = int(lo * vfps), min(int(hi * vfps), len(vr) - 1)
+def _even(lo_i, hi_i, k, nmax):
     if hi_i <= lo_i:
-        hi_i = min(lo_i + 1, len(vr) - 1)
-    idxs = [lo_i + round(i * (hi_i - lo_i) / max(n_frames - 1, 1)) for i in range(n_frames)]
-    idxs = sorted(set(min(max(i, 0), len(vr) - 1) for i in idxs))
+        hi_i = min(lo_i + 1, nmax - 1)
+    return [min(max(lo_i + round(i * (hi_i - lo_i) / max(k - 1, 1)), 0), nmax - 1)
+            for i in range(k)]
+
+
+def sample_clip_frames(vr, vfps, start, end, context_s, n_frames):
+    lo_i, hi_i = int(max(0.0, start - context_s) * vfps), int((end + context_s) * vfps)
+    idxs = sorted(set(_even(lo_i, hi_i, n_frames, len(vr))))
     return vr.get_batch(idxs).asnumpy(), idxs
 
 
-def build_content(vr, vfps, n, start, end, context_s, n_frames, max_pixels, mode):
-    clip_frames, fidx = sample_clip_frames(vr, vfps, start, end, context_s, n_frames)
-    content = []
+def sample_transition_frames(vr, vfps, start, end, ctx_s, n_before, n_during, n_after):
+    """before-during-after sampling so the model sees state_before -> action ->
+    state_after. n_frames total = n_before + n_during + n_after."""
+    n = len(vr)
+    s_i, e_i = int(start * vfps), int(end * vfps)
+    before = _even(int(max(0.0, start - ctx_s) * vfps), s_i, n_before, n)
+    during = _even(s_i, e_i, n_during, n)
+    after = _even(e_i, int((end + ctx_s) * vfps), n_after, n)
+    idxs = before + during + after                 # KEEP order (temporal), no sort/dedup
+    idxs = [min(max(i, 0), n - 1) for i in idxs]
+    return vr.get_batch(idxs).asnumpy(), idxs
+
+
+def build_content(vr, vfps, n, start, end, context_s, n_frames, max_pixels, mode,
+                  structured=False, reverse=False):
     extra_idx = {}
+    if mode == "transition":
+        nb = max(1, n_frames // 4)
+        na = max(1, n_frames // 4)
+        nd = max(1, n_frames - nb - na)
+        clip_frames, fidx = sample_transition_frames(
+            vr, vfps, start, end, context_s, nb, nd, na)
+        extra_idx = {"n_before": nb, "n_during": nd, "n_after": na}
+    else:
+        clip_frames, fidx = sample_clip_frames(vr, vfps, start, end, context_s, n_frames)
+
+    frames = list(clip_frames)
+    if reverse:
+        frames = frames[::-1]
+
+    content = []
     if mode == "procedure":
         mid_i = n // 2
-        ref = vr[mid_i].asnumpy()
-        content.append({"type": "image", "image": Image.fromarray(ref), "max_pixels": max_pixels})
+        content.append({"type": "image", "image": Image.fromarray(vr[mid_i].asnumpy()),
+                        "max_pixels": max_pixels})
         extra_idx["procedure_ref"] = mid_i
-    elif mode == "neighbor":
-        before_i = max(0, int((start - 3.0) * vfps))
-        before = vr[before_i].asnumpy()
-        content.append({"type": "image", "image": Image.fromarray(before), "max_pixels": max_pixels})
-        extra_idx["before"] = before_i
-    for f in clip_frames:
+    for f in frames:
         content.append({"type": "image", "image": Image.fromarray(f), "max_pixels": max_pixels})
-    if mode == "neighbor":
-        after_i = min(n - 1, int((end + 3.0) * vfps))
-        after = vr[after_i].asnumpy()
-        content.append({"type": "image", "image": Image.fromarray(after), "max_pixels": max_pixels})
-        extra_idx["after"] = after_i
-    content.append({"type": "text", "text": PROMPTS[mode]})
+
+    if structured:
+        instr = STRUCTURED_INSTRUCTION
+    elif mode == "transition":
+        instr = ("The images are frames in temporal order: first a few from just "
+                 "BEFORE the clip, then the clip itself, then a few from just "
+                 "AFTER. " + BASE_INSTRUCTION)
+    else:
+        instr = PROMPTS[mode]
+    content.append({"type": "text", "text": instr})
     return content, fidx, extra_idx
+
+
+def parse_prediction(out, structured):
+    if structured:
+        m = JSON_NAME_RE.search(out)
+        if m and m.group(1).strip():
+            return m.group(1).strip()
+        v = JSON_VERB_RE.search(out); o = JSON_OBJ_RE.search(out)
+        if v and o:
+            return f"{v.group(1).strip()} {o.group(1).strip()}".strip()
+        return out.strip()
+    m = NAME_RE.search(out)
+    return m.group(1).strip() if m else out.strip()
 
 
 def main():
@@ -118,12 +175,22 @@ def main():
     ap.add_argument("--n_frames", type=int, default=6, help="frames sampled per segment clip")
     ap.add_argument("--context_s", type=float, default=1.0,
                     help="extra seconds of boundary context included in the clip window")
-    ap.add_argument("--context_mode", choices=["local", "procedure", "neighbor"],
-                    default="local")
+    ap.add_argument("--context_mode",
+                    choices=["local", "procedure", "neighbor", "transition"],
+                    default="local",
+                    help="transition = before/during/after sampling so the model "
+                         "sees state_before -> action -> state_after")
+    ap.add_argument("--structured", action="store_true",
+                    help="output verb/object/state_before/state_after JSON instead "
+                         "of a free-text name (targets right-object/wrong-verb)")
+    ap.add_argument("--reverse", action="store_true",
+                    help="feed frames in REVERSE temporal order -- order-sensitivity "
+                         "control: a model using motion direction should change its "
+                         "answer on direction-reversible actions (remove<->replace)")
     ap.add_argument("--max_pixels", type=int, default=768 * 28 * 28)
     ap.add_argument("--max_new_tokens", type=int, default=64,
-                    help="ONE name, not a list -- keep this small so decode "
-                         "degeneration (long-list repetition) cannot happen")
+                    help="one name/JSON, not a list -- keep small; raised "
+                         "automatically for --structured")
     ap.add_argument("--max_segments_per_video", type=int, default=0,
                     help="0 = all; else randomly subsample per recording (dense "
                          "videos have hundreds of segments)")
@@ -148,26 +215,28 @@ def main():
         idx_pool = list(range(len(gts)))
         if a.max_segments_per_video and len(idx_pool) > a.max_segments_per_video:
             idx_pool = sorted(rng.sample(idx_pool, a.max_segments_per_video))
+        mnt = max(a.max_new_tokens, 160) if a.structured else a.max_new_tokens
         for si in idx_pool:
             name, s, e = gts[si]
             content, fidx, extra_idx = build_content(
-                vr, vfps, n, s, e, a.context_s, a.n_frames, a.max_pixels, a.context_mode)
+                vr, vfps, n, s, e, a.context_s, a.n_frames, a.max_pixels,
+                a.context_mode, structured=a.structured, reverse=a.reverse)
             msgs = [{"role": "user", "content": content}]
             text = proc.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
             imgs, _, _ = process_vision_info(msgs, return_video_kwargs=True)
             inp = proc(text=[text], images=imgs, return_tensors="pt").to("cuda")
             with torch.no_grad():
-                gen = model.generate(**inp, max_new_tokens=a.max_new_tokens,
+                gen = model.generate(**inp, max_new_tokens=mnt,
                                      do_sample=False, repetition_penalty=1.3)
             out = proc.batch_decode(gen[:, inp["input_ids"].shape[1]:],
                                     skip_special_tokens=True)[0]
-            m = NAME_RE.search(out)
-            pred = m.group(1).strip() if m else out.strip()
+            pred = parse_prediction(out, a.structured)
             es = sim(pred, [name])[0]
             rec = {"video": r["video"], "recording_id": r.get("recording_id"),
                    "segment_idx": si, "start": s, "end": e, "gt_name": name,
                    "pred_name": pred, "emb_sim": es, "frame_idx": fidx,
                    "extra_idx": extra_idx, "context_mode": a.context_mode,
+                   "structured": a.structured, "reverse": a.reverse,
                    "n_frames": a.n_frames, "raw": out}
             fout.write(json.dumps(rec, ensure_ascii=False) + "\n"); fout.flush()
             print(f"{r.get('recording_id')} seg{si} gt='{name}' pred='{pred}' sim={es:.2f}")
