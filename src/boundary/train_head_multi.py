@@ -103,6 +103,21 @@ def topk_peaks(prob, times, k, min_gap):
     return sorted(times[i] for i in kept)
 
 
+def thresh_peaks(prob, times, thr, min_gap):
+    """Threshold decode: FREE number of peaks (>thr). Unlike oracle top-k, the
+    predicted count varies -> reveals over/under-prediction (the pos_weight
+    symptom: too-high probs -> many peaks -> low precision)."""
+    cand = [i for i in range(len(prob))
+            if prob[i] >= thr
+            and (i == 0 or prob[i] >= prob[i - 1])
+            and (i == len(prob) - 1 or prob[i] >= prob[i + 1])]
+    cand.sort(key=lambda i: -prob[i]); kept = []
+    for i in cand:
+        if all(abs(times[i] - times[j]) >= min_gap for j in kept):
+            kept.append(i)
+    return sorted(times[i] for i in kept)
+
+
 def gt_bounds(segs):
     ts = sorted({round(s[1], 2) for s in segs} | {round(s[2], 2) for s in segs})
     return ts[1:-1] if len(ts) > 2 else ts
@@ -118,7 +133,8 @@ def bf1(preds, gts, tol):
         if bj >= 0 and best <= tol:
             used.add(bj); tp += 1
     pr, rc = tp / max(len(preds), 1), tp / max(len(gts), 1)
-    return 2 * pr * rc / max(pr + rc, 1e-9)
+    f1 = 2 * pr * rc / max(pr + rc, 1e-9)
+    return f1, pr, rc, len(preds), len(gts)
 
 
 def run_seed(tr, va, variant, mu, sd, dev, a, seed):
@@ -132,7 +148,28 @@ def run_seed(tr, va, variant, mu, sd, dev, a, seed):
         r = to_regions(x["feats"]).to(dev)          # move to device BEFORE using
         return (r - mu) / sd                        # mu/sd already on dev; standardize
 
-    best_f5, best_train_f5 = -1.0, 0.0
+    def oracle_f5(split):
+        out = []
+        for x in split:
+            prob = torch.sigmoid(net(prep(x))).cpu().numpy()
+            gts = gt_bounds(x["segments"])
+            pk = topk_peaks(prob, x["times"].numpy(), len(gts), a.min_gap_s)
+            out.append(bf1(pk, gts, 0.5)[0])
+        return statistics.mean(out)
+
+    def thresh_diag(split):                        # free-count decode diagnostics
+        prec, rec, ratio, mprob = [], [], [], []
+        for x in split:
+            prob = torch.sigmoid(net(prep(x))).cpu().numpy()
+            gts = gt_bounds(x["segments"])
+            pk = thresh_peaks(prob, x["times"].numpy(), a.thr, a.min_gap_s)
+            _, pr, rc, npd, ngt = bf1(pk, gts, 0.5)
+            prec.append(pr); rec.append(rc); mprob.append(float(prob.mean()))
+            ratio.append(npd / max(ngt, 1))
+        return (statistics.mean(prec), statistics.mean(rec),
+                statistics.mean(ratio), statistics.mean(mprob))
+
+    best = {"val_f5": -1.0}
     for ep in range(a.epochs):
         net.train()
         for x in tr:
@@ -141,20 +178,14 @@ def run_seed(tr, va, variant, mu, sd, dev, a, seed):
             opt.zero_grad(); loss.backward(); opt.step()
         if (ep + 1) % a.eval_every == 0 or ep == a.epochs - 1:
             net.eval()
-            def eval_split(split):
-                f5 = []
-                for x in split:
-                    prob = torch.sigmoid(net(prep(x))).cpu().numpy()
-                    gts = gt_bounds(x["segments"])
-                    pk = topk_peaks(prob, x["times"].numpy(), len(gts), a.min_gap_s)
-                    f5.append(bf1(pk, gts, 0.5))
-                return statistics.mean(f5)
             with torch.no_grad():
-                m = eval_split(va)
-                if m > best_f5:
-                    best_f5 = m
-                    best_train_f5 = eval_split(tr[:len(va)])   # train F1 at val-best
-    return best_f5, best_train_f5
+                m = oracle_f5(va)
+                if m > best["val_f5"]:
+                    pr, rc, ratio, mprob = thresh_diag(va)
+                    best = {"val_f5": m, "train_f5": oracle_f5(tr[:len(va)]),
+                            "thr_prec": pr, "thr_rec": rc,
+                            "pred_ratio": ratio, "mean_prob": mprob}
+    return best
 
 
 def main():
@@ -172,6 +203,8 @@ def main():
     ap.add_argument("--sigma_s", type=float, default=1.0)
     ap.add_argument("--min_gap_s", type=float, default=1.0)
     ap.add_argument("--pos_weight", type=float, default=8.0)
+    ap.add_argument("--thr", type=float, default=0.5,
+                    help="threshold for the free-count decode diagnostic")
     a = ap.parse_args()
 
     tr = torch.load(a.train, weights_only=False)
@@ -188,28 +221,34 @@ def main():
     # class-balance diagnostic: with no-blur (long dense sequences ~1200-1400
     # frames), positive boundary frames are a tiny fraction -> pos_weight/sigma
     # tuned for the old short (~60-frame) sequences may no longer fit.
-    pos_frac, seq_len = [], []
+    pos_soft, seq_len, eff = [], [], []
     for x in tr:
         lab = soft_boundary(x["times"], x["segments"], a.sigma_s)
-        pos_frac.append(float((lab > 0.5).mean())); seq_len.append(len(lab))
+        pos_soft.append(float(lab.sum()))                 # soft positive mass
+        eff.append(float((1 - lab).sum()) / max(float(lab.sum()), 1e-6))
+        seq_len.append(len(lab))
     print(f"[diag] seq_len mean {statistics.mean(seq_len):.0f} | "
-          f"positive-frame frac (soft>0.5) mean {statistics.mean(pos_frac):.4f} "
-          f"-> ~1:{1/max(statistics.mean(pos_frac),1e-6):.0f} pos:neg "
-          f"(current pos_weight={a.pos_weight}, sigma_s={a.sigma_s})\n")
+          f"effective neg:pos (sum(1-y)/sum(y)) mean {statistics.mean(eff):.1f} "
+          f"| sigma_s={a.sigma_s} (too wide -> dense boundaries' soft labels "
+          f"merge into blobs). BCE pos_weight matching eff ratio ~= "
+          f"{statistics.mean(eff):.0f}, current {a.pos_weight}\n")
 
     variants = (["global", "left", "spatial_max", "mean5", "region_attn", "concat"]
                 if a.variant == "all" else [a.variant])
-    print(f"{'variant':14s} {'val F1@0.5 (seeds)':26s} {'val_mean':>8s} "
-          f"{'std':>6s} {'train_f5':>9s}")
+    print(f"[cfg] sigma_s={a.sigma_s} pos_weight={a.pos_weight} thr={a.thr} "
+          f"min_gap_s={a.min_gap_s}")
+    print(f"{'variant':12s} {'val_f5':>7s} {'std':>5s} {'train_f5':>8s} "
+          f"{'thr_P':>6s} {'thr_R':>6s} {'pred/gt':>7s} {'meanp':>6s}")
     for v in variants:
         res = [run_seed(tr, va, v, mu, sd, dev, a, s) for s in a.seeds]
-        val_rs = [r[0] for r in res]; tr_rs = [r[1] for r in res]
-        print(f"{v:14s} {str([round(r,3) for r in val_rs]):26s} "
-              f"{statistics.mean(val_rs):8.3f} {statistics.pstdev(val_rs):6.3f} "
-              f"{statistics.mean(tr_rs):9.3f}")
-    print("\ntrain_f5 >> val_f5 -> overfit/too little data; both low -> underfit/"
-          "config mismatch. NOTE: 0.331 was OLD data (short blur seqs) -- NOT "
-          "directly comparable; rerun old features through THIS script to compare.")
+        vf = [r["val_f5"] for r in res]
+        agg = lambda k: statistics.mean([r[k] for r in res])
+        print(f"{v:12s} {statistics.mean(vf):7.3f} {statistics.pstdev(vf):5.3f} "
+              f"{agg('train_f5'):8.3f} {agg('thr_prec'):6.2f} {agg('thr_rec'):6.2f} "
+              f"{agg('pred_ratio'):7.2f} {agg('mean_prob'):6.3f}")
+    print("\ntrain_f5>>val_f5 = overfit. thr diag (free-count decode): pred/gt>>1 "
+          "+ thr_P low = over-prediction (pos_weight too high / sigma too wide). "
+          "0.331 was OLD short-blur data, NOT directly comparable.")
 
 
 if __name__ == "__main__":
