@@ -50,8 +50,10 @@ INVERSE_WORD = {
     "reseat": "remove", "pick": "put", "put": "pick", "grab": "put", "place": "remove",
 }
 
-JSON_VERB_RE = re.compile(r'"verb"\s*:\s*"([^"]*)"', re.I)
+JSON_VERB_RE = re.compile(r'"(?:primary_verb|verb)"\s*:\s*"([^"]*)"', re.I)
 JSON_OBJECT_RE = re.compile(r'"object"\s*:\s*"([^"]*)"', re.I)
+JSON_SECONDARY_RE = re.compile(r'"secondary_verbs"\s*:\s*\[([^\]]*)\]', re.I)
+_QUOTED = re.compile(r'"([^"]*)"')
 
 
 def content(name):
@@ -82,6 +84,9 @@ def main():
         vm = JSON_VERB_RE.search(raw); om = JSON_OBJECT_RE.search(raw)
         pred_verb = vm.group(1).strip().lower() if vm else ""
         pred_obj = om.group(1).strip() if om else r["pred_name"]
+        sm = JSON_SECONDARY_RE.search(raw)
+        secondary = [w.strip().lower() for w in _QUOTED.findall(sm.group(1))] if sm else []
+        pred_verbs = {pred_verb} | set(secondary)          # v3 schema, empty if v2/free-text
 
         gvs = gt_verbs(r["gt_name"])
         primary_gt_verb = gvs[0] if gvs else ""
@@ -101,12 +106,12 @@ def main():
             else:
                 other_verb_errors.append((r["recording_id"], r["segment_idx"],
                                           r["gt_name"], pred_verb))
-        if len(gvs) >= 2 and pred_verb in gvs and pred_verb != gvs[0]:
-            pass  # captured a later verb, not the primary -- still "some" match
-        if len(gvs) >= 2 and pred_verb not in gvs[1:]:
-            # GT has >=2 action verbs; predicted verb doesn't cover the later one(s)
+        if len(gvs) >= 2 and not (set(gvs[1:]) & pred_verbs):
+            # GT has >=2 action verbs; neither primary nor secondary_verbs (if
+            # present, v3) covers the later one(s) -- this is what P1's
+            # secondary_verbs field is supposed to fix vs v2's single verb.
             compound_omissions.append((r["recording_id"], r["segment_idx"],
-                                       r["gt_name"], pred_verb, gvs))
+                                       r["gt_name"], pred_verbs, gvs))
 
     print(f"=== P0 field-level scoring (n={n}) ===")
     print(f"primary_verb exact-match accuracy: {verb_correct}/{n} = {verb_correct/n:.1%}")

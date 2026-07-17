@@ -81,10 +81,33 @@ STRUCTURED_INSTRUCTION = (
     "\"before\": \"<state before, max 8 words>\", "
     "\"after\": \"<state after, max 8 words>\"}")
 
-# JSON name key can drift; grab canonical_name, else fall back to verb+object.
+# v3 (P1): v2 forces exactly ONE verb, which systematically truncates compound
+# GT actions ("rinse and replace strainer" -> only "rinse" captured -- see
+# naming_field_score.py's compound_omission metric). v3 adds an optional
+# secondary_verbs list + an atomicity field so multi-step clips aren't forced
+# into a single verb; still short values, same controlled-verb list.
+STRUCTURED_INSTRUCTION_V3 = (
+    "Focus ONLY on THIS clip; do NOT summarize the overall procedure. Pick "
+    "verb(s) from this list if they fit: " + CONTROLLED_VERBS + ". If the clip "
+    "shows a SINGLE action, secondary_verbs should be an empty list. If it "
+    "shows MULTIPLE actions in sequence (e.g. rinse then replace), list the "
+    "later one(s) in secondary_verbs and set atomicity to \"compound\"; "
+    "otherwise atomicity is \"atomic\". "
+    "Output exactly one JSON object with SHORT values (a few words each, not "
+    "full sentences):\n"
+    "{\"primary_verb\": \"<one controlled verb>\", "
+    "\"secondary_verbs\": [\"<additional controlled verb(s) if any>\"], "
+    "\"object\": \"<short noun phrase>\", "
+    "\"atomicity\": \"<atomic or compound>\", "
+    "\"canonical_name\": \"<primary_verb + [and secondary_verbs] + object>\", "
+    "\"before\": \"<state before, max 8 words>\", "
+    "\"after\": \"<state after, max 8 words>\"}")
+
+# JSON keys can drift between schema versions; try v3 keys first, fall back to v2.
 JSON_NAME_RE = re.compile(r'"canonical_name"\s*:\s*"([^"]*)"', re.I)
-JSON_VERB_RE = re.compile(r'"verb"\s*:\s*"([^"]*)"', re.I)
+JSON_VERB_RE = re.compile(r'"(?:primary_verb|verb)"\s*:\s*"([^"]*)"', re.I)
 JSON_OBJ_RE = re.compile(r'"object"\s*:\s*"([^"]*)"', re.I)
+JSON_SECONDARY_RE = re.compile(r'"secondary_verbs"\s*:\s*\[([^\]]*)\]', re.I)
 
 PROMPTS = {
     "local": (
@@ -133,7 +156,7 @@ def sample_transition_frames(vr, vfps, start, end, ctx_s, n_before, n_during, n_
 
 
 def build_content(vr, vfps, n, start, end, context_s, n_frames, max_pixels, mode,
-                  structured=False, reverse=False):
+                  structured=False, reverse=False, multi_verb=False):
     extra_idx = {}
     if mode == "transition":
         nb = max(1, n_frames // 4)
@@ -159,7 +182,7 @@ def build_content(vr, vfps, n, start, end, context_s, n_frames, max_pixels, mode
         content.append({"type": "image", "image": Image.fromarray(f), "max_pixels": max_pixels})
 
     if structured:
-        instr = STRUCTURED_INSTRUCTION
+        instr = STRUCTURED_INSTRUCTION_V3 if multi_verb else STRUCTURED_INSTRUCTION
     elif mode == "transition":
         instr = ("The images are frames in temporal order: first a few from just "
                  "BEFORE the clip, then the clip itself, then a few from just "
@@ -199,6 +222,12 @@ def main():
     ap.add_argument("--structured", action="store_true",
                     help="output verb/object/state_before/state_after JSON instead "
                          "of a free-text name (targets right-object/wrong-verb)")
+    ap.add_argument("--multi_verb", action="store_true",
+                    help="(requires --structured) v3 schema: primary_verb + "
+                         "secondary_verbs list + atomicity, instead of a single "
+                         "forced verb -- targets compound_omission (GT names 2+ "
+                         "actions, e.g. 'rinse and replace', but v2's single verb "
+                         "field can only capture one)")
     ap.add_argument("--reverse", action="store_true",
                     help="feed frames in REVERSE temporal order -- order-sensitivity "
                          "control: a model using motion direction should change its "
@@ -231,12 +260,13 @@ def main():
         idx_pool = list(range(len(gts)))
         if a.max_segments_per_video and len(idx_pool) > a.max_segments_per_video:
             idx_pool = sorted(rng.sample(idx_pool, a.max_segments_per_video))
-        mnt = max(a.max_new_tokens, 160) if a.structured else a.max_new_tokens
+        mnt = max(a.max_new_tokens, 200) if a.structured else a.max_new_tokens
         for si in idx_pool:
             name, s, e = gts[si]
             content, fidx, extra_idx = build_content(
                 vr, vfps, n, s, e, a.context_s, a.n_frames, a.max_pixels,
-                a.context_mode, structured=a.structured, reverse=a.reverse)
+                a.context_mode, structured=a.structured, reverse=a.reverse,
+                multi_verb=a.multi_verb)
             msgs = [{"role": "user", "content": content}]
             text = proc.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
             imgs, _, _ = process_vision_info(msgs, return_video_kwargs=True)
@@ -252,8 +282,8 @@ def main():
                    "segment_idx": si, "start": s, "end": e, "gt_name": name,
                    "pred_name": pred, "emb_sim": es, "frame_idx": fidx,
                    "extra_idx": extra_idx, "context_mode": a.context_mode,
-                   "structured": a.structured, "reverse": a.reverse,
-                   "n_frames": a.n_frames, "raw": out}
+                   "structured": a.structured, "multi_verb": a.multi_verb,
+                   "reverse": a.reverse, "n_frames": a.n_frames, "raw": out}
             fout.write(json.dumps(rec, ensure_ascii=False) + "\n"); fout.flush()
             print(f"{r.get('recording_id')} seg{si} gt='{name}' pred='{pred}' sim={es:.2f}")
             n_done += 1
