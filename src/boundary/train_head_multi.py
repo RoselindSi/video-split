@@ -79,10 +79,10 @@ class Head(nn.Module):
             x = (a.unsqueeze(-1) * z).sum(1)        # [T,proj]
         elif self.variant == "concat":
             x = self.proj(regions.reshape(regions.shape[0], -1))   # [T,proj] from 5760
+        elif self.variant == "mean5":
+            x = self.proj(regions.mean(1))          # [T,proj] mean over 5 regions
         else:
-            r = REGION[self.variant]
-            src = regions.mean(1) if self.variant == "mean5" else regions[:, r]
-            x = self.proj(src)                      # [T,proj]
+            x = self.proj(regions[:, REGION[self.variant]])   # single region [T,proj]
         h = self.tin(x.transpose(0, 1).unsqueeze(0))   # [1,d,T]
         for conv, gn in zip(self.blocks, self.norm):
             h = h + torch.relu(gn(conv(h)))
