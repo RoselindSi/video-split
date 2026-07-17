@@ -215,15 +215,19 @@ def run_seed(tr, va, variant, mu, sd, dev, a, seed):
                 "near_gt_peaks": statistics.mean(near) if near else 0.0}
 
     def dump_logits(split):
-        """Per-video (prob, times, gt boundary times) at the CURRENT weights,
-        for offline decode-sweep diagnostics (B2) -- decoupled from training so
-        threshold/min_gap/smoothing can be swept without retraining."""
+        """Per-video (prob, times, gt boundary times, named segments) at the
+        CURRENT weights, for offline decode-sweep (B2) AND FP/FN audit (B6) --
+        decoupled from training so both can run without retraining. segments
+        (raw [name,start,end] triples) let the audit label each GT boundary
+        with what changed (or didn't) across it, and place false peaks inside
+        a named segment, with no need to re-load the original recseg json."""
         out = []
         for x in split:
             prob = torch.sigmoid(net(prep(x))).cpu().numpy().tolist()
             out.append({"recording_id": x.get("recording_id", ""),
                         "prob": prob, "times": x["times"].numpy().tolist(),
-                        "gt": gt_bounds(x["segments"])})
+                        "gt": gt_bounds(x["segments"]),
+                        "segments": [[s[0], float(s[1]), float(s[2])] for s in x["segments"]]})
         return out
 
     best = {"val_f5": -1.0}
