@@ -136,6 +136,12 @@ OBJECT_NORM = {
     "tissue sheet": "tissue", "sheet": "tissue", "tissue pack": "tissue pack",
     "sink edge": "sink edge", "table edge": "table edge",
     "phone screen": "screen", "smartphone": "phone",
+    # iter5 (final context audit): "lift and re-seat removable sink basin" /
+    # "adjust and check sink basin fit" -- basin IS the directly-manipulated
+    # object, not a modifier. "pack" alone (e.g. "tissue ... from pack") is the
+    # same referent as the existing "tissue pack" phrase, just split across the
+    # sentence -- map it to the same canonical so it's absorbed, not leaked.
+    "sink basin": "sink basin", "basin": "sink basin", "pack": "tissue pack",
     # iter3: unambiguous phrase objects from unresolved audit (box/power/edge/
     # surface/crease/metal HELD pending *_x_context raw dumps below)
     "wall socket": "socket", "power socket": "socket", "power outlet": "socket",
@@ -188,6 +194,17 @@ OBJECT_STOP = {
     "edge", "crease", "surface", "sides", "opposite", "interior", "exterior",
     "half", "forth", "operation", "inspection", "batch", "metal", "face",
     "corner", "row", "column", "layer", "end", "middle",
+    # iter5 (final context audit): "tea" is always a modifier of sachet/pack
+    # ("tea sachet(s)", "pack tea sachets") -- content, never itself the
+    # manipulated object (matches water/debris/dust). "tool" in this data is
+    # always the AGENT acting on an already-resolved object ("curved wall
+    # tool" -> object is "wall", already captured separately). "tabletop"
+    # only ever modifies another noun ("tabletop appliance/device/items") or
+    # marks location ("on right tabletop") -- never itself acted on, unlike
+    # "sink basin" which IS acted on directly.
+    "tea", "tool", "tabletop",
+    # pure descriptors seen in the final unresolved audit, never referents
+    "plastic", "cylindrical", "off", "far", "near", "neat", "handheld",
 }
 
 # strict inverses: pure visual state reversal, object-independent -> safe to use

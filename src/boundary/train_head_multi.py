@@ -214,6 +214,18 @@ def run_seed(tr, va, variant, mu, sd, dev, a, seed):
                 "pred_ratio": statistics.mean(ratio), "mean_prob": statistics.mean(mprob),
                 "near_gt_peaks": statistics.mean(near) if near else 0.0}
 
+    def dump_logits(split):
+        """Per-video (prob, times, gt boundary times) at the CURRENT weights,
+        for offline decode-sweep diagnostics (B2) -- decoupled from training so
+        threshold/min_gap/smoothing can be swept without retraining."""
+        out = []
+        for x in split:
+            prob = torch.sigmoid(net(prep(x))).cpu().numpy().tolist()
+            out.append({"recording_id": x.get("recording_id", ""),
+                        "prob": prob, "times": x["times"].numpy().tolist(),
+                        "gt": gt_bounds(x["segments"])})
+        return out
+
     best = {"val_f5": -1.0}
     for ep in range(a.epochs):
         net.train()
@@ -228,6 +240,8 @@ def run_seed(tr, va, variant, mu, sd, dev, a, seed):
                 if m > best["val_f5"]:
                     diag = thresh_diag(va)
                     best = {"val_f5": m, "train_f5": oracle_f5(tr[:len(va)]), **diag}
+                    if a.save_logits:
+                        best["_logits"] = dump_logits(va)
     return best
 
 
@@ -253,6 +267,11 @@ def main():
     ap.add_argument("--pos_weight", type=float, default=8.0)
     ap.add_argument("--thr", type=float, default=0.5,
                     help="threshold for the free-count decode diagnostic")
+    ap.add_argument("--save_logits", default=None,
+                    help="path to save per-video val (prob,times,gt) at the "
+                         "best epoch for offline B2 decode-sweep diagnostics. "
+                         "Only meaningful with a single --variant and a single "
+                         "seed (the first seed's best-epoch logits are saved).")
     a = ap.parse_args()
 
     tr = torch.load(a.train, weights_only=False)
@@ -292,8 +311,16 @@ def main():
     print(f"{'variant':12s} {'val_f5':>7s} {'std':>5s} {'train_f5':>8s} "
           f"{'thr_P':>6s} {'thr_R':>6s} {'pred/gt':>7s} {'meanp':>6s} "
           f"{'nearGT':>7s} {'verdict':>16s}")
-    for v in variants:
+    if a.save_logits and (a.variant == "all" or len(a.seeds) > 1):
+        print("WARNING: --save_logits intended for a single --variant and a "
+              "single seed; only the first variant/seed's logits will be saved.")
+    for vi, v in enumerate(variants):
         res = [run_seed(tr, va, v, mu, sd, dev, a, s) for s in a.seeds]
+        if a.save_logits and vi == 0:
+            torch.save(res[0].pop("_logits", []), a.save_logits)
+            print(f"saved val logits ({v}, seed {a.seeds[0]}) -> {a.save_logits}")
+        else:
+            res[0].pop("_logits", None)
         vf = [r["val_f5"] for r in res]
         agg = lambda k: statistics.mean([r[k] for r in res])
         ratio, prec, near = agg("pred_ratio"), agg("thr_prec"), agg("near_gt_peaks")
