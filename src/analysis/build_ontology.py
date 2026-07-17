@@ -59,6 +59,7 @@ VERB_NORM = {
     "reinstalling": "reinstall", "washing": "wash", "discarding": "discard",
     "peeling": "peel", "manipulating": "manipulate", "displaying": "display",
     "stowing": "stow", "presenting": "present", "collecting": "collect",
+    "returning": "return",
     "flattening": "flatten", "pressing": "press", "loosening": "loosen",
     "tightening": "tighten", "threading": "thread", "aligning": "align",
     "gathering": "gather", "spreading": "spread",
@@ -78,7 +79,7 @@ CANONICAL_VERBS = {
     # added from unresolved-verb audit (real actions the first pass missed)
     "sweep", "plug", "unplug", "install", "stack", "unstack", "store", "turn",
     "arrange", "wash", "peel", "manipulate", "display", "stow", "present",
-    "collect", "tape", "gather", "spread", "reinstall", "discard",
+    "collect", "tape", "gather", "spread", "reinstall", "discard", "return",
 }
 
 # verbs that describe an action too weakly to be a good hard-negative candidate
@@ -148,7 +149,11 @@ OBJECT_NORM = {
     # iter4 (from context dumps): power cable was being eaten by "cable"->usb
     # cable, mislabeling 325 power cables. Give it its own object; unify cord.
     "power cable": "power cable", "power cord": "power cable",
+    "data cable": "usb cable",                       # same eaten-by-"cable" bug
     "storage box": "box", "box": "box", "bowls": "bowl",
+    "pens": "pen",                                   # was splitting off from pen
+    "faucet": "faucet", "tap": "faucet",
+    "bottle cap": "cap", "cap": "cap",
 }
 # cleaning implements -> tool slot (not the acted-on object)
 _TOOL_OBJ = {"cleaning sponge": "sponge", "sponge": "sponge",
