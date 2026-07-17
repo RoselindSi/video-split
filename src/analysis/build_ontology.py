@@ -114,10 +114,17 @@ OBJECT_NORM = {
     "remote control": "remote control", "remote": "remote control",
     "utility knife": "utility knife", "box cutter": "utility knife",
     "tissue sheet": "tissue", "facial tissue": "tissue", "tissue paper": "tissue",
-    "paper tissue": "tissue", "tissue": "tissue",
+    "paper tissue": "tissue", "tissue": "tissue", "napkin": "tissue",
     "water bottle": "water bottle", "bottle": "water bottle",
     "product box": "product box", "charger box": "product box",
     "portable charger box": "product box", "inner box": "product box",
+    # longer phrases FIRST so the container (head noun) wins over "portable
+    # charger" -> power bank; "open the charger's PRODUCT BOX" is an action on
+    # the box, the charger isn't even out yet. (audit: rec188 seg0/5, rec196
+    # seg9 -- model correctly said "open box", ontology was wrongly forcing
+    # GT object to power bank via "portable charger" matching first.)
+    "portable charger product box": "product box",
+    "portable charger packaging": "product box",
     "sink countertop": "countertop", "countertop": "countertop",
     "squeegee": "squeegee", "sink squeegee": "squeegee",
     "usb cable": "usb cable", "charging cable": "usb cable", "cable": "usb cable",
