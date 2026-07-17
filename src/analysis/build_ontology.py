@@ -92,8 +92,12 @@ GENERIC_VERBS = {"manipulate", "present", "display", "adjust", "move", "arrange"
 # time, never globally. Everything not listed keeps its own canonical verb until
 # audited. Seeded conservatively; expand only from the *_x_object audit output.
 CONTEXTUAL_VERB_NORM = {
+    # audit (iter4): replace/reinstall/install sink strainer all = putting the
+    # strainer back into the drain = seat; remove stays (the inverse). 467+187+
+    # 81 vs seat 241. Gives a clean remove<->seat direction pair on one object.
     ("reinstall", "sink strainer"): "seat",
     ("replace", "sink strainer"): "seat",
+    ("install", "sink strainer"): "seat",
 }
 
 # PHRASE-level object normalization (phrase -> canonical object). Longest match
@@ -141,6 +145,10 @@ OBJECT_NORM = {
     "tissue sachet": "sachet", "sachet": "sachet", "sachets": "sachet",
     "trash bin": "trash bin", "waste bin": "trash bin", "bin": "trash bin",
     "tool holder": "holder", "squeegee holder": "holder", "holder": "holder",
+    # iter4 (from context dumps): power cable was being eaten by "cable"->usb
+    # cable, mislabeling 325 power cables. Give it its own object; unify cord.
+    "power cable": "power cable", "power cord": "power cable",
+    "storage box": "box", "box": "box", "bowls": "bowl",
 }
 # cleaning implements -> tool slot (not the acted-on object)
 _TOOL_OBJ = {"cleaning sponge": "sponge", "sponge": "sponge",
@@ -170,6 +178,11 @@ OBJECT_STOP = {
     "portable", "disposable", "used", "each", "single", "multiple",
     # content substances (tracked separately in CONTENT_NORM, not objects)
     "water", "debris", "dust",
+    # iter4: region / feature / phase / modifier words from context audit --
+    # these are parts-of an object or phase titles, never standalone objects
+    "edge", "crease", "surface", "sides", "opposite", "interior", "exterior",
+    "half", "forth", "operation", "inspection", "batch", "metal", "face",
+    "corner", "row", "column", "layer", "end", "middle",
 }
 
 # strict inverses: pure visual state reversal, object-independent -> safe to use
