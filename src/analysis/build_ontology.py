@@ -42,7 +42,7 @@ VERB_NORM = {
     "folding": "fold", "unfolding": "unfold", "wiping": "wipe", "cleaning": "clean",
     "retrieving": "retrieve", "taking": "retrieve", "extracting": "extract",
     "removing": "remove", "inserting": "insert", "replacing": "replace",
-    "reseat": "seat", "re-seat": "seat", "reinstall": "seat", "reseating": "seat",
+    "reseat": "seat", "re-seat": "seat", "reseating": "seat",
     "seating": "seat", "coiling": "coil", "uncoiling": "uncoil", "pressing": "press",
     "sliding": "slide", "rotating": "rotate", "flipping": "flip", "pouring": "pour",
     "adjusting": "adjust", "inspecting": "inspect", "mounting": "mount",
@@ -56,7 +56,7 @@ VERB_NORM = {
     "relocate": "reposition", "installing": "install", "stacking": "stack",
     "unstacking": "unstack", "unplugging": "unplug", "plugging": "plug",
     "storing": "store", "turning": "turn", "arranging": "arrange",
-    "reinstall": "seat", "reinstalling": "seat", "washing": "wash",
+    "reinstalling": "reinstall", "washing": "wash", "discarding": "discard",
     "peeling": "peel", "manipulating": "manipulate", "displaying": "display",
     "stowing": "stow", "presenting": "present", "collecting": "collect",
     "flattening": "flatten", "pressing": "press", "loosening": "loosen",
@@ -78,7 +78,22 @@ CANONICAL_VERBS = {
     # added from unresolved-verb audit (real actions the first pass missed)
     "sweep", "plug", "unplug", "install", "stack", "unstack", "store", "turn",
     "arrange", "wash", "peel", "manipulate", "display", "stow", "present",
-    "collect", "tape", "gather", "spread",
+    "collect", "tape", "gather", "spread", "reinstall", "discard",
+}
+
+# verbs that describe an action too weakly to be a good hard-negative candidate
+# (N4/N7): keep them canonical so they don't inflate NO-verb, but flag as generic
+# so the benchmark builder won't offer them as distractors.
+GENERIC_VERBS = {"manipulate", "present", "display", "adjust", "move", "arrange"}
+
+# object-conditioned verb normalization: a verb collapses to another ONLY for a
+# specific object family, where the audit (reinstall/replace x object dumps)
+# confirmed the surface verb is really the canonical action. Applied at SCORING
+# time, never globally. Everything not listed keeps its own canonical verb until
+# audited. Seeded conservatively; expand only from the *_x_object audit output.
+CONTEXTUAL_VERB_NORM = {
+    ("reinstall", "sink strainer"): "seat",
+    ("replace", "sink strainer"): "seat",
 }
 
 # PHRASE-level object normalization (phrase -> canonical object). Longest match
@@ -116,14 +131,29 @@ OBJECT_NORM = {
     "tissue sheet": "tissue", "sheet": "tissue", "tissue pack": "tissue pack",
     "sink edge": "sink edge", "table edge": "table edge",
     "phone screen": "screen", "smartphone": "phone",
+    # iter3: unambiguous phrase objects from unresolved audit (box/power/edge/
+    # surface/crease/metal HELD pending *_x_context raw dumps below)
+    "wall socket": "socket", "power socket": "socket", "power outlet": "socket",
+    "outlet": "socket", "socket": "socket",
+    "desk drawer": "drawer", "table drawer": "drawer", "drawer": "drawer",
+    "desk": "desk", "counter": "countertop", "sink counter": "countertop",
+    "metal tin": "tin", "tin": "tin", "tins": "tin",
+    "tissue sachet": "sachet", "sachet": "sachet", "sachets": "sachet",
+    "trash bin": "trash bin", "waste bin": "trash bin", "bin": "trash bin",
+    "tool holder": "holder", "squeegee holder": "holder", "holder": "holder",
 }
+# cleaning implements -> tool slot (not the acted-on object)
+_TOOL_OBJ = {"cleaning sponge": "sponge", "sponge": "sponge",
+             "cleaning cloth": "cloth", "cloth": "cloth", "rag": "cloth"}
+OBJECT_NORM.update(_TOOL_OBJ)
 # content = substance being moved/removed (NOT the object); keep separate
 CONTENT_NORM = {"dirty water": "dirty water", "water": "water",
                 "debris": "debris", "dust": "dust"}
 # longest phrases first, so "sink drain strainer" matches before "strainer"
 OBJECT_PHRASES = sorted(OBJECT_NORM, key=lambda p: -len(p.split()))
 
-TOOL_WORDS = {"squeegee", "utility knife", "tweezers", "brush", "cloth", "spray bottle"}
+TOOL_WORDS = {"squeegee", "utility knife", "tweezers", "brush", "cloth",
+              "spray bottle", "sponge", "rag", "holder"}
 CONTENT_WORDS = {"dirty water", "water", "debris", "dust"}
 CONTAINER_WORDS = {"product box", "box", "drawer", "pouch", "packaging", "pack"}
 
@@ -214,9 +244,20 @@ def main():
                 if seg and isinstance(seg[0], str):
                     names.append(seg[0].strip())
 
+    # tokens the mentor flagged as ambiguous: dump raw context before deciding a
+    # phrase mapping (don't guess / don't stoplist blindly).
+    CONTEXT_TOKENS = {"power", "box", "edge", "surface", "crease", "metal",
+                      "tape", "plug", "socket", "holder"}
+    # verbs whose object-conditioned collapse we need to see before freezing.
+    PAIR_VERBS = {"replace", "reinstall", "install", "seat", "remove"}
+
     verb_freq = Counter(); no_verb = 0
     obj_freq = Counter(); tool_freq = Counter(); container_freq = Counter()
     unresolved_freq = Counter(); no_object = 0
+    verb_obj_pairs = Counter()
+    unresolved_examples = {}          # token -> [raw names]
+    context_examples = {}             # token -> [raw names]
+    pair_examples = {}                # verb -> Counter(object)
     for nm in names:
         vs = extract_verbs(nm)
         if vs:
@@ -233,10 +274,26 @@ def main():
         if cont:
             container_freq[cont] += 1
         unresolved_freq.update(unresolved)
+        for v in set(vs):
+            verb_obj_pairs[(v, obj or "<none>")] += 1
+            if v in PAIR_VERBS:
+                pair_examples.setdefault(v, Counter())[obj or "<none>"] += 1
+        for tkn in set(unresolved):
+            ex = unresolved_examples.setdefault(tkn, [])
+            if len(ex) < 10:
+                ex.append(nm)
+        toks = set(tok(nm))
+        for tkn in CONTEXT_TOKENS & toks:
+            ex = context_examples.setdefault(tkn, [])
+            if len(ex) < 10:
+                ex.append(nm)
 
     os.makedirs(a.out_dir, exist_ok=True)
     json.dump({"canonical_verbs": sorted(CANONICAL_VERBS),
+               "generic_verbs": sorted(GENERIC_VERBS),
                "normalization": VERB_NORM, "stoplist": sorted(STOPLIST),
+               "contextual_verb_norm": {f"{v}|{o}": c
+                                        for (v, o), c in CONTEXTUAL_VERB_NORM.items()},
                "observed_freq": dict(verb_freq.most_common())},
               open(os.path.join(a.out_dir, "verbs.json"), "w"),
               ensure_ascii=False, indent=2)
@@ -245,7 +302,14 @@ def main():
                "canonical_object_freq": dict(obj_freq.most_common()),
                "tool_freq": dict(tool_freq.most_common()),
                "container_freq": dict(container_freq.most_common()),
-               "unresolved_audit": dict(unresolved_freq.most_common(100))},
+               "unresolved_audit": dict(unresolved_freq.most_common(100)),
+               "unresolved_examples": {t: unresolved_examples[t]
+                                       for t, _ in unresolved_freq.most_common(40)},
+               "context_examples": context_examples,
+               "verb_object_pairs": {f"{v}|{o}": c
+                                     for (v, o), c in verb_obj_pairs.most_common(120)},
+               "pair_verb_object": {v: dict(c.most_common(20))
+                                    for v, c in pair_examples.items()}},
               open(os.path.join(a.out_dir, "objects.json"), "w"),
               ensure_ascii=False, indent=2)
     json.dump({"strict_inverse": STRICT_INVERSE,
@@ -268,6 +332,25 @@ def main():
         print(f"  {c:5d}  {w}")
     if tool_freq:
         print(f"\ntools: {dict(tool_freq.most_common(10))}")
+
+    print(f"\n=== top-12 unresolved tokens + up to 5 raw examples "
+          f"(decide: phrase-object / modifier / content) ===")
+    for w, c in unresolved_freq.most_common(12):
+        print(f"  [{c}] {w}:")
+        for nm in unresolved_examples.get(w, [])[:5]:
+            print(f"        {nm}")
+    print(f"\n=== context dumps for ambiguous tokens (mentor-flagged) ===")
+    for tkn in sorted(context_examples):
+        print(f"  {tkn}:")
+        for nm in context_examples[tkn][:6]:
+            print(f"        {nm}")
+    print(f"\n=== object-conditioned verb audit (replace/reinstall/install/seat "
+          f"x object -> which collapse to seat?) ===")
+    for v in ("replace", "reinstall", "install", "seat", "remove"):
+        if v in pair_examples:
+            top = pair_examples[v].most_common(8)
+            print(f"  {v}: " + ", ".join(f"{o}={n}" for o, n in top))
+
     print(f"\nwrote verbs.json / objects.json / inverse_map.json -> {a.out_dir}")
     print("N1 done-criteria: top objects are phrases (no split sink/strainer), "
           "unresolved tokens mostly modifiers not real objects. REVIEW by hand "
