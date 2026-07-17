@@ -58,8 +58,13 @@ def main():
 
     boundary_stats = Counter()          # (same_or_diff, matched_or_missed) -> n
     missed_examples = {"same": [], "diff": []}
+    missed_video_cap = Counter()        # recording_id -> # examples already taken
     false_peak_examples = []
+    false_peak_video_cap = Counter()
     false_peak_positions = []           # frac into containing segment, or None
+    missed_by_video = Counter()         # for the outlier-video sanity check
+    false_peak_by_video = Counter()
+    PER_VIDEO_CAP = 2
 
     for v in data:
         segs = sorted(v["segments"], key=lambda s: s[1])
@@ -82,22 +87,30 @@ def main():
             kind = "same" if before == after else "diff"
             status = "matched" if j in used else "missed"
             boundary_stats[(kind, status)] += 1
-            if status == "missed" and len(missed_examples[kind]) < a.examples:
-                missed_examples[kind].append(
-                    (v["recording_id"], round(g, 2), before, after))
+            if status == "missed":
+                missed_by_video[v["recording_id"]] += 1
+                if (len(missed_examples[kind]) < a.examples
+                        and missed_video_cap[v["recording_id"]] < PER_VIDEO_CAP):
+                    missed_examples[kind].append(
+                        (v["recording_id"], round(g, 2), before, after))
+                    missed_video_cap[v["recording_id"]] += 1
 
         for p in preds:
             d = min((abs(p - g) for g in gts), default=999)
             if d > a.tol:
+                false_peak_by_video[v["recording_id"]] += 1
                 containing = next((s for s in segs if s[1] <= p <= s[2]), None)
                 if containing:
                     frac = (p - containing[1]) / max(containing[2] - containing[1], 1e-6)
                     false_peak_positions.append(frac)
-                    if len(false_peak_examples) < a.examples:
+                if (len(false_peak_examples) < a.examples
+                        and false_peak_video_cap[v["recording_id"]] < PER_VIDEO_CAP):
+                    if containing:
                         false_peak_examples.append(
                             (v["recording_id"], round(p, 2), containing[0], round(frac, 2)))
-                elif len(false_peak_examples) < a.examples:
-                    false_peak_examples.append((v["recording_id"], round(p, 2), "<gap>", None))
+                    else:
+                        false_peak_examples.append((v["recording_id"], round(p, 2), "<gap>", None))
+                    false_peak_video_cap[v["recording_id"]] += 1
 
     def rate(kind):
         m, x = boundary_stats[(kind, "matched")], boundary_stats[(kind, "missed")]
@@ -126,6 +139,16 @@ def main():
               "right region but times it wrong -> B4/temporal head, not audit. "
               "Low near-edge fraction = spurious mid-segment activations "
               "(motion/occlusion/camera) -> B6 video audit / B8 hand signal.)")
+
+    total_missed = sum(missed_by_video.values())
+    total_fp = sum(false_peak_by_video.values())
+    print(f"\n=== outlier-video check (is one video dominating the failure counts?) ===")
+    print(f"missed boundaries, top 5 videos:")
+    for rid, c in missed_by_video.most_common(5):
+        print(f"  {rid}: {c}/{total_missed} = {c/max(total_missed,1):.1%}")
+    print(f"false peaks, top 5 videos:")
+    for rid, c in false_peak_by_video.most_common(5):
+        print(f"  {rid}: {c}/{total_fp} = {c/max(total_fp,1):.1%}")
 
     print(f"\n=== example missed boundaries, same-name (repeated action) ===")
     for rid, t, before, after in missed_examples["same"]:
