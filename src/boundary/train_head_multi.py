@@ -175,8 +175,10 @@ def run_seed(tr, va, variant, mu, sd, dev, a, seed):
     bce = nn.functional.binary_cross_entropy_with_logits
 
     def prep(x):
-        r = to_regions(x["feats"]).to(dev)          # move to device BEFORE using
-        return (r - mu) / sd                        # mu/sd already on dev; standardize
+        # x["R"] is the standardized [T,5,D] tensor PRE-MOVED to GPU once in main
+        # (avoids re-uploading ~29MB and re-standardizing every forward pass --
+        # that repeated host->device transfer was the training bottleneck).
+        return x["R"]
 
     def oracle_f5(split):
         out = []
@@ -263,21 +265,25 @@ def main():
     allr = torch.cat([to_regions(x["feats"]) for x in tr], 0)   # [N,5,D]
     mu, sd = allr.mean(0, keepdim=True), allr.std(0, keepdim=True) + 1e-5
     mu, sd = mu.to(dev), sd.to(dev)
+    del allr
 
-    # class-balance diagnostic: with no-blur (long dense sequences ~1200-1400
-    # frames), positive boundary frames are a tiny fraction -> pos_weight/sigma
-    # tuned for the old short (~60-frame) sequences may no longer fit.
-    pos_soft, seq_len, eff = [], [], []
+    # PRE-MOVE standardized features to GPU once (was the training bottleneck:
+    # re-uploading + re-standardizing 29MB/video every forward pass).
+    for x in tr + va:
+        x["R"] = ((to_regions(x["feats"]) - mu.cpu()) / sd.cpu()).to(dev)
+
+    # class-balance diagnostic (HARD positive fraction; the soft-mass ratio was a
+    # bug -> millions). pos_frac = mean frac of frames with soft label > 0.5;
+    # neg:pos ~= (1-frac)/frac, which is the pos_weight that balances BCE.
+    seq_len, fracs = [], []
     for x in tr:
         lab = soft_boundary(x["times"], x["segments"], a.sigma_s)
-        pos_soft.append(float(lab.sum()))                 # soft positive mass
-        eff.append(float((1 - lab).sum()) / max(float(lab.sum()), 1e-6))
-        seq_len.append(len(lab))
-    print(f"[diag] seq_len mean {statistics.mean(seq_len):.0f} | "
-          f"effective neg:pos (sum(1-y)/sum(y)) mean {statistics.mean(eff):.1f} "
-          f"| sigma_s={a.sigma_s} (too wide -> dense boundaries' soft labels "
-          f"merge into blobs). BCE pos_weight matching eff ratio ~= "
-          f"{statistics.mean(eff):.0f}, current {a.pos_weight}\n")
+        seq_len.append(len(lab)); fracs.append(float((lab > 0.5).mean()))
+    frac = statistics.mean(fracs)
+    print(f"[diag] seq_len mean {statistics.mean(seq_len):.0f} | pos-frame frac "
+          f"(soft>0.5) {frac:.3f} -> neg:pos ~= {(1-frac)/max(frac,1e-6):.1f} "
+          f"(pos_weight balancing BCE ~= this; current {a.pos_weight}, "
+          f"sigma_s={a.sigma_s})\n")
 
     variants = (["global", "left", "spatial_max", "mean5", "region_attn", "concat"]
                 if a.variant == "all" else [a.variant])
