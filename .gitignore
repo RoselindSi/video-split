@@ -4,6 +4,8 @@ docs/trajectory-policy-design.md
 docs/results-qwen3-migration.md
 docs/naming-and-10fps-plan.md
 .DS_Store
+__pycache__/
+*.pyc
 
 docs/architecture-plan.md
 docs/gebd-method-notes.md
