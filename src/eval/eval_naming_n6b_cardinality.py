@@ -1,4 +1,4 @@
-"""N6.1 -- selection-calibration fix for N6's compound multi-select.
+"""N6.1 (iter2) -- selection-calibration fix for N6's compound multi-select.
 
 N6 showed the model isn't blind to secondary actions (secondary recall
 64.1%, vs ~0% under free generation) -- it OVER-selects (pred cardinality
@@ -12,27 +12,37 @@ confidence proxy -- we don't have per-candidate scores without a 6x-cost
 independent-scoring pass, which is option (1), saved for later if this
 doesn't fix enough of the gap).
 
-Uses uniform16 frame sampling (N5's frozen conclusion: explicit before/
-during/after sampling did not beat plain uniform coverage), not N6's BDA.
-
-Reports the FULL metric set requested after N6 (not just exact/secondary-
-recall/false-positive-rate, which conflated a few different things):
-  primary accuracy (single-choice), primary-inclusion recall (in the
-  multi-select prediction), secondary precision/recall/F1, full-set micro
-  precision/recall/F1, mean Jaccard, exact-set accuracy, predicted vs GT
-  cardinality mean + MAE. Run twice in one pass -- BEFORE truncation (same
-  question as plain N6, for a same-frames comparison point) and AFTER
-  truncation -- so the effect of cardinality-based truncation is isolated.
+iter2 fixes, from the iter1 run's own diagnosis:
+  - iter1's count prompt was a loose "answer with a single digit" -> 46.6%
+    unparseable, and every GT>=3 item happened to fail parsing entirely
+    (undiagnosed until we looked). Now requires strict JSON {"count": N} and
+    treats a parse failure as its own tracked outcome (count_parsed=False),
+    reported separately -- NOT silently treated as "chose not to truncate".
+  - count-prediction quality is now reported as its OWN benchmark (exact
+    accuracy, MAE, confusion matrix, per-GT-count accuracy, parse success
+    rate, over/under-count rate) BEFORE looking at how truncation affects
+    set metrics -- otherwise you're optimizing prompt-parsing, not the
+    actual count predictor.
+  - iter1 also (by accident, violating "one variable at a time") changed
+    BOTH the frame sampling (BDA->uniform16, per N5) AND the multi-select
+    prompt wording ("most confident first") in the SAME run it introduced
+    truncation, then mislabeled the untruncated half "same as plain N6" --
+    it wasn't; those are two independent prompt/sampling changes on top of
+    the original N6 run, not a controlled replica of it. The BEFORE/AFTER
+    comparison WITHIN this script is still valid (both sides see identical
+    frames/prompt/candidates, differing only in whether truncation is
+    applied) -- it just isn't comparable to the archived N6 log, and this
+    version's print labels say so explicitly instead of implying otherwise.
 
 Usage (server):
     python -m src.eval.eval_naming_n6b_cardinality \
         --model_base /workspace/tr1/ckpts/Qwen3-VL-8B-Instruct \
         --pool_data /workspace/tr1/data_recseg/recseg_train.json /workspace/tr1/data_recseg/recseg_val.json \
         --target_data /workspace/tr1/data_recseg/recseg_val.json \
-        --out /tmp/n6b_cardinality.jsonl --max_per_video 3
+        --out /tmp/n6b_cardinality_v2.jsonl --max_per_video 3
 """
 import argparse, json, os, random, re
-from collections import defaultdict
+from collections import Counter, defaultdict
 
 import torch
 from decord import VideoReader
@@ -51,7 +61,7 @@ except ImportError:
     from src.rewards.seg_rewards import _as_segs
 
 LETTERS_RE = re.compile(r"\b([A-F])\b", re.I)
-DIGIT_RE = re.compile(r"\b([1-6])\b")
+COUNT_JSON_RE = re.compile(r'"count"\s*:\s*(\d+)')
 
 
 def _generate(proc, model, content_msg, max_new_tokens=5):
@@ -64,18 +74,27 @@ def _generate(proc, model, content_msg, max_new_tokens=5):
     return proc.batch_decode(gen[:, inp["input_ids"].shape[1]:], skip_special_tokens=True)[0]
 
 
-def ask_cardinality(proc, model, frames, obj):
+def ask_cardinality(proc, model, frames, obj, max_count):
     """NOT shown the candidate verb list -- asked purely from the frames, so
-    the count isn't anchored by seeing N plausible options."""
+    the count isn't anchored by seeing N plausible options. Strict JSON
+    output required; a parse failure is tracked as its own outcome (see
+    count_parsed in the returned tuple), never silently treated as "0
+    truncation needed"."""
     content_msg = [{"type": "image", "image": Image.fromarray(f),
                     "max_pixels": 768 * 28 * 28} for f in frames]
     content_msg.append({"type": "text", "text": (
         "The images are frames in temporal order of a short clip of a person "
-        f"acting on the {obj}. How many DISTINCT actions occur in this clip? "
-        "Answer with a single digit.")})
-    out = _generate(proc, model, content_msg, max_new_tokens=3)
-    m = DIGIT_RE.search(out)
-    return (int(m.group(1)) if m else None), out
+        f"acting on the {obj}. How many DISTINCT actions occur in this clip "
+        f"(an integer from 1 to {max_count})? Respond with STRICT JSON only, "
+        "no other text: {\"count\": N}")})
+    out = _generate(proc, model, content_msg, max_new_tokens=12)
+    m = COUNT_JSON_RE.search(out)
+    if not m:
+        return None, out, False
+    n = int(m.group(1))
+    if not (1 <= n <= max_count):
+        return None, out, False
+    return n, out, True
 
 
 def ask_multi(proc, model, frames, options, obj):
@@ -120,6 +139,45 @@ def score_set(pred_letters, gt_letters, primary_letter):
             "recall": recall, "jaccard": jaccard, "exact": exact,
             "primary_included": primary_included, "secondary_gt_n": len(secondary_gt),
             "secondary_hit": secondary_pred_hit}
+
+
+def count_quality_report(count_rows):
+    """count_rows: list of dicts {gt_count, pred_count, parsed}. Reported as
+    its OWN benchmark, separate from set-level metrics -- a truncation step
+    built on a bad count predictor just measures prompt-parsing, not the
+    actual hypothesis."""
+    n = len(count_rows)
+    parsed = [r for r in count_rows if r["parsed"]]
+    n_parsed = len(parsed)
+    print(f"\n---- count-prediction quality (n={n}, parsed={n_parsed}, "
+          f"parse_rate={n_parsed/max(n,1):.1%}) ----")
+    if not parsed:
+        print("  0 parsed -- count predictor unusable, do not trust any "
+              "truncation results below.")
+        return
+    exact = sum(r["pred_count"] == r["gt_count"] for r in parsed)
+    mae = sum(abs(r["pred_count"] - r["gt_count"]) for r in parsed) / n_parsed
+    over = sum(r["pred_count"] > r["gt_count"] for r in parsed)
+    under = sum(r["pred_count"] < r["gt_count"] for r in parsed)
+    print(f"  count exact accuracy (of PARSED only): {exact}/{n_parsed} = {exact/n_parsed:.1%}")
+    print(f"  count MAE (of PARSED only): {mae:.2f}")
+    print(f"  over-count: {over}/{n_parsed} = {over/n_parsed:.1%}  "
+          f"under-count: {under}/{n_parsed} = {under/n_parsed:.1%}")
+    print(f"  count exact accuracy INCLUDING parse failures as wrong: "
+          f"{exact}/{n} = {exact/n:.1%}")
+    by_gt = defaultdict(lambda: [0, 0, 0])  # gt_count -> [n_total, n_parsed, n_exact]
+    for r in count_rows:
+        by_gt[r["gt_count"]][0] += 1
+        if r["parsed"]:
+            by_gt[r["gt_count"]][1] += 1
+            by_gt[r["gt_count"]][2] += int(r["pred_count"] == r["gt_count"])
+    print("  per-GT-count: gt_count -> n_total (n_parsed, exact_among_parsed)")
+    for gc in sorted(by_gt):
+        nt, npd, ne = by_gt[gc]
+        print(f"    GT={gc}: n={nt} parsed={npd} exact={ne}"
+              f"{f' ({ne/npd:.0%})' if npd else ''}")
+    confusion = Counter((r["gt_count"], r["pred_count"]) for r in parsed)
+    print("  confusion (gt,pred) -> count:", dict(sorted(confusion.items())))
 
 
 def aggregate_report(label, rows, primary_correct_single):
@@ -169,7 +227,7 @@ def main():
     os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)
     fout = open(a.out, "w")
 
-    before_rows, after_rows = [], []
+    before_rows, after_rows, count_rows = [], [], []
     primary_correct = 0
 
     for r in rows:
@@ -204,7 +262,11 @@ def main():
 
             frames, fidx = sample_uniform(vr, vfps, s, e, 16)
 
-            card_pred, card_raw = ask_cardinality(proc, model, frames, obj)
+            card_pred, card_raw, card_parsed = ask_cardinality(
+                proc, model, frames, obj, max_count=len(options))
+            count_rows.append({"gt_count": len(verbs),
+                               "pred_count": card_pred if card_parsed else None,
+                               "parsed": card_parsed})
             ms_out = ask_multi(proc, model, frames, options, obj)
             ordered = ordered_letters(ms_out)
 
@@ -223,9 +285,14 @@ def main():
             primary_correct += int(sc_correct)
 
             before = score_set(ordered, gt_letters, primary_letter)
-            k = card_pred if card_pred else len(ordered)
-            k = max(1, min(k, len(options)))
-            truncated = ordered[:k]
+            # only truncate when the count actually PARSED -- a parse
+            # failure must never silently mean "keep everything", it's its
+            # own outcome, tracked in count_rows/count_parsed above.
+            if card_parsed:
+                k = max(1, min(card_pred, len(options)))
+                truncated = ordered[:k]
+            else:
+                truncated = ordered
             after = score_set(truncated, gt_letters, primary_letter)
             before_rows.append(before); after_rows.append(after)
 
@@ -234,23 +301,32 @@ def main():
                    "object": obj, "gt_verbs": verbs, "options": options,
                    "gt_letters": gt_letters, "primary_letter": primary_letter,
                    "frame_indices": fidx, "cardinality_pred": card_pred,
-                   "cardinality_raw": card_raw, "multi_select_ordered": ordered,
-                   "multi_select_truncated": truncated, "single_choice_pred": sc_pred,
-                   "single_choice_correct": sc_correct, "raw_multi": ms_out}
+                   "cardinality_parsed": card_parsed, "cardinality_raw": card_raw,
+                   "multi_select_ordered": ordered, "multi_select_truncated": truncated,
+                   "single_choice_pred": sc_pred, "single_choice_correct": sc_correct,
+                   "raw_multi": ms_out}
             fout.write(json.dumps(rec, ensure_ascii=False) + "\n"); fout.flush()
             print(f"{r.get('recording_id')} seg{i} obj='{obj}' gt_verbs={verbs} "
-                  f"gt_letters={gt_letters} card_pred={card_pred} "
+                  f"gt_letters={gt_letters} card_pred={card_pred}"
+                  f"{'' if card_parsed else '(PARSE FAILED)'} "
                   f"multi_ordered={ordered} -> truncated={truncated}")
             picked += 1
         del vr
 
-    print(f"\n==== N6.1 cardinality-truncated multi-select vs untruncated (n={len(before_rows)}) ====")
-    aggregate_report("BEFORE truncation (same as plain N6 multi-select)", before_rows, primary_correct)
-    aggregate_report("AFTER cardinality-based truncation", after_rows, primary_correct)
+    print(f"\n==== N6.1 iter2 cardinality-truncated multi-select vs untruncated "
+          f"(n={len(before_rows)}) ====")
+    count_quality_report(count_rows)
+    aggregate_report("UNTRUNCATED multi-select (this run's own prompt/sampling -- "
+                     "NOT a replica of the archived N6 log, see module docstring)",
+                     before_rows, primary_correct)
+    aggregate_report("TRUNCATED by parsed cardinality (unparsed items left "
+                     "untruncated, tracked separately above)",
+                     after_rows, primary_correct)
 
     from src.eval.run_manifest import write_manifest
     write_manifest(a.out, input_paths=list(a.pool_data) + [a.target_data],
-                   extra={"n_done": len(before_rows)})
+                   extra={"n_done": len(before_rows),
+                          "count_parse_rate": sum(r["parsed"] for r in count_rows) / max(len(count_rows), 1)})
 
 
 if __name__ == "__main__":
