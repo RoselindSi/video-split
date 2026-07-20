@@ -64,20 +64,20 @@ def sample_uniform(vr, vfps, s, e, n=16):
     n_frames = len(vr)
     ts = [s] if n <= 1 else [s + (e - s) * i / (n - 1) for i in range(n)]
     idx = [min(max(0, int(t * vfps)), n_frames - 1) for t in ts]
-    return [vr[i].asnumpy() for i in idx]
+    return [vr[i].asnumpy() for i in idx], idx
 
 
-def get_frames(vr, vfps, s, e, variant, bda_frames, context_s):
+def get_frames(vr, vfps, s, e, variant, bda_frames, bda_idx, context_s):
     if variant == "uniform16":
         return sample_uniform(vr, vfps, s, e, 16)
     if variant == "single":
         return sample_uniform(vr, vfps, s, e, 1)
     if variant == "reversed16":
-        return list(reversed(bda_frames))
+        return list(reversed(bda_frames)), list(reversed(bda_idx))
     if variant == "shuffled16":
-        out = list(bda_frames)
-        random.Random(0).shuffle(out)
-        return out
+        order = list(range(len(bda_frames)))
+        random.Random(0).shuffle(order)
+        return [bda_frames[i] for i in order], [bda_idx[i] for i in order]
     raise ValueError(variant)
 
 
@@ -120,6 +120,8 @@ def main():
     a = ap.parse_args()
 
     os.makedirs(a.out_dir, exist_ok=True)
+    from src.eval.run_manifest import print_manifest_if_exists
+    print_manifest_if_exists(a.prev_jsonl)
     items = [json.loads(l) for l in open(a.prev_jsonl)]
     rows = {r.get("recording_id"): r for r in json.load(open(a.target_data))}
 
@@ -141,17 +143,17 @@ def main():
         vr = vr_cache[rid]
         vfps = vr.get_avg_fps()
 
-        bda_frames, _ = sample_transition_frames(vr, vfps, s, e, a.context_s, 4, 8, 4)
+        bda_frames, bda_idx = sample_transition_frames(vr, vfps, s, e, a.context_s, 4, 8, 4)
         results["bda"].append({**it, "variant": "bda", "pred_letter": it["pred_letter"],
-                                "correct": it["correct"]})
+                                "correct": it["correct"], "frame_indices": bda_idx})
 
         for variant in a.variants:
-            frames = get_frames(vr, vfps, s, e, variant, bda_frames, a.context_s)
+            frames, idx = get_frames(vr, vfps, s, e, variant, bda_frames, bda_idx, a.context_s)
             claim_order = variant not in ("single",)
             pred_letter, raw = ask(proc, model, frames, it["options"], it["object"], claim_order)
             correct = (pred_letter == it["correct_letter"])
             results[variant].append({**it, "variant": variant, "pred_letter": pred_letter,
-                                     "correct": correct, "raw": raw})
+                                     "correct": correct, "frame_indices": idx, "raw": raw})
             print(f"[{variant}] {rid} seg{it['segment_idx']} obj='{it['object']}' "
                   f"correct_verb={it['correct_verb']} pred={pred_letter}"
                   f"({'OK' if correct else 'WRONG'})")
@@ -194,6 +196,16 @@ def main():
           "'shuffled16' hurts dir-sensitive verbs specifically (vs less on "
           "direction-insensitive verbs), order matters for direction "
           "specifically, not just 'more frames = better'.")
+
+    from src.eval.run_manifest import write_manifest
+    out_stub = os.path.join(a.out_dir, "n5_results.jsonl")
+    write_manifest(out_stub, input_paths=[a.target_data, a.prev_jsonl],
+                   extra={"n_items": len(items), "variants": a.variants,
+                          "note": "input_files includes prev_jsonl's content "
+                                  "hash -- compare this against another N5 "
+                                  "run's manifest before treating their "
+                                  "numbers as the same underlying questions "
+                                  "(see run_manifest.check_comparable)."})
 
 
 if __name__ == "__main__":

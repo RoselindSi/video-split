@@ -112,6 +112,8 @@ def main():
     ap.add_argument("--tol", type=float, default=0.5, help="F1 match tolerance (s)")
     a = ap.parse_args()
 
+    from src.eval.run_manifest import print_manifest_if_exists
+    print_manifest_if_exists(a.logits)
     data = torch.load(a.logits, weights_only=False)
     if not data:
         raise SystemExit("empty logits file -- did the run finish an eval epoch "

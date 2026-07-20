@@ -323,6 +323,11 @@ def main():
         if a.save_logits and vi == 0:
             torch.save(res[0].pop("_logits", []), a.save_logits)
             print(f"saved val logits ({v}, seed {a.seeds[0]}) -> {a.save_logits}")
+            from src.eval.run_manifest import write_manifest
+            write_manifest(a.save_logits, input_paths=[a.train, a.val],
+                           extra={"variant": v, "seed": a.seeds[0], "sigma_s": a.sigma_s,
+                                  "pos_weight": a.pos_weight, "delta_mode": a.delta_mode,
+                                  "val_f5": res[0]["val_f5"], "train_f5": res[0]["train_f5"]})
         else:
             res[0].pop("_logits", None)
         vf = [r["val_f5"] for r in res]

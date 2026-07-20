@@ -77,6 +77,8 @@ def main():
     a = ap.parse_args()
 
     os.makedirs(a.out_dir, exist_ok=True)
+    from src.eval.run_manifest import print_manifest_if_exists
+    print_manifest_if_exists(a.logits)
     data = torch.load(a.logits, weights_only=False)
     video_path = {r["recording_id"]: r["video"] for r in json.load(open(a.data))}
     rng = random.Random(a.seed)

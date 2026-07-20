@@ -211,11 +211,11 @@ def main():
                 n_compound += 1
                 n_compound_wrong += int(not correct)
             rec = {"video": r["video"], "recording_id": r.get("recording_id"),
-                   "segment_idx": i, "gt_name": name, "object": obj,
+                   "segment_idx": i, "start": s, "end": e, "gt_name": name, "object": obj,
                    "correct_verb": correct_verb, "options": options,
                    "correct_letter": correct_letter, "pred_letter": pred_letter,
                    "correct": correct, "has_inverse_distractor": has_inverse_distractor,
-                   "is_compound": is_compound, "raw": out}
+                   "is_compound": is_compound, "frame_indices": fidx, "raw": out}
             fout.write(json.dumps(rec, ensure_ascii=False) + "\n"); fout.flush()
             print(f"{r.get('recording_id')} seg{i} obj='{obj}' "
                   f"correct_verb={correct_verb} options={options} "
@@ -246,6 +246,10 @@ def main():
     print("\nper-verb accuracy:")
     for v, (n, c) in sorted(per_verb.items(), key=lambda kv: -kv[1][0]):
         print(f"  {v:12s} {c}/{n} = {c/n:.1%}")
+
+    from src.eval.run_manifest import write_manifest
+    write_manifest(a.out, input_paths=list(a.pool_data) + [a.target_data],
+                   extra={"n_done": n_done, "overall_accuracy": n_correct / max(n_done, 1)})
 
 
 if __name__ == "__main__":

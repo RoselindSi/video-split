@@ -150,7 +150,7 @@ def main():
             gt_letters = {letters[options.index(v)] for v in verbs}
             primary_letter = letters[options.index(verbs[0])]
 
-            frames, _ = sample_transition_frames(
+            frames, fidx = sample_transition_frames(
                 vr, vfps, s, e, a.context_s, 4, 8, 4)
 
             sc_out = ask_single(proc, model, frames, options, obj)
@@ -173,8 +173,8 @@ def main():
             picked += 1
 
             rec = {"video": r["video"], "recording_id": r.get("recording_id"),
-                   "segment_idx": i, "gt_name": name, "object": obj,
-                   "gt_verbs": verbs, "options": options,
+                   "segment_idx": i, "start": s, "end": e, "gt_name": name, "object": obj,
+                   "gt_verbs": verbs, "options": options, "frame_indices": fidx,
                    "gt_letters": sorted(gt_letters), "primary_letter": primary_letter,
                    "single_choice_pred": sc_pred, "single_choice_correct": sc_correct,
                    "multi_select_pred_letters": sorted(ms_pred_letters),
@@ -198,6 +198,11 @@ def main():
           f"generation): {sec_hit}/{sec_total} = {sec_hit/max(sec_total,1):.1%}")
     print(f"multi-select false-positive rate (extra wrong verbs selected): "
           f"{fp_total}/{pred_total} = {fp_total/max(pred_total,1):.1%}")
+
+    from src.eval.run_manifest import write_manifest
+    write_manifest(a.out, input_paths=list(a.pool_data) + [a.target_data],
+                   extra={"n_done": n_done, "single_choice_accuracy": sc_primary_correct / max(n_done, 1),
+                          "secondary_recall": sec_hit / max(sec_total, 1)})
 
 
 if __name__ == "__main__":

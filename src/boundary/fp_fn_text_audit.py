@@ -50,6 +50,8 @@ def main():
     a = ap.parse_args()
 
     import torch
+    from src.eval.run_manifest import print_manifest_if_exists
+    print_manifest_if_exists(a.logits)
     data = torch.load(a.logits, weights_only=False)
     if not data or "segments" not in data[0]:
         raise SystemExit("logits file has no 'segments' field -- re-run "
