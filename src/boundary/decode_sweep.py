@@ -1,50 +1,48 @@
-"""B2 -- is the boundary problem SCORING (ranking) or DECODING (calibration)?
+"""B2 (full) -- is the boundary bottleneck RANKING (does the model put true
+boundaries at high probability at all) or DECODING/CALIBRATION (does the
+right threshold/NMS/count exist but we're not using it)?
 
-pred/GT~=0.99 but F1~0.30 = right COUNT, wrong POSITION -- ambiguous between
-"the model doesn't rank true boundaries highly" (feature/temporal problem) and
-"the ranking is fine but threshold/NMS picks the wrong peaks" (decode problem).
-This script takes ONE saved set of val logits (from train_head_multi.py
---save_logits) and answers it directly:
+Produces the single table that answers this, comparing 5 decoders on the
+SAME saved logits (train_head_multi.py --save_logits, no retraining):
 
-  1. threshold sweep (0.20-0.70): full PR curve at the CURRENT min_gap/sigma.
-  2. oracle-count top-K: decode with the TRUE number of GT boundaries per
-     video (upper bound on ranking quality, independent of any threshold).
-  3. min_gap sweep {0.5,1,1.5,2} x smoothing {none,0.25,0.5,1.0}s: does NMS
-     width or curve smoothing change things.
-  4. per-boundary diagnostics: predicted peaks within +-1s of each GT
-     (duplicate-detection), false peaks >1s from any GT, missed GT count,
-     peak-to-nearest-GT distance histogram.
+  Fixed threshold (thr=0.5, min_gap=1.0s)  -- the naive baseline
+  Best threshold  (grid search @ min_gap=1.0s)
+  Best threshold + gap (grid search over threshold AND min_gap jointly)
+  Oracle top-K    (told the TRUE boundary count per video -- upper bound on
+                    ranking quality, not a deployable decoder)
+  Adaptive-K      (K estimated from a boundary-rate lambda fit on train data:
+                    K_i = round(lambda * duration_i), never sees the true
+                    count -- IS deployable, tests whether a cheap count
+                    estimate closes most of the oracle gap)
 
-Verdict:
-  oracle-count F1 >> best threshold-decode F1  -> ranking is fine, problem is
-    calibration/decode -- freeze a decoder and move on (B4+).
-  oracle-count F1 is ALSO ~0.30 -> the model isn't ranking true boundaries
-    above false ones even when told the count -- problem is feature/temporal
-    modeling, decode tuning won't fix it (this rules out B2 being the answer).
+for each, reports F1@0.25s / F1@0.5s / F1@1.0s / pred:gt ratio, plus whether
+it's an oracle (uses ground truth at decode time) or not.
 
-NOTE: "adaptive-count" decode (from the B2 plan) needs a trained COUNT head,
-which train_head_multi.py doesn't have -- not implemented here. If oracle-count
-clears threshold-decode by a wide margin, that's the next lever (predict count,
-then top-K by that), not more threshold tuning.
+Also reports, once, decoder-independent RANKING-only diagnostics:
+  - frame-level PR-AUC (frame is "positive" if within 0.5s of a true
+    boundary; this is decode-free -- pure ranking quality)
+  - GT-boundary probability percentile rank (for each true boundary, what
+    fraction of all frames in that video have LOWER probability -- 100% =
+    perfectly ranked at the top, 50% = indistinguishable from a random
+    frame)
+  - nearest-peak-to-GT distance distribution at the best threshold decode
 
-Usage (server, after a run_head_multi.py --save_logits pass):
-    python -m src.boundary.decode_sweep --logits /tmp/b2_logits.pt
+Read: if Oracle top-K clears Best-threshold-decode by a wide margin, the
+model IS ranking true boundaries highly and the ceiling is in
+decode/calibration -- worth trying Adaptive-K, NOT worth changing the
+backbone. If Oracle top-K is close to Best-threshold-decode (both mediocre),
+even the upper bound is bad -- decode tuning is maxed out, the problem is
+representation/ranking (temporal head capacity, features, or needs
+hand/language signal -- see the B6 audit for which).
+
+Usage (server, after a train_head_multi.py --save_logits run):
+    python -m src.boundary.decode_sweep \
+        --logits /tmp/b2_logits.pt \
+        --train_data /workspace/tr1/data_recseg/recseg_train.json
 """
-import argparse, statistics
+import argparse, json, statistics
 import numpy as np
 import torch
-
-
-def smooth(prob, times, sigma):
-    if sigma <= 0:
-        return prob
-    t = np.asarray(times)
-    out = np.zeros_like(prob)
-    # small dense sequences (~1000-1500 frames) -- O(T^2) gaussian is fine here
-    for i in range(len(t)):
-        w = np.exp(-((t - t[i]) ** 2) / (2 * sigma ** 2))
-        out[i] = np.sum(w * prob) / np.sum(w)
-    return out
 
 
 def peaks_threshold(prob, times, thr, min_gap):
@@ -59,7 +57,7 @@ def peaks_threshold(prob, times, thr, min_gap):
     return sorted(times[i] for i in kept)
 
 
-def peaks_oracle_count(prob, times, k, min_gap):
+def peaks_topk(prob, times, k, min_gap):
     cand = [i for i in range(len(prob))
             if (i == 0 or prob[i] >= prob[i - 1])
             and (i == len(prob) - 1 or prob[i] >= prob[i + 1])]
@@ -86,119 +84,200 @@ def bf1(preds, gts, tol):
     return f1, pr, rc
 
 
-def peak_diagnostics(preds, gts, near_window=1.0, tol=0.5):
-    near_counts, dists, false_peaks, missed = [], [], 0, 0
-    used = set()
-    for g in gts:
-        c = sum(1 for p in preds if abs(p - g) <= near_window)
-        near_counts.append(c)
-        if not any(abs(p - g) <= tol for p in preds):
-            missed += 1
-    for p in preds:
-        if gts:
-            d = min(abs(p - g) for g in gts)
-        else:
-            d = float("inf")
-        dists.append(d)
-        if d > 1.0:
-            false_peaks += 1
-    return near_counts, dists, false_peaks, missed
+def video_boundary_rate(recseg_path):
+    """Mean (internal boundary count) / (video duration) across recordings,
+    for the adaptive-K decoder's lambda. Uses the same segments format as
+    train_head_multi.py (list of [name, start, end])."""
+    rates = []
+    for r in json.load(open(recseg_path)):
+        segs = sorted(r.get("solution", []), key=lambda s: s[1])
+        if len(segs) < 2:
+            continue
+        ts = sorted({round(s[1], 2) for s in segs} | {round(s[2], 2) for s in segs})
+        n_internal = max(len(ts) - 2, 0)
+        duration = segs[-1][2] - segs[0][1]
+        if duration > 0:
+            rates.append(n_internal / duration)
+    return statistics.mean(rates) if rates else 0.0
+
+
+def pr_auc(all_probs, all_labels):
+    """Manual PR-AUC (no sklearn dependency): sort by score desc, walk the
+    precision/recall curve, trapezoidal integration over recall."""
+    order = np.argsort(-np.asarray(all_probs))
+    labels = np.asarray(all_labels)[order]
+    tp = np.cumsum(labels)
+    fp = np.cumsum(1 - labels)
+    n_pos = labels.sum()
+    if n_pos == 0:
+        return 0.0
+    precision = tp / np.maximum(tp + fp, 1)
+    recall = tp / n_pos
+    recall = np.concatenate([[0.0], recall])
+    precision = np.concatenate([[1.0], precision])
+    return float(np.trapz(precision, recall))
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--logits", required=True,
                     help="output of train_head_multi.py --save_logits")
-    ap.add_argument("--tol", type=float, default=0.5, help="F1 match tolerance (s)")
+    ap.add_argument("--train_data", default=None,
+                    help="recseg_train.json, for the adaptive-K boundary-rate "
+                         "lambda. If omitted, adaptive-K is skipped.")
     a = ap.parse_args()
 
     from src.eval.run_manifest import print_manifest_if_exists
     print_manifest_if_exists(a.logits)
     data = torch.load(a.logits, weights_only=False)
     if not data:
-        raise SystemExit("empty logits file -- did the run finish an eval epoch "
-                          "with --save_logits set on a single variant/seed?")
+        raise SystemExit("empty logits file -- did the run finish an eval "
+                          "epoch with --save_logits set on a single "
+                          "variant/seed?")
     print(f"loaded {len(data)} videos")
 
-    # 1) threshold sweep @ default min_gap=1.0, no smoothing
-    print("\n=== threshold sweep (min_gap=1.0, no smoothing) ===")
-    print(f"{'thr':>5s} {'P':>6s} {'R':>6s} {'F1':>6s} {'pred/gt':>8s}")
-    best_thr_f1, best_thr = -1, None
-    for thr in [0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70]:
-        f1s, ps, rs, ratios = [], [], [], []
+    # ---------------- decoder-independent ranking diagnostics ----------------
+    all_probs, all_labels, pctile_ranks, near_dists = [], [], [], []
+    for v in data:
+        prob = np.asarray(v["prob"]); times = np.asarray(v["times"])
+        gts = v["gt"]
+        is_pos = np.zeros(len(times), dtype=int)
+        for g in gts:
+            is_pos |= (np.abs(times - g) <= 0.5)
+        all_probs.extend(prob.tolist()); all_labels.extend(is_pos.tolist())
+        for g in gts:
+            j = int(np.argmin(np.abs(times - g)))
+            pctile = float((prob <= prob[j]).mean())
+            pctile_ranks.append(pctile)
+
+    auc = pr_auc(all_probs, all_labels)
+    print(f"\n=== ranking-only diagnostics (decode-free) ===")
+    print(f"frame-level PR-AUC (positive = within 0.5s of a GT boundary): {auc:.3f}")
+    print(f"GT-boundary probability percentile rank (mean over all GT "
+          f"boundaries; 100% = ranked above every other frame in its video, "
+          f"50% = indistinguishable from a random frame): "
+          f"{statistics.mean(pctile_ranks):.1%}  (median {statistics.median(pctile_ranks):.1%})")
+
+    # ---------------- threshold sweep (fixes min_gap=1.0) ----------------
+    best_thr, best_thr_f1 = 0.5, -1
+    thr_results = {}
+    for thr in [0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50,
+                0.55, 0.60, 0.65, 0.70, 0.75, 0.80]:
+        f1s = []
         for v in data:
             pk = peaks_threshold(v["prob"], v["times"], thr, 1.0)
-            f1, pr, rc = bf1(pk, v["gt"], a.tol)
-            f1s.append(f1); ps.append(pr); rs.append(rc)
-            ratios.append(len(pk) / max(len(v["gt"]), 1))
-        mf1 = statistics.mean(f1s)
-        print(f"{thr:5.2f} {statistics.mean(ps):6.2f} {statistics.mean(rs):6.2f} "
-              f"{mf1:6.3f} {statistics.mean(ratios):8.2f}")
-        if mf1 > best_thr_f1:
-            best_thr_f1, best_thr = mf1, thr
+            f1s.append(bf1(pk, v["gt"], 0.5)[0])
+        thr_results[thr] = statistics.mean(f1s)
+        if thr_results[thr] > best_thr_f1:
+            best_thr_f1, best_thr = thr_results[thr], thr
+    print(f"\n=== threshold sweep @ min_gap=1.0 (F1@0.5) ===")
+    for thr, f1 in thr_results.items():
+        marker = "  <-- best" if thr == best_thr else ""
+        print(f"  thr={thr:.2f}  F1={f1:.3f}{marker}")
+    neighbors = [thr_results.get(round(best_thr + d, 2)) for d in (-0.05, 0.05)]
+    neighbors = [x for x in neighbors if x is not None]
+    if neighbors and (best_thr_f1 - min(neighbors)) > 0.05:
+        print(f"  WARNING: best threshold is a narrow spike (neighbors "
+              f"{neighbors} vs best {best_thr_f1:.3f}) -- decoder may be unstable.")
 
-    # 2) oracle-count top-K (upper bound on ranking quality)
-    oracle_f1s = []
-    for v in data:
-        pk = peaks_oracle_count(v["prob"], v["times"], len(v["gt"]), 1.0)
-        oracle_f1s.append(bf1(pk, v["gt"], a.tol)[0])
-    oracle_f1 = statistics.mean(oracle_f1s)
-    print(f"\noracle-count top-K F1 (min_gap=1.0): {oracle_f1:.3f}  "
-          f"(best threshold-decode F1: {best_thr_f1:.3f} @ thr={best_thr})")
-
-    # 3) min_gap x smoothing grid (oracle-count decode, isolates NMS/smoothing
-    #    from threshold calibration)
-    print("\n=== min_gap x smoothing grid (oracle-count decode) ===")
-    print(f"{'min_gap':>8s} {'smooth':>7s} {'F1':>6s}")
-    grid_best_f1, grid_best_cfg = -1, None
-    for min_gap in (0.5, 1.0, 1.5, 2.0):
-        for sig in (0.0, 0.25, 0.5, 1.0):
+    # ---------------- threshold x min_gap joint grid ----------------
+    best_grid_f1, best_grid_cfg = -1, (best_thr, 1.0)
+    grid = {}
+    for thr in [0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60]:
+        for mg in [0.25, 0.5, 0.75, 1.0, 1.5, 2.0]:
             f1s = []
             for v in data:
-                prob = smooth(np.asarray(v["prob"]), v["times"], sig) if sig > 0 else np.asarray(v["prob"])
-                pk = peaks_oracle_count(prob.tolist(), v["times"], len(v["gt"]), min_gap)
-                f1s.append(bf1(pk, v["gt"], a.tol)[0])
+                pk = peaks_threshold(v["prob"], v["times"], thr, mg)
+                f1s.append(bf1(pk, v["gt"], 0.5)[0])
             mf1 = statistics.mean(f1s)
-            print(f"{min_gap:8.1f} {sig:7.2f} {mf1:6.3f}")
-            if mf1 > grid_best_f1:
-                grid_best_f1, grid_best_cfg = mf1, (min_gap, sig)
+            grid[(thr, mg)] = mf1
+            if mf1 > best_grid_f1:
+                best_grid_f1, best_grid_cfg = mf1, (thr, mg)
+    print(f"\n=== threshold x min_gap joint grid: best = thr={best_grid_cfg[0]} "
+          f"min_gap={best_grid_cfg[1]} -> F1={best_grid_f1:.3f} ===")
 
-    # 4) per-boundary diagnostics at the best threshold config found above
-    all_near, all_dists, fp_total, miss_total, gt_total = [], [], 0, 0, 0
+    # ---------------- multi-tolerance F1 for each decoder ----------------
+    def eval_decoder(decode_fn, oracle):
+        f1s = {0.25: [], 0.5: [], 1.0: []}
+        ratios = []
+        for v in data:
+            pk = decode_fn(v)
+            for tol in f1s:
+                f1s[tol].append(bf1(pk, v["gt"], tol)[0])
+            ratios.append(len(pk) / max(len(v["gt"]), 1))
+        return {tol: statistics.mean(vals) for tol, vals in f1s.items()}, \
+               statistics.mean(ratios), oracle
+
+    lam = video_boundary_rate(a.train_data) if a.train_data else None
+    decoders = {
+        "Fixed threshold (0.5, gap=1.0)": (
+            lambda v: peaks_threshold(v["prob"], v["times"], 0.5, 1.0), False),
+        f"Best threshold ({best_thr}, gap=1.0)": (
+            lambda v: peaks_threshold(v["prob"], v["times"], best_thr, 1.0), False),
+        f"Best threshold+gap ({best_grid_cfg[0]}, gap={best_grid_cfg[1]})": (
+            lambda v: peaks_threshold(v["prob"], v["times"], *best_grid_cfg), False),
+        "Oracle top-K (true count)": (
+            lambda v: peaks_topk(v["prob"], v["times"], len(v["gt"]), best_grid_cfg[1]), True),
+    }
+    if lam is not None:
+        print(f"\nadaptive-K lambda (boundaries/sec, from train_data): {lam:.4f}")
+        def adaptive_decode(v):
+            duration = v["times"][-1] - v["times"][0] if len(v["times"]) > 1 else 0
+            k = max(1, round(lam * duration))
+            return peaks_topk(v["prob"], v["times"], k, best_grid_cfg[1])
+        decoders["Adaptive-K (estimated count)"] = (adaptive_decode, False)
+
+    print(f"\n=== FINAL COMPARISON TABLE ===")
+    print(f"{'Decoder':38s} {'F1@0.25':>8s} {'F1@0.5':>8s} {'F1@1.0':>8s} "
+          f"{'Pred/GT':>8s} {'Oracle':>7s}")
+    rows = {}
+    for name, (fn, oracle) in decoders.items():
+        f1s, ratio, is_oracle = eval_decoder(fn, oracle)
+        rows[name] = (f1s, ratio, is_oracle)
+        print(f"{name:38s} {f1s[0.25]:8.3f} {f1s[0.5]:8.3f} {f1s[1.0]:8.3f} "
+              f"{ratio:8.2f} {'Yes' if is_oracle else 'No':>7s}")
+
+    # ---------------- nearest-peak distance @ best threshold+gap ----------------
+    dists = []
     for v in data:
-        pk = peaks_threshold(v["prob"], v["times"], best_thr, 1.0)
-        near, dists, fp, missed = peak_diagnostics(pk, v["gt"], tol=a.tol)
-        all_near += near; all_dists += dists
-        fp_total += fp; miss_total += missed; gt_total += len(v["gt"])
-    print(f"\n=== per-boundary diagnostics @ thr={best_thr} ===")
-    print(f"mean predicted peaks within +-1s of each GT: "
-          f"{statistics.mean(all_near) if all_near else 0:.2f} "
-          f"(>1.3 => duplicate peaks on same boundary, widen min_gap/narrow sigma_s)")
-    print(f"false peaks (>1s from any GT): {fp_total} "
-          f"({fp_total / max(sum(len(v['prob']) for v in data), 1) * 1000:.2f} per 1000 frames)")
-    print(f"missed GT boundaries (no pred within {a.tol}s): {miss_total}/{gt_total} "
-          f"= {miss_total/max(gt_total,1):.1%}")
-    if all_dists:
-        finite = [d for d in all_dists if d != float('inf')]
-        if finite:
-            print(f"peak-to-nearest-GT distance: mean={statistics.mean(finite):.2f}s "
-                  f"median={statistics.median(finite):.2f}s")
+        pk = peaks_threshold(v["prob"], v["times"], *best_grid_cfg)
+        for p in pk:
+            if v["gt"]:
+                dists.append(min(abs(p - g) for g in v["gt"]))
+    if dists:
+        print(f"\nnearest-peak-to-GT distance @ best threshold+gap: "
+              f"mean={statistics.mean(dists):.2f}s median={statistics.median(dists):.2f}s")
 
+    # ---------------- verdict ----------------
+    best_deploy_f1 = max(rows[n][0][0.5] for n in rows if not rows[n][2])
+    oracle_f1 = max((rows[n][0][0.5] for n in rows if rows[n][2]), default=None)
     print(f"\n=== VERDICT ===")
-    print(f"oracle-count F1={oracle_f1:.3f} vs best threshold-decode F1={best_thr_f1:.3f} "
-          f"(gap={oracle_f1-best_thr_f1:.3f}); best min_gap/smoothing grid F1={grid_best_f1:.3f} "
-          f"@ {grid_best_cfg}")
-    if oracle_f1 - best_thr_f1 > 0.05:
-        print("oracle-count clearly beats threshold decode -> ranking is OK, "
-              "ceiling is in calibration/decode. Freeze best decoder config, "
-              "move to B4 (regularize) or a trained count head, NOT more "
-              "feature engineering.")
+    if oracle_f1 is not None:
+        gap = oracle_f1 - best_deploy_f1
+        print(f"best deployable F1@0.5={best_deploy_f1:.3f}  oracle-count F1@0.5={oracle_f1:.3f}  gap={gap:.3f}")
+        if gap > 0.05:
+            print("Oracle clears deployable decoding by a real margin -> ranking is "
+                  "usable, the ceiling is calibration/count estimation. Try "
+                  "Adaptive-K seriously (if listed above, check how close it got "
+                  "to oracle); do NOT change the backbone yet.")
+        else:
+            print("Oracle is close to the best deployable decoder -> decode tuning "
+                  "is maxed out. The problem is representation/ranking, not "
+                  "calibration. Proceed to the B6 human audit to see WHICH "
+                  "boundary types are failing before picking TCN vs language vs "
+                  "hand-object signal.")
+    f1_25, f1_50, f1_10 = (rows[f"Best threshold+gap ({best_grid_cfg[0]}, gap={best_grid_cfg[1]})"][0][t]
+                           for t in (0.25, 0.5, 1.0))
+    print(f"\nlocalization read: F1@0.25={f1_25:.3f} F1@0.5={f1_50:.3f} F1@1.0={f1_10:.3f}")
+    if f1_10 - f1_25 > 0.1:
+        print("F1@1.0 >> F1@0.25 -> model knows roughly WHERE but not precisely WHEN "
+              "(localization/temporal-head issue).")
+    elif f1_10 < 0.35:
+        print("all three tolerances low -> model isn't reliably finding semantic "
+              "boundaries at all, not just imprecise timing.")
     else:
-        print("oracle-count is close to threshold decode -> even given the true "
-              "count, the model isn't ranking true boundaries above false ones. "
-              "Decode tuning has hit its ceiling; the problem is in the "
-              "feature/temporal modeling (matches the B3 negative result). "
-              "Move to B6 FP/FN audit to see WHICH boundary types are failing.")
+        print("F1@0.25 close to F1@0.5/1.0 -> localization isn't the main issue; "
+              "the gap is missed/false detections, not offset timing.")
 
 
 if __name__ == "__main__":

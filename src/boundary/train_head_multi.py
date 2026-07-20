@@ -215,17 +215,30 @@ def run_seed(tr, va, variant, mu, sd, dev, a, seed):
                 "near_gt_peaks": statistics.mean(near) if near else 0.0}
 
     def dump_logits(split):
-        """Per-video (prob, times, gt boundary times, named segments) at the
-        CURRENT weights, for offline decode-sweep (B2) AND FP/FN audit (B6) --
-        decoupled from training so both can run without retraining. segments
-        (raw [name,start,end] triples) let the audit label each GT boundary
-        with what changed (or didn't) across it, and place false peaks inside
-        a named segment, with no need to re-load the original recseg json."""
+        """Per-video (raw logits, sigmoid prob, soft target, valid_mask, times,
+        gt boundary times, named segments) at the CURRENT weights, for offline
+        decode-sweep (B2) AND FP/FN audit (B6) -- decoupled from training so
+        both can run without retraining. segments (raw [name,start,end]
+        triples) let the audit label each GT boundary with what changed (or
+        didn't) across it, and place false peaks inside a named segment, with
+        no need to re-load the original recseg json.
+
+        valid_mask is all-True for every frame: run_seed calls net(prep(x))
+        on ONE full video at a time (see the `for x in tr` training loop
+        above) -- there is no cross-video batching or padding anywhere in
+        this script, so there is no padding-contaminates-the-stats failure
+        mode to guard against. Saved anyway so downstream scripts don't have
+        to assume it and so this is auditable rather than asserted."""
         out = []
         for x in split:
-            prob = torch.sigmoid(net(prep(x))).cpu().numpy().tolist()
+            logits = net(prep(x))
+            prob = torch.sigmoid(logits).cpu().numpy().tolist()
+            y = soft_boundary(x["times"], x["segments"], a.sigma_s).tolist()
             out.append({"recording_id": x.get("recording_id", ""),
-                        "prob": prob, "times": x["times"].numpy().tolist(),
+                        "logits": logits.detach().cpu().numpy().tolist(),
+                        "prob": prob, "y_soft_target": y,
+                        "valid_mask": [True] * len(prob),
+                        "times": x["times"].numpy().tolist(),
                         "gt": gt_bounds(x["segments"]),
                         "segments": [[s[0], float(s[1]), float(s[2])] for s in x["segments"]]})
         return out
