@@ -92,7 +92,9 @@ def main():
         gt_has_secondary = len(set(it["gt_letters"]) - {it["primary_letter"]}) > 0
         rec = {"recording_id": rid, "segment_idx": it["segment_idx"],
                "object": it["object"], "primary_verb": primary_verb,
-               "gate_score": gate_score, "gt_has_secondary": gt_has_secondary}
+               "gate_score": gate_score, "gt_has_secondary": gt_has_secondary,
+               "start": it.get("start"), "end": it.get("end"),
+               "duration": (it["end"] - it["start"]) if "start" in it and "end" in it else None}
         fout.write(json.dumps(rec, ensure_ascii=False) + "\n"); fout.flush()
         records.append(rec)
         print(f"{rid} seg{it['segment_idx']} obj='{it['object']}' primary={primary_verb} "
@@ -108,11 +110,22 @@ def main():
     neg_s = [s for s, l in zip(scores, labels) if l == 0]
     wins = sum(1 for p in pos_s for n in neg_s if p > n)
     ties = sum(1 for p in pos_s for n in neg_s if p == n)
-    pairwise_auc = (wins + 0.5 * ties) / max(len(pos_s) * len(neg_s), 1)
-    print(f"PR-AUC: {auc:.3f}   pairwise ranking AUC: {pairwise_auc:.3f}")
+    auroc = (wins + 0.5 * ties) / max(len(pos_s) * len(neg_s), 1)
+    print(f"PR-AUC: {auc:.3f}   AUROC (= pairwise ranking AUC, "
+          f"P(score(compound) > score(single))): {auroc:.3f}")
 
-    best_tau, best_acc, best_stats = None, -1, None
-    for tau in [x / 20 for x in range(-40, 41)]:
+    always_single_acc = n_neg / max(len(labels), 1)
+    always_compound_acc = n_pos / max(len(labels), 1)
+    print(f"majority-class baselines: always-single acc={always_single_acc:.1%}  "
+          f"always-compound acc={always_compound_acc:.1%}")
+
+    # data-driven threshold candidates (sorted unique scores + +-inf sentinels)
+    # -- fixes the earlier bug where a fixed [-2,2] sweep couldn't reach the
+    # all-negative solution because scores went up to ~10.5.
+    cand_thresholds = sorted(set(scores))
+    cand_thresholds = [cand_thresholds[0] - 1] + cand_thresholds + [cand_thresholds[-1] + 1]
+
+    def stats_at(tau):
         tp = fp = tn = fn = 0
         for s, l in zip(scores, labels):
             pred = int(s > tau)
@@ -120,25 +133,44 @@ def main():
             fp += pred == 1 and l == 0
             tn += pred == 0 and l == 0
             fn += pred == 0 and l == 1
+        return tp, fp, tn, fn
+
+    def metrics_at(tau):
+        tp, fp, tn, fn = stats_at(tau)
         acc = (tp + tn) / max(len(labels), 1)
-        if acc > best_acc:
-            best_acc, best_tau, best_stats = acc, tau, (tp, fp, tn, fn)
-    tp, fp, tn, fn = best_stats
-    prec = tp / max(tp + fp, 1); rec = tp / max(tp + fn, 1)
-    f1 = 2 * prec * rec / max(prec + rec, 1e-9)
-    single_to_compound_fpr = fp / max(n_neg, 1)   # single items wrongly gated "yes"
-    compound_to_single_fnr = fn / max(n_pos, 1)   # compound items wrongly gated "no"
-    print(f"best-accuracy threshold tau={best_tau:.2f} (CAVEAT: same-set, not held-out)")
-    print(f"accuracy={best_acc:.1%}  precision={prec:.1%}  recall={rec:.1%}  F1={f1:.1%}")
-    print(f"single->compound false-positive rate (wrongly says 'yes' on an "
-          f"atomic segment, reintroduces over-selection): {fp}/{n_neg} = {single_to_compound_fpr:.1%}")
-    print(f"compound->single false-negative rate (wrongly says 'no', silently "
-          f"drops a real secondary action): {fn}/{n_pos} = {compound_to_single_fnr:.1%}")
+        prec = tp / max(tp + fp, 1); rec = tp / max(tp + fn, 1)
+        f1 = 2 * prec * rec / max(prec + rec, 1e-9)
+        tnr = tn / max(tn + fp, 1)
+        bal_acc = (rec + tnr) / 2
+        return {"tau": tau, "tp": tp, "fp": fp, "tn": tn, "fn": fn, "acc": acc,
+                "precision": prec, "recall": rec, "f1": f1, "balanced_acc": bal_acc}
+
+    all_metrics = [metrics_at(t) for t in cand_thresholds]
+    best_acc_m = max(all_metrics, key=lambda m: m["acc"])
+    best_f1_m = max(all_metrics, key=lambda m: m["f1"])
+    best_bal_m = max(all_metrics, key=lambda m: m["balanced_acc"])
+
+    print(f"\nCAVEAT: all thresholds below are same-set, not held-out.")
+    for name, m in [("best ACCURACY", best_acc_m), ("best F1", best_f1_m),
+                    ("best BALANCED accuracy", best_bal_m)]:
+        single_to_compound_fpr = m["fp"] / max(n_neg, 1)
+        compound_to_single_fnr = m["fn"] / max(n_pos, 1)
+        print(f"\n[{name}] tau={m['tau']:.2f}  acc={m['acc']:.1%}  "
+              f"precision={m['precision']:.1%}  recall={m['recall']:.1%}  "
+              f"f1={m['f1']:.1%}  balanced_acc={m['balanced_acc']:.1%}")
+        print(f"  single->compound FPR: {m['fp']}/{n_neg} = {single_to_compound_fpr:.1%}   "
+              f"compound->single FNR: {m['fn']}/{n_pos} = {compound_to_single_fnr:.1%}")
+        if m["acc"] < max(always_single_acc, always_compound_acc):
+            print(f"  WARNING: this operating point is BELOW the majority-class "
+                  f"baseline ({max(always_single_acc, always_compound_acc):.1%}) "
+                  f"on accuracy -- the gate is adding negative value at this tau.")
 
     from src.eval.run_manifest import write_manifest
     write_manifest(a.out, input_paths=[a.prev_jsonl],
-                   extra={"n": len(records), "auc": auc, "best_tau": best_tau,
-                          "accuracy": best_acc})
+                   extra={"n": len(records), "pr_auc": auc, "auroc": auroc,
+                          "always_single_acc": always_single_acc,
+                          "best_accuracy_tau": best_acc_m["tau"], "best_accuracy": best_acc_m["acc"],
+                          "best_f1_tau": best_f1_m["tau"], "best_f1": best_f1_m["f1"]})
 
 
 if __name__ == "__main__":
