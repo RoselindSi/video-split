@@ -1,25 +1,32 @@
-"""B-final media step -- for a balanced sample of classified events from
+"""B-final media step (v2) -- for a balanced sample of classified events from
 boundary_error_audit.py's predictions.jsonl, render the three artifacts a
-human audit actually needs (not just numbers):
+human audit actually needs, WITH the segment-name context that v1 was
+missing (a category+timestamp alone can't tell you if this is a
+"rinse mug -> place mug" transition or a "pick up -> put down" one):
 
-  {event_id}.mp4              : ~3s before/after the event center
-  {event_id}_contact_sheet.png: 9 frames across that window (local action
-                                 change, same layout family as the other
-                                 contact-sheet scripts in this repo)
-  {event_id}_score_plot.png   : the boundary-probability curve in that
-                                 window, with GT boundaries (green dashed)
-                                 and predicted peaks (red dashed) marked
+  {event_id}.mp4              : ~3s before/after the event center, with the
+                                 segment-label transition burned into the
+                                 video via ffmpeg drawtext (if ffmpeg on PATH)
+  {event_id}_contact_sheet.png: 9 frames across that window, header shows
+                                 Previous/Next (or containing) segment labels
+                                 + GT/pred times so you don't have to cross-
+                                 reference the CSV while looking at the image
+  {event_id}_score_plot.png   : probability curve with GT (green dashed) /
+                                 pred (red dashed) marked, title includes the
+                                 same label + time context
 
-Samples across ALL of boundary_error_audit.py's categories (exact/early/late/
-missed-weak_signal/missed-signal_present_not_top for GT boundaries;
-duplicate/false_near_edge/false_mid_segment for unmatched predicted peaks),
-capped per category AND per recording so no single video dominates.
+CSV columns (audit_sample.csv) now include gt_time, pred_time, pred_score,
+offset, and segment labels -- for GT-centered events (exact/early/late/
+missed_*): prev_segment_label/next_segment_label (the two segments either
+side of the GT cut). For prediction-centered false positives (duplicate/
+false_near_edge/false_mid_segment/false_gap): containing_segment_label,
+nearest_previous_segment_label, nearest_next_segment_label,
+nearest_gt_boundary_time, distance_to_nearest_gt -- so you can tell a
+false_mid_segment peak apart as "inside 'wipe mug', 1.8s from the nearest GT"
+vs "actually sitting near an unlabeled sub-action".
 
-Requires ffmpeg on PATH for the .mp4 clips; if unavailable, clips are
-skipped with a warning but contact sheets + score plots (matplotlib + decord
-only) still render.
-
-Usage (server, after boundary_error_audit.py has written predictions.jsonl):
+Usage (server, after boundary_error_audit.py's v2 -- run it again first if
+predictions.jsonl predates the segment-label fields):
     python -m src.boundary.render_audit_media \
         --predictions /workspace/tr1/results/boundary/error_audit/predictions.jsonl \
         --logits /workspace/tr1/results/boundary/b2_logits.pt \
@@ -37,8 +44,33 @@ import torch
 from decord import VideoReader
 from PIL import Image, ImageDraw
 
+GT_CENTERED = {"exact", "early", "late"}  # + "missed_*" handled by prefix
 
-def make_contact_sheet(vr, vfps, center, window_s, gt_in_window, pred_in_window, thumb_w=160):
+
+def is_gt_centered(cat):
+    return cat in GT_CENTERED or cat.startswith("missed_")
+
+
+def label_pair_text(row):
+    """Short 'A -> B' style label string for titles/captions, from whichever
+    fields this row's category populated."""
+    if row["prev_segment_label"] or row["next_segment_label"]:
+        a = row["prev_segment_label"] or "?"
+        b = row["next_segment_label"] or "?"
+        return f"{a}  ->  {b}"
+    if row["containing_segment_label"]:
+        a = row["nearest_previous_segment_label"] or "?"
+        c = row["containing_segment_label"]
+        b = row["nearest_next_segment_label"] or "?"
+        return f"{a} | [{c}] | {b}"
+    return ""
+
+
+def ffmpeg_escape(text):
+    return text.replace("\\", "\\\\").replace(":", "\\:").replace("'", "\\'")
+
+
+def make_contact_sheet(vr, vfps, center, window_s, gt_in_window, pred_in_window, row, thumb_w=160):
     n = len(vr)
     offsets = [-window_s + i * (2 * window_s / 8) for i in range(9)]
     pts = [max(0, min(n - 1, int((center + o) * vfps))) for o in offsets]
@@ -49,23 +81,26 @@ def make_contact_sheet(vr, vfps, center, window_s, gt_in_window, pred_in_window,
         im = im.resize((thumb_w, int(h * thumb_w / w)))
         imgs.append(im)
     H = max(im.height for im in imgs)
-    sheet = Image.new("RGB", (thumb_w * 9, H + 50), "white")
+    sheet = Image.new("RGB", (thumb_w * 9, H + 70), "white")
     d = ImageDraw.Draw(sheet)
     for i, (im, o) in enumerate(zip(imgs, offsets)):
         sheet.paste(im, (i * thumb_w, 30))
         d.text((i * thumb_w + 4, 4), f"{o:+.1f}s", fill="black")
-    d.text((4, H + 34), f"GT in window: {[round(g,2) for g in gt_in_window]}  "
-                        f"pred in window: {[round(p,2) for p in pred_in_window]}", fill="darkred")
+    d.text((4, H + 34), label_pair_text(row), fill="darkblue")
+    gt_str = f"GT={row['gt_time']}" if row["gt_time"] != "" else "GT=n/a"
+    pred_str = f"pred={row['pred_time']}" if row["pred_time"] != "" else "pred=n/a"
+    d.text((4, H + 54), f"{row['category']}  {gt_str}  {pred_str}  "
+                       f"offset={row['offset']}  score={row['pred_score']}", fill="darkred")
     return sheet
 
 
-def make_score_plot(times, prob, center, window_s, gt_in_window, pred_in_window, out_path, title):
+def make_score_plot(times, prob, center, window_s, gt_in_window, pred_in_window, out_path, row):
     lo, hi = center - window_s, center + window_s
     idx = [i for i, t in enumerate(times) if lo <= t <= hi]
     if not idx:
         return False
     t = [times[i] for i in idx]; p = [prob[i] for i in idx]
-    fig, ax = plt.subplots(figsize=(6, 3))
+    fig, ax = plt.subplots(figsize=(6, 3.3))
     ax.plot(t, p, color="steelblue", lw=1.5)
     for g in gt_in_window:
         ax.axvline(g, color="green", linestyle="--", alpha=0.8, label="GT")
@@ -78,7 +113,10 @@ def make_score_plot(times, prob, center, window_s, gt_in_window, pred_in_window,
         seen.setdefault(lb, hd)
     if seen:
         ax.legend(seen.values(), seen.keys(), loc="upper right", fontsize=8)
-    ax.set_xlabel("time (s)"); ax.set_ylabel("boundary probability"); ax.set_title(title, fontsize=9)
+    ax.set_xlabel("time (s)"); ax.set_ylabel("boundary probability")
+    title1 = f"{row['recording_id']} [{row['category']}]"
+    title2 = label_pair_text(row)
+    ax.set_title(f"{title1}\n{title2}" if title2 else title1, fontsize=8)
     ax.set_ylim(-0.05, 1.05)
     fig.tight_layout()
     fig.savefig(out_path, dpi=110)
@@ -86,13 +124,16 @@ def make_score_plot(times, prob, center, window_s, gt_in_window, pred_in_window,
     return True
 
 
-def make_clip(video_path, center, window_s, out_path):
+def make_clip(video_path, center, window_s, out_path, caption):
     if shutil.which("ffmpeg") is None:
         return False
     start = max(0.0, center - window_s)
     duration = 2 * window_s
+    vf = "scale=480:-2"
+    if caption:
+        vf += f",drawtext=text='{ffmpeg_escape(caption)}':x=8:y=8:fontsize=14:fontcolor=yellow:box=1:boxcolor=black@0.5"
     cmd = ["ffmpeg", "-y", "-ss", f"{start:.2f}", "-i", video_path, "-t", f"{duration:.2f}",
-           "-vf", "scale=480:-2", "-c:v", "libx264", "-preset", "fast", "-an", out_path]
+           "-vf", vf, "-c:v", "libx264", "-preset", "fast", "-an", out_path]
     try:
         subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return True
@@ -122,18 +163,19 @@ def main():
     media_dir = os.path.join(a.out_dir, "media")
     os.makedirs(media_dir, exist_ok=True)
 
+    if preds and preds[0]["gt_boundaries"] and "prev_segment_label" not in preds[0]["gt_boundaries"][0]:
+        print("WARNING: predictions.jsonl looks like it predates the segment-label "
+              "fields -- re-run boundary_error_audit.py first.")
+
     # ---------------- build flat event list ----------------
-    cands = defaultdict(list)  # category -> [(recording_id, center, gt_list, pred_list, extra)]
+    cands = defaultdict(list)  # category -> [(recording_id, center, gts_all, preds_all, extra)]
     for rec in preds:
         rid = rec["recording_id"]
         gts_all = [g["gt_time"] for g in rec["gt_boundaries"]]
         preds_all = [p["pred_time"] for p in rec["predicted_peaks"]] + \
                     [g["matched_pred_time"] for g in rec["gt_boundaries"] if "matched_pred_time" in g]
         for g in rec["gt_boundaries"]:
-            if g["status"] == "missed":
-                cat = f"missed_{g['signal']}"
-            else:
-                cat = g["status"]  # exact / early / late
+            cat = f"missed_{g['signal']}" if g["status"] == "missed" else g["status"]
             cands[cat].append((rid, g["gt_time"], gts_all, preds_all, g))
         for p in rec["predicted_peaks"]:
             cands[p["status"]].append((rid, p["pred_time"], gts_all, preds_all, p))
@@ -155,6 +197,12 @@ def main():
 
     print(f"total events selected: {len(selected)}")
 
+    header = ["event_id", "recording_id", "category", "gt_time", "pred_time", "pred_score", "offset",
+             "prev_segment_label", "next_segment_label",
+             "containing_segment_label", "nearest_previous_segment_label", "nearest_next_segment_label",
+             "nearest_gt_boundary_time", "distance_to_nearest_gt",
+             "clip_path", "contact_sheet_path", "score_plot_path",
+             "primary_error_type", "secondary_error_type", "visual_evidence_present", "notes"]
     rows = []
     for cat, rid, center, gts_all, preds_all, extra in selected:
         event_id = f"{rid}_{cat}_t{center:.1f}"
@@ -163,37 +211,62 @@ def main():
         gt_in_window = [g for g in gts_all if abs(g - center) <= a.window_s]
         pred_in_window = [p for p in preds_all if abs(p - center) <= a.window_s]
 
+        row = {h: "" for h in header}
+        row.update({"event_id": event_id, "recording_id": rid, "category": cat})
+        if is_gt_centered(cat):
+            row["gt_time"] = round(center, 3)
+            row["pred_time"] = extra.get("matched_pred_time", "")
+            row["pred_score"] = extra.get("pred_score", extra.get("gt_prob_at_time", ""))
+            row["offset"] = extra.get("offset", "")
+            row["prev_segment_label"] = extra.get("prev_segment_label", "") or ""
+            row["next_segment_label"] = extra.get("next_segment_label", "") or ""
+        else:
+            row["pred_time"] = round(center, 3)
+            row["pred_score"] = extra.get("pred_score", "")
+            row["gt_time"] = extra.get("nearest_gt_boundary_time", extra.get("near_gt_time", ""))
+            row["distance_to_nearest_gt"] = extra.get("distance_to_nearest_gt", "")
+            row["nearest_gt_boundary_time"] = extra.get("nearest_gt_boundary_time", extra.get("near_gt_time", ""))
+            row["containing_segment_label"] = extra.get("containing_segment_label", "") or ""
+            row["nearest_previous_segment_label"] = extra.get("nearest_previous_segment_label", "") or ""
+            row["nearest_next_segment_label"] = extra.get("nearest_next_segment_label", "") or ""
+
+        caption = f"{cat}"
+        lp = label_pair_text(row)
+        if lp:
+            caption += f" | {lp}"
+        if row["gt_time"] != "":
+            caption += f" | GT={row['gt_time']}"
+        if row["pred_time"] != "":
+            caption += f" | Pred={row['pred_time']}"
+
         clip_path = os.path.join(media_dir, f"{event_id}.mp4")
         contact_path = os.path.join(media_dir, f"{event_id}_contact_sheet.png")
         plot_path = os.path.join(media_dir, f"{event_id}_score_plot.png")
 
-        clip_ok = make_clip(vp, center, a.window_s, clip_path) if vp else False
+        clip_ok = make_clip(vp, center, a.window_s, clip_path, caption) if vp else False
         contact_ok = False
         if vp:
             vr = VideoReader(vp, num_threads=1)
-            sheet = make_contact_sheet(vr, vr.get_avg_fps(), center, a.window_s, gt_in_window, pred_in_window)
+            sheet = make_contact_sheet(vr, vr.get_avg_fps(), center, a.window_s, gt_in_window, pred_in_window, row)
             sheet.save(contact_path)
             contact_ok = True
             del vr
         plot_ok = False
         if ld:
             plot_ok = make_score_plot(ld["times"], ld["prob"], center, a.window_s, gt_in_window,
-                                      pred_in_window, plot_path, f"{rid} [{cat}] t={center:.1f}s")
+                                      pred_in_window, plot_path, row)
 
-        rows.append({"event_id": event_id, "recording_id": rid, "category": cat,
-                    "center_time": round(center, 2),
-                    "offset": round(extra.get("offset", 0), 3) if "offset" in extra else "",
-                    "clip_path": clip_path if clip_ok else "",
-                    "contact_sheet_path": contact_path if contact_ok else "",
-                    "score_plot_path": plot_path if plot_ok else "",
-                    "primary_error_type": "", "secondary_error_type": "",
-                    "visual_evidence_present": "", "notes": ""})
-        print(f"{event_id}: clip={'ok' if clip_ok else 'SKIPPED (no ffmpeg?)'} "
+        row["clip_path"] = clip_path if clip_ok else ""
+        row["contact_sheet_path"] = contact_path if contact_ok else ""
+        row["score_plot_path"] = plot_path if plot_ok else ""
+        rows.append(row)
+        print(f"{event_id}: {lp or '(no label context)'}  "
+              f"clip={'ok' if clip_ok else 'SKIPPED (no ffmpeg?)'} "
               f"contact_sheet={'ok' if contact_ok else 'skip'} score_plot={'ok' if plot_ok else 'skip'}")
 
     csv_path = os.path.join(a.out_dir, "audit_sample.csv")
     with open(csv_path, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=list(rows[0].keys()) if rows else [])
+        w = csv.DictWriter(f, fieldnames=header)
         w.writeheader()
         for row in rows:
             w.writerow(row)

@@ -107,6 +107,42 @@ def nearest_local_maximum(prob, times, local_maxima_idx, g, window=1.0):
     return max(near, key=lambda i: prob[i]) if near else None
 
 
+def prob_at(prob, times, t):
+    """Probability at the frame nearest to time t -- for reporting the
+    actual score at a GT/pred time in the audit media, not just the class."""
+    i = min(range(len(times)), key=lambda j: abs(times[j] - t))
+    return float(prob[i])
+
+
+def segment_labels_at_boundary(segs, t, tol=0.05):
+    """segs: sorted [name,start,end]. Returns (prev_label, next_label) for a
+    time t that is (approximately) a segment cut -- the segment ending at t
+    and the segment starting at t. Falls back to containing/adjacent search
+    if t doesn't land exactly on a cut (e.g. a predicted peak, not a GT time)."""
+    prev_label = next((s[0] for s in segs if abs(s[2] - t) <= tol), None)
+    next_label = next((s[0] for s in segs if abs(s[1] - t) <= tol), None)
+    return prev_label, next_label
+
+
+def segment_context_at_point(segs, t):
+    """For an arbitrary time t (e.g. a false-peak time, not necessarily a cut):
+    containing segment label, and the previous/next segment labels relative
+    to whichever segment contains (or is nearest to) t."""
+    containing_idx = next((i for i, s in enumerate(segs) if s[1] <= t <= s[2]), None)
+    if containing_idx is None:
+        # in a gap between segments -- find the segment ending before t and
+        # the one starting after
+        before = [s for s in segs if s[2] <= t]
+        after = [s for s in segs if s[1] >= t]
+        prev_label = before[-1][0] if before else None
+        next_label = after[0][0] if after else None
+        return None, prev_label, next_label
+    containing_label = segs[containing_idx][0]
+    prev_label = segs[containing_idx - 1][0] if containing_idx > 0 else None
+    next_label = segs[containing_idx + 1][0] if containing_idx + 1 < len(segs) else None
+    return containing_label, prev_label, next_label
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--logits", required=True)
@@ -180,7 +216,10 @@ def main():
                 # tol" -- this is the only correct way to measure that).
                 nearest_dist = min((abs(p - g) for p in preds), default=None)
                 missed_nearest_dists.append(nearest_dist)
+                prev_label, next_label = segment_labels_at_boundary(segs, g)
                 rec = {"gt_time": g, "status": "missed", "signal": kind, "subtype": subtype,
+                      "prev_segment_label": prev_label, "next_segment_label": next_label,
+                      "gt_prob_at_time": round(prob_at(prob, times, g), 3),
                       "local_max_prob": round(lp, 3), "video_median_prob": round(overall_median, 3),
                       "nearest_pred_dist": round(nearest_dist, 3) if nearest_dist is not None else None}
                 if kind == "signal_present_not_top" and subtype in ("below_threshold", "suppressed_by_min_gap",
@@ -210,17 +249,27 @@ def main():
             else:
                 status = "late"
             gt_class[status] += 1
+            prev_label, next_label = segment_labels_at_boundary(segs, g)
             gt_records.append({"gt_time": g, "status": status, "offset": round(offset, 3),
-                               "matched_pred_time": round(nearest, 3)})
+                               "matched_pred_time": round(nearest, 3),
+                               "pred_score": round(prob_at(prob, times, nearest), 3),
+                               "prev_segment_label": prev_label, "next_segment_label": next_label})
 
         pred_records = []
         for p in preds:
             if p in used_preds:
                 continue
+            nearest_g = min(gts, key=lambda g: abs(g - p)) if gts else None
+            dist_to_gt = abs(nearest_g - p) if nearest_g is not None else None
+            containing_label, prev_label, next_label = segment_context_at_point(segs, p)
             if p in duplicate_preds:
-                nearest_g = min(gts, key=lambda g: abs(g - p)) if gts else None
                 pred_records.append({"pred_time": round(p, 3), "status": "duplicate",
-                                     "near_gt_time": round(nearest_g, 3) if nearest_g is not None else None})
+                                     "pred_score": round(prob_at(prob, times, p), 3),
+                                     "near_gt_time": round(nearest_g, 3) if nearest_g is not None else None,
+                                     "distance_to_nearest_gt": round(dist_to_gt, 3) if dist_to_gt is not None else None,
+                                     "containing_segment_label": containing_label,
+                                     "nearest_previous_segment_label": prev_label,
+                                     "nearest_next_segment_label": next_label})
                 continue
             containing = next((s for s in segs if s[1] <= p <= s[2]), None)
             if containing:
@@ -230,8 +279,13 @@ def main():
                 kind, frac = "false_gap", None
             peak_class[kind] += 1
             pred_records.append({"pred_time": round(p, 3), "status": kind,
+                                 "pred_score": round(prob_at(prob, times, p), 3),
                                  "frac_into_segment": round(frac, 3) if frac is not None else None,
-                                 "containing_segment": containing[0] if containing else None})
+                                 "containing_segment_label": containing_label,
+                                 "nearest_previous_segment_label": prev_label,
+                                 "nearest_next_segment_label": next_label,
+                                 "nearest_gt_boundary_time": round(nearest_g, 3) if nearest_g is not None else None,
+                                 "distance_to_nearest_gt": round(dist_to_gt, 3) if dist_to_gt is not None else None})
 
         per_recording_preds.append({"recording_id": v.get("recording_id", ""),
                                     "gt_boundaries": gt_records, "predicted_peaks": pred_records})
