@@ -94,6 +94,7 @@ def main():
     gt_class = Counter()
     peak_class = Counter()
     offsets = []  # signed, matched only
+    missed_nearest_dists = []  # unbounded nearest-pred distance for MISSED GTs only
     weak_signal_missed = 0; signal_present_missed = 0
     per_recording_preds = []
 
@@ -118,8 +119,17 @@ def main():
                 else:
                     signal_present_missed += 1
                 gt_class["missed"] += 1
+                # unbounded nearest-pred distance -- tells us whether a LOOSER
+                # tolerance would actually rescue this miss, unlike the
+                # matched-pair offset stats below which are capped at `tol` by
+                # construction (matched pairs can never be >tol apart, so
+                # their own distribution can't show "near misses just outside
+                # tol" -- this is the only correct way to measure that).
+                nearest_dist = min((abs(p - g) for p in preds), default=None)
+                missed_nearest_dists.append(nearest_dist)
                 gt_records.append({"gt_time": g, "status": "missed", "signal": kind,
-                                   "local_max_prob": round(lp, 3), "video_median_prob": round(overall_median, 3)})
+                                   "local_max_prob": round(lp, 3), "video_median_prob": round(overall_median, 3),
+                                   "nearest_pred_dist": round(nearest_dist, 3) if nearest_dist is not None else None})
                 continue
             nearest = min(within, key=lambda p: abs(p - g))
             offset = nearest - g
@@ -194,11 +204,29 @@ def main():
             print(f"  within +-{t}s: {frac:.1%}")
         print(f"early/late split (of matched, non-exact): "
               f"early={gt_class['early']}  late={gt_class['late']}")
-        print("read: if 'within +-0.5s' is much higher than the GT-boundary "
-              "'exact' rate but strict F1@0.5 is still low, the tolerance-vs-"
-              "count mismatch (near-misses vs the exact_tol cutoff) explains "
-              "part of the F1 gap -- this is a localization/timing issue, not "
-              "a detection failure.")
+        print("NOTE: 'within +-Xs' above is capped at 100% once X>=tol by "
+              "construction (a pair can't be 'matched' at all if it's farther "
+              "than tol apart) -- it can only show whether near-misses cluster "
+              "just under exact_tol, NOT whether missed GTs have a near-miss "
+              "just OUTSIDE tol. See the rescue-rate section below for that.")
+
+    if missed_nearest_dists:
+        finite = [d for d in missed_nearest_dists if d is not None]
+        print(f"\n=== would a LOOSER tolerance rescue missed GT boundaries? "
+              f"(n_missed={len(missed_nearest_dists)}, has a pred at all in "
+              f"this video: {len(finite)}) ===")
+        print(f"nearest predicted peak distance for MISSED GTs: "
+              f"median={statistics.median(finite):.2f}s  mean={statistics.mean(finite):.2f}s")
+        for t in (0.75, 1.0, 1.5, 2.0, 3.0):
+            rescued = sum(d <= t for d in finite)
+            print(f"  would be rescued at tol={t}s: {rescued}/{len(missed_nearest_dists)} "
+                  f"= {rescued/len(missed_nearest_dists):.1%}")
+        print("read: if rescue rate stays low even at tol=2-3s, missed boundaries "
+              "genuinely have NO nearby prediction (consistent with the "
+              "signal_present_not_top finding -- the model's peak, if any, is "
+              "elsewhere, not just slightly mistimed) -- confirms this is a "
+              "ranking/detection problem, not a tolerance-calibration problem, "
+              "and tightens the case against further threshold/min_gap tuning.")
 
     # ---------------- reproducibility freeze ----------------
     pred_path = os.path.join(a.out_dir, "predictions.jsonl")
