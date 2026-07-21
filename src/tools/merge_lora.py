@@ -21,7 +21,7 @@ import os
 
 import torch
 from peft import PeftModel
-from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration
+from transformers import AutoProcessor, AutoModelForImageTextToText
 
 
 def main():
@@ -38,7 +38,7 @@ def main():
         )
 
     print(f"loading base: {args.base}")
-    model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
+    model = AutoModelForImageTextToText.from_pretrained(
         args.base, torch_dtype=torch.bfloat16, device_map="cpu"
     )
     print(f"loading adapter: {args.adapter}")
