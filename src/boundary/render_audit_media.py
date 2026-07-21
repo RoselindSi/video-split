@@ -124,21 +124,42 @@ def make_score_plot(times, prob, center, window_s, gt_in_window, pred_in_window,
     return True
 
 
+def _run_ffmpeg(cmd):
+    """Returns (ok, stderr_tail) -- never silently swallows the real error."""
+    try:
+        r = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        if r.returncode == 0:
+            return True, ""
+        return False, r.stderr.decode(errors="replace")[-500:]
+    except FileNotFoundError as e:
+        return False, str(e)
+
+
 def make_clip(video_path, center, window_s, out_path, caption):
     if shutil.which("ffmpeg") is None:
+        print("    [make_clip] ffmpeg not found on PATH")
         return False
     start = max(0.0, center - window_s)
     duration = 2 * window_s
-    vf = "scale=480:-2"
+    base_cmd = ["ffmpeg", "-y", "-ss", f"{start:.2f}", "-i", video_path, "-t", f"{duration:.2f}"]
+    tail = ["-c:v", "libx264", "-preset", "fast", "-an", out_path]
+
     if caption:
-        vf += f",drawtext=text='{ffmpeg_escape(caption)}':x=8:y=8:fontsize=14:fontcolor=yellow:box=1:boxcolor=black@0.5"
-    cmd = ["ffmpeg", "-y", "-ss", f"{start:.2f}", "-i", video_path, "-t", f"{duration:.2f}",
-           "-vf", vf, "-c:v", "libx264", "-preset", "fast", "-an", out_path]
-    try:
-        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        return True
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return False
+        # drawtext needs a font -- fails hard on minimal servers with no
+        # fontconfig/font files installed. Try it, but fall back to a plain
+        # (uncaptioned) clip rather than skipping the clip entirely.
+        vf_captioned = (f"scale=480:-2,drawtext=text='{ffmpeg_escape(caption)}':"
+                       f"x=8:y=8:fontsize=14:fontcolor=yellow:box=1:boxcolor=black@0.5")
+        ok, err = _run_ffmpeg(base_cmd + ["-vf", vf_captioned] + tail)
+        if ok:
+            return True
+        print(f"    [make_clip] drawtext failed (likely missing font), "
+              f"falling back to uncaptioned clip. ffmpeg stderr tail:\n{err}")
+
+    ok, err = _run_ffmpeg(base_cmd + ["-vf", "scale=480:-2"] + tail)
+    if not ok:
+        print(f"    [make_clip] ffmpeg failed:\n{err}")
+    return ok
 
 
 def main():
@@ -261,7 +282,7 @@ def main():
         row["score_plot_path"] = plot_path if plot_ok else ""
         rows.append(row)
         print(f"{event_id}: {lp or '(no label context)'}  "
-              f"clip={'ok' if clip_ok else 'SKIPPED (no ffmpeg?)'} "
+              f"clip={'ok' if clip_ok else 'FAILED (see error above)'} "
               f"contact_sheet={'ok' if contact_ok else 'skip'} score_plot={'ok' if plot_ok else 'skip'}")
 
     csv_path = os.path.join(a.out_dir, "audit_sample.csv")
