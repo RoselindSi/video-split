@@ -115,13 +115,30 @@ def prob_at(prob, times, t):
 
 
 def segment_labels_at_boundary(segs, t, tol=0.05):
-    """segs: sorted [name,start,end]. Returns (prev_label, next_label) for a
-    time t that is (approximately) a segment cut -- the segment ending at t
-    and the segment starting at t. Falls back to containing/adjacent search
-    if t doesn't land exactly on a cut (e.g. a predicted peak, not a GT time)."""
+    """segs: sorted [name,start,end]. A GT boundary time is always EITHER
+    some segment's end OR some segment's start (gt_bounds is built from the
+    union of all segment starts/ends) -- but NOT necessarily both: this
+    dataset's segments aren't always contiguous, so a segment can end at t
+    with no other segment starting exactly at t (there's a real annotation
+    gap before whatever comes next). Returns:
+      prev_label, next_label : exact match only (within `tol`), as before
+      next_label_is_gap      : True if no segment starts exactly at t (the
+                                side that would be "next" ends up empty)
+      nearest_next_label, nearest_next_gap_s : the closest segment that
+                                DOES start after t, and how far after --
+                                so a "?" is never a dead end; you always get
+                                *something* (the next REAL segment, at
+                                whatever distance) instead of nothing."""
     prev_label = next((s[0] for s in segs if abs(s[2] - t) <= tol), None)
     next_label = next((s[0] for s in segs if abs(s[1] - t) <= tol), None)
-    return prev_label, next_label
+    nearest_next_label = nearest_next_gap_s = None
+    if next_label is None:
+        after = [s for s in segs if s[1] > t]
+        if after:
+            nxt = min(after, key=lambda s: s[1])
+            nearest_next_label = nxt[0]
+            nearest_next_gap_s = round(nxt[1] - t, 3)
+    return prev_label, next_label, (next_label is None), nearest_next_label, nearest_next_gap_s
 
 
 def segment_context_at_point(segs, t):
@@ -216,9 +233,12 @@ def main():
                 # tol" -- this is the only correct way to measure that).
                 nearest_dist = min((abs(p - g) for p in preds), default=None)
                 missed_nearest_dists.append(nearest_dist)
-                prev_label, next_label = segment_labels_at_boundary(segs, g)
+                prev_label, next_label, next_is_gap, nearest_next_label, nearest_next_gap_s = \
+                    segment_labels_at_boundary(segs, g)
                 rec = {"gt_time": g, "status": "missed", "signal": kind, "subtype": subtype,
                       "prev_segment_label": prev_label, "next_segment_label": next_label,
+                      "next_label_is_gap": next_is_gap,
+                      "nearest_next_label": nearest_next_label, "nearest_next_gap_s": nearest_next_gap_s,
                       "gt_prob_at_time": round(prob_at(prob, times, g), 3),
                       "local_max_prob": round(lp, 3), "video_median_prob": round(overall_median, 3),
                       "nearest_pred_dist": round(nearest_dist, 3) if nearest_dist is not None else None}
@@ -249,11 +269,14 @@ def main():
             else:
                 status = "late"
             gt_class[status] += 1
-            prev_label, next_label = segment_labels_at_boundary(segs, g)
+            prev_label, next_label, next_is_gap, nearest_next_label, nearest_next_gap_s = \
+                segment_labels_at_boundary(segs, g)
             gt_records.append({"gt_time": g, "status": status, "offset": round(offset, 3),
                                "matched_pred_time": round(nearest, 3),
                                "pred_score": round(prob_at(prob, times, nearest), 3),
-                               "prev_segment_label": prev_label, "next_segment_label": next_label})
+                               "prev_segment_label": prev_label, "next_segment_label": next_label,
+                               "next_label_is_gap": next_is_gap,
+                               "nearest_next_label": nearest_next_label, "nearest_next_gap_s": nearest_next_gap_s})
 
         pred_records = []
         for p in preds:

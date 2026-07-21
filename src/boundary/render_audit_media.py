@@ -53,10 +53,18 @@ def is_gt_centered(cat):
 
 def label_pair_text(row):
     """Short 'A -> B' style label string for titles/captions, from whichever
-    fields this row's category populated."""
-    if row["prev_segment_label"] or row["next_segment_label"]:
+    fields this row's category populated. If no segment starts exactly at a
+    GT-centered event (a real annotation gap, not a bug -- segments in this
+    dataset aren't always contiguous), falls back to the NEAREST next
+    segment + how many seconds after, so this never dead-ends at '?'."""
+    if row["prev_segment_label"] or row["next_segment_label"] or row["nearest_next_label"]:
         a = row["prev_segment_label"] or "?"
-        b = row["next_segment_label"] or "?"
+        if row["next_segment_label"]:
+            b = row["next_segment_label"]
+        elif row["nearest_next_label"]:
+            b = f"[gap {row['nearest_next_gap_s']}s] {row['nearest_next_label']}"
+        else:
+            b = "?"
         return f"{a}  ->  {b}"
     if row["containing_segment_label"]:
         a = row["nearest_previous_segment_label"] or "?"
@@ -225,7 +233,8 @@ def main():
     print(f"total events selected: {len(selected)}")
 
     header = ["event_id", "recording_id", "category", "gt_time", "pred_time", "pred_score", "offset",
-             "prev_segment_label", "next_segment_label",
+             "prev_segment_label", "next_segment_label", "next_label_is_gap",
+             "nearest_next_label", "nearest_next_gap_s",
              "containing_segment_label", "nearest_previous_segment_label", "nearest_next_segment_label",
              "nearest_gt_boundary_time", "distance_to_nearest_gt",
              "clip_path", "contact_sheet_path", "score_plot_path",
@@ -247,6 +256,9 @@ def main():
             row["offset"] = extra.get("offset", "")
             row["prev_segment_label"] = extra.get("prev_segment_label", "") or ""
             row["next_segment_label"] = extra.get("next_segment_label", "") or ""
+            row["next_label_is_gap"] = extra.get("next_label_is_gap", "")
+            row["nearest_next_label"] = extra.get("nearest_next_label", "") or ""
+            row["nearest_next_gap_s"] = extra.get("nearest_next_gap_s", "")
         else:
             row["pred_time"] = round(center, 3)
             row["pred_score"] = extra.get("pred_score", "")
