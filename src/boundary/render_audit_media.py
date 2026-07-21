@@ -135,13 +135,13 @@ def _run_ffmpeg(cmd):
         return False, str(e)
 
 
-def make_clip(video_path, center, window_s, out_path, caption):
-    if shutil.which("ffmpeg") is None:
+def make_clip(video_path, center, window_s, out_path, caption, ffmpeg_bin="ffmpeg"):
+    if ffmpeg_bin == "ffmpeg" and shutil.which("ffmpeg") is None:
         print("    [make_clip] ffmpeg not found on PATH")
         return False
     start = max(0.0, center - window_s)
     duration = 2 * window_s
-    base_cmd = ["ffmpeg", "-y", "-ss", f"{start:.2f}", "-i", video_path, "-t", f"{duration:.2f}"]
+    base_cmd = [ffmpeg_bin, "-y", "-ss", f"{start:.2f}", "-i", video_path, "-t", f"{duration:.2f}"]
     tail = ["-c:v", "libx264", "-preset", "fast", "-an", out_path]
 
     if caption:
@@ -172,6 +172,12 @@ def main():
     ap.add_argument("--per_video_cap", type=int, default=2)
     ap.add_argument("--window_s", type=float, default=3.0)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--ffmpeg_bin", default="ffmpeg",
+                     help="explicit path to an ffmpeg binary with drawtext "
+                          "support (e.g. /usr/bin/ffmpeg), to bypass PATH "
+                          "resolution finding a different ffmpeg first "
+                          "(common when a static/minimal build shadows a "
+                          "full apt-installed one earlier in PATH)")
     a = ap.parse_args()
 
     from src.eval.run_manifest import print_manifest_if_exists, write_manifest
@@ -264,7 +270,7 @@ def main():
         contact_path = os.path.join(media_dir, f"{event_id}_contact_sheet.png")
         plot_path = os.path.join(media_dir, f"{event_id}_score_plot.png")
 
-        clip_ok = make_clip(vp, center, a.window_s, clip_path, caption) if vp else False
+        clip_ok = make_clip(vp, center, a.window_s, clip_path, caption, a.ffmpeg_bin) if vp else False
         contact_ok = False
         if vp:
             vr = VideoReader(vp, num_threads=1)
