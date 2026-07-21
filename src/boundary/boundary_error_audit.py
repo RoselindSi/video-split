@@ -105,7 +105,8 @@ def main():
 
         # match each GT to the NEAREST pred within tol; track ALL preds
         # within tol of each GT to detect duplicates separately
-        used_preds = set()
+        used_preds = set()          # nearest matches only -- excluded from unmatched classification
+        duplicate_preds = set()     # extra peaks near an already-matched GT -- get their OWN pred_record
         gt_records = []
         for g in gts:
             within = [p for p in preds if abs(p - g) <= a.tol]
@@ -126,7 +127,7 @@ def main():
             used_preds.add(nearest)
             for extra in within:
                 if extra != nearest:
-                    used_preds.add(extra)
+                    duplicate_preds.add(extra)
                     peak_class["duplicate"] += 1
             if abs(offset) <= a.exact_tol:
                 status = "exact"
@@ -141,6 +142,11 @@ def main():
         pred_records = []
         for p in preds:
             if p in used_preds:
+                continue
+            if p in duplicate_preds:
+                nearest_g = min(gts, key=lambda g: abs(g - p)) if gts else None
+                pred_records.append({"pred_time": round(p, 3), "status": "duplicate",
+                                     "near_gt_time": round(nearest_g, 3) if nearest_g is not None else None})
                 continue
             containing = next((s for s in segs if s[1] <= p <= s[2]), None)
             if containing:
