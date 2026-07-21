@@ -59,11 +59,14 @@ from collections import Counter
 import torch
 
 
-def peaks_threshold(prob, times, thr, min_gap):
-    cand = [i for i in range(len(prob))
-            if prob[i] >= thr
-            and (i == 0 or prob[i] >= prob[i - 1])
+def all_local_maxima(prob, times):
+    return [i for i in range(len(prob))
+            if (i == 0 or prob[i] >= prob[i - 1])
             and (i == len(prob) - 1 or prob[i] >= prob[i + 1])]
+
+
+def peaks_threshold(prob, times, thr, min_gap):
+    cand = [i for i in all_local_maxima(prob, times) if prob[i] >= thr]
     cand.sort(key=lambda i: -prob[i]); kept = []
     for i in cand:
         if all(abs(times[i] - times[j]) >= min_gap for j in kept):
@@ -71,9 +74,37 @@ def peaks_threshold(prob, times, thr, min_gap):
     return sorted(times[i] for i in kept)
 
 
+def peaks_threshold_instrumented(prob, times, thr, min_gap):
+    """Same greedy NMS as peaks_threshold, but also returns which kept peak
+    suppressed each rejected above-threshold candidate. Under this decode
+    algorithm (fixed threshold + greedy min_gap NMS, no global proposal
+    budget) there are exactly two ways a real above-threshold local maximum
+    can fail to survive: it never clears --thr, or it's suppressed by a
+    higher-scoring peak within --min_gap. There's no third "outranked by a
+    far-away peak" failure mode here (that only exists under a budgeted
+    top-K decoder) -- see boundary_candidate_recall.py for that question."""
+    cand = [i for i in all_local_maxima(prob, times) if prob[i] >= thr]
+    cand.sort(key=lambda i: -prob[i])
+    kept = []
+    suppressed_by = {}
+    for i in cand:
+        blocker = next((j for j in kept if abs(times[i] - times[j]) < min_gap), None)
+        if blocker is None:
+            kept.append(i)
+        else:
+            suppressed_by[i] = blocker
+    return kept, suppressed_by
+
+
 def local_max_prob(prob, times, g, window=1.0):
     vals = [prob[i] for i, t in enumerate(times) if abs(t - g) <= window]
     return max(vals) if vals else 0.0
+
+
+def nearest_local_maximum(prob, times, local_maxima_idx, g, window=1.0):
+    """Best (highest-score) local maximum within `window` of g, or None."""
+    near = [i for i in local_maxima_idx if abs(times[i] - g) <= window]
+    return max(near, key=lambda i: prob[i]) if near else None
 
 
 def main():
@@ -93,6 +124,7 @@ def main():
 
     gt_class = Counter()
     peak_class = Counter()
+    missed_subtype = Counter()  # fine-grained split of signal_present_not_top
     offsets = []  # signed, matched only
     missed_nearest_dists = []  # unbounded nearest-pred distance for MISSED GTs only
     weak_signal_missed = 0; signal_present_missed = 0
@@ -103,6 +135,8 @@ def main():
         segs = sorted(v["segments"], key=lambda s: s[1])
         overall_median = statistics.median(prob)
         preds = peaks_threshold(prob, times, a.thr, a.min_gap)
+        local_maxima_idx = all_local_maxima(prob, times)
+        kept_idx, suppressed_by = peaks_threshold_instrumented(prob, times, a.thr, a.min_gap)
 
         # match each GT to the NEAREST pred within tol; track ALL preds
         # within tol of each GT to detect duplicates separately
@@ -114,6 +148,25 @@ def main():
             if not within:
                 lp = local_max_prob(prob, times, g)
                 kind = "weak_signal" if lp < overall_median else "signal_present_not_top"
+                subtype = None
+                if kind == "signal_present_not_top":
+                    best = nearest_local_maximum(prob, times, local_maxima_idx, g)
+                    if best is None:
+                        subtype = "not_a_local_maximum"
+                    elif prob[best] < a.thr:
+                        subtype = "below_threshold"
+                    elif best in suppressed_by:
+                        subtype = "suppressed_by_min_gap"
+                    elif best in kept_idx:
+                        # this local max DID survive NMS and become a final
+                        # prediction, but its own distance to g exceeds the
+                        # strict matching tol (or a nearer GT claimed it
+                        # first) -- a tol/assignment interaction, not a
+                        # decode failure per se
+                        subtype = "kept_but_outside_matching_tol"
+                    else:
+                        subtype = "unexplained"
+                    missed_subtype[subtype] += 1
                 if kind == "weak_signal":
                     weak_signal_missed += 1
                 else:
@@ -127,9 +180,20 @@ def main():
                 # tol" -- this is the only correct way to measure that).
                 nearest_dist = min((abs(p - g) for p in preds), default=None)
                 missed_nearest_dists.append(nearest_dist)
-                gt_records.append({"gt_time": g, "status": "missed", "signal": kind,
-                                   "local_max_prob": round(lp, 3), "video_median_prob": round(overall_median, 3),
-                                   "nearest_pred_dist": round(nearest_dist, 3) if nearest_dist is not None else None})
+                rec = {"gt_time": g, "status": "missed", "signal": kind, "subtype": subtype,
+                      "local_max_prob": round(lp, 3), "video_median_prob": round(overall_median, 3),
+                      "nearest_pred_dist": round(nearest_dist, 3) if nearest_dist is not None else None}
+                if kind == "signal_present_not_top" and subtype in ("below_threshold", "suppressed_by_min_gap",
+                                                                     "kept_but_outside_matching_tol"):
+                    best = nearest_local_maximum(prob, times, local_maxima_idx, g)
+                    rec["local_peak_score"] = round(float(prob[best]), 3)
+                    rec["local_peak_time"] = round(float(times[best]), 3)
+                    rec["threshold_margin"] = round(float(prob[best]) - a.thr, 3)
+                    if subtype == "suppressed_by_min_gap":
+                        blocker = suppressed_by[best]
+                        rec["suppressing_peak_time"] = round(float(times[blocker]), 3)
+                        rec["suppressing_peak_score"] = round(float(prob[blocker]), 3)
+                gt_records.append(rec)
                 continue
             nearest = min(within, key=lambda p: abs(p - g))
             offset = nearest - g
@@ -188,6 +252,15 @@ def main():
           f"({signal_present_missed/max(gt_class['missed'],1):.1%} of missed) -- "
           f"model produced local signal but it wasn't the top peak/didn't "
           f"clear threshold -- ranking/calibration, not blindness")
+    print(f"  signal_present_not_top subtype breakdown (n={signal_present_missed}) -- "
+          f"the ONLY two decode-level failure modes for an above-threshold "
+          f"local max under this fixed-threshold+min_gap-NMS decoder are "
+          f"below_threshold and suppressed_by_min_gap (no global proposal "
+          f"budget exists here, so there's no third 'outranked by a far-away "
+          f"peak' mode -- that only applies to a budgeted top-K decoder, see "
+          f"boundary_candidate_recall.py):")
+    for st, c in missed_subtype.most_common():
+        print(f"    {st:28s} {c:5d}  {c/max(signal_present_missed,1):.1%}")
 
     total_pred = sum(peak_class[k] for k in ("duplicate", "false_near_edge", "false_mid_segment", "false_gap"))
     print(f"\npredicted peaks not counted as clean matches (n={total_pred}):")
