@@ -167,7 +167,7 @@ def bf1(preds, gts, tol):
     return f1, pr, rc, len(preds), len(gts)
 
 
-def run_seed(tr, va, variant, mu, sd, dev, a, seed):
+def run_seed(tr, va, variant, mu, sd, dev, a, seed, extra=None):
     torch.manual_seed(seed); np.random.seed(seed)
     net = Head(variant, proj=a.proj, delta_mode=a.delta_mode).to(dev)
     opt = torch.optim.AdamW(net.parameters(), lr=a.lr, weight_decay=1e-4)
@@ -259,6 +259,12 @@ def run_seed(tr, va, variant, mu, sd, dev, a, seed):
                     best = {"val_f5": m, "train_f5": oracle_f5(tr[:len(va)]), **diag}
                     if a.save_logits:
                         best["_logits"] = dump_logits(va)
+                    if a.infer_extra and extra is not None:
+                        # part2/unseen-generalization logits, dumped at the SAME
+                        # best-val epoch as the val logits (so they reflect the
+                        # same model state), with the head trained ONLY on part1
+                        # train -- never sees `extra`.
+                        best["_extra_logits"] = dump_logits(extra)
     return best
 
 
@@ -289,6 +295,16 @@ def main():
                          "best epoch for offline B2 decode-sweep diagnostics. "
                          "Only meaningful with a single --variant and a single "
                          "seed (the first seed's best-epoch logits are saved).")
+    ap.add_argument("--infer_extra", default=None,
+                    help="path to an EXTRA feature .pt (e.g. unseen part_02) to "
+                         "run the trained head on for generalization testing. "
+                         "Standardized with the SAME part1-train mu/sd; the head "
+                         "is trained only on --train and never sees this. Logits "
+                         "dumped at the best-val epoch. Requires a single "
+                         "--variant and single seed.")
+    ap.add_argument("--infer_extra_out", default=None,
+                    help="where to save the --infer_extra logits (same format as "
+                         "--save_logits, consumable by all boundary diagnostics).")
     a = ap.parse_args()
 
     tr = torch.load(a.train, weights_only=False)
@@ -307,6 +323,17 @@ def main():
     # re-uploading + re-standardizing 29MB/video every forward pass).
     for x in tr + va:
         x["R"] = ((to_regions(x["feats"]) - mu.cpu()) / sd.cpu()).to(dev)
+
+    extra = None
+    if a.infer_extra:
+        extra = torch.load(a.infer_extra, weights_only=False)
+        extra = [x for x in extra if x["feats"].dim() == 2 and x["feats"].shape[0] > 4]
+        for x in extra:
+            # SAME part1-train mu/sd -- an unseen-data feature must be
+            # standardized by the training statistics, not its own, or the
+            # generalization test conflates distribution shift with recentering.
+            x["R"] = ((to_regions(x["feats"]) - mu.cpu()) / sd.cpu()).to(dev)
+        print(f"[infer_extra] loaded {len(extra)} unseen recordings from {a.infer_extra}")
 
     # class-balance diagnostic (HARD positive fraction; the soft-mass ratio was a
     # bug -> millions). pos_frac = mean frac of frames with soft label > 0.5;
@@ -332,7 +359,19 @@ def main():
         print("WARNING: --save_logits intended for a single --variant and a "
               "single seed; only the first variant/seed's logits will be saved.")
     for vi, v in enumerate(variants):
-        res = [run_seed(tr, va, v, mu, sd, dev, a, s) for s in a.seeds]
+        res = [run_seed(tr, va, v, mu, sd, dev, a, s, extra=extra) for s in a.seeds]
+        if a.infer_extra and a.infer_extra_out and vi == 0:
+            torch.save(res[0].pop("_extra_logits", []), a.infer_extra_out)
+            print(f"saved UNSEEN-generalization logits ({v}, seed {a.seeds[0]}) "
+                  f"-> {a.infer_extra_out}")
+            from src.eval.run_manifest import write_manifest
+            write_manifest(a.infer_extra_out, input_paths=[a.train, a.infer_extra],
+                           extra={"variant": v, "seed": a.seeds[0], "sigma_s": a.sigma_s,
+                                  "pos_weight": a.pos_weight, "note": "head trained on "
+                                  "part1 --train, inferred on unseen --infer_extra"})
+        else:
+            if vi == 0:
+                res[0].pop("_extra_logits", None)
         if a.save_logits and vi == 0:
             torch.save(res[0].pop("_logits", []), a.save_logits)
             print(f"saved val logits ({v}, seed {a.seeds[0]}) -> {a.save_logits}")
