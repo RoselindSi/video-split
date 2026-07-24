@@ -111,11 +111,14 @@ class QwenVLBackend(VisionBackend):
         except Exception:  # older transformers
             from transformers import AutoModelForVision2Seq as _AutoVLM
         torch_dtype = getattr(torch, dtype)
-        kw = {"torch_dtype": torch_dtype, "device_map": device}
+        kw = {"device_map": device}
         if attn:
             kw["attn_implementation"] = attn
         self._torch = torch
-        self.model = _AutoVLM.from_pretrained(model_id, **kw).eval()
+        try:
+            self.model = _AutoVLM.from_pretrained(model_id, dtype=torch_dtype, **kw).eval()
+        except TypeError:  # transformers < ~4.56 used torch_dtype instead of dtype
+            self.model = _AutoVLM.from_pretrained(model_id, torch_dtype=torch_dtype, **kw).eval()
         self.processor = AutoProcessor.from_pretrained(model_id)
 
     def _content(self, video, images, fps):
@@ -138,10 +141,19 @@ class QwenVLBackend(VisionBackend):
         ]
         text = self.processor.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True)
-        image_inputs, video_inputs = process_vision_info(messages)
+        # return_video_kwargs=True yields a 3rd dict ({'do_sample_frames': False,
+        # 'fps': [<actual sampled fps per video>]}) that MUST be forwarded to the
+        # processor call. Without it, the processor has no way to know the frames
+        # were already sampled at our requested `fps` and silently re-samples at
+        # a hardcoded default (observed: fps=24) -- see the auditor README/memory
+        # for the concrete symptom (a "no video metadata" warning + ~10x more
+        # frames than intended).
+        image_inputs, video_inputs, video_kwargs = process_vision_info(
+            messages, return_video_kwargs=True)
         inputs = self.processor(
             text=[text], images=image_inputs, videos=video_inputs,
-            padding=True, return_tensors="pt").to(self.model.device)
+            padding=True, return_tensors="pt", **(video_kwargs or {})
+        ).to(self.model.device)
         gen_kw = dict(max_new_tokens=max_new_tokens)
         if temperature and temperature > 0:
             gen_kw.update(do_sample=True, temperature=temperature, top_p=0.9)
