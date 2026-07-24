@@ -81,6 +81,10 @@ def main():
     ap.add_argument("--context", help="context jsonl (default: committed data/gold/...)")
     ap.add_argument("--short_half", type=float, default=0.75)
     ap.add_argument("--context_half", type=float, default=3.0)
+    ap.add_argument("--variance_half", type=float, default=None,
+                    help="window half-width for left/right_internal_variance only "
+                         "(default: max(short_half, 1.5s) -- see hal_features.py docstring, "
+                         "variance needs >=2 frames and short_half alone is usually too narrow)")
     ap.add_argument("--out", help="write JSON summary here")
     a = ap.parse_args()
 
@@ -108,7 +112,8 @@ def main():
         if t is None:
             continue
         feats_at_t = hal_features_at(rec["feats"], rec["times"], float(t),
-                                     short_half=a.short_half, context_half=a.context_half)
+                                     short_half=a.short_half, context_half=a.context_half,
+                                     variance_half=a.variance_half)
         rows.append({
             "event_id": eid, "recording_id": rid, "t": t,
             "temporal_truth": g.get("temporal_truth"),

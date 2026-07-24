@@ -97,16 +97,28 @@ def _internal_variance(feats, mask):
     return float(((sub - mu) ** 2).mean().item())
 
 
-def hal_features_at(feats, times, t, short_half=0.75, context_half=3.0):
+def hal_features_at(feats, times, t, short_half=0.75, context_half=3.0, variance_half=None):
     """feats: [N,D] tensor, times: [N] tensor (seconds, same recording), t:
     candidate time in seconds. Returns a dict of the 5 features above; any
-    value is None if the relevant window had zero frames (e.g. t near the
-    start/end of the recording)."""
+    value is None if the relevant window had zero (or, for the variance
+    features, fewer than 2) frames -- e.g. t near the start/end of the
+    recording, or a window narrower than the frame spacing.
+
+    variance_half: window half-width used ONLY for left/right_internal_
+    variance, independent of short_half. Variance needs >=2 frames to be
+    non-degenerate; at ~0.5s frame spacing (2fps features), short_half=0.75s
+    gives ~1.5 frames on average -- almost always insufficient (confirmed on
+    the server: only 2/72 events had a computable value at short_half=0.75).
+    Defaults to max(short_half, 1.5s) so it's usable out of the box without
+    silently widening the short_change window itself."""
     if not isinstance(times, torch.Tensor):
         times = torch.as_tensor(times)
+    if variance_half is None:
+        variance_half = max(short_half, 1.5)
 
     pre_s, post_s = _pre_mask(times, t, short_half), _post_mask(times, t, short_half)
     pre_c, post_c = _pre_mask(times, t, context_half), _post_mask(times, t, context_half)
+    pre_v, post_v = _pre_mask(times, t, variance_half), _post_mask(times, t, variance_half)
     far_post = (times >= t + context_half) & (times < t + 2 * context_half)
 
     mu_pre_s, mu_post_s = _mean_feat(feats, pre_s), _mean_feat(feats, post_s)
@@ -117,8 +129,8 @@ def hal_features_at(feats, times, t, short_half=0.75, context_half=3.0):
         "short_change": _cos_dist(mu_pre_s, mu_post_s),
         "context_change": _cos_dist(mu_pre_c, _mean_feat(feats, post_c)),
         "change_persistence": _cos_dist(mu_pre_c, mu_far_post),
-        "left_internal_variance": _internal_variance(feats, pre_s),
-        "right_internal_variance": _internal_variance(feats, post_s),
+        "left_internal_variance": _internal_variance(feats, pre_v),
+        "right_internal_variance": _internal_variance(feats, post_v),
     }
 
 
