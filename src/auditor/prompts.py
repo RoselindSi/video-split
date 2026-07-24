@@ -49,6 +49,7 @@ PASS_A_KEYS = {
 }
 
 PASS_B_KEYS = {
+    "conflicts_with_blind_description": "yes | no -- does the ORIGINAL LABEL disagree with the blind visual description above on verb, object, or granularity? Decide this FIRST, before the fields below.",
     "label_support": " | ".join(S.LABEL_SUPPORT),
     "label_completeness": " | ".join(S.LABEL_COMPLETENESS),
     "label_granularity": " | ".join(S.LABEL_GRANULARITY),
@@ -61,6 +62,7 @@ PASS_B_KEYS = {
 }
 
 PASS_C_KEYS = {
+    "agrees_with_pass_a_motion_judgment": "yes | no | pass_a_uncertain -- does your temporal_truth conclusion below align with what the blind Pass A description already implied (semantic_action_changed / motion_change_without_semantic_change)? Decide this FIRST. If you override Pass A, your rationale must name the NEW evidence that justifies it.",
     "temporal_truth": " | ".join(S.TEMPORAL_TRUTH) + " -- does a real action-level boundary exist near here, independent of GT/model",
     "gt_boundary_relation": " | ".join(S.GT_BOUNDARY_RELATION),
     "model_boundary_behavior": " | ".join(S.MODEL_BOUNDARY_BEHAVIOR),
@@ -111,9 +113,18 @@ PASS_B_SYSTEM = (
     "actually shows. You are given (1) a blind visual description produced "
     "without seeing the label, and (2) the original annotation label(s). Judge "
     "the LABEL against the VISUAL EVIDENCE -- do not assume the label is "
-    "correct, and do not rewrite it into something the video does not show. It "
-    "is common for a label to be a correct-but-coarser (parent) description of "
-    "a finer action; that is 'too_coarse', not 'incorrect'."
+    "correct, and do not rewrite it into something the video does not show.\n\n"
+    "KNOWN FAILURE MODE, correct for it: earlier runs of this exact pipeline "
+    "showed a strong bias toward rubber-stamping the given label as "
+    "'supported'/'complete' even when the blind description clearly disagreed. "
+    "Your default stance must be adversarial, not agreeable -- actively look "
+    "FIRST for any way the label conflicts with the blind description (wrong "
+    "verb, wrong object, an action the clip does not show) before concluding "
+    "it is supported. It is common for a label to be a correct-but-coarser "
+    "(parent) description of a finer action; that is 'too_coarse', not "
+    "'incorrect' -- but a label naming a DIFFERENT verb or object than the "
+    "blind description is 'contradicted'/'incorrect', and you must say so even "
+    "if the difference feels minor or the label is 'probably close enough'."
 )
 
 
@@ -143,7 +154,18 @@ PASS_C_SYSTEM = (
     "transition occurs -- independent of whether the GT marked it or the model "
     "fired. A boundary can be real but unannotated (missing_from_gt), or "
     "annotated where no real transition occurs (spurious_gt). Repetitive or "
-    "reversing motion inside one action is NOT a boundary."
+    "reversing motion inside one action is NOT a boundary.\n\n"
+    "KNOWN FAILURE MODE, correct for it: earlier runs of this exact pipeline "
+    "showed a strong bias toward calling everything 'valid' (or hedging to "
+    "'ambiguous') even when the blind Pass A description already said the "
+    "motion was ordinary within-action motion (motion_change_without_"
+    "semantic_change=yes, semantic_action_changed=no). Pass A's judgment was "
+    "made WITHOUT seeing the GT time or the model's prediction, so it is "
+    "strong independent evidence -- do not let seeing an annotated GT time "
+    "talk you into 'valid' by default. If Pass A already concluded this is "
+    "just motion inside one action, your default should be temporal_truth= "
+    "'spurious' unless you find CONCRETE ADDITIONAL evidence, not already "
+    "visible to Pass A, that a genuine action changed."
 )
 
 

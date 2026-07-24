@@ -133,6 +133,52 @@ def time_error(gold_rows, pred):
             "within_1.0s": sum(e <= 1.0 for e in errs) / len(errs)}
 
 
+def _confidence_bucket(overall):
+    """Match the high/medium/low thresholds run_visual_auditor.py actually
+    uses to set auto_proposal_eligible (0.8 / 0.5), so this reads as
+    'would auto-acting on this confidence tier have been safe'."""
+    if overall is None:
+        return "unknown"
+    if overall >= 0.8:
+        return "high(>=0.8)"
+    if overall >= 0.5:
+        return "medium(0.5-0.8)"
+    return "low(<0.5)"
+
+
+_CONF_BUCKET_ORDER = ["high(>=0.8)", "medium(0.5-0.8)", "low(<0.5)", "unknown"]
+
+
+def calibration_buckets(rows, pred, is_correct):
+    """rows: subset of gold to evaluate over. is_correct(gold_row, pred_row)
+    -> bool. Buckets by the auditor's OWN consistency-based `_confidence`
+    score (NOT the review_confidence enum, which is graded elsewhere against
+    the human's own separately-written confidence string and is a different,
+    much weaker check -- see the note printed above this section)."""
+    buckets = defaultdict(lambda: [0, 0])
+    for g in rows:
+        p = pred.get(g["event_id"])
+        if p is None:
+            continue
+        conf = (p.get("_confidence") or {}).get("overall")
+        b = _confidence_bucket(conf)
+        buckets[b][1] += 1
+        buckets[b][0] += int(bool(is_correct(g, p)))
+    return buckets
+
+
+def _print_calibration(title, buckets):
+    print(f"  {title}:")
+    any_row = False
+    for b in _CONF_BUCKET_ORDER:
+        if b in buckets:
+            c, n = buckets[b]
+            print(f"    {b:<16} acc={c / n:.3f}  (n={n})")
+            any_row = True
+    if not any_row:
+        print("    (no rows)")
+
+
 def _print_confusion(conf, title):
     print(f"    {title} (gold -> pred):")
     for gv in sorted(conf):
@@ -261,6 +307,44 @@ def main():
         "true_boundary_kept_valid": {"ok": s1_ok, "n": len(s1)},
         "motion_neg_called_spurious": {"ok": s2_ok, "n": len(s2)},
         "coarse_wrongly_flagged_incorrect": {"bad": s3_bad, "n": len(s3)},
+    }
+
+    # --- confidence calibration ---------------------------------------
+    # This is DIFFERENT from the `review_confidence` row under per-field
+    # accuracy above: that row compares two independently-written confidence
+    # STRINGS (the human's own self-rated confidence in their gold judgment,
+    # vs the auditor's self-rated bucket) and can score high by coincidence
+    # if both happen to say "high" most of the time. It says nothing about
+    # whether the auditor's confidence tracks whether it was actually RIGHT.
+    # This section does that: buckets by the auditor's own consistency score
+    # (`_confidence.overall`, from repeats + blind/conditioned agreement) and
+    # reports accuracy against gold per bucket. If accuracy climbs sharply in
+    # the high bucket, that subset may be safe to auto-act on even when the
+    # overall field accuracy is not.
+    print("\n-- confidence calibration (does self-consistency track correctness?) --")
+    print("  NOT the same check as 'review_confidence' above -- see code comment.")
+
+    def _temporal_ok(g, p):
+        gv = _norm(g.get("temporal_truth"))
+        return gv is not None and _norm(p.get("temporal_truth")) == gv
+
+    def _label_support_ok(g, p):
+        gv = _norm(g.get("label_support"))
+        return gv is not None and _norm(p.get("label_support")) == gv
+
+    def _motion_neg_ok(g, p):
+        return _norm(p.get("temporal_truth")) == "spurious"
+
+    cal_temporal = calibration_buckets(gold, pred, _temporal_ok)
+    cal_label = calibration_buckets(gold, pred, _label_support_ok)
+    cal_motion_neg = calibration_buckets(s2, pred, _motion_neg_ok)
+    _print_calibration("temporal_truth accuracy by confidence bucket", cal_temporal)
+    _print_calibration("label_support accuracy by confidence bucket", cal_label)
+    _print_calibration("hard-slice(2) motion_hard_negative->spurious, by confidence bucket", cal_motion_neg)
+    summary["confidence_calibration"] = {
+        "temporal_truth": dict(cal_temporal),
+        "label_support": dict(cal_label),
+        "motion_neg_called_spurious": dict(cal_motion_neg),
     }
 
     out = a.out or (a.pred + ".eval.json")

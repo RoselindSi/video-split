@@ -56,6 +56,8 @@ _ENUM_HINTS = {
     "semantic_action_changed": ["yes", "no", "unclear"],
     "motion_change_without_semantic_change": ["no", "yes", "unclear"],
     "visual_evidence": ["clear", "partial", "insufficient"],
+    "conflicts_with_blind_description": ["no", "no", "yes"],
+    "agrees_with_pass_a_motion_judgment": ["yes", "yes", "no", "pass_a_uncertain"],
 }
 
 
