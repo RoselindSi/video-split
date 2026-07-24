@@ -141,21 +141,23 @@ class QwenVLBackend(VisionBackend):
         ]
         text = self.processor.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True)
-        # return_video_kwargs=True yields a 3rd dict ({'do_sample_frames': False,
-        # 'fps': [<actual sampled fps per video>]}) that MUST be forwarded to the
-        # processor call. Without it, the processor has no way to know the frames
-        # were already sampled at our requested `fps` and silently re-samples at
-        # a hardcoded default (observed: fps=24) -- see the auditor README/memory
-        # for the concrete symptom (a "no video metadata" warning + ~10x more
-        # frames than intended).
+        # Qwen3VL needs real per-frame timestamps to build its prompt, which
+        # requires `video_metadata`, not just `fps`. With return_video_metadata=
+        # True, qwen_vl_utils returns each video as a (tensor, metadata_dict)
+        # tuple instead of a bare tensor -- the tensor and metadata must be
+        # split apart and passed as separate `videos=`/`video_metadata=`
+        # arguments (VideosKwargs.video_metadata expects list[dict], NOT a
+        # tuple embedded in `videos`). Skipping this makes the processor fall
+        # back to a hardcoded fps=24 sampling assumption regardless of what we
+        # actually requested (confirmed via processing_utils.VideosKwargs and
+        # Qwen3VLVideoProcessor.preprocess on the server -- see auditor
+        # README/memory for the diagnostic trail).
         image_inputs, video_inputs, video_kwargs = process_vision_info(
-            messages, return_video_kwargs=True)
-        # This processor's typed kwargs want a scalar `fps`, but qwen_vl_utils
-        # returns one-per-video ([2.0]) since it supports multi-video input.
-        # We only ever pass a single video, so unwrap it.
-        if video_kwargs and isinstance(video_kwargs.get("fps"), list):
-            fps_list = video_kwargs["fps"]
-            video_kwargs["fps"] = fps_list[0] if fps_list else None
+            messages, return_video_kwargs=True, return_video_metadata=True)
+        if video_inputs:
+            video_tensors, video_metadata = zip(*video_inputs)
+            video_inputs = list(video_tensors)
+            video_kwargs["video_metadata"] = list(video_metadata)
         inputs = self.processor(
             text=[text], images=image_inputs, videos=video_inputs,
             padding=True, return_tensors="pt", **(video_kwargs or {})
