@@ -193,6 +193,15 @@ def main():
     ap.add_argument("--gold", help="gold jsonl (default: committed data/gold/...)")
     ap.add_argument("--out", help="write JSON summary here (default: <pred>.eval.json)")
     ap.add_argument("--show_confusion", action="store_true")
+    ap.add_argument("--restrict_to_predicted", action="store_true",
+                    help="Evaluate only over gold rows present in --pred, instead of "
+                         "against the full gold set. Use this for a --limit/partial "
+                         "run -- otherwise every metric's denominator silently includes "
+                         "the un-predicted rows as implicit failures, which can make a "
+                         "partial run look far worse (or, for 'want low' metrics, "
+                         "misleadingly better) than the model actually is. For a like-"
+                         "for-like before/after prompt comparison, prefer restricting "
+                         "GOLD itself to the same event_ids in both runs (see README).")
     a = ap.parse_args()
 
     gold_path, _ = S.default_gold_paths()
@@ -207,7 +216,23 @@ def main():
         pass
 
     covered = sum(1 for g in gold if g["event_id"] in pred)
-    print(f"\n=== Visual auditor vs Gold v2 ({covered}/{len(gold)} events predicted) ===\n")
+    n_gold_total = len(gold)
+    print(f"\n=== Visual auditor vs Gold v2 ({covered}/{n_gold_total} events predicted) ===\n")
+    if covered < n_gold_total:
+        if a.restrict_to_predicted:
+            gold = [g for g in gold if g["event_id"] in pred]
+            print(f"[--restrict_to_predicted] scoring ONLY the {len(gold)} predicted "
+                  f"rows -- denominators below are out of {len(gold)}, not the full "
+                  f"{n_gold_total}-row gold set.\n")
+        else:
+            print(f"!! WARNING: only {covered}/{n_gold_total} gold events have a prediction. "
+                  f"Every metric below is computed against the FULL {n_gold_total}-row "
+                  f"denominator -- the {n_gold_total - covered} missing rows are silently "
+                  f"treated as failures (or, for 'want low' metrics, as passes) in most "
+                  f"binary checks. This will look artificially worse (or artificially "
+                  f"better) than the model's real behavior on a --limit/partial run. "
+                  f"Pass --restrict_to_predicted, or score against a --gold file "
+                  f"containing only these {covered} event_ids, for a fair number.\n")
 
     summary = {"n_gold": len(gold), "n_predicted": covered, "fields": {}}
 
