@@ -92,19 +92,37 @@ def _sigmoid(z):
     return 1.0 / (1.0 + np.exp(-np.clip(z, -30, 30)))
 
 
-def fit_logreg(X, y, l2=1.0, lr=0.2, iters=3000):
+def fit_logreg(X, y, l2=1.0, lr=0.2, iters=3000, class_weight="balanced"):
+    """class_weight='balanced' (default): weight each sample inversely
+    proportional to its class's frequency in THIS training fold (sklearn's
+    convention: n_samples / (n_classes * n_samples_for_that_class)), then
+    renormalize weights to mean 1 so the effective learning rate is
+    unchanged. Without this, unweighted BCE on an imbalanced training fold
+    (this data is ~2.15:1 valid:spurious) makes the model just learn the
+    majority-class prior -- confirmed on the server: the first unweighted
+    run had motion_hard_negative_recall=0.000 in ALL THREE arms."""
     n, d = X.shape
     w, b = np.zeros(d), 0.0
+    if class_weight == "balanced":
+        n_pos, n_neg = float(y.sum()), float(n - y.sum())
+        if n_pos > 0 and n_neg > 0:
+            sw = np.where(y == 1, n / (2.0 * n_pos), n / (2.0 * n_neg))
+            sw = sw / sw.mean()
+        else:
+            sw = np.ones(n)
+    else:
+        sw = np.ones(n)
     for _ in range(iters):
         p = _sigmoid(X @ w + b)
-        grad_w = X.T @ (p - y) / n + l2 * w / n
-        grad_b = float(np.mean(p - y))
+        grad_w = X.T @ (sw * (p - y)) / n + l2 * w / n
+        grad_b = float(np.mean(sw * (p - y)))
         w -= lr * grad_w
         b -= lr * grad_b
     return w, b
 
 
-def grouped_loro_predict(X, y, groups, l2=1.0, lr=0.2, iters=3000, min_train=6):
+def grouped_loro_predict(X, y, groups, l2=1.0, lr=0.2, iters=3000, min_train=6,
+                         class_weight="balanced"):
     """Leave-one-RECORDING-out (LORO) out-of-fold predicted P(valid).
     Skips a fold (leaves NaN) if the training data would be too small or
     single-class -- reported, not silently averaged over."""
@@ -123,7 +141,8 @@ def grouped_loro_predict(X, y, groups, l2=1.0, lr=0.2, iters=3000, min_train=6):
         Xtr_i = np.where(np.isnan(Xtr), col_mean, Xtr)
         Xte_i = np.where(np.isnan(Xte), col_mean, Xte)
         mu, sigma = Xtr_i.mean(0), Xtr_i.std(0) + 1e-8
-        w, b = fit_logreg((Xtr_i - mu) / sigma, y_train, l2=l2, lr=lr, iters=iters)
+        w, b = fit_logreg((Xtr_i - mu) / sigma, y_train, l2=l2, lr=lr, iters=iters,
+                          class_weight=class_weight)
         preds[test_mask] = _sigmoid((Xte_i - mu) / sigma @ w + b)
     return preds
 
@@ -178,6 +197,10 @@ def main():
     ap.add_argument("--variance_half", type=float, default=None)
     ap.add_argument("--lo", type=float, default=0.25)
     ap.add_argument("--hi", type=float, default=0.75)
+    ap.add_argument("--class_weight", choices=["balanced", "none"], default="balanced",
+                    help="'balanced' (default) reweights the ~2.15:1 valid:spurious "
+                         "imbalance per training fold; 'none' reproduces the original "
+                         "unweighted fit (which collapsed to always-predict-valid)")
     ap.add_argument("--l2", type=float, default=1.0)
     ap.add_argument("--out")
     a = ap.parse_args()
@@ -244,7 +267,7 @@ def main():
     results = {}
     print("\n=== A. HAL-only (n=%d, grouped LORO over %d recordings) ===" %
           (n_total, len(set(groups_all))))
-    pA = grouped_loro_predict(X_hal_all, y_all, groups_all, l2=a.l2)
+    pA = grouped_loro_predict(X_hal_all, y_all, groups_all, l2=a.l2, class_weight=a.class_weight)
     mA = arm_metrics(y_all, pA, lo=a.lo, hi=a.hi)
     results["hal_only"] = mA
     for k, v in mA.items():
@@ -253,14 +276,14 @@ def main():
     if len(vlm_rows) >= 8:
         print("\n=== B. VLM-atomic-only (n=%d, grouped LORO over %d recordings) ===" %
               (len(vlm_rows), len(set(groups_vlm))))
-        pB = grouped_loro_predict(X_vlm, y_vlm, groups_vlm, l2=a.l2)
+        pB = grouped_loro_predict(X_vlm, y_vlm, groups_vlm, l2=a.l2, class_weight=a.class_weight)
         mB = arm_metrics(y_vlm, pB, lo=a.lo, hi=a.hi)
         results["vlm_only"] = mB
         for k, v in mB.items():
             print(f"  {k:<28} {_fmt(v)}")
 
         print("\n=== C. Fusion (HAL + VLM atomic, n=%d) ===" % len(vlm_rows))
-        pC = grouped_loro_predict(X_fusion, y_vlm, groups_vlm, l2=a.l2)
+        pC = grouped_loro_predict(X_fusion, y_vlm, groups_vlm, l2=a.l2, class_weight=a.class_weight)
         mC = arm_metrics(y_vlm, pC, lo=a.lo, hi=a.hi)
         results["fusion"] = mC
         for k, v in mC.items():
