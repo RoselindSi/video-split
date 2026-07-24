@@ -147,6 +147,32 @@ def grouped_loro_predict(X, y, groups, l2=1.0, lr=0.2, iters=3000, min_train=6,
     return preds
 
 
+def fit_full_hal_model(X, y, l2=1.0, lr=0.2, iters=3000, class_weight="balanced"):
+    """Fit on ALL rows (no held-out fold) -- for deploying the HAL scorer to
+    genuinely new candidates/recordings the model has never seen, where
+    grouped_loro_predict's per-fold holdout doesn't apply (there's no fold
+    structure left once you're scoring truly new data, not re-estimating
+    generalization on the 63 gold events). Returns a small dict that
+    score_hal_model() consumes; do NOT reuse this fit's own predictions on
+    its own training rows as if they were held-out -- that's exactly the
+    in-sample leakage grouped_loro_predict exists to avoid for evaluation."""
+    col_mean = np.nanmean(X, axis=0)
+    col_mean = np.where(np.isnan(col_mean), 0.0, col_mean)
+    X_i = np.where(np.isnan(X), col_mean, X)
+    mu, sigma = X_i.mean(0), X_i.std(0) + 1e-8
+    w, b = fit_logreg((X_i - mu) / sigma, y, l2=l2, lr=lr, iters=iters, class_weight=class_weight)
+    return {"w": w, "b": b, "mu": mu, "sigma": sigma, "col_mean": col_mean}
+
+
+def score_hal_model(model, x):
+    """x: a length-len(HAL_FEATURE_NAMES) array/list, possibly with NaN/None
+    for missing features. Returns a scalar P(valid)."""
+    x = np.array([np.nan if v is None else v for v in x], dtype=float)
+    x_i = np.where(np.isnan(x), model["col_mean"], x)
+    z = (x_i - model["mu"]) / model["sigma"] @ model["w"] + model["b"]
+    return float(_sigmoid(z))
+
+
 def arm_metrics(y, p, lo=0.25, hi=0.75):
     mask = ~np.isnan(p)
     n_excluded_fold = int((~mask).sum())
