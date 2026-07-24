@@ -48,27 +48,33 @@ PASS_A_KEYS = {
     "visual_evidence": "clear | partial | insufficient -- how well the clip shows the relevant moment",
 }
 
+
+# Pass B and Pass C are deliberately ATOMIC: they ask ONLY questions
+# answerable from the video itself. Fields like label_support/
+# semantic_relation/gt_boundary_relation/model_boundary_behavior used to be
+# asked directly and were the worst-performing fields in two full-72 runs --
+# not because the model wasn't smart enough, but because they aren't visual
+# questions (semantic_relation needs the frozen naming ontology's own
+# verb-comparison logic; gt_boundary_relation/model_boundary_behavior need
+# decode-mechanics info -- was a candidate peak suppressed by NMS vs never
+# above threshold -- that isn't visible in an 8-second clip at all). Those
+# are now DERIVED deterministically in derive_fields.py from these atomic
+# observations + the existing structured context. See that module's
+# docstring for the full rationale.
+
 PASS_B_KEYS = {
     "reasoning": "2-3 sentences, written BEFORE any field below: state the blind description's verb+object, state the label's verb+object, then explicitly say where they agree or disagree. Do not restate the label as if it were the conclusion.",
-    "conflicts_with_blind_description": "yes | no -- does the ORIGINAL LABEL disagree with the blind visual description above on verb, object, or granularity? Decide this FIRST, before the fields below.",
-    "label_support": " | ".join(S.LABEL_SUPPORT),
-    "label_completeness": " | ".join(S.LABEL_COMPLETENESS),
-    "label_granularity": " | ".join(S.LABEL_GRANULARITY),
-    "semantic_relation": " | ".join(S.SEMANTIC_RELATION) + " (original vs corrected action)",
-    "object_relation": " | ".join(S.OBJECT_RELATION) + " (original vs corrected object)",
-    "corrected_primary_verb": "the correct primary verb given the video (may equal the label's verb)",
-    "corrected_secondary_verbs": "list of secondary verbs the video supports (may be empty)",
-    "corrected_object": "the correct object noun",
-    "rationale": "one sentence grounded in the visual evidence, not in the label wording",
+    "observed_primary_verb": "the single main verb for what the video shows here (your own observation -- do not just copy the label's verb)",
+    "observed_secondary_verbs": "list of additional verbs/actions the video shows co-occurring or immediately following (may be empty)",
+    "observed_object": "the main object noun being manipulated, as you observe it",
+    "additional_action_visible": "yes | no -- is there a second, distinct action visible beyond the single primary verb above (this drives missing_secondary detection -- do not answer based on the label, only on what you see)",
+    "conflicts_with_blind_description": "yes | no -- does the ORIGINAL LABEL disagree with your own observation above on verb, object, or granularity? Decide this after observing, not before.",
 }
 
 PASS_C_KEYS = {
     "reasoning": "2-3 sentences, written BEFORE any field below: state what Pass A already concluded (semantic_action_changed / motion_change_without_semantic_change), then state whether the GT/prediction context here changes that conclusion and why. Do not jump straight to 'valid' because a GT time was given.",
     "agrees_with_pass_a_motion_judgment": "yes | no | pass_a_uncertain -- does your temporal_truth conclusion below align with what the blind Pass A description already implied (semantic_action_changed / motion_change_without_semantic_change)? Decide this FIRST. If you override Pass A, your rationale must name the NEW evidence that justifies it.",
-    "temporal_truth": " | ".join(S.TEMPORAL_TRUTH) + " -- does a real action-level boundary exist near here, independent of GT/model",
-    "gt_boundary_relation": " | ".join(S.GT_BOUNDARY_RELATION),
-    "model_boundary_behavior": " | ".join(S.MODEL_BOUNDARY_BEHAVIOR),
-    "candidate_boundary_validity": " | ".join(S.CANDIDATE_BOUNDARY_VALIDITY),
+    "temporal_truth": " | ".join(S.TEMPORAL_TRUTH) + " -- does a real action-level boundary exist near here, independent of GT/model. This is the ONLY judgment call in this pass; do not also decide how the model or annotation behaved -- that is derived separately from this answer.",
     "corrected_boundary_time": "absolute seconds of the true boundary, or null if none/unresolved",
     "corrected_boundary_interval": '{"start": s, "end": s} or null',
     "rationale": "one sentence",
@@ -111,31 +117,30 @@ def build_pass_a(clip_start: float, clip_end: float) -> str:
 # --- Pass B: semantic label verification ------------------------------------
 
 PASS_B_SYSTEM = (
-    "You verify whether a human-written action label matches what a video "
-    "actually shows. You are given (1) a blind visual description produced "
-    "without seeing the label, and (2) the original annotation label(s). Judge "
-    "the LABEL against the VISUAL EVIDENCE -- do not assume the label is "
-    "correct, and do not rewrite it into something the video does not show.\n\n"
+    "You report what a video ACTUALLY SHOWS, for later comparison against a "
+    "human-written label by separate, deterministic code -- you do not judge "
+    "the label yourself. You are given (1) a blind visual description "
+    "produced without seeing the label, and (2) the original annotation "
+    "label(s), shown only as extra context for your OWN observation (e.g. to "
+    "know which object/segment is meant), not as something to confirm or "
+    "deny.\n\n"
     "KNOWN FAILURE MODE, correct for it: earlier runs of this exact pipeline "
-    "showed a strong bias toward rubber-stamping the given label as "
-    "'supported'/'complete' even when the blind description clearly disagreed. "
-    "Your default stance must be adversarial, not agreeable -- actively look "
-    "FIRST for any way the label conflicts with the blind description (wrong "
-    "verb, wrong object, an action the clip does not show) before concluding "
-    "it is supported. It is common for a label to be a correct-but-coarser "
-    "(parent) description of a finer action; that is 'too_coarse', not "
-    "'incorrect' -- but a label naming a DIFFERENT verb or object than the "
-    "blind description is 'contradicted'/'incorrect', and you must say so even "
-    "if the difference feels minor or the label is 'probably close enough'.\n\n"
-    "WORKED EXAMPLE of the reasoning style expected (label is WRONG despite "
-    "being topically close): blind description says the clip shows picking up "
-    "a folded tissue and beginning to unfold/open it; the label says 'fold "
-    "tissue into a compact rectangle'. reasoning: 'Blind description: "
-    "unfolding a tissue. Label: folding a tissue. These are OPPOSITE actions "
-    "on the same object, not a paraphrase.' -> conflicts_with_blind_"
-    "description=yes, label_support=contradicted, label_completeness="
-    "incorrect, corrected_primary_verb='unfold'. Do not soften this to "
-    "'supported' just because both actions involve a tissue."
+    "asked the model to directly judge 'does this label match', and it showed "
+    "a strong bias toward rubber-stamping the label as correct even when the "
+    "blind description clearly disagreed. Report your OWN independent "
+    "observation of verb/object/secondary-actions first; only the "
+    "conflicts_with_blind_description field compares to the label, and it "
+    "must reflect what you actually observed, not what would make the label "
+    "'probably close enough'.\n\n"
+    "WORKED EXAMPLE of the reasoning style expected (own observation "
+    "disagrees with a topically-close label): blind description says the "
+    "clip shows picking up a folded tissue and beginning to unfold/open it; "
+    "the label says 'fold tissue into a compact rectangle'. reasoning: "
+    "'Blind description: unfolding a tissue. Label: folding a tissue. These "
+    "are OPPOSITE actions on the same object, not a paraphrase.' -> "
+    "observed_primary_verb='unfold', observed_object='tissue', "
+    "conflicts_with_blind_description=yes. Report 'unfold', not 'fold', even "
+    "though both actions involve a tissue."
 )
 
 
@@ -159,13 +164,16 @@ def build_pass_b(pass_a: dict, containing_label, prev_label, next_label) -> str:
 # --- Pass C: temporal / boundary verification -------------------------------
 
 PASS_C_SYSTEM = (
-    "You decide whether a real ACTION-LEVEL boundary exists at a point in an "
-    "egocentric video, and how the annotation and a detection model relate to "
-    "it. 'temporal_truth' is about the VIDEO ONLY -- whether a genuine action "
-    "transition occurs -- independent of whether the GT marked it or the model "
-    "fired. A boundary can be real but unannotated (missing_from_gt), or "
-    "annotated where no real transition occurs (spurious_gt). Repetitive or "
-    "reversing motion inside one action is NOT a boundary.\n\n"
+    "You decide ONE thing: whether a real ACTION-LEVEL boundary exists at a "
+    "point in an egocentric video ('temporal_truth'), about the VIDEO ONLY -- "
+    "whether a genuine action transition occurs -- independent of whether the "
+    "GT marked it or the model fired. A boundary can be real but unannotated, "
+    "or annotated where no real transition occurs. Repetitive or reversing "
+    "motion inside one action is NOT a boundary. Do NOT try to also decide "
+    "how the annotation or the detection model behaved (whether a candidate "
+    "peak was suppressed, below threshold, etc.) -- that is decode-mechanics "
+    "information not visible in a video clip, and is derived separately from "
+    "your temporal_truth answer by code, not by you.\n\n"
     "KNOWN FAILURE MODE, correct for it: earlier runs of this exact pipeline "
     "showed a strong bias toward calling everything 'valid' (or hedging to "
     "'ambiguous') even when the blind Pass A description already said the "
@@ -185,8 +193,8 @@ PASS_C_SYSTEM = (
     "change here -- the GT sits in a stable no-action gap between two real "
     "flips elsewhere. A GT timestamp existing is not evidence a boundary is "
     "real.' -> agrees_with_pass_a_motion_judgment=yes, temporal_truth="
-    "spurious, gt_boundary_relation=spurious_gt. Do not default to 'valid' "
-    "just because an annotated GT time was provided in the evidence above."
+    "spurious. Do not default to 'valid' just because an annotated GT time "
+    "was provided in the evidence above."
 )
 
 

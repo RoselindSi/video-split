@@ -47,6 +47,7 @@ from collections import Counter
 from . import gold_schema as S
 from . import prompts as P
 from . import vision_backends as VB
+from . import derive_fields as D
 
 
 # --- small aggregation helpers ---------------------------------------------
@@ -132,16 +133,44 @@ def run_pass_multi(backends, system, user, *, video, images, base_fps, repeats,
     return merged, per_backend
 
 
-def cross_model_agreement(per_backend_runs, field):
-    """1.0 if all backends' dominant answer for `field` agrees, 0.0 if any
-    disagree, None if there's only one backend (not applicable)."""
-    if len(per_backend_runs) < 2:
+def cross_model_agreement_values(per_backend_value_lists):
+    """1.0 if all backends' dominant value agrees, 0.0 if any disagree, None
+    if there's only one backend's worth of values (not applicable). Takes
+    raw value lists (not run dicts) so it works for atomic VLM fields AND
+    for per-repeat DERIVED fields (e.g. label_support) alike."""
+    if len(per_backend_value_lists) < 2:
         return None
-    dominants = [_mode([r.get(field) for r in runs])[0] for runs in per_backend_runs]
+    dominants = [_mode(vals)[0] for vals in per_backend_value_lists]
     dominants = [d for d in dominants if d is not None]
     if len(dominants) < 2:
         return None
     return 1.0 if len(set(dominants)) == 1 else 0.0
+
+
+def cross_model_agreement(per_backend_runs, field):
+    """1.0 if all backends' dominant answer for `field` agrees, 0.0 if any
+    disagree, None if there's only one backend (not applicable)."""
+    return cross_model_agreement_values([[r.get(field) for r in runs] for runs in per_backend_runs])
+
+
+def derive_semantic_per_repeat(runs, label_text):
+    """Apply derive_semantic_fields to each repeat's ATOMIC observation
+    (never the raw VLM output directly -- there is no VLM-predicted
+    label_support/etc. any more, see derive_fields.py)."""
+    return [D.derive_semantic_fields(
+                r.get("observed_primary_verb"), r.get("observed_secondary_verbs"),
+                r.get("observed_object"), r.get("additional_action_visible"), label_text)
+            for r in runs]
+
+
+def derive_boundary_per_repeat(runs, source_category, pred_time, pred_score):
+    """Apply derive_boundary_fields to each repeat's temporal_truth answer."""
+    out = []
+    for r in runs:
+        truth = _norm_enum("temporal_truth", r.get("temporal_truth")) or "unresolved"
+        rel, behav = D.derive_boundary_fields(truth, source_category, pred_time, pred_score)
+        out.append({"gt_boundary_relation": rel, "model_boundary_behavior": behav})
+    return out
 
 
 def consensus_pass_a(runs):
@@ -204,15 +233,23 @@ def _boundary_role(truth, motion_change):
     return "exclude"  # ambiguous / unresolved
 
 
-def fuse(pa, pb, pc):
+def fuse(pa, pb, pb_derived, pc, pc_derived):
+    """pb/pc hold the VLM's ATOMIC observations (consensus across repeats);
+    pb_derived/pc_derived hold the deterministically-derived judgment fields
+    (consensus across per-repeat derivations) -- see derive_fields.py. Fusing
+    from derived-consensus, rather than asking the VLM for these fields
+    directly, is the fix for the worst-performing fields in the full-72 runs
+    (gt_boundary_relation/model_boundary_behavior needed decode-mechanics
+    info no video shows; label_support/semantic_relation showed a strong
+    anchoring bias when asked directly of the model)."""
     truth = _norm_enum("temporal_truth", pc.get("temporal_truth")) or "unresolved"
-    rel = _norm_enum("gt_boundary_relation", pc.get("gt_boundary_relation")) or "unresolved"
-    behav = _norm_enum("model_boundary_behavior", pc.get("model_boundary_behavior")) or "not_evaluable"
-    support = _norm_enum("label_support", pb.get("label_support")) or "uncertain"
-    comp = _norm_enum("label_completeness", pb.get("label_completeness")) or "unresolved"
-    gran = _norm_enum("label_granularity", pb.get("label_granularity")) or "unresolved"
-    sem_rel = _norm_enum("semantic_relation", pb.get("semantic_relation")) or "unknown"
-    obj_rel = _norm_enum("object_relation", pb.get("object_relation")) or "unknown"
+    rel = _norm_enum("gt_boundary_relation", pc_derived.get("gt_boundary_relation")) or "unresolved"
+    behav = _norm_enum("model_boundary_behavior", pc_derived.get("model_boundary_behavior")) or "not_evaluable"
+    support = _norm_enum("label_support", pb_derived.get("label_support")) or "uncertain"
+    comp = _norm_enum("label_completeness", pb_derived.get("label_completeness")) or "unresolved"
+    gran = _norm_enum("label_granularity", pb_derived.get("label_granularity")) or "unresolved"
+    sem_rel = _norm_enum("semantic_relation", pb_derived.get("semantic_relation")) or "unknown"
+    obj_rel = _norm_enum("object_relation", pb_derived.get("object_relation")) or "unknown"
     motion = pa.get("motion_change_without_semantic_change")
     ctime = _median_time([pc.get("corrected_boundary_time"), pa.get("candidate_boundary_time")]) \
         if truth in ("valid", "ambiguous") else _median_time([pc.get("corrected_boundary_time")])
@@ -227,9 +264,9 @@ def fuse(pa, pb, pc):
         "label_granularity": gran,
         "semantic_relation": sem_rel,
         "object_relation": obj_rel,
-        "corrected_primary_verb": pb.get("corrected_primary_verb"),
-        "corrected_secondary_verbs": pb.get("corrected_secondary_verbs") or [],
-        "corrected_object": pb.get("corrected_object"),
+        "corrected_primary_verb": pb.get("observed_primary_verb"),
+        "corrected_secondary_verbs": pb.get("observed_secondary_verbs") or [],
+        "corrected_object": pb.get("observed_object"),
         "primary_corrected_boundary_time": ctime,
         "no_valid_boundary": bool(truth in ("spurious", "unresolved") and ctime is None),
         "boundary_time_unresolved": bool(truth == "unresolved"),
@@ -240,9 +277,13 @@ def fuse(pa, pb, pc):
     }
 
 
-def calibrated_confidence(pa_runs, pb_runs, pc_runs, fused,
+def calibrated_confidence(pa_runs, pb_derived_runs, pc_runs, fused,
                           cross_model_temporal=None, cross_model_label=None):
     """Consistency-based confidence (not the model's stated confidence).
+
+    pb_derived_runs: per-repeat DERIVED label_support (see
+    derive_semantic_per_repeat) -- there is no VLM-predicted label_support
+    any more, so repeat-agreement is measured on the derived judgment.
 
     cross_model_temporal / cross_model_label: from cross_model_agreement(),
     None unless a second B/C backend was actually used. Same-model repeats
@@ -255,7 +296,7 @@ def calibrated_confidence(pa_runs, pb_runs, pc_runs, fused,
     comps = {}
     # agreement across repeats on the two anchor fields
     comps["temporal_agree"] = _mode([r.get("temporal_truth") for r in pc_runs])[1]
-    comps["semantic_agree"] = _mode([r.get("label_support") for r in pb_runs])[1]
+    comps["semantic_agree"] = _mode([d.get("label_support") for d in pb_derived_runs])[1]
     # blind (Pass A) vs conditioned (Pass C) agreement
     changed = _mode([r.get("semantic_action_changed") for r in pa_runs])[0]
     truth = fused["temporal_truth"]
@@ -310,7 +351,11 @@ def audit_event(backend_a, backend_bc, gold_row, ctx, args, backend_bc2=None):
 
     backends_bc = [backend_bc] + ([backend_bc2] if backend_bc2 is not None else [])
 
-    # Pass B -- semantic label verification (reasoning model[s])
+    label_text = ctx.get("containing_segment_label")
+    source_category = gold_row.get("source_category")
+
+    # Pass B -- ATOMIC visual observation only (reasoning model[s]). Judgment
+    # fields (label_support etc.) are DERIVED below, never asked of the VLM.
     pb_user = P.build_pass_b(pa, ctx.get("containing_segment_label"),
                              ctx.get("prev_segment_label"), ctx.get("next_segment_label"))
     pb_runs, pb_per_backend = run_pass_multi(
@@ -318,8 +363,16 @@ def audit_event(backend_a, backend_bc, gold_row, ctx, args, backend_bc2=None):
         base_fps=args.fps, repeats=args.repeats,
         temperature=args.temperature, keys=list(P.PASS_B_KEYS))
     pb = {k: _mode([r.get(k) for r in pb_runs])[0] for k in P.PASS_B_KEYS}
+    pb_derived_runs = derive_semantic_per_repeat(pb_runs, label_text)
+    pb_derived = {k: _mode([d.get(k) for d in pb_derived_runs])[0] for k in
+                 ("label_support", "label_completeness", "label_granularity",
+                  "semantic_relation", "object_relation")}
 
-    # Pass C -- temporal / boundary verification (reasoning model[s])
+    # Pass C -- ATOMIC temporal_truth only (reasoning model[s]). gt_boundary_
+    # relation/model_boundary_behavior are DERIVED below from temporal_truth +
+    # source_category, never asked of the VLM (they need decode-mechanics
+    # info -- was a peak suppressed by NMS vs below threshold -- that isn't
+    # visible in a clip at all).
     pc_user = P.build_pass_c(pa, ctx.get("gt_time"), ctx.get("pred_time"),
                              ctx.get("pred_score"), ctx.get("prev_segment_label"),
                              ctx.get("next_segment_label"), bool(images))
@@ -328,12 +381,18 @@ def audit_event(backend_a, backend_bc, gold_row, ctx, args, backend_bc2=None):
         base_fps=args.fps, repeats=args.repeats,
         temperature=args.temperature, keys=list(P.PASS_C_KEYS))
     pc = {k: _mode([r.get(k) for r in pc_runs])[0] for k in P.PASS_C_KEYS}
+    pc_derived_runs = derive_boundary_per_repeat(
+        pc_runs, source_category, ctx.get("pred_time"), ctx.get("pred_score"))
+    pc_derived = {k: _mode([d.get(k) for d in pc_derived_runs])[0] for k in
+                 ("gt_boundary_relation", "model_boundary_behavior")}
 
-    fused = fuse(pa, pb, pc)
+    fused = fuse(pa, pb, pb_derived, pc, pc_derived)
     cm_temporal = cross_model_agreement(pc_per_backend, "temporal_truth")
-    cm_label = cross_model_agreement(pb_per_backend, "label_support")
+    pb_derived_per_backend = [derive_semantic_per_repeat(runs, label_text) for runs in pb_per_backend]
+    cm_label = cross_model_agreement_values(
+        [[d.get("label_support") for d in derived] for derived in pb_derived_per_backend])
     overall, bin_, eligible, comps = calibrated_confidence(
-        pa_runs, pb_runs, pc_runs, fused,
+        pa_runs, pb_derived_runs, pc_runs, fused,
         cross_model_temporal=cm_temporal, cross_model_label=cm_label)
     fused["review_confidence"] = bin_
     fused["auto_proposal_eligible"] = eligible

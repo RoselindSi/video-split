@@ -44,19 +44,16 @@ class VisionBackend:
 _ENUM_HINTS = {
     # bias the mock toward plausible-but-not-perfect answers so the scorer
     # produces a non-degenerate confusion matrix during a smoke test.
+    # NOTE: gt_boundary_relation / model_boundary_behavior / candidate_
+    # boundary_validity / label_support / label_completeness /
+    # label_granularity / semantic_relation / object_relation are no longer
+    # asked of the VLM directly (see derive_fields.py) -- no hints needed.
     "temporal_truth": ["valid", "valid", "spurious", "ambiguous"],
-    "gt_boundary_relation": ["correctly_annotated", "missing_from_gt", "spurious_gt"],
-    "model_boundary_behavior": ["correct_detection", "spurious_motion_response", "missed"],
-    "candidate_boundary_validity": ["valid", "invalid", "ambiguous"],
-    "label_support": ["supported", "supported", "contradicted"],
-    "label_completeness": ["complete", "incorrect", "missing_secondary"],
-    "label_granularity": ["appropriate", "too_coarse", "not_applicable"],
-    "semantic_relation": ["same", "incompatible", "parent"],
-    "object_relation": ["same", "same", "wrong_object"],
     "semantic_action_changed": ["yes", "no", "unclear"],
     "motion_change_without_semantic_change": ["no", "yes", "unclear"],
     "visual_evidence": ["clear", "partial", "insufficient"],
     "conflicts_with_blind_description": ["no", "no", "yes"],
+    "additional_action_visible": ["no", "no", "yes"],
     "agrees_with_pass_a_motion_judgment": ["yes", "yes", "no", "pass_a_uncertain"],
 }
 
@@ -78,9 +75,11 @@ class MockBackend(VisionBackend):
                 out[k] = round(rng.uniform(10, 500), 1) if rng.random() > 0.3 else None
             elif k.startswith("corrected_secondary") or k.startswith("observed_secondary"):
                 out[k] = [] if rng.random() > 0.4 else ["rinse"]
-            elif k.startswith("corrected_primary") or k == "before_action" or k == "after_action":
+            elif (k.startswith("corrected_primary") or k.startswith("observed_primary")
+                  or k == "before_action" or k == "after_action"):
                 out[k] = rng.choice(["scrub", "rinse", "fold", "wipe", "flip", "remove"])
-            elif k.startswith("corrected_object") or k.startswith("object_"):
+            elif (k.startswith("corrected_object") or k.startswith("observed_object")
+                  or k.startswith("object_")):
                 out[k] = rng.choice(["mug", "tissue", "sink strainer", "remote control"])
             elif k in ("state_change", "rationale", "reasoning"):
                 out[k] = "mock: describes a plausible state change"
