@@ -42,6 +42,18 @@ PASS_A_KEYS = {
     "state_change": "one sentence: what physically changes (object/hand/contact state)",
     "semantic_action_changed": "yes | no | unclear -- did the high-level ACTION INTENT change (not just motion)",
     "motion_change_without_semantic_change": "yes | no | unclear -- is there strong visual motion but the SAME ongoing action (e.g. repetitive wiping, direction reversal, regrasp)",
+    # Added after the HAL x VLM cross-tab showed the model's main failure is
+    # collapsing brief-but-real transitions (a quick pick, release, regrasp,
+    # seat, or contact change) into "same ongoing action" -- these are
+    # narrower, more literal atomic facts than semantic_action_changed, aimed
+    # specifically at that collapse. Evidence only: not consumed by fuse() or
+    # derive_fields.py yet, for manual contrast-set review first.
+    "new_object_contact": "yes | no | unclear -- does the hand make NEW contact with an object it wasn't touching a moment ago",
+    "object_released": "yes | no | unclear -- is an object let go / put down / released from the hand",
+    "object_state_changed": "yes | no | unclear -- did the object itself change state (opened, flipped, folded, moved to a new location) independent of hand motion",
+    "interaction_target_changed": "yes | no | unclear -- did the hand start interacting with a DIFFERENT object/part than before",
+    "repetitive_motion_visible": "yes | no | unclear -- is the motion a repeating/cyclic pattern (wiping, folding passes, back-and-forth) rather than a one-off transition",
+    "brief_distinct_action_visible": "yes | no | unclear -- is there a SHORT (sub-2s) but genuinely distinct action here (quick pick/release/regrasp/seat/contact) that could be wrongly folded into 'same ongoing action' just because it's fast",
     "candidate_boundary_time": "absolute seconds of the single most likely action boundary in this clip, or null",
     "candidate_boundary_interval": '{"start": s, "end": s} absolute-second window in which a boundary plausibly lies, or null',
     "observed_secondary_actions": "list of short additional/co-occurring actions visible (may be empty)",
@@ -101,7 +113,16 @@ PASS_A_SYSTEM = (
     "mug and starts rinsing it; picks up a new object) from mere MOTION CHANGE "
     "within one ongoing action (repetitive wiping, a direction reversal, "
     "regrasping, tool repositioning). Strong visual motion does NOT imply an "
-    "action boundary."
+    "action boundary.\n\n"
+    "KNOWN FAILURE MODE, correct for it: a real risk in the OTHER direction is "
+    "collapsing a genuinely distinct action into 'same ongoing action' just "
+    "because it's brief (sub-2s) -- a quick pick, release, regrasp-into-a-new-"
+    "grip, seating an object, or a new contact can be a real boundary even "
+    "though it looks momentary. Report the specific atomic facts (new_object_"
+    "contact, object_released, object_state_changed, interaction_target_"
+    "changed, repetitive_motion_visible, brief_distinct_action_visible) "
+    "independently and literally -- do not let 'it happened fast' talk you "
+    "into semantic_action_changed=no by default."
 )
 
 

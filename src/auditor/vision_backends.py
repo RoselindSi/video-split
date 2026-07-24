@@ -55,6 +55,12 @@ _ENUM_HINTS = {
     "conflicts_with_blind_description": ["no", "no", "yes"],
     "additional_action_visible": ["no", "no", "yes"],
     "agrees_with_pass_a_motion_judgment": ["yes", "yes", "no", "pass_a_uncertain"],
+    "new_object_contact": ["no", "no", "yes", "unclear"],
+    "object_released": ["no", "no", "yes", "unclear"],
+    "object_state_changed": ["no", "yes", "unclear"],
+    "interaction_target_changed": ["no", "no", "yes", "unclear"],
+    "repetitive_motion_visible": ["no", "yes", "yes", "unclear"],
+    "brief_distinct_action_visible": ["no", "no", "yes", "unclear"],
 }
 
 

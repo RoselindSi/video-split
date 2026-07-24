@@ -190,6 +190,31 @@ def main():
     for r in disagreement:
         print(f"  {r['event_id']}  gold={'valid' if r['y'] == 1 else 'spurious'}")
 
+    # --- frozen policy: selective boundary verifier, no auto-remove --------
+    # HAL >= thr_valid -> provisional_keep (VLM attached only as an agree/
+    # disagree flag, NEVER used to override -- the disagreement cell above
+    # showed VLM's 'spurious' call is WRONG most of the time when HAL is
+    # confidently 'valid': 5/6 gold-valid in this cross-tab). Everything else
+    # -> review. There is deliberately NO provisional_remove branch: no HAL
+    # low-score bucket cleared the target precision on the spurious side
+    # (see the 'spurious' curve above), so a remove decision currently has no
+    # trustworthy evidence behind it at all.
+    keep_group = [r for r, p in zip(rows, p_hal) if hal_bucket(p) == "valid"]
+    review_group = [r for r, p in zip(rows, p_hal) if hal_bucket(p) != "valid"]
+    n_keep, n_review = len(keep_group), len(review_group)
+    keep_valid = sum(r["y"] == 1 for r in keep_group)
+    keep_precision = keep_valid / n_keep if n_keep else None
+    keep_vlm_agree = sum(r["vlm_temporal_truth"] == "valid" for r in keep_group)
+    keep_vlm_disagree = sum(r["vlm_temporal_truth"] == "spurious" for r in keep_group)
+    print("\n-- FROZEN POLICY: selective boundary verifier (HAL>=%.2f -> provisional_keep, "
+          "else -> review; VLM advisory-only, never overrides; no auto-remove) --" % thr_valid)
+    print(f"  provisional_keep : n={n_keep}  precision={_fmt(keep_precision)}  "
+          f"(coverage={n_keep/len(rows):.3f})  "
+          f"[VLM agrees: {keep_vlm_agree}, VLM disagrees: {keep_vlm_disagree} -- disagreement NOT acted on]")
+    print(f"  review           : n={n_review}  (coverage={n_review/len(rows):.3f})")
+    print("  provisional_remove: NOT DEFINED -- no HAL threshold reaches target precision on "
+          "the spurious side yet (see 'spurious' curve above)")
+
     if a.out:
         os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
         with open(a.out, "w", encoding="utf-8") as f:
@@ -198,6 +223,14 @@ def main():
                 "thr_valid": thr_valid, "thr_spurious": thr_spur,
                 "curve_valid": curve_valid, "curve_spurious": curve_spur,
                 "cells": summary_cells,
+                "frozen_policy": {
+                    "provisional_keep": {"n": n_keep, "precision": keep_precision,
+                                        "coverage": n_keep / len(rows),
+                                        "vlm_agree": keep_vlm_agree, "vlm_disagree": keep_vlm_disagree,
+                                        "event_ids": [r["event_id"] for r in keep_group]},
+                    "review": {"n": n_review, "coverage": n_review / len(rows)},
+                    "provisional_remove": None,
+                },
             }, f, ensure_ascii=False, indent=2)
         print(f"\nwrote {a.out}")
         try:
