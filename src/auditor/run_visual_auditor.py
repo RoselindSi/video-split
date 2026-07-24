@@ -110,6 +110,40 @@ def run_pass(backend, system, user, *, video, images, base_fps, repeats,
     return outs
 
 
+def run_pass_multi(backends, system, user, *, video, images, base_fps, repeats,
+                   temperature, keys):
+    """Like run_pass, but across one or more backends -- e.g. a small AND a
+    large Instruct checkpoint, since running the SAME model on itself
+    (`repeats`) only measures whether it is internally consistent, not
+    whether it is right: a systematic bias reproduces identically across
+    fps-jittered repeats and reads as high confidence. Two DIFFERENT models
+    agreeing is a much stronger signal. Returns (merged_runs_for_fusion,
+    [per_backend_runs...]) -- the merged list feeds the existing _mode()
+    consensus unchanged; the per-backend lists let the caller additionally
+    check cross-model agreement."""
+    per_backend = []
+    merged = []
+    for backend in backends:
+        runs = run_pass(backend, system, user, video=video, images=images,
+                        base_fps=base_fps, repeats=repeats,
+                        temperature=temperature, keys=keys)
+        per_backend.append(runs)
+        merged.extend(runs)
+    return merged, per_backend
+
+
+def cross_model_agreement(per_backend_runs, field):
+    """1.0 if all backends' dominant answer for `field` agrees, 0.0 if any
+    disagree, None if there's only one backend (not applicable)."""
+    if len(per_backend_runs) < 2:
+        return None
+    dominants = [_mode([r.get(field) for r in runs])[0] for runs in per_backend_runs]
+    dominants = [d for d in dominants if d is not None]
+    if len(dominants) < 2:
+        return None
+    return 1.0 if len(set(dominants)) == 1 else 0.0
+
+
 def consensus_pass_a(runs):
     changed, _ = _mode([r.get("semantic_action_changed") for r in runs])
     motion, _ = _mode([r.get("motion_change_without_semantic_change") for r in runs])
@@ -206,8 +240,18 @@ def fuse(pa, pb, pc):
     }
 
 
-def calibrated_confidence(pa_runs, pb_runs, pc_runs, fused):
-    """Consistency-based confidence (not the model's stated confidence)."""
+def calibrated_confidence(pa_runs, pb_runs, pc_runs, fused,
+                          cross_model_temporal=None, cross_model_label=None):
+    """Consistency-based confidence (not the model's stated confidence).
+
+    cross_model_temporal / cross_model_label: from cross_model_agreement(),
+    None unless a second B/C backend was actually used. Same-model repeats
+    (temporal_agree/semantic_agree below) measure internal consistency only
+    -- a systematic bias reproduces identically across fps-jittered repeats
+    of ONE model and reads as high confidence despite being wrong (observed
+    on the server: hard-slice(2) was 0/17 in the 'high confidence' bucket).
+    Cross-model agreement is real diversity and is weighted in when present.
+    """
     comps = {}
     # agreement across repeats on the two anchor fields
     comps["temporal_agree"] = _mode([r.get("temporal_truth") for r in pc_runs])[1]
@@ -220,16 +264,26 @@ def calibrated_confidence(pa_runs, pb_runs, pc_runs, fused):
         comps["blind_conditioned_agree"] = 1.0 if (expect_valid == (truth == "valid")) else 0.0
     else:
         comps["blind_conditioned_agree"] = 0.5
+    if cross_model_temporal is not None:
+        comps["cross_model_temporal_agree"] = cross_model_temporal
+    if cross_model_label is not None:
+        comps["cross_model_label_agree"] = cross_model_label
     overall = sum(comps.values()) / len(comps)
     bin_ = "high" if overall >= 0.8 else ("medium" if overall >= 0.5 else "low")
     eligible = (overall >= 0.8 and truth not in ("ambiguous", "unresolved")
                 and fused["label_support"] != "uncertain")
+    # With a second model available, never call something high-confidence if
+    # the two models actually disagreed on the anchor fields -- this is the
+    # exact case the whole cross-model addition exists to catch.
+    if cross_model_temporal == 0.0 or cross_model_label == 0.0:
+        bin_ = "low" if bin_ == "high" else bin_
+        eligible = False
     return overall, bin_, eligible, comps
 
 
 # --- main -------------------------------------------------------------------
 
-def audit_event(backend_a, backend_bc, gold_row, ctx, args):
+def audit_event(backend_a, backend_bc, gold_row, ctx, args, backend_bc2=None):
     center = ctx.get("pred_time") or ctx.get("gt_time") or 0.0
     half = args.clip_window / 2.0
     clip_start, clip_end = max(0.0, center - half), center + half
@@ -254,25 +308,33 @@ def audit_event(backend_a, backend_bc, gold_row, ctx, args):
                        temperature=args.temperature, keys=list(P.PASS_A_KEYS))
     pa = consensus_pass_a(pa_runs)
 
-    # Pass B -- semantic label verification (reasoning model)
+    backends_bc = [backend_bc] + ([backend_bc2] if backend_bc2 is not None else [])
+
+    # Pass B -- semantic label verification (reasoning model[s])
     pb_user = P.build_pass_b(pa, ctx.get("containing_segment_label"),
                              ctx.get("prev_segment_label"), ctx.get("next_segment_label"))
-    pb_runs = run_pass(backend_bc, P.PASS_B_SYSTEM, pb_user, video=video, images=(),
-                       base_fps=args.fps, repeats=args.repeats,
-                       temperature=args.temperature, keys=list(P.PASS_B_KEYS))
+    pb_runs, pb_per_backend = run_pass_multi(
+        backends_bc, P.PASS_B_SYSTEM, pb_user, video=video, images=(),
+        base_fps=args.fps, repeats=args.repeats,
+        temperature=args.temperature, keys=list(P.PASS_B_KEYS))
     pb = {k: _mode([r.get(k) for r in pb_runs])[0] for k in P.PASS_B_KEYS}
 
-    # Pass C -- temporal / boundary verification (reasoning model)
+    # Pass C -- temporal / boundary verification (reasoning model[s])
     pc_user = P.build_pass_c(pa, ctx.get("gt_time"), ctx.get("pred_time"),
                              ctx.get("pred_score"), ctx.get("prev_segment_label"),
                              ctx.get("next_segment_label"), bool(images))
-    pc_runs = run_pass(backend_bc, P.PASS_C_SYSTEM, pc_user, video=video, images=images,
-                       base_fps=args.fps, repeats=args.repeats,
-                       temperature=args.temperature, keys=list(P.PASS_C_KEYS))
+    pc_runs, pc_per_backend = run_pass_multi(
+        backends_bc, P.PASS_C_SYSTEM, pc_user, video=video, images=images,
+        base_fps=args.fps, repeats=args.repeats,
+        temperature=args.temperature, keys=list(P.PASS_C_KEYS))
     pc = {k: _mode([r.get(k) for r in pc_runs])[0] for k in P.PASS_C_KEYS}
 
     fused = fuse(pa, pb, pc)
-    overall, bin_, eligible, comps = calibrated_confidence(pa_runs, pb_runs, pc_runs, fused)
+    cm_temporal = cross_model_agreement(pc_per_backend, "temporal_truth")
+    cm_label = cross_model_agreement(pb_per_backend, "label_support")
+    overall, bin_, eligible, comps = calibrated_confidence(
+        pa_runs, pb_runs, pc_runs, fused,
+        cross_model_temporal=cm_temporal, cross_model_label=cm_label)
     fused["review_confidence"] = bin_
     fused["auto_proposal_eligible"] = eligible
 
@@ -291,6 +353,13 @@ def main():
     ap.add_argument("--backend", choices=["mock", "qwen"], default="mock")
     ap.add_argument("--model_id_a", help="Pass A (blind) model; Instruct recommended")
     ap.add_argument("--model_id_bc", help="Pass B/C (reasoning) model; Think recommended")
+    ap.add_argument("--model_id_bc2", help="OPTIONAL second Pass B/C model for cross-model "
+                    "agreement (e.g. a larger checkpoint alongside model_id_bc). Same-model "
+                    "--repeats only measures self-consistency, which is blind to a systematic "
+                    "bias (it reproduces identically every repeat); a second, differently-"
+                    "sized/trained model disagreeing is a real diversity signal and downgrades "
+                    "confidence/auto_proposal_eligible when the two disagree on the anchor "
+                    "fields. Roughly doubles Pass B/C runtime.")
     ap.add_argument("--model_id", help="single model id used for all passes (overridden by _a/_bc)")
     ap.add_argument("--gold", help="gold jsonl (default: committed data/gold/...)")
     ap.add_argument("--context", help="context jsonl (default: committed data/gold/...)")
@@ -312,20 +381,25 @@ def main():
     if a.limit:
         gold = gold[:a.limit]
 
+    backend_bc2 = None
     if a.backend == "mock":
         backend_a = backend_bc = VB.build_backend("mock")
+        if a.model_id_bc2:
+            backend_bc2 = VB.build_backend("mock")
     else:
         id_a = a.model_id_a or a.model_id
         id_bc = a.model_id_bc or a.model_id or id_a
         backend_a = VB.build_backend("qwen", id_a)
         backend_bc = backend_a if id_bc == id_a else VB.build_backend("qwen", id_bc)
+        if a.model_id_bc2:
+            backend_bc2 = VB.build_backend("qwen", a.model_id_bc2)
 
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     n = 0
     with open(a.out, "w", encoding="utf-8") as f:
         for row in gold:
             eid = row["event_id"]
-            rec = audit_event(backend_a, backend_bc, row, ctx.get(eid, {}), a)
+            rec = audit_event(backend_a, backend_bc, row, ctx.get(eid, {}), a, backend_bc2=backend_bc2)
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")
             n += 1
             print(f"[{n}/{len(gold)}] {eid} -> truth={rec['temporal_truth']} "
@@ -336,8 +410,8 @@ def main():
         from src.eval.run_manifest import write_manifest
         write_manifest(a.out, input_paths=[gold_path, ctx_path],
                        extra={"backend": a.backend, "model_id_a": a.model_id_a,
-                              "model_id_bc": a.model_id_bc, "repeats": a.repeats,
-                              "n_events": n})
+                              "model_id_bc": a.model_id_bc, "model_id_bc2": a.model_id_bc2,
+                              "repeats": a.repeats, "n_events": n})
     except Exception as e:
         print(f"[manifest] skipped ({e})", file=sys.stderr)
     print(f"wrote {n} auditor records -> {a.out}")

@@ -82,7 +82,7 @@ class MockBackend(VisionBackend):
                 out[k] = rng.choice(["scrub", "rinse", "fold", "wipe", "flip", "remove"])
             elif k.startswith("corrected_object") or k.startswith("object_"):
                 out[k] = rng.choice(["mug", "tissue", "sink strainer", "remote control"])
-            elif k in ("state_change", "rationale"):
+            elif k in ("state_change", "rationale", "reasoning"):
                 out[k] = "mock: describes a plausible state change"
             else:
                 out[k] = None

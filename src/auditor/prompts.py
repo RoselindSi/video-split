@@ -49,6 +49,7 @@ PASS_A_KEYS = {
 }
 
 PASS_B_KEYS = {
+    "reasoning": "2-3 sentences, written BEFORE any field below: state the blind description's verb+object, state the label's verb+object, then explicitly say where they agree or disagree. Do not restate the label as if it were the conclusion.",
     "conflicts_with_blind_description": "yes | no -- does the ORIGINAL LABEL disagree with the blind visual description above on verb, object, or granularity? Decide this FIRST, before the fields below.",
     "label_support": " | ".join(S.LABEL_SUPPORT),
     "label_completeness": " | ".join(S.LABEL_COMPLETENESS),
@@ -62,6 +63,7 @@ PASS_B_KEYS = {
 }
 
 PASS_C_KEYS = {
+    "reasoning": "2-3 sentences, written BEFORE any field below: state what Pass A already concluded (semantic_action_changed / motion_change_without_semantic_change), then state whether the GT/prediction context here changes that conclusion and why. Do not jump straight to 'valid' because a GT time was given.",
     "agrees_with_pass_a_motion_judgment": "yes | no | pass_a_uncertain -- does your temporal_truth conclusion below align with what the blind Pass A description already implied (semantic_action_changed / motion_change_without_semantic_change)? Decide this FIRST. If you override Pass A, your rationale must name the NEW evidence that justifies it.",
     "temporal_truth": " | ".join(S.TEMPORAL_TRUTH) + " -- does a real action-level boundary exist near here, independent of GT/model",
     "gt_boundary_relation": " | ".join(S.GT_BOUNDARY_RELATION),
@@ -124,7 +126,16 @@ PASS_B_SYSTEM = (
     "(parent) description of a finer action; that is 'too_coarse', not "
     "'incorrect' -- but a label naming a DIFFERENT verb or object than the "
     "blind description is 'contradicted'/'incorrect', and you must say so even "
-    "if the difference feels minor or the label is 'probably close enough'."
+    "if the difference feels minor or the label is 'probably close enough'.\n\n"
+    "WORKED EXAMPLE of the reasoning style expected (label is WRONG despite "
+    "being topically close): blind description says the clip shows picking up "
+    "a folded tissue and beginning to unfold/open it; the label says 'fold "
+    "tissue into a compact rectangle'. reasoning: 'Blind description: "
+    "unfolding a tissue. Label: folding a tissue. These are OPPOSITE actions "
+    "on the same object, not a paraphrase.' -> conflicts_with_blind_"
+    "description=yes, label_support=contradicted, label_completeness="
+    "incorrect, corrected_primary_verb='unfold'. Do not soften this to "
+    "'supported' just because both actions involve a tissue."
 )
 
 
@@ -165,7 +176,17 @@ PASS_C_SYSTEM = (
     "talk you into 'valid' by default. If Pass A already concluded this is "
     "just motion inside one action, your default should be temporal_truth= "
     "'spurious' unless you find CONCRETE ADDITIONAL evidence, not already "
-    "visible to Pass A, that a genuine action changed."
+    "visible to Pass A, that a genuine action changed.\n\n"
+    "WORKED EXAMPLE of the reasoning style expected (temporal_truth is "
+    "'spurious' despite a GT time being given): Pass A already said "
+    "motion_change_without_semantic_change=yes for two remote-control flips "
+    "separated by a brief static hold; the GT time falls inside that static "
+    "hold, between the two real flips. reasoning: 'Pass A found no semantic "
+    "change here -- the GT sits in a stable no-action gap between two real "
+    "flips elsewhere. A GT timestamp existing is not evidence a boundary is "
+    "real.' -> agrees_with_pass_a_motion_judgment=yes, temporal_truth="
+    "spurious, gt_boundary_relation=spurious_gt. Do not default to 'valid' "
+    "just because an annotated GT time was provided in the evidence above."
 )
 
 
