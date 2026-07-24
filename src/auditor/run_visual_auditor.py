@@ -9,15 +9,30 @@ mine training pairs or train any second-stage model.
 
   Pass A (blind)     : clip only, no label/GT/category -> visual truth, and the
                        motion-change-vs-semantic-change distinction.
-  Pass B (semantic)  : Pass A + the ORIGINAL annotation label -> label quality
-                       + corrected target.
-  Pass C (temporal)  : Pass A + GT time / model time / adjacent labels -> is a
-                       real boundary here, and how do GT and the model relate.
+  Pass B (semantic)  : Pass A + the ORIGINAL annotation label -> ATOMIC
+                       observation only (observed verb/object/secondary
+                       action). Does NOT judge the label itself.
+  Pass C (temporal)  : Pass A + GT time / model time / adjacent labels ->
+                       temporal_truth ONLY. Does NOT judge how the GT/model
+                       behaved.
+
+Judgment fields the VLM used to be asked for directly -- label_support/
+completeness/granularity/semantic_relation/object_relation and
+gt_boundary_relation/model_boundary_behavior -- are now DERIVED by rule in
+derive_fields.py from the atomic observations above, not guessed by the VLM.
+Two full-72 runs showed these were the worst-scoring fields when asked
+directly, for a structural reason: gt_boundary_relation/model_boundary_
+behavior need decode-mechanics info (was a peak suppressed by NMS vs never
+above threshold) that simply isn't visible in a video clip, and the semantic
+fields showed a strong anchoring bias (rubber-stamping the label) even with
+a blind first pass. See derive_fields.py's docstring for the full rationale.
 
 Confidence is NOT the model's own verbal confidence. It is a consistency score
 across `--repeats` runs (fps-jittered) plus a blind-vs-conditioned agreement
-check (does Pass C's temporal_truth agree with Pass A's action-changed call).
-Only high-consistency, resolved cases get auto_proposal_eligible=True.
+check (does Pass C's temporal_truth agree with Pass A's action-changed call),
+plus optional cross-model agreement (--model_id_bc2) since same-model repeats
+alone cannot detect a systematic bias (it reproduces identically every
+repeat). Only high-consistency, resolved cases get auto_proposal_eligible=True.
 
 Usage
 -----
