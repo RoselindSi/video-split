@@ -150,6 +150,12 @@ class QwenVLBackend(VisionBackend):
         # frames than intended).
         image_inputs, video_inputs, video_kwargs = process_vision_info(
             messages, return_video_kwargs=True)
+        # This processor's typed kwargs want a scalar `fps`, but qwen_vl_utils
+        # returns one-per-video ([2.0]) since it supports multi-video input.
+        # We only ever pass a single video, so unwrap it.
+        if video_kwargs and isinstance(video_kwargs.get("fps"), list):
+            fps_list = video_kwargs["fps"]
+            video_kwargs["fps"] = fps_list[0] if fps_list else None
         inputs = self.processor(
             text=[text], images=image_inputs, videos=video_inputs,
             padding=True, return_tensors="pt", **(video_kwargs or {})
