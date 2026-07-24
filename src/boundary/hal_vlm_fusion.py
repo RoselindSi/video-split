@@ -183,6 +183,45 @@ def _fmt(v):
     return f"{v:.3f}" if isinstance(v, float) and not np.isnan(v) else str(v)
 
 
+def build_event_rows(gold, ctx, by_rid, vlm_pred, short_half=0.75, context_half=3.0,
+                     variance_half=None):
+    """One row per gold event with usable label (valid/spurious) + HAL
+    feature coverage. `vlm_pred`: dict event_id -> run_visual_auditor.py
+    pred record (may be {} / not cover all events -- rows still get built,
+    with has_vlm=False and vlm/vlm_temporal_truth left as NaN/None). Shared
+    by hal_vlm_fusion.py and hal_vlm_crosstab.py so the two scripts can never
+    silently diverge on what counts as a usable event."""
+    rows = []
+    for g in gold:
+        truth = g.get("temporal_truth")
+        if truth not in ("valid", "spurious"):
+            continue
+        eid = g["event_id"]
+        c = ctx.get(eid, {})
+        rid = g.get("recording_id") or c.get("recording_id")
+        rec = by_rid.get(rid)
+        if rec is None:
+            continue
+        t = c.get("pred_time")
+        if t is None:
+            t = c.get("gt_time")
+        if t is None:
+            continue
+        hal = hal_features_at(rec["feats"], rec["times"], float(t),
+                              short_half=short_half, context_half=context_half,
+                              variance_half=variance_half)
+        vlm_rec = vlm_pred.get(eid)
+        pass_a = (vlm_rec or {}).get("_pass_a")
+        rows.append({
+            "event_id": eid, "recording_id": rid, "y": 1 if truth == "valid" else 0,
+            "hal": [hal.get(k, np.nan) if hal.get(k) is not None else np.nan for k in HAL_FEATURE_NAMES],
+            "vlm": _encode_vlm_atomic(pass_a),
+            "has_vlm": pass_a is not None,
+            "vlm_temporal_truth": (vlm_rec or {}).get("temporal_truth"),
+        })
+    return rows
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -216,33 +255,8 @@ def main():
                 d = json.loads(line)
                 vlm_pred[d["event_id"]] = d
 
-    rows = []
-    for g in gold:
-        truth = g.get("temporal_truth")
-        if truth not in ("valid", "spurious"):
-            continue
-        eid = g["event_id"]
-        c = ctx.get(eid, {})
-        rid = g.get("recording_id") or c.get("recording_id")
-        rec = by_rid.get(rid)
-        if rec is None:
-            continue
-        t = c.get("pred_time")
-        if t is None:
-            t = c.get("gt_time")
-        if t is None:
-            continue
-        hal = hal_features_at(rec["feats"], rec["times"], float(t),
-                              short_half=a.short_half, context_half=a.context_half,
-                              variance_half=a.variance_half)
-        vlm_rec = vlm_pred.get(eid)
-        pass_a = (vlm_rec or {}).get("_pass_a")
-        rows.append({
-            "event_id": eid, "recording_id": rid, "y": 1 if truth == "valid" else 0,
-            "hal": [hal.get(k, np.nan) if hal.get(k) is not None else np.nan for k in HAL_FEATURE_NAMES],
-            "vlm": _encode_vlm_atomic(pass_a),
-            "has_vlm": pass_a is not None,
-        })
+    rows = build_event_rows(gold, ctx, by_rid, vlm_pred, short_half=a.short_half,
+                            context_half=a.context_half, variance_half=a.variance_half)
 
     n_total = len(rows)
     n_vlm = sum(r["has_vlm"] for r in rows)
