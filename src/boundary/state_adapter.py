@@ -193,7 +193,7 @@ def train_adapter(events, in_dim, device, epochs=40, lr=1e-3, seed=0,
             if loss is None:
                 continue
             opt.zero_grad(); loss.backward(); opt.step()
-            tot += float(loss); n += 1
+            tot += loss.detach().item(); n += 1
         vtot = vn = 0
         if va:
             model.eval()
@@ -204,7 +204,7 @@ def train_adapter(events, in_dim, device, epochs=40, lr=1e-3, seed=0,
                         continue
                     l = event_loss(model(fx.to(device)), tx.to(device), e["t"], e["y"])
                     if l is not None:
-                        vtot += float(l); vn += 1
+                        vtot += l.detach().item(); vn += 1
             vloss = vtot / max(vn, 1)
             if vloss < best_val:
                 best_val, best_state = vloss, {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
@@ -335,6 +335,18 @@ def loro_fit_predict(X, y, groups, l2=1.0):
     return preds
 
 
+def _auroc(y, p):
+    """Rank-based AUROC; nan if either class is empty."""
+    m = ~np.isnan(p)
+    y_, p_ = np.asarray(y)[m], np.asarray(p)[m]
+    if len(set(y_.tolist())) < 2:
+        return float("nan")
+    order = np.argsort(p_)
+    ranks = np.empty(len(p_)); ranks[order] = np.arange(len(p_))
+    pos, neg = ranks[y_ == 1], ranks[y_ == 0]
+    return float((pos[:, None] > neg[None, :]).mean())
+
+
 def report_arm(name, y, p, target=0.90):
     m = ~np.isnan(p)
     y_, p_ = y[m], p[m]
@@ -409,6 +421,7 @@ def main():
 
     # arm 3: v2 features on the ADAPTER embedding, nested per fold
     p_v2ad = np.full(len(events), np.nan)
+    fold_diag = []
     folds = grouped_folds(groups, a.folds, a.seed)
     for fi, held in enumerate(folds):
         tr_ev = [e for e in events if e["recording_id"] not in held]
@@ -431,6 +444,19 @@ def main():
         mu, sd = Xtr_i.mean(0), Xtr_i.std(0) + 1e-8
         w, b = fit_logreg((Xtr_i - mu) / sd, ytr)
         pte = _sigmoid((Xte_i - mu) / sd @ w + b)
+        # per-fold TRAIN vs TEST AUROC: the only way to tell "the adapter
+        # learned nothing" (train also low) from "it overfits across
+        # recordings" (train high, test low) -- a pooled OOF number alone
+        # cannot separate those two, and they need opposite fixes.
+        ptr = _sigmoid((Xtr_i - mu) / sd @ w + b)
+        yte_arr = np.array([e["y"] for e in te_ev], dtype=float)
+        tr_auc, te_auc = _auroc(ytr, ptr), _auroc(yte_arr, pte)
+        fold_diag.append({"fold": fi + 1, "n_train": len(tr_ev), "n_test": len(te_ev),
+                          "n_recordings_held": len(held),
+                          "train_auroc": tr_auc, "test_auroc": te_auc,
+                          "test_pos_frac": float(yte_arr.mean()) if len(yte_arr) else None})
+        print(f"      train AUROC={tr_auc:.3f}  test AUROC={te_auc:.3f}  "
+              f"test positive frac={yte_arr.mean():.2f}")
         idx = {e["event_id"]: i for i, e in enumerate(events)}
         for e, p in zip(te_ev, pte):
             p_v2ad[idx[e["event_id"]]] = p
@@ -440,11 +466,26 @@ def main():
         "v1_raw_rejected_baseline": report_arm("v1 raw (rejected)", y, p_v1),
         "v2_raw_frozen_embedding": report_arm("v2 raw embedding", y, p_v2raw),
         "v2_adapter_embedding": report_arm("v2 adapter embedding", y, p_v2ad),
+        "adapter_per_fold": fold_diag,
     }
     out = os.path.join(a.out_dir, "nested_cv_report.json")
     with open(out, "w", encoding="utf-8") as f:
         json.dump(res, f, indent=2)
     print(f"\nwrote {out}")
+    if fold_diag:
+        tr_m = float(np.nanmean([d["train_auroc"] for d in fold_diag]))
+        te_m = float(np.nanmean([d["test_auroc"] for d in fold_diag]))
+        print(f"\nadapter per-fold mean: train AUROC={tr_m:.3f}  test AUROC={te_m:.3f}")
+        if tr_m > 0.85 and te_m < 0.65:
+            print("  -> train high / test low: the adapter OVERFITS across recordings "
+                  "(needs stronger regularization or more recordings, not a new objective)")
+        elif tr_m < 0.70:
+            print("  -> train ALSO low: the contrastive objective is not fitting even the "
+                  "training pairs -- supervision/implementation issue, not generalization")
+        spread = [d["test_auroc"] for d in fold_diag if not np.isnan(d["test_auroc"])]
+        if spread and (max(spread) - min(spread)) > 0.25:
+            print(f"  -> test AUROC varies {min(spread):.2f}-{max(spread):.2f} across folds: "
+                  f"recording-level domain shift dominates the average")
     print("read: if v2-adapter does not beat v2-raw, the learned state space adds "
           "nothing yet (more data or different supervision needed); if v2-raw already "
           "beats v1, the structural features alone were the missing piece.")
