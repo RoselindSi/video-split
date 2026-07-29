@@ -1,0 +1,16 @@
+{
+  "_purpose": "Clean-supervision gate: does P1's advantage survive when the contradictory binary labels are replaced by the relabelled strong_separate/strong_align subset? Registered BEFORE that run.",
+  "_registered": "2026-07-29",
+  "_protocol": "Architecture is FROZEN from the passing run: same pca_dim 64, l2 5.0, seed 0, 5 stratified grouped folds, --clip_windows_at_neighbors, --ablate_shortcuts. ONLY the labels change. P2/P3 are not rerun -- they already failed their stability criterion (3/5 folds).",
+  "baseline_arm": "P0_v1_logreg",
+  "candidate_arm": "P1_pairwise_proj",
+  "min_auroc_gain": 0.03,
+  "min_folds_improved_frac": 0.8,
+  "min_coverage_at_90": 0.10,
+  "max_worst_fold_drop": 0.05,
+  "_notes": {
+    "comparison": "Both arms are recomputed on the SAME clean subset. The old mixed-label 0.729/0.887 pair is not a valid comparator for these numbers.",
+    "interpretation_if_gain_vanishes": "P1 was partly exploiting the old audit taxonomy rather than a cleaner semantic-transition signal; do not freeze, revisit features.",
+    "interpretation_if_gain_holds": "the architecture gate result is confirmed under clean supervision; proceed to freeze and collect batch3."
+  }
+}

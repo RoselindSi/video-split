@@ -527,21 +527,29 @@ def main():
                   if not np.isnan(x) and not np.isnan(z)]
         improved_frac = (sum(1 for x, z in paired if x > z) / len(paired)) if paired else 0.0
         gain = cand["pooled_auroc"] - base["pooled_auroc"]
-        worst_drop = (min(bf) - min(cf)) if bf and cf else float("inf")
+        # Reported as a GAIN (candidate - baseline) so the sign reads the
+        # obvious way: positive = the candidate's worst fold is better. The
+        # earlier name ("worst_fold_not_degraded") printed baseline - candidate,
+        # so a healthy +0.213 improvement showed as -0.214 and looked like a
+        # regression to anyone reading the manifest later. Decision logic is
+        # unchanged: allow a drop of at most max_worst_fold_drop.
+        worst_fold_gain = (min(cf) - min(bf)) if bf and cf else float("-inf")
+        max_drop = gate.get("max_worst_fold_drop", 0.05)
         checks = {
             "auroc_gain": (gain, gate.get("min_auroc_gain", 0.03), gain >= gate.get("min_auroc_gain", 0.03)),
             "folds_improved_frac": (improved_frac, gate.get("min_folds_improved_frac", 0.8),
                                     improved_frac >= gate.get("min_folds_improved_frac", 0.8)),
             "coverage_at_90": (cand["coverage_at_0.9_precision"], gate.get("min_coverage_at_90", 0.10),
                                cand["coverage_at_0.9_precision"] >= gate.get("min_coverage_at_90", 0.10)),
-            "worst_fold_not_degraded": (worst_drop, gate.get("max_worst_fold_drop", 0.05),
-                                        worst_drop <= gate.get("max_worst_fold_drop", 0.05)),
+            "worst_fold_gain": (worst_fold_gain, -max_drop, worst_fold_gain >= -max_drop),
         }
         print(f"\n=== PRE-REGISTERED GATE ({cand_key} vs {base_key}) ===")
         print(f"  thresholds fixed in {a.gate_config} "
               f"(written before results -- do not edit them now)")
         for name, (val, thr, ok) in checks.items():
-            print(f"  {'PASS' if ok else 'FAIL'}  {name:<26} {val:+.3f}  (threshold {thr})")
+            comp = ">=" if name != "worst_fold_gain" else ">="
+            print(f"  {'PASS' if ok else 'FAIL'}  {name:<26} {val:+.3f}  "
+                  f"(needs {comp} {thr:+.3f})")
         passed = all(ok for _, _, ok in checks.values())
         print(f"  -> {'GATE PASSED: freeze this config and collect batch3' if passed else 'GATE NOT PASSED: do NOT collect batch3 or restore auto-keep'}")
         res["gate"] = {"config": gate, "passed": bool(passed),

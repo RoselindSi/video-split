@@ -60,12 +60,26 @@ from src.boundary.pairwise_verifier import (
     _impute_scale_fit, _impute_scale_apply, REL_NAMES, SHORTCUT_GROUPS, SCALES,
 )
 
-DROP = [n for g in SHORTCUT_GROUPS.values() for n in g]
-KEEP_REL = [n for n in REL_NAMES if n not in DROP]
-KEEP_IDX = [REL_NAMES.index(n) for n in KEEP_REL]
+SHORTCUT_FEATS = [n for g in SHORTCUT_GROUPS.values() for n in g]
 
 
-def fit_fold(Ls, Rs, X_rel, y, tr, pca_dim, l2):
+def resolve_features(feature_set):
+    """`full` keeps every relative feature -- this is the configuration that
+    actually passed the pre-registered architecture gate, so it stays the
+    PRIMARY model. `visual_only` drops the annotation-position features
+    (left/right_room, contamination); it scored +0.006 AUROC on dev, which is
+    far too small to justify swapping the primary after the fact, but it is
+    kept as a pre-declared SECONDARY because it is the variant whose inputs
+    are all genuinely visual. Freeze both, report both, promote neither on
+    the strength of a dev-set decimal."""
+    if feature_set == "visual_only":
+        keep = [n for n in REL_NAMES if n not in SHORTCUT_FEATS]
+    else:
+        keep = list(REL_NAMES)
+    return keep, [REL_NAMES.index(n) for n in keep]
+
+
+def fit_fold(Ls, Rs, X_rel, y, tr, pca_dim, l2, KEEP_IDX):
     """Fit the whole P1 pipeline on `tr` and return an apply() closure."""
     pca = pca_fit(np.concatenate([Ls[tr], Rs[tr]], 0), pca_dim)
     Xr = X_rel[tr][:, KEEP_IDX]
@@ -113,21 +127,32 @@ def main():
     ap.add_argument("--gold", default="data/gold/audit_188_gold_v2.jsonl")
     ap.add_argument("--context", default="data/gold/audit_188_context.jsonl")
     ap.add_argument("--clip_windows_at_neighbors", action="store_true")
-    ap.add_argument("--target_precision", type=float, default=0.90)
+    ap.add_argument("--feature_set", choices=["full", "visual_only"], default="full",
+                    help="`full` = the configuration that passed the pre-registered gate "
+                         "(PRIMARY). `visual_only` = pre-declared secondary with the "
+                         "annotation-position features removed.")
+    ap.add_argument("--target_precision", type=float, default=0.92,
+                    help="deliberately ABOVE the 0.90 deployment target: picking the "
+                         "threshold exactly at 0.90 on dev is how the previous policy "
+                         "shipped 0.90-on-dev and delivered 0.767 held out. The margin "
+                         "buys headroom for the dev->test drop.")
     ap.add_argument("--folds", type=int, default=5)
     ap.add_argument("--inner_folds", type=int, default=5)
     ap.add_argument("--pca_dim", type=int, default=64)
     ap.add_argument("--l2", type=float, default=5.0)
     ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--min_selected", type=int, default=10,
+    ap.add_argument("--min_selected", type=int, default=30,
                     help="a threshold must select at least this many items; prevents "
                          "estimating an operating point from a handful of samples")
+    ap.add_argument("--pc_table", action="store_true", default=True,
+                    help="print the full dev precision-coverage table before freezing")
     ap.add_argument("--out_dir", required=True)
     a = ap.parse_args()
 
     gold = S.load_gold(a.gold)
     ctx = S.load_context(a.context)
     by_rid = load_feature_caches(a.feat_cache)
+    KEEP_REL, KEEP_IDX = resolve_features(a.feature_set)
     events = build_events(gold, ctx, by_rid)
     X_v1, Ls, Rs, X_rel, keep = build_matrices(events, a.clip_windows_at_neighbors)
     events = [events[i] for i in keep]
@@ -137,7 +162,16 @@ def main():
     print(f"development events: {len(events)} ({int(y.sum())}+/{int(len(y)-y.sum())}-), "
           f"{len(set(groups))} recordings")
     print(f"features: {len(KEEP_REL)} relative ({KEEP_REL}) + PCA-{a.pca_dim} pair block")
-    print(f"dropped as non-visual shortcuts: {DROP}")
+    print(f"feature_set = {a.feature_set}"
+          + (f"  (dropped: {SHORTCUT_FEATS})" if a.feature_set == "visual_only"
+             else "  (PRIMARY -- the gated configuration; visual_only is the secondary)"))
+    print(f"threshold rule (pre-registered): loosest threshold with empirical precision "
+          f">= {a.target_precision:.2f} AND at least {a.min_selected} selected")
+    if a.clip_windows_at_neighbors:
+        print("SCOPE: windows are clipped at neighbouring ANNOTATED boundaries, so this is an "
+              "annotation-aware training-data boundary auditor -- NOT a fully annotation-free "
+              "detector. On unlabelled video the clipping must instead use candidate peaks or "
+              "provisional segments, which is a different (untested) configuration.")
 
     # ---- 1. nested estimate --------------------------------------------
     print(f"\n=== NESTED estimate (threshold chosen on inner folds only) ===")
@@ -156,7 +190,7 @@ def main():
             i_te = np.isin(inner_groups, list(ih)); i_tr = ~i_te
             if i_te.sum() == 0 or len(set(y[idx_tr[i_tr]].tolist())) < 2:
                 continue
-            ap_fn, _ = fit_fold(Ls, Rs, X_rel, y, idx_tr[i_tr], a.pca_dim, a.l2)
+            ap_fn, _ = fit_fold(Ls, Rs, X_rel, y, idx_tr[i_tr], a.pca_dim, a.l2, KEEP_IDX)
             p_inner[i_te] = ap_fn(idx_tr[i_te])
         m = ~np.isnan(p_inner)
         thr, inner_cov = threshold_for_precision(y[idx_tr][m], p_inner[m],
@@ -165,7 +199,7 @@ def main():
             print(f"  fold {fi+1}: inner CV never reached {a.target_precision:.0%} precision "
                   f"-- no threshold, fold contributes nothing")
             continue
-        ap_fn, _ = fit_fold(Ls, Rs, X_rel, y, tr, a.pca_dim, a.l2)
+        ap_fn, _ = fit_fold(Ls, Rs, X_rel, y, tr, a.pca_dim, a.l2, KEEP_IDX)
         p_te = ap_fn(te)
         chosen = p_te >= thr
         n_total += int(te.sum())
@@ -202,15 +236,24 @@ def main():
         i_te = np.isin(groups, list(ih)); i_tr = ~i_te
         if i_te.sum() == 0 or len(set(y[i_tr].tolist())) < 2:
             continue
-        ap_fn, _ = fit_fold(Ls, Rs, X_rel, y, i_tr, a.pca_dim, a.l2)
+        ap_fn, _ = fit_fold(Ls, Rs, X_rel, y, i_tr, a.pca_dim, a.l2, KEEP_IDX)
         p_oof[i_te] = ap_fn(i_te)
     m = ~np.isnan(p_oof)
+    if a.pc_table:
+        print("\n  dev OOF precision-coverage table (threshold selection is made from this,"
+              "\n  under the rule stated above -- not by eyeballing the best row):")
+        yo, po = y[m], p_oof[m]
+        order = np.argsort(-po)
+        ys, ps = yo[order], po[order]
+        print(f"    {'k':>4} {'thr':>7} {'precision':>10} {'coverage':>9}")
+        for k in range(a.min_selected, len(ys) + 1, max(1, len(ys) // 20)):
+            print(f"    {k:>4} {ps[k-1]:>7.4f} {ys[:k].mean():>10.3f} {k/len(ys):>9.3f}")
     frozen_thr, frozen_cov = threshold_for_precision(y[m], p_oof[m], a.target_precision,
                                                      a.min_selected)
     if frozen_thr is None:
         raise SystemExit(f"no threshold reaches {a.target_precision:.0%} precision with at "
                          f"least {a.min_selected} selected items -- nothing to freeze")
-    _, artifact = fit_fold(Ls, Rs, X_rel, y, all_idx, a.pca_dim, a.l2)
+    _, artifact = fit_fold(Ls, Rs, X_rel, y, all_idx, a.pca_dim, a.l2, KEEP_IDX)
     print(f"  frozen threshold = {frozen_thr:.4f}  (OOF coverage at that threshold "
           f"{frozen_cov:.3f}, OOF AUROC {_auroc(y[m], p_oof[m]):.3f})")
 
@@ -223,7 +266,8 @@ def main():
              threshold=frozen_thr)
     cfg = {
         "threshold": frozen_thr, "target_precision": a.target_precision,
-        "rel_features": KEEP_REL, "dropped_shortcut_features": DROP,
+        "feature_set": a.feature_set, "rel_features": KEEP_REL,
+        "shortcut_features_present": a.feature_set == "full",
         "scales": SCALES, "pca_dim": a.pca_dim, "l2": a.l2, "seed": a.seed,
         "clip_windows_at_neighbors": bool(a.clip_windows_at_neighbors),
         "n_dev_events": len(events), "n_dev_recordings": int(len(set(groups))),
@@ -235,6 +279,10 @@ def main():
             "same feature extraction params as the dev caches (pool multi, fps 2, no blur filter)",
             "annotated segments available (window clipping needs neighbouring boundaries)",
             "apply this artifact unchanged: no refitting, no threshold re-selection",
+            "180-250 candidate events from >=30 new recordings",
+            "sample the DEPLOYMENT distribution at random -- not high-score or hard cases",
+            "review blind: no model score, no provisional decision, no source error category",
+            "primary metric is precision AT THIS FROZEN THRESHOLD with a Wilson CI; AUROC is secondary",
         ],
     }
     with open(os.path.join(a.out_dir, "frozen_verifier.json"), "w", encoding="utf-8") as f:
