@@ -200,6 +200,19 @@ def relative_features(rec, t, other_event_times, clip_neighbors=False):
     return out
 
 
+# Feature groups that do NOT describe the video: they describe where the
+# candidate sits relative to the annotation/audit structure. Positives are
+# mostly GT-anchored (t lies ON a segment edge, so the room on each side is a
+# NEIGHBOURING segment's duration) while motion-hard-negatives are mostly
+# mid-segment false peaks (both bounds come from the SAME segment). That makes
+# these features systematically different by class for reasons unrelated to
+# what the video shows -- a potential label shortcut that must be ablated
+# before any accuracy claim is believed.
+SHORTCUT_GROUPS = {
+    "room": ["left_room_s", "right_room_s"],
+    "contamination": ["nearest_other_event_s", "contamination_flag"],
+}
+
 REL_NAMES = ([f"sep_{s}" for s in SCALES] + ["left_room_s", "right_room_s",
              "return_gap", "dir_consistency",
              "scale_agreement", "nearest_other_event_s", "contamination_flag"])
@@ -330,6 +343,11 @@ def main():
                          "seeing results. Keys: min_auroc_gain, min_folds_improved_frac, "
                          "min_coverage_at_90, max_worst_fold_drop")
     ap.add_argument("--stratified_folds", action="store_true", default=True)
+    ap.add_argument("--ablate_shortcuts", action="store_true",
+                    help="run P1 under several feature subsets to test whether the gain "
+                         "comes from VISUAL evidence or from features that merely encode "
+                         "where the candidate sits relative to the annotation (see "
+                         "SHORTCUT_GROUPS).")
     ap.add_argument("--clip_windows_at_neighbors", action="store_true",
                     help="bound each feature window at the neighbouring annotated segment "
                          "edges. Manual review found 81%% of contradictory pairs had windows "
@@ -437,6 +455,64 @@ def main():
               f"({'STABLE -- auxiliary supervision earns its place' if beats >= n - 1 and n else 'not stable -- do not adopt'})")
     print("\n  reminder: coverage@0.90 here is chosen post hoc on these same OOF "
           "predictions, so it is an upper bound, not a deployable operating point.")
+
+    # --- shortcut ablation ------------------------------------------------
+    if a.ablate_shortcuts:
+        print("\n=== SHORTCUT ABLATION (P1 only) ===")
+        print("  question: is the gain visual, or does it come from features that encode "
+              "the candidate's position relative to the annotation?")
+        drop_sets = [("full (all features)", []),
+                     ("no room", SHORTCUT_GROUPS["room"]),
+                     ("no contamination", SHORTCUT_GROUPS["contamination"]),
+                     ("no room + no contamination",
+                      SHORTCUT_GROUPS["room"] + SHORTCUT_GROUPS["contamination"]),
+                     ("ONLY room+contamination (shortcut-only control)", "ONLY_SHORTCUT")]
+        abl = {}
+        for name, drop in drop_sets:
+            if drop == "ONLY_SHORTCUT":
+                keep_idx = [REL_NAMES.index(n) for g in SHORTCUT_GROUPS.values() for n in g]
+                use_sides = False
+            else:
+                keep_idx = [i for i, n in enumerate(REL_NAMES) if n not in drop]
+                use_sides = True
+            p_abl = np.full(len(events), np.nan)
+            for fi, held in enumerate(folds):
+                te = np.array([g in held for g in groups]); tr = ~te
+                if te.sum() == 0 or len(set(y[tr].tolist())) < 2:
+                    continue
+                Xr_tr, Xr_te = X_rel[tr][:, keep_idx], X_rel[te][:, keep_idx]
+                st_r = _impute_scale_fit(Xr_tr)
+                if use_sides:
+                    pca = pca_fit(np.concatenate([Ls[tr], Rs[tr]], 0), a.pca_dim)
+                    Ptr = np.concatenate([pair_block(pca_apply(pca, Ls[tr]), pca_apply(pca, Rs[tr])),
+                                          _impute_scale_apply(st_r, Xr_tr)], 1)
+                    Pte = np.concatenate([pair_block(pca_apply(pca, Ls[te]), pca_apply(pca, Rs[te])),
+                                          _impute_scale_apply(st_r, Xr_te)], 1)
+                else:
+                    Ptr, Pte = _impute_scale_apply(st_r, Xr_tr), _impute_scale_apply(st_r, Xr_te)
+                stP = _impute_scale_fit(Ptr)
+                w_, b_ = fit_logreg(_impute_scale_apply(stP, Ptr), y[tr], l2=5.0)
+                p_abl[te] = _sigmoid(_impute_scale_apply(stP, Pte) @ w_ + b_)
+            m = ~np.isnan(p_abl)
+            auc = _auroc(y[m], p_abl[m])
+            cov, _ = precision_coverage(y[m], p_abl[m], 0.90)
+            abl[name] = {"auroc": float(auc), "coverage_at_0.9": float(cov)}
+            print(f"  {name:<46} AUROC={auc:.3f}  coverage@90%={cov:.3f}")
+        res["shortcut_ablation"] = abl
+        full = abl["full (all features)"]["auroc"]
+        clean = abl["no room + no contamination"]["auroc"]
+        only = abl["ONLY room+contamination (shortcut-only control)"]["auroc"]
+        print(f"\n  visual-only (no shortcuts) = {clean:.3f} vs full {full:.3f} "
+              f"vs shortcut-only control {only:.3f}")
+        if only > 0.75:
+            print("  !! the shortcut features ALONE reach high AUROC -- they encode the "
+                  "label through annotation position, not video content. Report the "
+                  "visual-only number as the real result.")
+        if full - clean > 0.05:
+            print("  !! a large part of the gain disappears without them -- do NOT claim "
+                  "the visual features achieve the full number.")
+        else:
+            print("  -> the gain survives without them: it is carried by visual features.")
 
     # --- pre-registered adoption gate ------------------------------------
     if a.gate_config:

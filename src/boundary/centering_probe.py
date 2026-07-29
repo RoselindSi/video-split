@@ -155,9 +155,14 @@ def main():
         print("  -> marginal gain: the compression was real but was not the binding "
               "constraint; the ranking was already monotone in the residual distance.")
     else:
-        print("  -> no gain: the frozen representation genuinely does not encode this "
-              "distinction, and rescaling cannot create it. This is evidence FOR needing "
-              "different features (hand/contact state, motion), not better normalization.")
+        print("  -> no gain from centering: the compression was real but was NOT the "
+              "binding constraint -- the ranking was already monotone in the residual "
+              "distance, so rescaling adds nothing.")
+        print("     CAREFUL: this says the single L/R DISTANCE does not improve. It does "
+              "NOT mean the representation lacks the distinction -- a richer read-out of "
+              "the same features (multi-scale sides + relative structure) reached AUROC "
+              "0.887 in the pairwise verifier. Judge the representation by the best "
+              "read-out, not by one scalar.")
     print("  NOTE: distance-only AUROC is a single-feature probe, not the full model. A "
           "gain here is necessary, not sufficient -- it must survive the grouped-CV arms.")
 
