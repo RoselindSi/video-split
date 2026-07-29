@@ -101,6 +101,34 @@ def stratified_grouped_folds(groups, y, k, seed=0):
 
 # ------------------------------------------------------- feature building --
 
+def neighbor_bounds(rec, t):
+    """(lower, upper) time limits for feature windows around candidate `t`,
+    set by the NEAREST annotated segment boundaries on each side.
+
+    Manual review of the 26 contradictory pairs found `window_spans_two_
+    actions` TRUE in 21 of them (81%), while `only_annotation_convention`
+    was FALSE in 25/26 and `unlabelled_subaction_present` FALSE in 23/26 --
+    i.e. the gold labels were mostly right and the geometry disagreed with
+    them because the +-2s/+-3s windows reached across OTHER actions, so the
+    "left state" and "right state" were not clean. Clipping each window at
+    the neighbouring boundaries makes the pooled sides represent the two
+    states actually being compared.
+
+    This uses annotation context, which is legitimate for a VERIFIER (the
+    question is "given the surrounding segmentation, is THIS candidate a
+    real boundary"), but it would be circular for a from-scratch detector --
+    do not reuse this in a decoder that is supposed to find boundaries."""
+    segs = rec.get("segments") or []
+    lo, hi = -1e9, 1e9
+    for _name, s0, s1 in segs:
+        for edge in (float(s0), float(s1)):
+            if edge < t - 1e-6:
+                lo = max(lo, edge)
+            elif edge > t + 1e-6:
+                hi = min(hi, edge)
+    return lo, hi
+
+
 def _pool(feats, times, lo, hi):
     m = (times >= lo) & (times < hi)
     if int(m.sum()) < 1:
@@ -112,37 +140,40 @@ def _cosd(a, b):
     return float(1.0 - F.cosine_similarity(a[None], b[None]))
 
 
-def side_vectors(rec, t, scales=SCALES):
+def side_vectors(rec, t, scales=SCALES, clip_neighbors=False):
     """Multi-scale pooled left/right raw vectors, concatenated."""
     feats, times = rec["feats"], rec["times"]
+    blo, bhi = neighbor_bounds(rec, t) if clip_neighbors else (-1e9, 1e9)
     L, R = [], []
     for s in scales:
-        l = _pool(feats, times, t - s, t)
-        r = _pool(feats, times, t, t + s)
+        l = _pool(feats, times, max(t - s, blo), t)
+        r = _pool(feats, times, t, min(t + s, bhi))
         if l is None or r is None:
             return None, None
         L.append(l); R.append(r)
     return torch.cat(L), torch.cat(R)
 
 
-def relative_features(rec, t, other_event_times):
+def relative_features(rec, t, other_event_times, clip_neighbors=False):
     """The mechanism-specific scalars, computed on RAW features."""
     feats, times = rec["feats"], rec["times"]
+    blo, bhi = neighbor_bounds(rec, t) if clip_neighbors else (-1e9, 1e9)
     out = {}
     for s in SCALES:
-        l, r = _pool(feats, times, t - s, t), _pool(feats, times, t, t + s)
+        lo_s, hi_s = max(t - s, blo), min(t + s, bhi)
+        l, r = _pool(feats, times, lo_s, t), _pool(feats, times, t, hi_s)
         if l is None or r is None:
             out[f"sep_{s}"] = np.nan
             continue
-        ml = (times >= t - s) & (times < t)
-        mr = (times >= t) & (times < t + s)
+        ml = (times >= lo_s) & (times < t)
+        mr = (times >= t) & (times < hi_s)
         sl = feats[ml].float(); sr = feats[mr].float()
         wl = float((1 - F.cosine_similarity(F.normalize(sl, dim=-1), l[None].expand_as(sl))).mean()) if len(sl) > 1 else 0.0
         wr = float((1 - F.cosine_similarity(F.normalize(sr, dim=-1), r[None].expand_as(sr))).mean()) if len(sr) > 1 else 0.0
         out[f"sep_{s}"] = _cosd(l, r) / (wl + wr + EPS)
-    pre = _pool(feats, times, t - 2, t)
-    near = _pool(feats, times, t, t + 2)
-    far = _pool(feats, times, t + 4, t + 8)
+    pre = _pool(feats, times, max(t - 2, blo), t)
+    near = _pool(feats, times, t, min(t + 2, bhi))
+    far = _pool(feats, times, min(t + 4, bhi), min(t + 8, bhi))
     out["return_gap"] = (_cosd(pre, near) - _cosd(pre, far)) if None not in (pre, near, far) else np.nan
     deltas = []
     if pre is not None:
@@ -162,26 +193,32 @@ def relative_features(rec, t, other_event_times):
     d_other = min(others) if others else 999.0
     out["nearest_other_event_s"] = d_other
     out["contamination_flag"] = 1.0 if d_other < 3.0 else 0.0
+    # how much the widest window had to be truncated by a neighbouring
+    # boundary -- 0 means the +-4s window was already inside one segment
+    out["left_room_s"] = min(4.0, t - blo) if blo > -1e8 else 4.0
+    out["right_room_s"] = min(4.0, bhi - t) if bhi < 1e8 else 4.0
     return out
 
 
-REL_NAMES = ([f"sep_{s}" for s in SCALES] + ["return_gap", "dir_consistency",
+REL_NAMES = ([f"sep_{s}" for s in SCALES] + ["left_room_s", "right_room_s",
+             "return_gap", "dir_consistency",
              "scale_agreement", "nearest_other_event_s", "contamination_flag"])
 
 
-def build_matrices(events):
+def build_matrices(events, clip_neighbors=False):
     """Returns X_v1 (5 raw HAL feats), side vectors L/R, and relative feats."""
     by_rec = {}
     for e in events:
         by_rec.setdefault(e["recording_id"], []).append(e["t"])
     X_v1, Ls, Rs, X_rel, keep = [], [], [], [], []
     for i, e in enumerate(events):
-        l, r = side_vectors(e["rec"], e["t"])
+        l, r = side_vectors(e["rec"], e["t"], clip_neighbors=clip_neighbors)
         if l is None:
             continue
         v1 = hal_features_at(e["rec"]["feats"], e["rec"]["times"], e["t"])
         X_v1.append([v1.get(k) if v1.get(k) is not None else np.nan for k in HAL_FEATURE_NAMES])
-        rel = relative_features(e["rec"], e["t"], by_rec[e["recording_id"]])
+        rel = relative_features(e["rec"], e["t"], by_rec[e["recording_id"]],
+                                clip_neighbors=clip_neighbors)
         X_rel.append([rel.get(k, np.nan) for k in REL_NAMES])
         Ls.append(l.numpy()); Rs.append(r.numpy()); keep.append(i)
     return (np.array(X_v1, dtype=float), np.array(Ls), np.array(Rs),
@@ -293,6 +330,10 @@ def main():
                          "seeing results. Keys: min_auroc_gain, min_folds_improved_frac, "
                          "min_coverage_at_90, max_worst_fold_drop")
     ap.add_argument("--stratified_folds", action="store_true", default=True)
+    ap.add_argument("--clip_windows_at_neighbors", action="store_true",
+                    help="bound each feature window at the neighbouring annotated segment "
+                         "edges. Manual review found 81%% of contradictory pairs had windows "
+                         "spanning two actions; this is the direct fix.")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
 
@@ -314,7 +355,13 @@ def main():
         print("  NOTE: running on the OLD binary labels (no --pair_labels). The adapter "
               "experiment showed this supervision is internally contradictory; treat "
               "these numbers as the legacy baseline only.")
-    X_v1, Ls, Rs, X_rel, keep = build_matrices(events)
+    X_v1, Ls, Rs, X_rel, keep = build_matrices(events, a.clip_windows_at_neighbors)
+    if a.clip_windows_at_neighbors:
+        li, ri = REL_NAMES.index("left_room_s"), REL_NAMES.index("right_room_s")
+        room = np.minimum(X_rel[:, li], X_rel[:, ri])
+        print(f"  window clipping active: {(room < 4.0).mean():.1%} of events had a "
+              f"+-4s window truncated by a neighbouring boundary "
+              f"(median usable half-window {np.median(room):.2f}s)")
     events = [events[i] for i in keep]
     y = np.array([e["y"] for e in events], dtype=float)
     groups = np.array([e["recording_id"] for e in events])
