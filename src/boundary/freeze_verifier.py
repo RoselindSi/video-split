@@ -55,6 +55,7 @@ from src.auditor import gold_schema as S
 from src.boundary.hal_features import load_feature_caches
 from src.boundary.hal_vlm_fusion import fit_logreg, _sigmoid
 from src.boundary.state_adapter import build_events, _auroc
+from src.boundary import pair_taxonomy as T
 from src.boundary.pairwise_verifier import (
     build_matrices, stratified_grouped_folds, pair_block, pca_fit, pca_apply,
     _impute_scale_fit, _impute_scale_apply, REL_NAMES, SHORTCUT_GROUPS, SCALES,
@@ -146,6 +147,13 @@ def main():
                          "estimating an operating point from a handful of samples")
     ap.add_argument("--pc_table", action="store_true", default=True,
                     help="print the full dev precision-coverage table before freezing")
+    ap.add_argument("--pair_labels",
+                    help="relabelled sheet (build_pair_relabel_sheet.py output, filled in). "
+                         "With it, freezing happens on the CLEAN strong_separate/"
+                         "strong_align subset -- the configuration that actually passed the "
+                         "clean-supervision gate. Without it, this freezes on the OLD, "
+                         "internally-contradictory binary labels; do not do that for a real "
+                         "batch3 artifact.")
     ap.add_argument("--out_dir", required=True)
     a = ap.parse_args()
 
@@ -154,6 +162,18 @@ def main():
     by_rid = load_feature_caches(a.feat_cache)
     KEEP_REL, KEEP_IDX = resolve_features(a.feature_set)
     events_all = build_events(gold, ctx, by_rid)
+    if a.pair_labels:
+        labels = T.load_pair_labels(a.pair_labels)
+        events_all = T.apply_to_events(events_all, labels)
+        if len(events_all) < 20:
+            raise SystemExit(f"only {len(events_all)} events survive the clean filter -- "
+                             f"relabel more rows before freezing")
+        print(f"clean pair labels applied: {len(events_all)} events "
+              f"(strong_separate/strong_align only)")
+    else:
+        print("!! NO --pair_labels given: freezing on the OLD, internally-contradictory "
+              "binary labels. This is the legacy configuration -- do not use this artifact "
+              "for a real batch3 test.")
     X_v1, Ls, Rs, X_rel, keep, crops = build_matrices(events_all, a.clip_windows_at_neighbors)
     events = [events_all[i] for i in keep]
     y = np.array([e["y"] for e in events], dtype=float)
