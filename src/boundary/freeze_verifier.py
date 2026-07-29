@@ -214,11 +214,25 @@ def main():
     # ---- 1. nested estimate --------------------------------------------
     print(f"\n=== NESTED estimate (threshold chosen on inner folds only) ===")
     outer = stratified_grouped_folds(groups, y, a.folds, a.seed)
-    sel_y, sel_p, n_total, thr_used = [], [], 0, []
+    sel_y, sel_p, thr_used = [], [], []
+    # BOTH denominators are tracked, on purpose: n_total_conditional (only
+    # folds where the inner CV found a threshold) is what was previously
+    # reported as "coverage" -- but a deployed frozen threshold does not get
+    # to skip candidates because some OTHER fold's inner CV happened to fail;
+    # every outer-fold event is a real future candidate. n_total_all is the
+    # true deployment-realistic denominator. Conflating the two overstated
+    # coverage by dropping the hardest folds from the denominator entirely
+    # (caught by hand-checking the arithmetic against the printed per-fold
+    # counts: e.g. 43 selected over 82 conditional vs 145 total events).
+    n_total_conditional = 0
+    n_total_all = 0
+    n_folds_total = n_folds_with_threshold = 0
     for fi, held in enumerate(outer):
         te = np.isin(groups, list(held)); tr = ~te
         if te.sum() == 0 or len(set(y[tr].tolist())) < 2:
             continue
+        n_folds_total += 1
+        n_total_all += int(te.sum())
         # inner CV on the training portion only
         inner_groups = groups[tr]
         inner = stratified_grouped_folds(inner_groups, y[tr], a.inner_folds, a.seed + fi)
@@ -235,12 +249,14 @@ def main():
                                                  a.target_precision, a.min_selected)
         if thr is None:
             print(f"  fold {fi+1}: inner CV never reached {a.target_precision:.0%} precision "
-                  f"-- no threshold, fold contributes nothing")
+                  f"-- no threshold; this fold's {int(te.sum())} events count as 0 selected "
+                  f"in the OVERALL coverage below (not dropped from the denominator)")
             continue
+        n_folds_with_threshold += 1
         ap_fn, _ = fit_fold(Ls, Rs, X_rel, y, tr, a.pca_dim, a.l2, KEEP_IDX)
         p_te = ap_fn(te)
         chosen = p_te >= thr
-        n_total += int(te.sum())
+        n_total_conditional += int(te.sum())
         thr_used.append(thr)
         sel_y.append(y[te][chosen]); sel_p.append(p_te[chosen])
         prec = y[te][chosen].mean() if chosen.any() else float("nan")
@@ -249,20 +265,29 @@ def main():
     if sel_y:
         allsel = np.concatenate(sel_y)
         nested_prec = float(allsel.mean())
-        nested_cov = float(len(allsel) / n_total)
         k, n = int(allsel.sum()), len(allsel)
+        conditional_cov = float(n / n_total_conditional)
+        overall_cov = float(n / n_total_all)
         from src.boundary.hal_heldout_validate import wilson_interval
         lo, hi = wilson_interval(k, n)
         print(f"\n  NESTED precision = {nested_prec:.3f}  ({k}/{n}, Wilson 95% CI "
-              f"[{lo:.3f}, {hi:.3f}])   coverage = {nested_cov:.3f}")
-        print(f"  This -- not the 0.604 post-hoc figure -- is the forecast for batch3.")
+              f"[{lo:.3f}, {hi:.3f}])")
+        print(f"  conditional_coverage_given_threshold_exists = {conditional_cov:.3f}  "
+              f"({n}/{n_total_conditional}, only the {n_folds_with_threshold}/{n_folds_total} "
+              f"outer folds where an inner threshold was found)")
+        print(f"  overall_nested_coverage                     = {overall_cov:.3f}  "
+              f"({n}/{n_total_all}, ALL outer development events -- this is the honest "
+              f"deployment forecast, not the conditional number)")
+        print(f"  This -- not the post-hoc dev-OOF coverage below -- is the forecast for batch3.")
         if nested_prec < a.target_precision:
             print(f"  !! below the {a.target_precision:.0%} target: the operating point does "
                   f"not survive honest threshold selection. Do NOT promise {a.target_precision:.0%} "
                   f"on batch3; either accept the lower precision or raise the target and "
                   f"lose coverage.")
+        nested_cov = overall_cov  # kept in the saved config under this name; see JSON below
     else:
-        nested_prec = nested_cov = None
+        nested_prec = nested_cov = conditional_cov = overall_cov = None
+        n_folds_with_threshold = 0
         print("  no fold produced a usable threshold")
 
     # ---- 2. frozen artifact ---------------------------------------------
@@ -292,8 +317,14 @@ def main():
         raise SystemExit(f"no threshold reaches {a.target_precision:.0%} precision with at "
                          f"least {a.min_selected} selected items -- nothing to freeze")
     _, artifact = fit_fold(Ls, Rs, X_rel, y, all_idx, a.pca_dim, a.l2, KEEP_IDX)
-    print(f"  frozen threshold = {frozen_thr:.4f}  (OOF coverage at that threshold "
-          f"{frozen_cov:.3f}, OOF AUROC {_auroc(y[m], p_oof[m]):.3f})")
+    print(f"  frozen threshold = {frozen_thr:.4f}  (OOF coverage-of-scorable {frozen_cov:.3f}, "
+          f"OOF AUROC {_auroc(y[m], p_oof[m]):.3f})")
+    if len(dropped):
+        scorable_rate_print = len(events) / len(events_all)
+        print(f"  scorable rate = {len(events)}/{len(events_all)} = {scorable_rate_print:.3f} "
+              f"-- {len(dropped)} candidate(s) route to manual review as UNSCORABLE, not as "
+              f"'not selected'. Coverage over ALL candidates = {frozen_cov * scorable_rate_print:.3f}, "
+              f"not {frozen_cov:.3f}.")
 
     npz = os.path.join(a.out_dir, "frozen_verifier.npz")
     np.savez(npz, pca_mu=artifact["pca_mu"], pca_W=artifact["pca_W"],
@@ -302,6 +333,13 @@ def main():
              pair_cm=artifact["pair_scaler"]["cm"], pair_mu=artifact["pair_scaler"]["mu"],
              pair_sd=artifact["pair_scaler"]["sd"], w=artifact["w"], b=artifact["b"],
              threshold=frozen_thr)
+    n_all_candidates = len(events_all)  # includes the events build_matrices couldn't score
+    scorable_rate = len(events) / n_all_candidates if n_all_candidates else None
+    # unscorable candidates (window too narrow to pool) don't vanish in real
+    # deployment -- they route to manual review, so the honest coverage over
+    # ALL incoming candidates is the scorable-only OOF coverage scaled down
+    # by how many candidates are even scorable in the first place.
+    frozen_cov_all_candidates = (frozen_cov * scorable_rate) if scorable_rate is not None else None
     cfg = {
         "threshold": frozen_thr, "target_precision": a.target_precision,
         "feature_set": a.feature_set, "rel_features": KEEP_REL,
@@ -309,9 +347,14 @@ def main():
         "scales": SCALES, "pca_dim": a.pca_dim, "l2": a.l2, "seed": a.seed,
         "clip_windows_at_neighbors": bool(a.clip_windows_at_neighbors),
         "n_dev_events": len(events), "n_dev_recordings": int(len(set(groups))),
+        "n_dev_candidates_all": n_all_candidates, "scorable_rate": scorable_rate,
         "min_selected": a.min_selected,
-        "nested_precision_forecast": nested_prec, "nested_coverage_forecast": nested_cov,
-        "posthoc_oof_coverage_DO_NOT_QUOTE": frozen_cov,
+        "nested_precision_forecast": nested_prec,
+        "nested_conditional_coverage_forecast": conditional_cov,
+        "nested_overall_coverage_forecast": overall_cov,
+        "n_folds_with_threshold": n_folds_with_threshold, "n_folds_total": n_folds_total,
+        "posthoc_oof_coverage_scorable_only_DO_NOT_QUOTE": frozen_cov,
+        "posthoc_oof_coverage_all_candidates_DO_NOT_QUOTE": frozen_cov_all_candidates,
         "batch3_requirements": [
             "recordings disjoint from all 47 development recordings",
             "same feature extraction params as the dev caches (pool multi, fps 2, no blur filter)",
@@ -321,6 +364,9 @@ def main():
             "sample the DEPLOYMENT distribution at random -- not high-score or hard cases",
             "review blind: no model score, no provisional decision, no source error category",
             "primary metric is precision AT THIS FROZEN THRESHOLD with a Wilson CI; AUROC is secondary",
+            "report scorable_rate, selected/all_candidates, AND selected/scorable_candidates "
+            "separately -- unscorable candidates (window too narrow to pool) route to manual "
+            "review, they are not absent from the denominator",
         ],
     }
     with open(os.path.join(a.out_dir, "frozen_verifier.json"), "w", encoding="utf-8") as f:
