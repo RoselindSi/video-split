@@ -153,14 +153,32 @@ def main():
     ctx = S.load_context(a.context)
     by_rid = load_feature_caches(a.feat_cache)
     KEEP_REL, KEEP_IDX = resolve_features(a.feature_set)
-    events = build_events(gold, ctx, by_rid)
-    X_v1, Ls, Rs, X_rel, keep = build_matrices(events, a.clip_windows_at_neighbors)
-    events = [events[i] for i in keep]
+    events_all = build_events(gold, ctx, by_rid)
+    X_v1, Ls, Rs, X_rel, keep, crops = build_matrices(events_all, a.clip_windows_at_neighbors)
+    events = [events_all[i] for i in keep]
     y = np.array([e["y"] for e in events], dtype=float)
     groups = np.array([e["recording_id"] for e in events])
     os.makedirs(a.out_dir, exist_ok=True)
     print(f"development events: {len(events)} ({int(y.sum())}+/{int(len(y)-y.sum())}-), "
           f"{len(set(groups))} recordings")
+
+    dropped = [events_all[i] for i in range(len(events_all)) if i not in set(keep)]
+    if dropped:
+        print(f"\n  !! {len(dropped)} event(s) dropped by build_matrices "
+              f"(side_vectors returned None at some scale -- window too narrow to pool, "
+              f"most likely under --clip_windows_at_neighbors near a segment edge):")
+        for e in dropped:
+            print(f"      {e['event_id']}  role={'positive' if e['y']==1 else 'motion_hard_negative'}"
+                  f"  recording={e['recording_id']}")
+        drop_y = [e["y"] for e in dropped]
+        from collections import Counter as _Counter
+        print(f"      by class: {dict(_Counter('positive' if v==1 else 'motion_hard_negative' for v in drop_y))}"
+              f"  (base rate in full set: {int(y.sum())}+/{int(len(y)-y.sum())}- -- "
+              f"compare shares before assuming this is unbiased)")
+        print(f"      by recording: {dict(_Counter(e['recording_id'] for e in dropped))}")
+        print("      the rule itself is deterministic (a pure function of segment layout "
+              "and the clip flag, no label involved) -- but WHICH events it hits need not "
+              "be label-balanced, so the class breakdown above must be checked, not assumed.")
     print(f"features: {len(KEEP_REL)} relative ({KEEP_REL}) + PCA-{a.pca_dim} pair block")
     print(f"feature_set = {a.feature_set}"
           + (f"  (dropped: {SHORTCUT_FEATS})" if a.feature_set == "visual_only"

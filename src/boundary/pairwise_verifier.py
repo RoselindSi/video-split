@@ -154,6 +154,21 @@ def side_vectors(rec, t, scales=SCALES, clip_neighbors=False):
     return torch.cat(L), torch.cat(R)
 
 
+def same_side_subcrops(rec, t, clip_neighbors=False, window=4.0):
+    """Two INDEPENDENT temporal sub-crops of the left window and two of the
+    right window (each side split at its own midpoint) -- for a genuine
+    same-side consistency check. NaN-safe: returns None entries where a half
+    is too narrow to pool (common once windows are clipped to a couple of
+    seconds; --clip_windows_at_neighbors reported a median usable half-window
+    of ~2s, so quarter-windows here are often <1s)."""
+    feats, times = rec["feats"], rec["times"]
+    blo, bhi = neighbor_bounds(rec, t) if clip_neighbors else (-1e9, 1e9)
+    lo, hi = max(t - window, blo), min(t + window, bhi)
+    lmid, rmid = (lo + t) / 2, (t + hi) / 2
+    return (_pool(feats, times, lo, lmid), _pool(feats, times, lmid, t),
+           _pool(feats, times, t, rmid), _pool(feats, times, rmid, hi))
+
+
 def relative_features(rec, t, other_event_times, clip_neighbors=False):
     """The mechanism-specific scalars, computed on RAW features."""
     feats, times = rec["feats"], rec["times"]
@@ -219,23 +234,36 @@ REL_NAMES = ([f"sep_{s}" for s in SCALES] + ["left_room_s", "right_room_s",
 
 
 def build_matrices(events, clip_neighbors=False):
-    """Returns X_v1 (5 raw HAL feats), side vectors L/R, and relative feats."""
+    """Returns X_v1 (5 raw HAL feats), side vectors L/R, relative feats, and
+    same-side sub-crops (L1,L2,R1,R2 -- zero-filled + a validity mask where a
+    half-window was too narrow to pool)."""
     by_rec = {}
     for e in events:
         by_rec.setdefault(e["recording_id"], []).append(e["t"])
     X_v1, Ls, Rs, X_rel, keep = [], [], [], [], []
+    L1s, L2s, R1s, R2s, crop_ok = [], [], [], [], []
+    dim = None
     for i, e in enumerate(events):
         l, r = side_vectors(e["rec"], e["t"], clip_neighbors=clip_neighbors)
         if l is None:
             continue
+        dim = dim or e["rec"]["feats"].shape[1]
         v1 = hal_features_at(e["rec"]["feats"], e["rec"]["times"], e["t"])
         X_v1.append([v1.get(k) if v1.get(k) is not None else np.nan for k in HAL_FEATURE_NAMES])
         rel = relative_features(e["rec"], e["t"], by_rec[e["recording_id"]],
                                 clip_neighbors=clip_neighbors)
         X_rel.append([rel.get(k, np.nan) for k in REL_NAMES])
         Ls.append(l.numpy()); Rs.append(r.numpy()); keep.append(i)
+        l1, l2, r1, r2 = same_side_subcrops(e["rec"], e["t"], clip_neighbors)
+        ok = all(v is not None for v in (l1, l2, r1, r2))
+        crop_ok.append(ok)
+        z = torch.full((dim,), float("nan"))
+        L1s.append((l1 if ok else z).numpy()); L2s.append((l2 if ok else z).numpy())
+        R1s.append((r1 if ok else z).numpy()); R2s.append((r2 if ok else z).numpy())
+    crops = {"L1": np.array(L1s), "L2": np.array(L2s), "R1": np.array(R1s),
+            "R2": np.array(R2s), "ok": np.array(crop_ok, dtype=bool)}
     return (np.array(X_v1, dtype=float), np.array(Ls), np.array(Rs),
-            np.array(X_rel, dtype=float), keep)
+            np.array(X_rel, dtype=float), keep, crops)
 
 
 # ------------------------------------------------------------ fold utils --
@@ -279,44 +307,115 @@ class PairHead(torch.nn.Module):
         return self.net(x).squeeze(-1)
 
 
-def train_torch_head(Xtr, ytr, zl_tr, zr_tr, aux, epochs=300, lr=1e-3,
+def _crop_impute_fit(crops):
+    """Column means over the OK (successfully-pooled) rows of each crop
+    array, for imputing the NaN rows on both train and (later) test."""
+    out = {}
+    ok = crops["ok"]
+    for k in ("L1", "L2", "R1", "R2"):
+        arr = crops[k]
+        mu = np.nanmean(arr[ok], axis=0) if ok.any() else np.zeros(arr.shape[1])
+        mu = np.where(np.isnan(mu), 0.0, mu)
+        out[k] = mu
+    return out
+
+
+def _crop_impute_apply(crops, means):
+    return {k: np.where(np.isnan(crops[k]), means[k], crops[k]) for k in ("L1", "L2", "R1", "R2")}
+
+
+def train_torch_head(Xtr, ytr, zl_tr, zr_tr, aux, crops_tr=None, epochs=300, lr=1e-3,
                      lam=0.1, seed=0, device="cpu"):
-    """aux: None | 'crop' | 'contrastive'. The auxiliary term is deliberately
-    small (lam) -- the review's point is that a contrastive objective must
-    not dominate the end task, which is what made the adapter worse."""
+    """aux: None | 'crop' | 'contrastive'.
+
+    FIXED BUG (found via a sanity check on suspiciously-identical P2/P3
+    results -- every run in this project so far had P2==P3 to 3 decimals).
+    The previous version computed BCE on head(X) and the auxiliary loss on a
+    SEPARATE proj(zl)/proj(zr) pair that `head` never consumed: the two loss
+    terms had disjoint parameter sets, so head's training trajectory was
+    mathematically guaranteed to be identical regardless of `aux` -- exactly
+    the observed pattern. The 'crop' term was ALSO literally
+    F.cosine_similarity(a, a.detach()), a tensor compared to its own detached
+    copy, which is unconditionally 1.0 -- an always-zero loss, not merely a
+    small one.
+
+    Fix, both parts: (1) 'crop' now uses REAL independent same-side sub-crops
+    (same_side_subcrops -- two different temporal halves, not a self-
+    comparison); (2) whichever projection the auxiliary loss shapes is
+    concatenated into head's actual input (crop: mean of the two projected
+    half-crops per side; contrastive: the projected left/right vectors), so
+    both loss terms share parameters and can genuinely interact. This changes
+    what P2/P3 measure versus every prior run in this project -- treat any
+    comparison against earlier P2/P3 numbers as before/after a bug fix, not
+    as a apples-to-apples ablation."""
     torch.manual_seed(seed)
     X = torch.tensor(Xtr, dtype=torch.float32, device=device)
     yv = torch.tensor(ytr, dtype=torch.float32, device=device)
-    zl = torch.tensor(zl_tr, dtype=torch.float32, device=device)
-    zr = torch.tensor(zr_tr, dtype=torch.float32, device=device)
-    head = PairHead(X.shape[1]).to(device)
-    proj = torch.nn.Linear(zl.shape[1], 32).to(device) if aux else None
-    params = list(head.parameters()) + (list(proj.parameters()) if proj else [])
+    proj = None
+    if aux == "contrastive":
+        zl = torch.tensor(zl_tr, dtype=torch.float32, device=device)
+        zr = torch.tensor(zr_tr, dtype=torch.float32, device=device)
+        proj = torch.nn.Linear(zl.shape[1], 32).to(device)
+        head = PairHead(X.shape[1] + 64).to(device)
+    elif aux == "crop":
+        assert crops_tr is not None, "aux='crop' requires crops_tr"
+        L1 = torch.tensor(crops_tr["L1"], dtype=torch.float32, device=device)
+        L2 = torch.tensor(crops_tr["L2"], dtype=torch.float32, device=device)
+        R1 = torch.tensor(crops_tr["R1"], dtype=torch.float32, device=device)
+        R2 = torch.tensor(crops_tr["R2"], dtype=torch.float32, device=device)
+        ok = torch.tensor(crops_tr["ok"], dtype=torch.bool, device=device)
+        proj = torch.nn.Linear(L1.shape[1], 32).to(device)
+        head = PairHead(X.shape[1] + 64).to(device)
+    else:
+        head = PairHead(X.shape[1]).to(device)
+
+    params = list(head.parameters()) + (list(proj.parameters()) if proj is not None else [])
     opt = torch.optim.Adam(params, lr=lr, weight_decay=1e-3)
+    zero = torch.tensor(0.0, device=device)
     for _ in range(epochs):
         opt.zero_grad()
-        loss = F.binary_cross_entropy_with_logits(head(X), yv)
-        if aux == "crop":
-            # same-side halves should agree: a cheap stability regularizer
-            # that uses NO label information at all
-            a, b = F.normalize(proj(zl), dim=-1), F.normalize(proj(zr), dim=-1)
-            loss = loss + lam * ((1 - F.cosine_similarity(a, a.detach())).pow(2).mean()
-                                 + (1 - F.cosine_similarity(b, b.detach())).pow(2).mean())
-        elif aux == "contrastive":
-            a, b = F.normalize(proj(zl), dim=-1), F.normalize(proj(zr), dim=-1)
-            d = 1 - F.cosine_similarity(a, b)
-            pos = F.relu(0.5 - d).pow(2)[yv == 1].mean() if (yv == 1).any() else 0.0
-            neg = d.pow(2)[yv == 0].mean() if (yv == 0).any() else 0.0
+        if aux == "contrastive":
+            a, b = proj(zl), proj(zr)
+            feat = torch.cat([X, a, b], dim=1)
+            loss = F.binary_cross_entropy_with_logits(head(feat), yv)
+            an, bn = F.normalize(a, dim=-1), F.normalize(b, dim=-1)
+            d = 1 - F.cosine_similarity(an, bn)
+            pos = F.relu(0.5 - d).pow(2)[yv == 1].mean() if (yv == 1).any() else zero
+            neg = d.pow(2)[yv == 0].mean() if (yv == 0).any() else zero
             loss = loss + lam * (pos + neg)
+        elif aux == "crop":
+            pl1, pl2, pr1, pr2 = proj(L1), proj(L2), proj(R1), proj(R2)
+            feat = torch.cat([X, 0.5 * (pl1 + pl2), 0.5 * (pr1 + pr2)], dim=1)
+            loss = F.binary_cross_entropy_with_logits(head(feat), yv)
+            if ok.any():
+                nl1, nl2 = F.normalize(pl1[ok], dim=-1), F.normalize(pl2[ok], dim=-1)
+                nr1, nr2 = F.normalize(pr1[ok], dim=-1), F.normalize(pr2[ok], dim=-1)
+                loss = loss + lam * ((1 - F.cosine_similarity(nl1, nl2)).pow(2).mean()
+                                     + (1 - F.cosine_similarity(nr1, nr2)).pow(2).mean())
+        else:
+            loss = F.binary_cross_entropy_with_logits(head(X), yv)
         loss.backward()
         opt.step()
     head.eval()
-    return head
+    return head, proj
 
 
-def predict_torch(head, X, device="cpu"):
+def predict_torch(head, X, aux, proj=None, zl=None, zr=None, crops=None, device="cpu"):
     with torch.no_grad():
-        return torch.sigmoid(head(torch.tensor(X, dtype=torch.float32, device=device))).cpu().numpy()
+        Xt = torch.tensor(X, dtype=torch.float32, device=device)
+        if aux == "contrastive":
+            a = proj(torch.tensor(zl, dtype=torch.float32, device=device))
+            b = proj(torch.tensor(zr, dtype=torch.float32, device=device))
+            feat = torch.cat([Xt, a, b], dim=1)
+        elif aux == "crop":
+            pl1 = proj(torch.tensor(crops["L1"], dtype=torch.float32, device=device))
+            pl2 = proj(torch.tensor(crops["L2"], dtype=torch.float32, device=device))
+            pr1 = proj(torch.tensor(crops["R1"], dtype=torch.float32, device=device))
+            pr2 = proj(torch.tensor(crops["R2"], dtype=torch.float32, device=device))
+            feat = torch.cat([Xt, 0.5 * (pl1 + pl2), 0.5 * (pr1 + pr2)], dim=1)
+        else:
+            feat = Xt
+        return torch.sigmoid(head(feat)).cpu().numpy()
 
 
 # ----------------------------------------------------------------- main ---
@@ -373,7 +472,7 @@ def main():
         print("  NOTE: running on the OLD binary labels (no --pair_labels). The adapter "
               "experiment showed this supervision is internally contradictory; treat "
               "these numbers as the legacy baseline only.")
-    X_v1, Ls, Rs, X_rel, keep = build_matrices(events, a.clip_windows_at_neighbors)
+    X_v1, Ls, Rs, X_rel, keep, crops = build_matrices(events, a.clip_windows_at_neighbors)
     if a.clip_windows_at_neighbors:
         li, ri = REL_NAMES.index("left_room_s"), REL_NAMES.index("right_room_s")
         room = np.minimum(X_rel[:, li], X_rel[:, ri])
@@ -416,10 +515,18 @@ def main():
         w1, b1 = fit_logreg(Ptr_s, ytr, l2=5.0)
         preds["P1_pairwise_proj"][te] = _sigmoid(Pte_s @ w1 + b1)
 
+        crop_means = _crop_impute_fit({k: crops[k][tr] for k in ("L1", "L2", "R1", "R2", "ok")})
+        crops_tr = _crop_impute_apply({k: crops[k][tr] for k in ("L1", "L2", "R1", "R2")}, crop_means)
+        crops_tr["ok"] = crops["ok"][tr]
+        crops_te = _crop_impute_apply({k: crops[k][te] for k in ("L1", "L2", "R1", "R2")}, crop_means)
+
         for arm, aux in [("P2_plus_crop", "crop"), ("P3_plus_contrastive", "contrastive")]:
-            head = train_torch_head(Ptr_s, ytr, zl_tr, zr_tr, aux, lam=a.lam,
-                                    seed=a.seed + fi, device=a.device)
-            preds[arm][te] = predict_torch(head, Pte_s, a.device)
+            head, proj = train_torch_head(Ptr_s, ytr, zl_tr, zr_tr, aux,
+                                          crops_tr=crops_tr if aux == "crop" else None,
+                                          lam=a.lam, seed=a.seed + fi, device=a.device)
+            preds[arm][te] = predict_torch(head, Pte_s, aux, proj=proj, zl=zl_te, zr=zr_te,
+                                           crops=crops_te if aux == "crop" else None,
+                                           device=a.device)
 
         line = (f"  fold {fi+1}/{a.folds} (n_test={int(te.sum())} "
                 f"[{int(yte.sum())}+/{int(len(yte)-yte.sum())}-], {len(held)} recs):")
