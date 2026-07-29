@@ -68,8 +68,35 @@ from src.boundary.hal_vlm_fusion import HAL_FEATURE_NAMES, fit_logreg, _sigmoid
 from src.boundary.state_adapter import (
     build_events, grouped_folds, precision_coverage, _auroc, EPS,
 )
+from src.boundary import pair_taxonomy as T
 
 SCALES = [0.5, 1.0, 2.0, 4.0]
+
+
+def stratified_grouped_folds(groups, y, k, seed=0):
+    """Grouped folds that also balance the classes across folds.
+
+    Plain random recording assignment produced folds with as few as 3
+    negatives out of 25 events (positive fraction 0.88), whose fold-level
+    AUROC (0.242) is essentially noise yet still drags the mean. Recordings
+    are therefore sorted by their positive fraction and dealt round-robin,
+    which keeps folds grouped by recording (no leakage) while making the
+    per-fold class mix comparable."""
+    import numpy as _np
+    groups = _np.asarray(groups); y = _np.asarray(y)
+    stats = []
+    for g in sorted(set(groups.tolist())):
+        m = groups == g
+        stats.append((g, float(y[m].mean()), int(m.sum())))
+    rng = _np.random.RandomState(seed)
+    rng.shuffle(stats)
+    stats.sort(key=lambda s_: s_[1])
+    folds = [set() for _ in range(k)]
+    sizes = [0] * k
+    for i, (g, _f, n) in enumerate(stats):
+        j = (i % k) if i // k % 2 == 0 else (k - 1 - i % k)   # serpentine
+        folds[j].add(g); sizes[j] += n
+    return folds
 
 
 # ------------------------------------------------------- feature building --
@@ -255,6 +282,17 @@ def main():
     ap.add_argument("--lam", type=float, default=0.1, help="auxiliary-loss weight for P2/P3")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--device", default="cpu")
+    ap.add_argument("--pair_labels",
+                    help="relabelled sheet (build_pair_relabel_sheet.py output, filled in). "
+                         "With it, the experiment runs on the CLEAN subset "
+                         "(strong_separate vs strong_align) and P0 is recomputed on that "
+                         "SAME subset -- comparing a new model on a clean subset against "
+                         "the old 0.702 on the old mixed labels would not be a fair test.")
+    ap.add_argument("--gate_config",
+                    help="JSON of pre-registered adoption thresholds, written BEFORE "
+                         "seeing results. Keys: min_auroc_gain, min_folds_improved_frac, "
+                         "min_coverage_at_90, max_worst_fold_drop")
+    ap.add_argument("--stratified_folds", action="store_true", default=True)
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
 
@@ -262,6 +300,20 @@ def main():
     ctx = S.load_context(a.context)
     by_rid = load_feature_caches(a.feat_cache)
     events = build_events(gold, ctx, by_rid)
+    clean_mode = bool(a.pair_labels)
+    if clean_mode:
+        labels = T.load_pair_labels(a.pair_labels)
+        events = T.apply_to_events(events, labels)
+        if len(events) < 20:
+            raise SystemExit(f"only {len(events)} events survive the clean filter -- "
+                             f"relabel more rows before running this comparison")
+        from collections import Counter
+        print("  subtypes in clean subset:",
+              dict(Counter(e.get("temporal_pair_subtype") for e in events)))
+    else:
+        print("  NOTE: running on the OLD binary labels (no --pair_labels). The adapter "
+              "experiment showed this supervision is internally contradictory; treat "
+              "these numbers as the legacy baseline only.")
     X_v1, Ls, Rs, X_rel, keep = build_matrices(events)
     events = [events[i] for i in keep]
     y = np.array([e["y"] for e in events], dtype=float)
@@ -270,7 +322,8 @@ def main():
           f"{int(len(y) - y.sum())} motion-HN), {len(set(groups))} recordings")
     print("all 188 audited events are DEVELOPMENT data; deployable claims need batch3.")
 
-    folds = grouped_folds(list(groups), a.folds, a.seed)
+    folds = (stratified_grouped_folds(groups, y, a.folds, a.seed)
+             if a.stratified_folds else grouped_folds(list(groups), a.folds, a.seed))
     arms = ["P0_v1_logreg", "P1_pairwise_proj", "P2_plus_crop", "P3_plus_contrastive"]
     preds = {k: np.full(len(events), np.nan) for k in arms}
     per_fold = {k: [] for k in arms}
@@ -303,7 +356,8 @@ def main():
                                     seed=a.seed + fi, device=a.device)
             preds[arm][te] = predict_torch(head, Pte_s, a.device)
 
-        line = f"  fold {fi+1}/{a.folds} (n_test={int(te.sum())}, {len(held)} recs):"
+        line = (f"  fold {fi+1}/{a.folds} (n_test={int(te.sum())} "
+                f"[{int(yte.sum())}+/{int(len(yte)-yte.sum())}-], {len(held)} recs):")
         for k in arms:
             auc = _auroc(yte, preds[k][te])
             per_fold[k].append(auc)
@@ -336,6 +390,43 @@ def main():
               f"({'STABLE -- auxiliary supervision earns its place' if beats >= n - 1 and n else 'not stable -- do not adopt'})")
     print("\n  reminder: coverage@0.90 here is chosen post hoc on these same OOF "
           "predictions, so it is an upper bound, not a deployable operating point.")
+
+    # --- pre-registered adoption gate ------------------------------------
+    if a.gate_config:
+        with open(a.gate_config, encoding="utf-8") as f:
+            gate = json.load(f)
+        base_key = gate.get("baseline_arm", "P0_v1_logreg")
+        cand_key = gate.get("candidate_arm", "P1_pairwise_proj")
+        base, cand = res[base_key], res[cand_key]
+        bf = [v for v in per_fold[base_key] if not np.isnan(v)]
+        cf = [v for v in per_fold[cand_key] if not np.isnan(v)]
+        paired = [(x, z) for x, z in zip(per_fold[cand_key], per_fold[base_key])
+                  if not np.isnan(x) and not np.isnan(z)]
+        improved_frac = (sum(1 for x, z in paired if x > z) / len(paired)) if paired else 0.0
+        gain = cand["pooled_auroc"] - base["pooled_auroc"]
+        worst_drop = (min(bf) - min(cf)) if bf and cf else float("inf")
+        checks = {
+            "auroc_gain": (gain, gate.get("min_auroc_gain", 0.03), gain >= gate.get("min_auroc_gain", 0.03)),
+            "folds_improved_frac": (improved_frac, gate.get("min_folds_improved_frac", 0.8),
+                                    improved_frac >= gate.get("min_folds_improved_frac", 0.8)),
+            "coverage_at_90": (cand["coverage_at_0.9_precision"], gate.get("min_coverage_at_90", 0.10),
+                               cand["coverage_at_0.9_precision"] >= gate.get("min_coverage_at_90", 0.10)),
+            "worst_fold_not_degraded": (worst_drop, gate.get("max_worst_fold_drop", 0.05),
+                                        worst_drop <= gate.get("max_worst_fold_drop", 0.05)),
+        }
+        print(f"\n=== PRE-REGISTERED GATE ({cand_key} vs {base_key}) ===")
+        print(f"  thresholds fixed in {a.gate_config} "
+              f"(written before results -- do not edit them now)")
+        for name, (val, thr, ok) in checks.items():
+            print(f"  {'PASS' if ok else 'FAIL'}  {name:<26} {val:+.3f}  (threshold {thr})")
+        passed = all(ok for _, _, ok in checks.values())
+        print(f"  -> {'GATE PASSED: freeze this config and collect batch3' if passed else 'GATE NOT PASSED: do NOT collect batch3 or restore auto-keep'}")
+        res["gate"] = {"config": gate, "passed": bool(passed),
+                       "checks": {k: {"value": float(v), "threshold": float(t), "pass": bool(o)}
+                                  for k, (v, t, o) in checks.items()}}
+    else:
+        print("\n  no --gate_config given: adoption thresholds were NOT pre-registered, "
+              "so any 'improvement' read off this table is exploratory only.")
 
     os.makedirs(os.path.dirname(os.path.abspath(a.out)) or ".", exist_ok=True)
     with open(a.out, "w", encoding="utf-8") as f:

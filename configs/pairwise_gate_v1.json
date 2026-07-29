@@ -1,0 +1,16 @@
+{
+  "_purpose": "Pre-registered adoption thresholds for the pairwise verifier. Written BEFORE running the clean-subset comparison. Editing these after seeing results invalidates the experiment.",
+  "_registered": "2026-07-29",
+  "baseline_arm": "P0_v1_logreg",
+  "candidate_arm": "P1_pairwise_proj",
+  "min_auroc_gain": 0.03,
+  "min_folds_improved_frac": 0.8,
+  "min_coverage_at_90": 0.10,
+  "max_worst_fold_drop": 0.05,
+  "_notes": {
+    "min_auroc_gain": "pooled OOF AUROC must beat the SAME-SUBSET baseline by >=0.03; comparing against the old 0.702 on the old mixed labels would not be a fair test",
+    "min_folds_improved_frac": "improvement must hold in >=80% of folds, so it is not driven by one fold or recording",
+    "min_coverage_at_90": "coverage at 0.90 precision must be materially non-zero (v1 gave 0.006), otherwise there is still no usable auto-keep branch",
+    "max_worst_fold_drop": "the worst fold must not degrade by more than 0.05 vs the baseline's worst fold"
+  }
+}
