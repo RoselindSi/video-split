@@ -1,0 +1,8 @@
+{
+  "_comment": "Pre-registered BEFORE any C1 result was seen (2026-07-30). Baseline is P1 no-clip on the frozen 145 clean pairs with stratified grouped 5-fold CV, seed 0, pca_dim 64, l2 5.0 -- the deployment-honest configuration per the batch3 failure attribution. The shuffled-future control must also pass (err_true < 0.8 * err_shuffled) or the run is void regardless of AUROC.",
+  "baseline": "P1_noclip_clean145",
+  "min_auroc_gain": 0.02,
+  "min_folds_improved_frac": 0.8,
+  "max_worst_fold_drop": 0.05,
+  "control_ratio_max": 0.8
+}
