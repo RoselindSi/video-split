@@ -85,9 +85,16 @@ from src.boundary.pairwise_verifier import (
     _impute_scale_fit, _impute_scale_apply, pca_fit, pca_apply, pair_block,
 )
 
-PAST_S = 4.0          # context the predictor sees
-PAST_FRAMES = 8       # 2 fps * 4 s
+PAST_S = 4.0          # context the predictor sees (seconds)
 FUT_LO, FUT_HI = 0.25, 1.25   # predicted (pooled) future window
+
+
+def infer_n_past(recs, cap=64):
+    """Frames per PAST_S window, from the cache's actual frame rate."""
+    rec = next(iter(recs.values()))
+    times = rec["times"]
+    dt = float(np.median(np.diff(times.numpy()[:200])))
+    return min(cap, max(4, int(round(PAST_S / dt))))
 EMB = 128
 
 CONT_NAMES = ["cont_efwd_z", "cont_ebwd_z", "cont_emin_z", "cont_emax_z"]
@@ -98,11 +105,12 @@ class ContinuityPredictor(torch.nn.Module):
     projected future. The PCA is fitted once (fit_pca) and registered as
     buffers; only the transformer + head train."""
 
-    def __init__(self, d_in, d=EMB, nhead=4, nlayers=2):
+    def __init__(self, d_in, n_past, d=EMB, nhead=4, nlayers=2):
         super().__init__()
+        self.n_past = n_past
         self.register_buffer("pca_mu", torch.zeros(d_in))
         self.register_buffer("pca_W", torch.zeros(d_in, d))
-        self.pos = torch.nn.Parameter(torch.randn(PAST_FRAMES, d) * 0.02)
+        self.pos = torch.nn.Parameter(torch.randn(n_past, d) * 0.02)
         layer = torch.nn.TransformerEncoderLayer(
             d_model=d, nhead=nhead, dim_feedforward=4 * d,
             batch_first=True, norm_first=True, dropout=0.0)
@@ -131,9 +139,9 @@ class ContinuityPredictor(torch.nn.Module):
         return self.head(h[:, -1])           # [B, d]
 
 
-def _past_stack(feats, times, t, reverse=False):
-    """Last PAST_FRAMES frames strictly before t (after t, mirrored, when
-    reverse=True). Returns [PAST_FRAMES, D] or None if <6 usable frames."""
+def _past_stack(feats, times, t, n_past, reverse=False):
+    """Last n_past frames strictly before t (after t, mirrored, when
+    reverse=True). Returns [n_past, D] or None if too few usable frames."""
     if reverse:
         m = (times > t) & (times <= t + PAST_S)
         idx = torch.nonzero(m).flatten().flip(0)         # nearest-to-t first? no:
@@ -141,11 +149,11 @@ def _past_stack(feats, times, t, reverse=False):
     else:
         m = (times >= t - PAST_S) & (times < t)
         idx = torch.nonzero(m).flatten()
-    if idx.numel() < 6:
+    if idx.numel() < max(4, n_past * 3 // 4):
         return None
-    x = feats[idx][-PAST_FRAMES:]
-    if x.shape[0] < PAST_FRAMES:
-        x = torch.cat([x[:1].repeat(PAST_FRAMES - x.shape[0], 1), x], 0)
+    x = feats[idx][-n_past:]
+    if x.shape[0] < n_past:
+        x = torch.cat([x[:1].repeat(n_past - x.shape[0], 1), x], 0)
     return x
 
 
@@ -173,7 +181,8 @@ def _sample_pairs(recs, stride=1.0, edge=PAST_S + FUT_HI):
 
 def train_predictor(recs, epochs, device, batch=256, lr=1e-3, seed=0):
     d_in = next(iter(recs.values()))["feats"].shape[1]
-    model = ContinuityPredictor(d_in)
+    n_past = infer_n_past(recs)
+    model = ContinuityPredictor(d_in, n_past)
     # frozen PCA embedding, fitted on a frame subsample across recordings
     rng = np.random.RandomState(seed)
     sub = []
@@ -184,7 +193,8 @@ def train_predictor(recs, epochs, device, batch=256, lr=1e-3, seed=0):
     model = model.to(device)
     opt = torch.optim.Adam([p for p in model.parameters() if p.requires_grad], lr=lr)
     pairs = _sample_pairs(recs)
-    print(f"training pairs: {len(pairs)} from {len(recs)} recordings  d_in={d_in}")
+    print(f"training pairs: {len(pairs)} from {len(recs)} recordings  d_in={d_in}  "
+          f"n_past={n_past} frames per {PAST_S}s window")
     for ep in range(epochs):
         rng.shuffle(pairs)
         tot, n = 0.0, 0
@@ -194,7 +204,7 @@ def train_predictor(recs, epochs, device, batch=256, lr=1e-3, seed=0):
             for rid, t in chunk:
                 rec = recs[rid]
                 rev = bool(rng.randint(2))               # train both directions
-                p = _past_stack(rec["feats"], rec["times"], t, reverse=rev)
+                p = _past_stack(rec["feats"], rec["times"], t, n_past, reverse=rev)
                 f_ = _future_pool(rec["feats"], rec["times"], t, reverse=rev)
                 if p is None or f_ is None:
                     continue
@@ -215,7 +225,7 @@ def train_predictor(recs, epochs, device, batch=256, lr=1e-3, seed=0):
 
 @torch.no_grad()
 def pred_error(model, rec, t, device, reverse=False):
-    p = _past_stack(rec["feats"], rec["times"], t, reverse=reverse)
+    p = _past_stack(rec["feats"], rec["times"], t, model.n_past, reverse=reverse)
     f_ = _future_pool(rec["feats"], rec["times"], t, reverse=reverse)
     if p is None or f_ is None:
         return None
@@ -235,7 +245,7 @@ def shuffled_control(model, recs, device, n=300, seed=0):
         rec = recs[rid]
         e = pred_error(model, rec, t, device)
         rid2, t2 = pairs[rng.randint(len(pairs))]
-        p = _past_stack(rec["feats"], rec["times"], t)
+        p = _past_stack(rec["feats"], rec["times"], t, model.n_past)
         f2 = _future_pool(recs[rid2]["feats"], recs[rid2]["times"], t2)
         if e is None or p is None or f2 is None:
             continue
@@ -266,19 +276,25 @@ def recording_error_baseline(model, rec, device, stride=2.0):
     return med, mad
 
 
-def continuity_features(model, events, device):
-    """CONT_NAMES columns per event; NaN where unscorable."""
+def continuity_features(model, events, device, cont_by_rid=None):
+    """CONT_NAMES columns per event; NaN where unscorable. When
+    cont_by_rid is given (e.g. a 10 fps cache), continuity scores are
+    computed from THAT cache's frames for the same recording_id, while the
+    events' own rec (2 fps) is untouched for P1."""
     base = {}
     X = np.full((len(events), len(CONT_NAMES)), np.nan)
     for i, e in enumerate(events):
         rid = e["recording_id"]
+        rec = cont_by_rid.get(rid) if cont_by_rid is not None else e["rec"]
+        if rec is None:
+            continue
         if rid not in base:
-            base[rid] = recording_error_baseline(model, e["rec"], device)
+            base[rid] = recording_error_baseline(model, rec, device)
         med, mad = base[rid]
         if med is None:
             continue
-        ef = pred_error(model, e["rec"], e["t"], device)
-        eb = pred_error(model, e["rec"], e["t"], device, reverse=True)
+        ef = pred_error(model, rec, e["t"], device)
+        eb = pred_error(model, rec, e["t"], device, reverse=True)
         zf = (ef - med) / mad if ef is not None else np.nan
         zb = (eb - med) / mad if eb is not None else np.nan
         X[i] = [zf, zb, np.nanmin([zf, zb]), np.nanmax([zf, zb])]
@@ -311,7 +327,15 @@ def p1_fold_eval(Ls, Rs, X_rel, y, groups, folds, pca_dim=64, l2=5.0):
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--feat_cache", action="append", required=True)
+    ap.add_argument("--feat_cache", action="append", required=True,
+                    help="2 fps caches -- used for the P1 baseline features")
+    ap.add_argument("--cont_feat_cache", action="append", default=None,
+                    help="caches for the continuity predictor (e.g. 10 fps). "
+                         "Defaults to --feat_cache. 2 fps aliases ~1s-period "
+                         "repetition (see module docstring); 10 fps is the "
+                         "recommended setting.")
+    ap.add_argument("--max_train_recordings", type=int, default=0,
+                    help="subsample the self-supervised training pool (0 = all)")
     ap.add_argument("--gold", default="data/gold/audit_188_gold_v2.jsonl")
     ap.add_argument("--context", default="data/gold/audit_188_context.jsonl")
     ap.add_argument("--pair_labels", default="data/gold/pair_labels_v1.csv")
@@ -327,6 +351,8 @@ def main():
 
     torch.manual_seed(a.seed)
     by_rid = load_feature_caches(a.feat_cache)
+    cont_by_rid = (load_feature_caches(a.cont_feat_cache)
+                   if a.cont_feat_cache else by_rid)
     gold = S.load_gold(a.gold)
     dev_recs = {g.get("recording_id") for g in gold if g.get("recording_id")}
     b3_recs = set()
@@ -335,12 +361,17 @@ def main():
             for line in f:
                 if line.strip():
                     b3_recs.add(json.loads(line)["recording_id"])
-    train_ids = sorted(set(by_rid) - dev_recs - b3_recs)
-    print(f"caches: {len(by_rid)} recordings; excluded dev={len(dev_recs & set(by_rid))} "
-          f"batch3={len(b3_recs & set(by_rid))}; TRAIN pool={len(train_ids)}")
+    train_ids = sorted(set(cont_by_rid) - dev_recs - b3_recs)
+    if a.max_train_recordings and len(train_ids) > a.max_train_recordings:
+        rng0 = np.random.RandomState(a.seed)
+        train_ids = sorted(rng0.choice(train_ids, a.max_train_recordings,
+                                       replace=False).tolist())
+    print(f"cont caches: {len(cont_by_rid)} recordings; "
+          f"excluded dev={len(dev_recs & set(cont_by_rid))} "
+          f"batch3={len(b3_recs & set(cont_by_rid))}; TRAIN pool={len(train_ids)}")
     if len(train_ids) < 20:
         raise SystemExit("training pool too small -- check cache paths / exclusions")
-    train_recs = {r: by_rid[r] for r in train_ids}
+    train_recs = {r: cont_by_rid[r] for r in train_ids}
 
     device = a.device
     model = train_predictor(train_recs, a.epochs, device, seed=a.seed)
@@ -365,7 +396,11 @@ def main():
     y = np.array([e["y"] for e in events], dtype=float)
     groups = [e["recording_id"] for e in events]
 
-    Xc = continuity_features(model, events, device)
+    Xc = continuity_features(model, events, device, cont_by_rid=cont_by_rid)
+    n_missing = sum(e["recording_id"] not in cont_by_rid for e in events)
+    if n_missing:
+        print(f"  !! {n_missing} eval events lack a continuity cache for their "
+              f"recording -- extract those recordings too or scores stay NaN")
     print(f"continuity features: {np.isfinite(Xc).all(1).sum()}/{len(Xc)} fully scorable")
 
     standalone = {}
@@ -411,7 +446,8 @@ def main():
         }, f, ensure_ascii=False, indent=2)
     print(f"wrote {a.out}")
 
-    torch.save(model.state_dict(), os.path.expanduser(a.out) + ".predictor.pt")
+    torch.save({"state_dict": model.state_dict(), "n_past": model.n_past},
+               os.path.expanduser(a.out) + ".predictor.pt")
     print(f"saved predictor -> {a.out}.predictor.pt")
 
 
