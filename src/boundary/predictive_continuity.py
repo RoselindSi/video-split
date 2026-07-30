@@ -144,8 +144,11 @@ def _past_stack(feats, times, t, n_past, reverse=False):
     reverse=True). Returns [n_past, D] or None if too few usable frames."""
     if reverse:
         m = (times > t) & (times <= t + PAST_S)
-        idx = torch.nonzero(m).flatten().flip(0)         # nearest-to-t first? no:
-        # reversed time: frames ordered t+4s ... t+eps so "most recent" is last
+        # ascending-time order puts t+eps (nearest t) first; flip so the
+        # nearest-to-t frame is LAST, mirroring the forward branch below
+        # (verified: feats[i]=times[i] probe confirms both branches end on
+        # the frame closest to t, farthest-first / oldest-first otherwise).
+        idx = torch.nonzero(m).flatten().flip(0)
     else:
         m = (times >= t - PAST_S) & (times < t)
         idx = torch.nonzero(m).flatten()
