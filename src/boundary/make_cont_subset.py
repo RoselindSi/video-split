@@ -43,7 +43,14 @@ def main():
     ap.add_argument("--gold", default="data/gold/audit_188_gold_v2.jsonl")
     ap.add_argument("--pair_labels", default="data/gold/pair_labels_v1.csv")
     ap.add_argument("--exclude_manifest", action="append", default=[])
-    ap.add_argument("--n_train", type=int, default=100)
+    ap.add_argument("--have_cache", action="append", default=[],
+                    help="existing feature cache(s); recordings already present "
+                         "are dropped from the subset so extraction only covers "
+                         "what is genuinely missing")
+    ap.add_argument("--n_train", type=int, default=100,
+                    help="TARGET total training recordings. Recordings already "
+                         "present in --have_cache count toward it, so re-running "
+                         "after a partial extraction tops up rather than doubling.")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
@@ -81,24 +88,40 @@ def main():
                     b3.add(json.loads(line)["recording_id"])
     print(f"batch3 recordings to exclude from training: {len(b3)}")
 
+    have = set()
+    for hp in a.have_cache:
+        import torch
+        for rec in torch.load(os.path.expanduser(hp), weights_only=False):
+            have.add(rec.get("recording_id") or rec.get("video"))
+    if a.have_cache:
+        print(f"already cached: {len(have)} recordings "
+              f"({len(eval_recs & have)}/{len(eval_recs)} of the eval-needed ones)")
+
     missing = sorted(eval_recs - set(by_rid))
     if missing:
         print(f"!! {len(missing)} eval recordings are not in any --data file: "
               f"{' '.join(missing[:10])}{' ...' if len(missing) > 10 else ''}")
 
-    pool = sorted(set(by_rid) - all_dev - b3)
+    already_train = have - all_dev - b3
+    need = max(0, a.n_train - len(already_train))
+    pool = sorted(set(by_rid) - all_dev - b3 - have)
     rng = np.random.RandomState(a.seed)
-    train_ids = sorted(rng.choice(pool, min(a.n_train, len(pool)),
-                                  replace=False).tolist())
-    print(f"training pool available {len(pool)} -> sampled {len(train_ids)}")
+    train_ids = sorted(rng.choice(pool, min(need, len(pool)),
+                                  replace=False).tolist()) if need and pool else []
+    print(f"training recordings: {len(already_train)} already cached, "
+          f"target {a.n_train} -> need {need}, sampled {len(train_ids)} "
+          f"from a pool of {len(pool)}")
 
-    selected = sorted((eval_recs & set(by_rid)) | set(train_ids))
+    selected = sorted(((eval_recs & set(by_rid)) | set(train_ids)) - have)
     out_rows = [by_rid[r] for r in selected]
     with open(os.path.expanduser(a.out), "w", encoding="utf-8") as f:
         json.dump(out_rows, f, ensure_ascii=False)
     print(f"\nwrote {len(out_rows)} recordings -> {a.out}")
-    print(f"  eval-needed {len(eval_recs & set(by_rid))} + training {len(train_ids)} "
-          f"(overlap 0 by construction)")
+    print(f"  eval-needed still missing {len((eval_recs & set(by_rid)) - have)} "
+          f"+ new training {len(train_ids)}")
+    if a.have_cache:
+        print(f"  (pass BOTH the old and new caches as --cont_feat_cache when "
+              f"running predictive_continuity)")
     print(f"  batch3 recordings included: "
           f"{len(set(selected) & b3)} (must be 0)")
     assert not (set(selected) & b3), "batch3 recording leaked into the subset"

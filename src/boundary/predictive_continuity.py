@@ -90,11 +90,38 @@ FUT_LO, FUT_HI = 0.25, 1.25   # predicted (pooled) future window
 
 
 def infer_n_past(recs, cap=64):
-    """Frames per PAST_S window, from the cache's actual frame rate."""
-    rec = next(iter(recs.values()))
-    times = rec["times"]
-    dt = float(np.median(np.diff(times.numpy()[:200])))
-    return min(cap, max(4, int(round(PAST_S / dt))))
+    """Frames per PAST_S window, from the cache's actual frame rate.
+
+    Uses the median across ALL recordings, not one. Reading a single
+    recording silently collapsed a genuine 10 fps cache (dt 0.1 -> 40
+    frames) down to n_past=4 because the one recording it happened to
+    sample was sparse and the max(4, ...) floor absorbed it -- the model
+    then trained on 4 timesteps per 4 s while the data had 40."""
+    dts = []
+    for rec in recs.values():
+        t = rec["times"]
+        if len(t) >= 3:
+            dts.append(float(np.median(np.diff(t.numpy()))))
+    if not dts:
+        raise SystemExit("no recording has >=3 frames -- check the cache")
+    dts = np.array(dts)
+    dt = float(np.median(dts))
+    lo, hi = float(np.percentile(dts, 5)), float(np.percentile(dts, 95))
+    n = min(cap, max(4, int(round(PAST_S / dt))))
+    print(f"frame spacing across {len(dts)} recordings: median {dt:.3f}s "
+          f"(p5 {lo:.3f}, p95 {hi:.3f}) -> n_past={n}")
+    if hi > 2 * dt:
+        odd = sorted(((float(np.median(np.diff(r["times"].numpy()))), k)
+                      for k, r in recs.items() if len(r["times"]) >= 3),
+                     reverse=True)[:5]
+        print(f"  !! spacing is heterogeneous; sparsest recordings: "
+              + ", ".join(f"{k}({d:.2f}s)" for d, k in odd))
+        print(f"  !! windows in those recordings hold fewer than {n} real frames "
+              f"and get edge-padded -- check them before trusting their scores")
+    if n <= 8 and dt < 0.3:
+        raise SystemExit(f"n_past={n} but median dt={dt:.3f}s: inconsistent, refusing "
+                         f"to train on a window that ignores most of the cache")
+    return n
 EMB = 128
 
 CONT_NAMES = ["cont_efwd_z", "cont_ebwd_z", "cont_emin_z", "cont_emax_z"]
