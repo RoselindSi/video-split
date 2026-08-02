@@ -283,34 +283,76 @@ def continuity_features(model, events, device, cont_by_rid=None):
     """CONT_NAMES columns per event; NaN where unscorable. When
     cont_by_rid is given (e.g. a 10 fps cache), continuity scores are
     computed from THAT cache's frames for the same recording_id, while the
-    events' own rec (2 fps) is untouched for P1."""
+    events' own rec (2 fps) is untouched for P1.
+
+    Also returns a per-event reason string so a coverage gap can be
+    attributed ("never extracted" vs "extracted but window too short")
+    instead of being reported as one opaque NaN count."""
     base = {}
     X = np.full((len(events), len(CONT_NAMES)), np.nan)
+    reasons = []
     for i, e in enumerate(events):
         rid = e["recording_id"]
         rec = cont_by_rid.get(rid) if cont_by_rid is not None else e["rec"]
         if rec is None:
+            reasons.append("no_cont_cache_for_recording")
             continue
         if rid not in base:
             base[rid] = recording_error_baseline(model, rec, device)
         med, mad = base[rid]
         if med is None:
+            reasons.append("recording_baseline_too_few_samples")
             continue
         ef = pred_error(model, rec, e["t"], device)
         eb = pred_error(model, rec, e["t"], device, reverse=True)
+        if ef is None and eb is None:
+            reasons.append("both_windows_too_short")
+            continue
         zf = (ef - med) / mad if ef is not None else np.nan
         zb = (eb - med) / mad if eb is not None else np.nan
-        X[i] = [zf, zb, np.nanmin([zf, zb]), np.nanmax([zf, zb])]
-    return X
+        both = [v for v in (zf, zb) if np.isfinite(v)]
+        X[i] = [zf, zb, min(both), max(both)]
+        reasons.append("ok" if ef is not None and eb is not None
+                       else ("forward_window_too_short" if ef is None
+                             else "backward_window_too_short"))
+    return X, reasons
+
+
+def _spearman(a, b):
+    """Rank correlation, NaN-safe, no scipy dependency."""
+    m = np.isfinite(a) & np.isfinite(b)
+    if m.sum() < 3:
+        return float("nan")
+
+    def rank(v):
+        order = np.argsort(v, kind="mergesort")
+        r = np.empty(len(v), dtype=float)
+        r[order] = np.arange(len(v), dtype=float)
+        # average ties so a constant column cannot fake a correlation
+        _, inv, cnt = np.unique(v, return_inverse=True, return_counts=True)
+        sums = np.zeros(len(cnt)); np.add.at(sums, inv, r)
+        return (sums / cnt)[inv]
+
+    ra, rb = rank(a[m]), rank(b[m])
+    sa, sb = ra.std(), rb.std()
+    if sa < 1e-12 or sb < 1e-12:
+        return float("nan")
+    return float(((ra - ra.mean()) * (rb - rb.mean())).mean() / (sa * sb))
 
 
 def p1_fold_eval(Ls, Rs, X_rel, y, groups, folds, pca_dim=64, l2=5.0):
     """P1 no-clip pipeline, pooled OOF predictions."""
     oof = np.full(len(y), np.nan)
+    n_skipped = 0
     for f in folds:
         te = np.array([g in f for g in groups])
         tr = ~te
-        pca = pca_fit(np.concatenate([Ls[tr], Rs[tr]], 0), pca_dim)
+        # on a filtered subset a fold can lose a class entirely; scoring such
+        # a fold would compare against an undefined baseline
+        if te.sum() < 2 or tr.sum() < 4 or len(set(y[tr].tolist())) < 2:
+            n_skipped += 1
+            continue
+        pca = pca_fit(np.concatenate([Ls[tr], Rs[tr]], 0), min(pca_dim, int(tr.sum()) - 1))
         st_rel = _impute_scale_fit(X_rel[tr])
         def blk(m):
             return np.concatenate([pair_block(pca_apply(pca, Ls[m]), pca_apply(pca, Rs[m])),
@@ -321,10 +363,15 @@ def p1_fold_eval(Ls, Rs, X_rel, y, groups, folds, pca_dim=64, l2=5.0):
         oof[te] = _sigmoid(_impute_scale_apply(stP, blk(te)) @ w + b)
     per_fold = []
     for f in folds:
-        te = np.array([g in f for g in groups])
-        if len(set(y[te].tolist())) == 2:
+        te = np.array([g in f for g in groups]) & np.isfinite(oof)
+        if te.sum() >= 2 and len(set(y[te].tolist())) == 2:
             per_fold.append(_auroc(y[te], oof[te]))
-    return _auroc(y, oof), per_fold, oof
+    m = np.isfinite(oof)
+    pooled = _auroc(y[m], oof[m]) if len(set(y[m].tolist())) == 2 else float("nan")
+    if n_skipped:
+        print(f"    ({n_skipped}/{len(folds)} folds skipped: too few events/classes "
+              f"after filtering)")
+    return pooled, per_fold, oof
 
 
 def main():
@@ -399,12 +446,19 @@ def main():
     y = np.array([e["y"] for e in events], dtype=float)
     groups = [e["recording_id"] for e in events]
 
-    Xc = continuity_features(model, events, device, cont_by_rid=cont_by_rid)
-    n_missing = sum(e["recording_id"] not in cont_by_rid for e in events)
-    if n_missing:
-        print(f"  !! {n_missing} eval events lack a continuity cache for their "
-              f"recording -- extract those recordings too or scores stay NaN")
-    print(f"continuity features: {np.isfinite(Xc).all(1).sum()}/{len(Xc)} fully scorable")
+    Xc, reasons = continuity_features(model, events, device, cont_by_rid=cont_by_rid)
+    scorable = np.isfinite(Xc).all(1)
+    print(f"continuity features: {scorable.sum()}/{len(Xc)} fully scorable")
+    print("  coverage breakdown:", dict(Counter(reasons)))
+    bad_recs = sorted({e["recording_id"] for e, r in zip(events, reasons)
+                       if r == "no_cont_cache_for_recording"})
+    if bad_recs:
+        print(f"  !! {len(bad_recs)} eval recordings have NO continuity cache "
+              f"-- extract these before trusting any number below:")
+        print("     " + " ".join(bad_recs))
+    print(f"  scorable subset class balance: "
+          f"{int(y[scorable].sum())}+/{int((1 - y[scorable]).sum())}- "
+          f"(full set {int(y.sum())}+/{int((1 - y).sum())}-)")
 
     standalone = {}
     for j, nm in enumerate(CONT_NAMES):
@@ -413,9 +467,9 @@ def main():
     print("standalone AUROC:", {k: round(v, 3) for k, v in standalone.items()})
 
     folds = stratified_grouped_folds(groups, y, 5, seed=0)
-    au_p1, pf_p1, _ = p1_fold_eval(Ls, Rs, X_rel, y, groups, folds)
+    au_p1, pf_p1, oof_p1 = p1_fold_eval(Ls, Rs, X_rel, y, groups, folds)
     X_rel_c = np.concatenate([X_rel, Xc], 1)
-    au_c, pf_c, _ = p1_fold_eval(Ls, Rs, X_rel_c, y, groups, folds)
+    au_c, pf_c, oof_c = p1_fold_eval(Ls, Rs, X_rel_c, y, groups, folds)
     gain = au_c - au_p1
     folds_improved = sum(c > p for c, p in zip(pf_c, pf_p1))
     worst_drop = min(pf_c) - min(pf_p1)
@@ -425,6 +479,68 @@ def main():
           f"{[round(x, 3) for x in pf_c]}")
     print(f"gain {gain:+.3f}  folds improved {folds_improved}/{len(pf_p1)}  "
           f"worst-fold change {worst_drop:+.3f}")
+
+    # ---- diagnostics requested after the first (coverage-broken) run -------
+    # Everything below is DIAGNOSTIC. The adoption gate above stays exactly as
+    # pre-registered; these numbers exist to explain a result, never to pick one.
+    diag = {"coverage_breakdown": dict(Counter(reasons)),
+            "recordings_without_cont_cache": bad_recs,
+            "n_scorable": int(scorable.sum()), "n_total": int(len(Xc))}
+
+    if scorable.sum() >= 20 and len(set(y[scorable].tolist())) == 2:
+        print("\n--- same-subset comparison (only fully-scorable events) ---")
+        sub = scorable
+        gsub = [g for g, k in zip(groups, sub) if k]
+        au_p1_s, pf_p1_s, oof_p1_s = p1_fold_eval(
+            Ls[sub], Rs[sub], X_rel[sub], y[sub], gsub, folds)
+        au_c_s, pf_c_s, _ = p1_fold_eval(
+            Ls[sub], Rs[sub], X_rel_c[sub], y[sub], gsub, folds)
+        # continuity features alone, through the same fold machinery
+        au_only, pf_only, _ = p1_fold_eval(
+            Ls[sub], Rs[sub], Xc[sub], y[sub], gsub, folds)
+        print(f"  P1 on all {len(y)}:            {au_p1:.3f}")
+        print(f"  P1 on scorable {int(sub.sum())}:        {au_p1_s:.3f}")
+        print(f"  continuity only, same subset: {au_only:.3f}")
+        print(f"  P1 + continuity, same subset: {au_c_s:.3f}  "
+              f"(gain {au_c_s - au_p1_s:+.3f})")
+        diag["same_subset"] = {
+            "p1_all": au_p1, "p1_subset": au_p1_s, "continuity_only": au_only,
+            "p1_plus_continuity": au_c_s, "gain_subset": au_c_s - au_p1_s,
+            "per_fold_p1": pf_p1_s, "per_fold_p1c": pf_c_s}
+
+        # Redundancy: if continuity merely restates P1's visual difference, a
+        # near-zero gain is expected and says nothing about the hypothesis.
+        rho = {nm: _spearman(oof_p1_s, Xc[sub][:, j]) for j, nm in enumerate(CONT_NAMES)}
+        print("  Spearman(P1 score, continuity):",
+              {k: (round(v, 3) if np.isfinite(v) else None) for k, v in rho.items()})
+        diag["spearman_p1_vs_continuity"] = rho
+
+        # The decisive question: do P1's confident FALSE POSITIVES (repetition
+        # scored as a boundary) look PREDICTABLE to the continuity model? That
+        # is the only thing continuity was introduced to fix.
+        ysub = y[sub]
+        neg = (ysub == 0) & np.isfinite(oof_p1_s)
+        pos = (ysub == 1) & np.isfinite(oof_p1_s)
+        if neg.sum() >= 3 and pos.sum() >= 3:
+            cut = np.quantile(oof_p1_s[pos], 0.5)      # "P1 is confident it is a boundary"
+            fp = neg & (oof_p1_s >= cut)
+            j = CONT_NAMES.index("cont_efwd_z")
+            col = Xc[sub][:, j]
+            print(f"\n  P1 false positives (negatives scoring above the positive "
+                  f"median {cut:.2f}): {int(fp.sum())}/{int(neg.sum())}")
+            if fp.sum():
+                print(f"    their forward-continuity z: median {np.nanmedian(col[fp]):+.2f}")
+                print(f"    true positives z:            median {np.nanmedian(col[pos]):+.2f}")
+                print(f"    other negatives z:           median {np.nanmedian(col[neg & ~fp]):+.2f}")
+                print("    -> continuity RESCUES them only if their z sits near the "
+                      "other-negatives value, not near the true-positive one.")
+                diag["false_positive_rescue"] = {
+                    "n_false_positive": int(fp.sum()), "n_negatives": int(neg.sum()),
+                    "z_false_positives": float(np.nanmedian(col[fp])),
+                    "z_true_positives": float(np.nanmedian(col[pos])),
+                    "z_other_negatives": float(np.nanmedian(col[neg & ~fp]))}
+    else:
+        print("\n--- same-subset comparison SKIPPED: too few scorable events ---")
 
     verdict = "NOT EVALUATED (gate config missing)"
     if os.path.exists(a.gate_config):
@@ -446,6 +562,10 @@ def main():
             "p1_plus_continuity": {"pooled": au_c, "per_fold": pf_c},
             "gain": gain, "folds_improved": folds_improved,
             "worst_fold_change": worst_drop, "verdict": verdict,
+            "standalone_coverage_note": (
+                "gate uses the pre-registered full-set comparison; `diagnostics` "
+                "holds the same-subset and redundancy checks"),
+            "diagnostics": diag,
         }, f, ensure_ascii=False, indent=2)
     print(f"wrote {a.out}")
 
