@@ -53,6 +53,19 @@ def main():
                          "unconditional in extract_features_recseg.py and can "
                          "reduce a recording to 0-30 frames, which is present but "
                          "unusable; re-extract those with --th_blur 0 --th_black 0.")
+    ap.add_argument("--force_reextract_eval", action="store_true",
+                    help="ALWAYS include every eval-needed recording in the "
+                         "output, regardless of --have_cache/--min_frames. "
+                         "Total frame count is a weak proxy: a recording can hold "
+                         "thousands of frames yet still have candidate-sized gaps "
+                         "concentrated exactly where they matter (e.g. blur "
+                         "removes frames preferentially during fast hand motion, "
+                         "which is disproportionately likely right at a real "
+                         "action boundary -- the least acceptable place to lose "
+                         "coverage). The eval set is only ~46 recordings, so "
+                         "forcing a clean --th_blur 0 --th_black 0 re-extract of "
+                         "all of them is cheap and removes this failure mode "
+                         "entirely instead of chasing per-recording thresholds.")
     ap.add_argument("--n_train", type=int, default=100,
                     help="TARGET total training recordings. Recordings already "
                          "present in --have_cache count toward it, so re-running "
@@ -130,13 +143,18 @@ def main():
           f"target {a.n_train} -> need {need}, sampled {len(train_ids)} "
           f"from a pool of {len(pool)}")
 
-    selected = sorted(((eval_recs & set(by_rid)) | set(train_ids)) - have)
+    eval_out = (eval_recs & set(by_rid)) if a.force_reextract_eval else                ((eval_recs & set(by_rid)) - have)
+    if a.force_reextract_eval:
+        print(f"--force_reextract_eval: re-extracting all {len(eval_out)} "
+              f"eval-needed recordings regardless of cache status")
+    selected = sorted(eval_out | set(train_ids))
     out_rows = [by_rid[r] for r in selected]
     with open(os.path.expanduser(a.out), "w", encoding="utf-8") as f:
         json.dump(out_rows, f, ensure_ascii=False)
     print(f"\nwrote {len(out_rows)} recordings -> {a.out}")
-    print(f"  eval-needed still missing {len((eval_recs & set(by_rid)) - have)} "
-          f"+ new training {len(train_ids)}")
+    print(f"  eval recordings in this output: {len(eval_out)} "
+          f"({'forced, ignoring cache status' if a.force_reextract_eval else 'missing from cache'})"
+          f" + new training {len(train_ids)}")
     if a.have_cache:
         print(f"  (pass BOTH the old and new caches as --cont_feat_cache when "
               f"running predictive_continuity)")
