@@ -47,6 +47,12 @@ def main():
                     help="existing feature cache(s); recordings already present "
                          "are dropped from the subset so extraction only covers "
                          "what is genuinely missing")
+    ap.add_argument("--min_frames", type=int, default=0,
+                    help="a recording in --have_cache with fewer than this many "
+                         "frames counts as NOT cached. Blur/black filtering is "
+                         "unconditional in extract_features_recseg.py and can "
+                         "reduce a recording to 0-30 frames, which is present but "
+                         "unusable; re-extract those with --th_blur 0 --th_black 0.")
     ap.add_argument("--n_train", type=int, default=100,
                     help="TARGET total training recordings. Recordings already "
                          "present in --have_cache count toward it, so re-running "
@@ -88,14 +94,26 @@ def main():
                     b3.add(json.loads(line)["recording_id"])
     print(f"batch3 recordings to exclude from training: {len(b3)}")
 
-    have = set()
+    have, too_sparse = set(), {}
     for hp in a.have_cache:
         import torch
         for rec in torch.load(os.path.expanduser(hp), weights_only=False):
-            have.add(rec.get("recording_id") or rec.get("video"))
+            rid = rec.get("recording_id") or rec.get("video")
+            n_fr = len(rec["times"])
+            if a.min_frames and n_fr < a.min_frames:
+                too_sparse[rid] = n_fr
+            else:
+                have.add(rid)
     if a.have_cache:
-        print(f"already cached: {len(have)} recordings "
+        print(f"already cached and usable: {len(have)} recordings "
               f"({len(eval_recs & have)}/{len(eval_recs)} of the eval-needed ones)")
+        if too_sparse:
+            ev = {r: n for r, n in too_sparse.items() if r in eval_recs}
+            print(f"  {len(too_sparse)} cached recordings hold <{a.min_frames} frames "
+                  f"and will be RE-extracted ({len(ev)} of them carry eval events)")
+            for rid, n in sorted(too_sparse.items(), key=lambda kv: kv[1])[:10]:
+                print(f"     {rid}  frames={n}"
+                      + ("  [eval]" if rid in eval_recs else ""))
 
     missing = sorted(eval_recs - set(by_rid))
     if missing:
@@ -125,6 +143,9 @@ def main():
     print(f"  batch3 recordings included: "
           f"{len(set(selected) & b3)} (must be 0)")
     assert not (set(selected) & b3), "batch3 recording leaked into the subset"
+    if a.min_frames:
+        print(f"  re-extract these with --th_blur 0 --th_black 0, and pass the new "
+              f"cache LAST to --cont_feat_cache so it overrides the sparse copies")
 
 
 if __name__ == "__main__":

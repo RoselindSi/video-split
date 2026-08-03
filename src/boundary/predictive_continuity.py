@@ -401,6 +401,26 @@ def p1_fold_eval(Ls, Rs, X_rel, y, groups, folds, pca_dim=64, l2=5.0):
     return pooled, per_fold, oof
 
 
+def feature_fold_eval(X, y, groups, folds, l2=5.0):
+    """Grouped-CV logistic regression on X ALONE.
+
+    p1_fold_eval always builds the PCA pair block from Ls/Rs, so calling it
+    with the continuity columns in the X_rel slot measures "P1 pair block +
+    continuity", not continuity by itself -- which is why an earlier run
+    reported continuity-only and P1-subset as the same 0.805."""
+    oof = np.full(len(y), np.nan)
+    for f in folds:
+        te = np.array([g in f for g in groups])
+        tr = ~te
+        if te.sum() < 2 or tr.sum() < 4 or len(set(y[tr].tolist())) < 2:
+            continue
+        st = _impute_scale_fit(X[tr])
+        w, b = fit_logreg(_impute_scale_apply(st, X[tr]), y[tr], l2=l2)
+        oof[te] = _sigmoid(_impute_scale_apply(st, X[te]) @ w + b)
+    m = np.isfinite(oof)
+    return (_auroc(y[m], oof[m]) if len(set(y[m].tolist())) == 2 else float("nan")), oof
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -422,6 +442,10 @@ def main():
     ap.add_argument("--epochs", type=int, default=8)
     ap.add_argument("--device", default="cpu")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--load_predictor",
+                    help="reuse a saved .predictor.pt instead of retraining "
+                         "(for rerunning diagnostics only -- the gate result is "
+                         "unchanged because the predictor is identical)")
     ap.add_argument("--gate_config", default="configs/continuity_gate_c1.json")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
@@ -451,7 +475,16 @@ def main():
     train_recs = {r: cont_by_rid[r] for r in train_ids}
 
     device = a.device
-    model = train_predictor(train_recs, a.epochs, device, seed=a.seed)
+    if a.load_predictor:
+        ckpt = torch.load(os.path.expanduser(a.load_predictor), weights_only=False)
+        d_in = next(iter(train_recs.values()))["feats"].shape[1]
+        model = ContinuityPredictor(d_in, ckpt["n_past"])
+        model.load_state_dict(ckpt["state_dict"])
+        model = model.to(device).eval()
+        print(f"loaded predictor from {a.load_predictor} (n_past={ckpt['n_past']}) "
+              f"-- NOT retraining")
+    else:
+        model = train_predictor(train_recs, a.epochs, device, seed=a.seed)
 
     te_true, te_shuf = shuffled_control(model, train_recs, device, seed=a.seed)
     print(f"\nshuffled-future control: err(true)={te_true:.4f}  err(shuffled)={te_shuf:.4f}")
@@ -483,6 +516,23 @@ def main():
         print(f"  !! {len(bad_recs)} eval recordings have NO continuity cache "
               f"-- extract these before trusting any number below:")
         print("     " + " ".join(bad_recs))
+    # A recording can be present yet unusable (extraction kept almost no
+    # frames). Name those too, with how many frames survived, so the fix is
+    # "re-extract these N recordings", not "coverage is bad".
+    unusable = {}
+    for e, r in zip(events, reasons):
+        if r in ("recording_baseline_too_few_samples", "both_windows_too_short"):
+            rid = e["recording_id"]
+            rec = (cont_by_rid or {}).get(rid)
+            unusable.setdefault(rid, [0, len(rec["times"]) if rec is not None else 0])
+            unusable[rid][0] += 1
+    if unusable:
+        tot = sum(v[0] for v in unusable.values())
+        print(f"  !! {tot} events lost across {len(unusable)} recordings that ARE "
+              f"cached but hold too few frames (extraction dropped them):")
+        for rid, (n_ev, n_fr) in sorted(unusable.items(), key=lambda kv: -kv[1][0])[:12]:
+            print(f"     {rid}  events={n_ev}  frames_in_cache={n_fr}")
+        print(f"     -> re-extract these with --th_blur 0 --th_black 0")
     print(f"  scorable subset class balance: "
           f"{int(y[scorable].sum())}+/{int((1 - y[scorable]).sum())}- "
           f"(full set {int(y.sum())}+/{int((1 - y).sum())}-)")
@@ -522,17 +572,19 @@ def main():
             Ls[sub], Rs[sub], X_rel[sub], y[sub], gsub, folds)
         au_c_s, pf_c_s, _ = p1_fold_eval(
             Ls[sub], Rs[sub], X_rel_c[sub], y[sub], gsub, folds)
-        # continuity features alone, through the same fold machinery
-        au_only, pf_only, _ = p1_fold_eval(
-            Ls[sub], Rs[sub], Xc[sub], y[sub], gsub, folds)
+        # continuity features ALONE -- no P1 pair block (see feature_fold_eval)
+        au_only, _ = feature_fold_eval(Xc[sub], y[sub], gsub, folds)
+        au_rel_only, _ = feature_fold_eval(X_rel[sub], y[sub], gsub, folds)
         print(f"  P1 on all {len(y)}:            {au_p1:.3f}")
         print(f"  P1 on scorable {int(sub.sum())}:        {au_p1_s:.3f}")
-        print(f"  continuity only, same subset: {au_only:.3f}")
+        print(f"  continuity alone (no pair block): {au_only:.3f}")
+        print(f"  P1 rel-features alone (reference): {au_rel_only:.3f}")
         print(f"  P1 + continuity, same subset: {au_c_s:.3f}  "
               f"(gain {au_c_s - au_p1_s:+.3f})")
         diag["same_subset"] = {
             "p1_all": au_p1, "p1_subset": au_p1_s, "continuity_only": au_only,
             "p1_plus_continuity": au_c_s, "gain_subset": au_c_s - au_p1_s,
+            "rel_features_alone": au_rel_only,
             "per_fold_p1": pf_p1_s, "per_fold_p1c": pf_c_s}
 
         # Redundancy: if continuity merely restates P1's visual difference, a
