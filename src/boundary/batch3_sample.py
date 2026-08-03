@@ -141,6 +141,13 @@ def main():
     ap.add_argument("--feat_cache", action="append", required=True)
     ap.add_argument("--gold", default="data/gold/audit_188_gold_v2.jsonl",
                     help="defines the 48 recordings to EXCLUDE (all rows, both splits)")
+    ap.add_argument("--exclude_manifest", action="append", default=[],
+                    help="additional batch manifest(s) (e.g. batch3_manifest.jsonl) whose "
+                         "recordings are ALSO excluded -- once a batch's labels are fully "
+                         "known they graduate into development data and can no longer serve "
+                         "as a blind test, so every later batch (batch4, batch5, ...) must "
+                         "exclude every recording used by every earlier one, not just the "
+                         "original 48 dev recordings.")
     ap.add_argument("--primary_dir", required=True)
     ap.add_argument("--secondary_dir", required=True)
     ap.add_argument("--n_target", type=int, default=240)
@@ -157,9 +164,18 @@ def main():
 
     gold = S.load_gold(a.gold)
     excluded = {g.get("recording_id") for g in gold if g.get("recording_id")}
+    n_dev = len(excluded)
+    for mp in a.exclude_manifest:
+        with open(os.path.expanduser(mp), encoding="utf-8") as f:
+            for line in f:
+                if line.strip():
+                    excluded.add(json.loads(line)["recording_id"])
     by_rid = load_feature_caches(a.feat_cache)
     new_recordings = sorted(set(by_rid) - excluded)
-    print(f"excluding {len(excluded)} development recordings")
+    print(f"excluding {n_dev} original development recordings"
+          + (f" + {len(excluded) - n_dev} from {len(a.exclude_manifest)} prior batch "
+             f"manifest(s)" if a.exclude_manifest else "")
+          + f" = {len(excluded)} total")
     print(f"candidate pool: {len(new_recordings)} new recordings")
     if len(new_recordings) < a.min_recordings:
         raise SystemExit(f"only {len(new_recordings)} new recordings available -- need at "
