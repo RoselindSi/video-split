@@ -306,17 +306,26 @@ def recording_error_baseline(model, rec, device, stride=2.0):
     return med, mad
 
 
+RAW_NAMES = ["cont_efwd_raw", "cont_ebwd_raw"]
+
+
 def continuity_features(model, events, device, cont_by_rid=None):
     """CONT_NAMES columns per event; NaN where unscorable. When
     cont_by_rid is given (e.g. a 10 fps cache), continuity scores are
     computed from THAT cache's frames for the same recording_id, while the
     events' own rec (2 fps) is untouched for P1.
 
-    Also returns a per-event reason string so a coverage gap can be
+    Also returns (a) a per-event reason string so a coverage gap can be
     attributed ("never extracted" vs "extracted but window too short")
-    instead of being reported as one opaque NaN count."""
+    instead of being reported as one opaque NaN count, and (b) the RAW
+    (pre-MAD-normalization) forward/backward errors alongside the
+    normalized ones -- MAD normalization can itself distort a comparison
+    (e.g. inflate errors from a low-variance recording), so any subtype- or
+    recording-level cross-tab should be able to check both, not just the
+    normalized numbers the fold-eval pipeline consumes."""
     base = {}
     X = np.full((len(events), len(CONT_NAMES)), np.nan)
+    Xraw = np.full((len(events), len(RAW_NAMES)), np.nan)
     reasons = []
     for i, e in enumerate(events):
         rid = e["recording_id"]
@@ -335,6 +344,7 @@ def continuity_features(model, events, device, cont_by_rid=None):
         if ef is None and eb is None:
             reasons.append("both_windows_too_short")
             continue
+        Xraw[i] = [ef if ef is not None else np.nan, eb if eb is not None else np.nan]
         zf = (ef - med) / mad if ef is not None else np.nan
         zb = (eb - med) / mad if eb is not None else np.nan
         both = [v for v in (zf, zb) if np.isfinite(v)]
@@ -342,7 +352,7 @@ def continuity_features(model, events, device, cont_by_rid=None):
         reasons.append("ok" if ef is not None and eb is not None
                        else ("forward_window_too_short" if ef is None
                              else "backward_window_too_short"))
-    return X, reasons
+    return X, reasons, Xraw
 
 
 def _spearman(a, b):
@@ -448,6 +458,12 @@ def main():
                          "unchanged because the predictor is identical)")
     ap.add_argument("--gate_config", default="configs/continuity_gate_c1.json")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--dump_events",
+                    help="optional CSV path: one row per clean-145 event with "
+                         "event_id, recording_id, y, dev_pair_subtype, raw and "
+                         "MAD-normalized forward/backward errors, and both "
+                         "grouped-OOF scores (P1 alone / P1+continuity) -- the "
+                         "join key for same_action_subtype.py's cross-tab.")
     a = ap.parse_args()
 
     torch.manual_seed(a.seed)
@@ -506,7 +522,7 @@ def main():
     y = np.array([e["y"] for e in events], dtype=float)
     groups = [e["recording_id"] for e in events]
 
-    Xc, reasons = continuity_features(model, events, device, cont_by_rid=cont_by_rid)
+    Xc, reasons, Xraw = continuity_features(model, events, device, cont_by_rid=cont_by_rid)
     scorable = np.isfinite(Xc).all(1)
     print(f"continuity features: {scorable.sum()}/{len(Xc)} fully scorable")
     print("  coverage breakdown:", dict(Counter(reasons)))
@@ -542,6 +558,27 @@ def main():
         m = np.isfinite(Xc[:, j])
         standalone[nm] = _auroc(y[m], Xc[m, j]) if len(set(y[m].tolist())) == 2 else float("nan")
     print("standalone AUROC:", {k: round(v, 3) for k, v in standalone.items()})
+
+    # ---- no-leakage checks (print, don't just assume) ----------------------
+    # (1) the continuity PREDICTOR's frozen PCA and transformer were fit on
+    #     train_ids only, which by construction excludes every dev/batch3
+    #     recording (see the set-difference above); confirm zero overlap
+    #     with the recordings actually carrying eval events, not just with
+    #     the nominal dev/batch3 sets, in case an event's recording_id
+    #     mismatches gold's bookkeeping.
+    eval_rec_ids = {e["recording_id"] for e in events}
+    leak = eval_rec_ids & set(train_ids)
+    print(f"\nleakage check: {len(leak)} eval recordings also used for "
+          f"self-supervised predictor training (must be 0)"
+          + (f"  !! {sorted(leak)}" if leak else ""))
+    assert not leak, "predictor trained on a recording that also carries an eval event"
+    # (2) P1's PCA/logreg (p1_fold_eval) is refit per outer fold on that
+    #     fold's TRAIN split only (see p1_fold_eval: pca_fit(...[tr]) and
+    #     fit_logreg(...[tr])) -- restated here so this is visible in every
+    #     run's output, not just readable from source.
+    print("leakage check: P1's per-fold PCA/logreg is refit on that fold's "
+          "train split only (pca_fit/fit_logreg called on [tr] slices in "
+          "p1_fold_eval) -- no event ever contributes to its own fold's fit")
 
     folds = stratified_grouped_folds(groups, y, 5, seed=0)
     au_p1, pf_p1, oof_p1 = p1_fold_eval(Ls, Rs, X_rel, y, groups, folds)
@@ -620,6 +657,23 @@ def main():
                     "z_other_negatives": float(np.nanmedian(col[neg & ~fp]))}
     else:
         print("\n--- same-subset comparison SKIPPED: too few scorable events ---")
+
+    if a.dump_events:
+        import csv as _csv
+        with open(os.path.expanduser(a.dump_events), "w", newline="", encoding="utf-8") as f:
+            w = _csv.writer(f)
+            w.writerow(["event_id", "recording_id", "y", "dev_pair_subtype",
+                       "cont_efwd_raw", "cont_ebwd_raw"] + CONT_NAMES +
+                       ["oof_p1", "oof_p1_plus_continuity", "coverage_reason"])
+            for i, e in enumerate(events):
+                w.writerow([e["event_id"], e["recording_id"], int(y[i]),
+                           e.get("temporal_pair_subtype") or "",
+                           *[("" if not np.isfinite(v) else f"{v:.6f}") for v in Xraw[i]],
+                           *[("" if not np.isfinite(v) else f"{v:.6f}") for v in Xc[i]],
+                           ("" if not np.isfinite(oof_p1[i]) else f"{oof_p1[i]:.6f}"),
+                           ("" if not np.isfinite(oof_c[i]) else f"{oof_c[i]:.6f}"),
+                           reasons[i]])
+        print(f"\nwrote per-event dump ({len(events)} rows) -> {a.dump_events}")
 
     verdict = "NOT EVALUATED (gate config missing)"
     if os.path.exists(a.gate_config):
