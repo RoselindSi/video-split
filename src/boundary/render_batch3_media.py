@@ -81,6 +81,12 @@ def main():
             "next_segment_label": c.get("next_segment_label", ""),
             "containing_segment_label": c.get("containing_segment_label", ""),
             "nearest_next_label": "", "nearest_next_gap_s": "",
+            # label_pair_text()'s fallback branch (prev/next/nearest_next all
+            # empty but containing_segment_label set -- happens for candidates
+            # near a recording's start/end) reads these two keys directly;
+            # batch3_blind_review.csv never populates them, so they must still
+            # be PRESENT (as "?") or the KeyError crashes the whole render run.
+            "nearest_previous_segment_label": "", "nearest_next_segment_label": "",
             "recording_id": rid,
         }
         caption = label_pair_text(blind_row)
