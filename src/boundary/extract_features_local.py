@@ -83,38 +83,34 @@ class HandBoxer:
     construction, which makes it the honest control for "did the detector
     actually buy anything"."""
 
-    def __init__(self, mode, margin=0.30, fixed=(0.20, 0.35, 0.80, 1.00)):
+    def __init__(self, mode, margin=0.30, fixed=(0.20, 0.35, 0.80, 1.00),
+                 hand_model=None):
         self.mode = mode
         self.margin = margin
         self.fixed = fixed
         self.det = None
         if mode == "mediapipe":
             try:
-                import mediapipe as mp
+                from src.boundary.hand_detect import HandDetector
             except ImportError:
                 raise SystemExit(
                     "--detector mediapipe needs the mediapipe package "
-                    "(pip install mediapipe). Use --detector none for the "
-                    "fixed lower-centre crop instead; that arm is a control "
-                    "worth running regardless.")
-            self.det = mp.solutions.hands.Hands(
-                static_image_mode=True, max_num_hands=2, min_detection_confidence=0.3)
+                    "(python -m pip install mediapipe -- note `python -m pip`, "
+                    "since on this host bare `pip` resolves to a different "
+                    "interpreter). Use --detector none for the fixed "
+                    "lower-centre crop instead; that arm is a control worth "
+                    "running regardless.")
+            self.det = HandDetector(hand_model)
 
     def __call__(self, frame):
         h, w = frame.shape[:2]
         if self.mode == "none":
             x0, y0, x1, y1 = self.fixed
             return (x0 * w, y0 * h, x1 * w, y1 * h)
-        res = self.det.process(frame)
-        if not res.multi_hand_landmarks:
+        b = self.det.union_box(frame)
+        if b is None:
             return None
-        xs, ys = [], []
-        for lm in res.multi_hand_landmarks:
-            for p in lm.landmark:
-                xs.append(p.x * w)
-                ys.append(p.y * h)
-        x0, x1 = min(xs), max(xs)
-        y0, y1 = min(ys), max(ys)
+        x0, y0, x1, y1 = b
         mx, my = self.margin * (x1 - x0), self.margin * (y1 - y0)
         return (x0 - mx, y0 - my, x1 + mx, y1 + my)
 
@@ -228,6 +224,8 @@ def main():
                          "'full' would let a box straddle the seam and is only "
                          "here for non-stereo sources.")
     ap.add_argument("--detector", choices=["mediapipe", "none"], default="mediapipe")
+    ap.add_argument("--hand_model",
+                    help="hand_landmarker.task, required by mediapipe >= 1.0")
     ap.add_argument("--margin", type=float, default=0.30,
                     help="context margin around the hand union box, as a fraction "
                          "of its size -- a hand with no surroundings cannot show "
@@ -253,7 +251,7 @@ def main():
     proc = AutoProcessor.from_pretrained(a.model_base)
     model = AutoModelForImageTextToText.from_pretrained(
         a.model_base, dtype=torch.bfloat16, device_map="cuda").eval()
-    boxer = HandBoxer(a.detector, a.margin)
+    boxer = HandBoxer(a.detector, a.margin, hand_model=a.hand_model)
 
     from decord import VideoReader
     rows = []

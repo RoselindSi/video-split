@@ -109,14 +109,9 @@ def load_wanted(paths):
 
 
 def hand_box(det, frame):
-    """Union box of all detected hands, in pixels, or None."""
-    res = det.process(frame)
-    if not res.multi_hand_landmarks:
-        return None
-    h, w = frame.shape[:2]
-    xs = [p.x * w for lm in res.multi_hand_landmarks for p in lm.landmark]
-    ys = [p.y * h for lm in res.multi_hand_landmarks for p in lm.landmark]
-    return min(xs), min(ys), max(xs), max(ys)
+    """Union box of all detected hands, in pixels, or None. Version handling
+    lives in hand_detect.HandDetector -- mediapipe 1.0 dropped mp.solutions."""
+    return det.union_box(frame)
 
 
 def main():
@@ -130,6 +125,10 @@ def main():
     ap.add_argument("--box", type=float, nargs=4, default=list(FIXED),
                     metavar=("X0", "Y0", "X1", "Y1"),
                     help="fixed crop as fractions of the EYE frame")
+    ap.add_argument("--hand_model",
+                    help="path to hand_landmarker.task, required by mediapipe >= 1.0 "
+                         "(the Tasks API takes an external model bundle; 0.10.x "
+                         "packaged one inside the wheel). See hand_detect.py.")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--sheet_per_rec", type=int, default=3,
                     help="panels per recording on the contact sheet. Sampling is "
@@ -168,10 +167,10 @@ def main():
           f"fall back to uniform random times")
 
     try:
-        import mediapipe as mp
-        det = mp.solutions.hands.Hands(static_image_mode=True, max_num_hands=2,
-                                       min_detection_confidence=0.3)
-        print("mediapipe available: coverage and occupancy will be measured")
+        from src.boundary.hand_detect import HandDetector
+        det = HandDetector(a.hand_model)
+        print(f"mediapipe {det.version} ({det.api} API): coverage and occupancy "
+              f"will be measured")
     except ImportError:
         det = None
         print("mediapipe NOT available: only the contact sheet will be produced. "
