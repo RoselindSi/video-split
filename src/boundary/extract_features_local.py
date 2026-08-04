@@ -153,6 +153,7 @@ def smooth_boxes(boxes, times, smooth_s):
 
     stats = {"n_frames": n, "n_detected": len(valid),
              "detected_frac": len(valid) / max(1, n)}
+    stats["detected_mask"] = [b is not None for b in boxes]
     if not valid:
         return [None] * n, 0.0, 0.0, stats
 
@@ -348,7 +349,18 @@ def main():
                       "feats": feats, "times": torch.tensor(times[:len(feats)]),
                       "duration": float(r["duration"]), "segments": segs,
                       "detection_rate": det_rate, "box_jitter_px": jitter,
-                      "box_jitter_raw_px": raw_jitter, "box_stats": bstats})
+                      "box_jitter_raw_px": raw_jitter, "box_stats": bstats,
+                      # PER-FRAME validity, so the evaluation can gate per EVENT
+                      # rather than per recording. What matters is whether the
+                      # hand was really detected inside a candidate's window,
+                      # not the recording's overall rate: recording_000046 ran
+                      # at 0.11 over all frames while detection AT candidate
+                      # moments measured 0.87 across the coverage audit. Dropping
+                      # whole recordings would discard usable events and would
+                      # bias the set toward whichever task families keep hands
+                      # in view.
+                      "detected": torch.tensor(bstats.get("detected_mask",
+                                                          [True] * len(feats))[:len(feats)])})
         stats.append((det_rate, jitter, raw_jitter))
         # Both sides measured over the SAME crops. An earlier version averaged
         # the raw side over the first 20 frames and the upscaled side over all
@@ -376,6 +388,18 @@ def main():
               f"min {d.min():.3f} ({int((d < 0.5).sum())} recordings below 0.5)")
         print(f"box jitter px:  raw median {np.median(rj):.1f} (max {rj.max():.1f})  "
               f"-> smoothed median {np.median(j):.1f} (max {j.max():.1f})")
+        bad = [(c["recording_id"], c["detection_rate"], c["box_stats"].get("longest_gap_s", 0))
+               for c in cache if c["detection_rate"] < 0.5
+               or c["box_stats"].get("longest_gap_s", 0) > 10]
+        if bad:
+            print(f"\n  !! {len(bad)} recordings are held together by interpolation:")
+            for rid, dr, g in bad:
+                print(f"       {rid}: detection {dr:.2f}, longest gap {g:.1f}s")
+            print("     A LOW smoothed jitter on these is a symptom, not health: "
+                  "interpolating across a long gap draws a near-straight line, "
+                  "which scores as very stable while having nothing to do with "
+                  "where the hand was. Gate per EVENT on the `detected` mask "
+                  "rather than trusting the jitter column for these.")
         print("  raw is the detector's own stability; smoothed is what reaches the "
               "crops. A large gap means the smoother is carrying the branch, and "
               "the crop follows the smoother more than it follows the hand.")
