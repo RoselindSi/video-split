@@ -45,16 +45,26 @@ def _f(v):
     return float(v) if v not in (None, "") else float("nan")
 
 
-def load_events(path):
+def load_events(path, score_col="oof_fixed"):
+    """score_col selects which C2xP1 combination to run the postmortem
+    against: 'oof_fixed' (the pre-registered 0.5/0.5 fusion, comparable
+    across v1->v2) or 'oof_nested' (v2's diagnostic nested-LR fusion).
+    Falls back gracefully if the dump predates a column (v1 dumps have
+    oof_fused/oof_c2 instead of oof_fixed/oof_q -- both are accepted)."""
     rows = []
     with open(path, newline="", encoding="utf-8") as f:
-        for r in csv.DictReader(f):
+        reader = csv.DictReader(f)
+        fields = reader.fieldnames
+        fused_col = score_col if score_col in fields else (
+            "oof_fused" if "oof_fused" in fields else "oof_fixed")
+        c2_col = "oof_q" if "oof_q" in fields else "oof_c2"
+        for r in reader:
             rows.append({
                 "event_id": r["event_id"], "recording_id": r["recording_id"],
                 "y": int(r["y"]), "dev_pair_subtype": r["dev_pair_subtype"],
                 "same_action_subtype": r["same_action_subtype"],
                 "d_lr": _f(r["oof_d_lr"]), "d_l": _f(r["oof_d_l"]), "d_r": _f(r["oof_d_r"]),
-                "p1": _f(r["oof_p1"]), "c2": _f(r["oof_c2"]), "fused": _f(r["oof_fused"]),
+                "p1": _f(r["oof_p1"]), "c2": _f(r[c2_col]), "fused": _f(r[fused_col]),
             })
     return rows
 
@@ -132,10 +142,14 @@ def main():
     ap.add_argument("--events_dump", required=True)
     ap.add_argument("--n_boot", type=int, default=2000)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--score_col", default="oof_fixed",
+                    help="which fusion column to analyze: oof_fixed (default, "
+                         "pre-registered) or oof_nested (v2 diagnostic)")
     ap.add_argument("--out")
     a = ap.parse_args()
 
-    events = load_events(a.events_dump)
+    events = load_events(a.events_dump, score_col=a.score_col)
+    print(f"analyzing score column: {a.score_col}")
     y = np.array([e["y"] for e in events], dtype=float)
     print(f"events: {len(events)} ({int(y.sum())} positive / {int((1-y).sum())} negative)  "
           f"recordings: {len(set(e['recording_id'] for e in events))}")
