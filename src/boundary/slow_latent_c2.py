@@ -219,10 +219,18 @@ def slow_latent_loss(model, batch, margin=0.5, lambda_stability=1.0, device="cpu
     return loss, d_lr.detach().cpu().numpy()
 
 
-def score_events(model, events, n_frames, device, clip_neighbors=False):
-    """Returns (score, scorable_mask). score = distance(s_left, s_right):
-    higher means more separated -> more "sharp-like"."""
+def score_events(model, events, n_frames, device, clip_neighbors=False, return_geometry=False):
+    """Returns score = distance(s_left, s_right) (higher = more separated =
+    more "sharp-like"). If return_geometry, also returns d_l, d_r (the two
+    intra-window stability distances) so a postmortem can check whether the
+    encoder is actually behaving "slow" (low d_l/d_r everywhere) rather than
+    just checking the final d_lr-based classification number -- section 5's
+    point that AUROC alone cannot tell you whether phase-invariance was
+    actually learned or whether the classifier head found an unrelated
+    shortcut."""
     scores = np.full(len(events), np.nan)
+    d_ls = np.full(len(events), np.nan)
+    d_rs = np.full(len(events), np.nan)
     model.eval()
     with torch.no_grad():
         for i, e in enumerate(events):
@@ -232,6 +240,16 @@ def score_events(model, events, n_frames, device, clip_neighbors=False):
             sl = model(w["L"][None].float().to(device))
             sr = model(w["R"][None].float().to(device))
             scores[i] = float((1 - F.cosine_similarity(sl, sr)).item())
+            if return_geometry and w["L1"] is not None and w["L2"] is not None:
+                sl1 = model(w["L1"][None].float().to(device))
+                sl2 = model(w["L2"][None].float().to(device))
+                d_ls[i] = float((1 - F.cosine_similarity(sl1, sl2)).item())
+            if return_geometry and w["R1"] is not None and w["R2"] is not None:
+                sr1 = model(w["R1"][None].float().to(device))
+                sr2 = model(w["R2"][None].float().to(device))
+                d_rs[i] = float((1 - F.cosine_similarity(sr1, sr2)).item())
+    if return_geometry:
+        return scores, d_ls, d_rs
     return scores
 
 
@@ -268,6 +286,8 @@ def p1_plus_c2_fold_eval(Ls, Rs, X_rel, y, groups, folds, c2_events, n_frames,
     oof_p1 = np.full(len(y), np.nan)
     oof_c2 = np.full(len(y), np.nan)
     oof_fused = np.full(len(y), np.nan)
+    oof_dl = np.full(len(y), np.nan)
+    oof_dr = np.full(len(y), np.nan)
     per_fold_p1, per_fold_fused = [], []
     for fi, f in enumerate(folds):
         te = np.array([g in f for g in groups])
@@ -289,9 +309,12 @@ def p1_plus_c2_fold_eval(Ls, Rs, X_rel, y, groups, folds, c2_events, n_frames,
         events_tr = [c2_events[i] for i in np.nonzero(tr)[0]]
         model = train_fold(events_tr, d_in, n_frames, epochs, device, seed=fi,
                            clip_neighbors=clip_neighbors)
-        c2_te = score_events(model, [c2_events[i] for i in np.nonzero(te)[0]],
-                             n_frames, device, clip_neighbors)
+        c2_te, dl_te, dr_te = score_events(
+            model, [c2_events[i] for i in np.nonzero(te)[0]],
+            n_frames, device, clip_neighbors, return_geometry=True)
         oof_c2[np.nonzero(te)[0]] = c2_te
+        oof_dl[np.nonzero(te)[0]] = dl_te
+        oof_dr[np.nonzero(te)[0]] = dr_te
 
         # simple late fusion: average of two independently-calibrated [0,1]
         # scores (P1's sigmoid output and C2's distance rescaled by the
@@ -318,7 +341,8 @@ def p1_plus_c2_fold_eval(Ls, Rs, X_rel, y, groups, folds, c2_events, n_frames,
             per_fold_fused.append(_auroc(y[te2], oof_fused[te2]))
     return {"au_p1": au_p1, "au_c2_only": au_c2_only, "au_fused": au_fused,
             "per_fold_p1": per_fold_p1, "per_fold_fused": per_fold_fused,
-            "oof_p1": oof_p1, "oof_c2": oof_c2, "oof_fused": oof_fused}
+            "oof_p1": oof_p1, "oof_c2": oof_c2, "oof_fused": oof_fused,
+            "oof_dl": oof_dl, "oof_dr": oof_dr}
 
 
 def main():
@@ -346,6 +370,12 @@ def main():
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--gate_config", default="configs/slow_latent_gate_c2.json")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--dump_events",
+                    help="optional CSV path: one row per clean-145 event with "
+                         "event_id, recording_id, y, dev_pair_subtype, "
+                         "same_action_subtype (joined from --same_action_subtype "
+                         "for negatives), OOF d_lr/d_l/d_r geometry, and OOF "
+                         "P1/C2/fused scores -- the input to c2_postmortem.py.")
     a = ap.parse_args()
 
     by_rid = load_feature_caches(a.feat_cache)
@@ -394,10 +424,10 @@ def main():
 
     # subtype-specific false-positive check (mentor's point 8.3): does C2
     # INCREASE the false-positive rate on the two subtypes that broke C1?
+    import csv
     diag = {}
+    sub_map = {}
     if os.path.exists(a.same_action_subtype):
-        import csv
-        sub_map = {}
         with open(a.same_action_subtype, encoding="utf-8") as f:
             for r in csv.DictReader(f):
                 sub_map[r["event_id"]] = r["subtype"]
@@ -417,6 +447,22 @@ def main():
     else:
         print(f"  (no subtype file at {a.same_action_subtype} -- skipping "
               f"regrasp/direction_reversal FP check)")
+
+    if a.dump_events:
+        with open(os.path.expanduser(a.dump_events), "w", newline="", encoding="utf-8") as f:
+            w = csv.writer(f)
+            w.writerow(["event_id", "recording_id", "y", "dev_pair_subtype",
+                       "same_action_subtype", "oof_d_lr", "oof_d_l", "oof_d_r",
+                       "oof_p1", "oof_c2", "oof_fused"])
+            def fmt(v):
+                return "" if v is None or not np.isfinite(v) else f"{v:.6f}"
+            for i, e in enumerate(events):
+                w.writerow([e["event_id"], e["recording_id"], int(y[i]),
+                           e.get("temporal_pair_subtype") or "",
+                           sub_map.get(e["event_id"], ""),
+                           fmt(res["oof_c2"][i]), fmt(res["oof_dl"][i]), fmt(res["oof_dr"][i]),
+                           fmt(res["oof_p1"][i]), fmt(res["oof_c2"][i]), fmt(res["oof_fused"][i])])
+        print(f"\nwrote per-event dump ({len(events)} rows) -> {a.dump_events}")
 
     verdict = "NOT EVALUATED (gate config missing)"
     if os.path.exists(a.gate_config):
