@@ -66,6 +66,13 @@ def main():
                          "forcing a clean --th_blur 0 --th_black 0 re-extract of "
                          "all of them is cheap and removes this failure mode "
                          "entirely instead of chasing per-recording thresholds.")
+    ap.add_argument("--include_recordings_from", action="append", default=[],
+                    help="additional manifest(s) (e.g. batch3_manifest.jsonl) whose "
+                         "recordings must ALSO be in the output, on top of the "
+                         "clean-145 eval-needed set -- for extracting a diagnostic "
+                         "cache over a promoted batch's recordings without writing "
+                         "a separate script. Subject to the same --have_cache/"
+                         "--min_frames/--force_reextract_eval logic as eval_recs.")
     ap.add_argument("--n_train", type=int, default=100,
                     help="TARGET total training recordings. Recordings already "
                          "present in --have_cache count toward it, so re-running "
@@ -98,6 +105,17 @@ def main():
     all_dev = {g.get("recording_id") for g in gold if g.get("recording_id")}
     print(f"eval recordings needed (clean-145 events): {len(eval_recs)} "
           f"(of {len(all_dev)} development recordings)")
+
+    extra_recs = set()
+    for mp in a.include_recordings_from:
+        with open(os.path.expanduser(mp), encoding="utf-8") as f:
+            for line in f:
+                if line.strip():
+                    extra_recs.add(json.loads(line)["recording_id"])
+    if extra_recs:
+        print(f"extra recordings requested via --include_recordings_from: "
+              f"{len(extra_recs)} (from {len(a.include_recordings_from)} manifest(s))")
+    eval_recs = eval_recs | extra_recs
 
     b3 = set()
     for mp in a.exclude_manifest:
