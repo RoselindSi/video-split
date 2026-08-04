@@ -116,80 +116,64 @@ class HandBoxer:
 
 
 def smooth_boxes(boxes, times, smooth_s):
-    """Causal-symmetric moving average over a +/- smooth_s window, carrying the
-    last valid box through gaps.
+    """Fill detection gaps, smooth, and report honest stability numbers.
 
-    Detector jitter is not a cosmetic problem here. An unsmoothed box that
-    shifts by tens of pixels between adjacent frames makes consecutive crops
-    disagree, and the boundary features are built from exactly that kind of
-    frame-to-frame difference -- so jitter would manufacture the appearance of
-    an action change wherever the detector is merely unstable. Gaps are filled
-    rather than dropped so the feature sequence keeps a uniform time grid."""
+    Returns (boxes, smoothed_jitter, raw_jitter, stats).
+
+    GAPS ARE INTERPOLATED, not carried forward. Carrying the last valid box
+    through a gap freezes the crop while the hand keeps moving, so on a
+    recording where the detector misses 45% of frames the crop follows a stale
+    box for long stretches; linear interpolation between the surrounding
+    detections at least tracks toward where the hand actually reappears.
+
+    RAW JITTER IS MEASURED ON DETECTED BOXES ONLY. Measuring it on the filled
+    sequence made a worse detector look more stable: carried-forward runs have
+    zero frame-to-frame displacement, which drags the median down, and
+    smoothing then spreads the accumulated jump across neighbours and pushes
+    it back up. That produced the impossible reading "jitter 14.3 -> 30.1 px"
+    -- smoothing appearing to make things worse -- which was an artefact of
+    the measurement, not of the smoother."""
     n = len(boxes)
-    filled, last = [], None
-    for b in boxes:
-        if b is not None:
-            last = b
-        filled.append(last)
-    first = next((b for b in filled if b is not None), None)
-    if first is None:
-        return [None] * n, 0.0, 0.0
-    filled = [b if b is not None else first for b in filled]
-    arr = np.array(filled, dtype=float)
     t = np.asarray(times, dtype=float)
+    valid = [i for i, b in enumerate(boxes) if b is not None]
 
-    def _jitter(a):
+    def _jitter(a, at=None):
+        """a: [k,4] boxes ALREADY in the order they occur. `at` are their
+        timestamps; when given, each displacement is divided by how many
+        frame-intervals it spans, so a jump across a detection gap is not
+        counted as if it happened in one frame."""
         if len(a) < 2:
             return 0.0
         c = np.stack([(a[:, 0] + a[:, 2]) / 2, (a[:, 1] + a[:, 3]) / 2], 1)
-        return float(np.median(np.linalg.norm(np.diff(c, axis=0), axis=1)))
+        d = np.linalg.norm(np.diff(c, axis=0), axis=1)
+        if at is not None and len(t) > 1:
+            step = float(np.median(np.diff(t)))
+            d = d / np.maximum(np.diff(at) / max(step, 1e-6), 1.0)
+        return float(np.median(d))
 
-    # Both numbers are reported. Smoothing does heavy lifting -- on a synthetic
-    # sequence it took 39.1 px of jitter down to 5.8 px -- so quoting only the
-    # post-smoothing figure would make an unstable detector look fine while the
-    # smoother quietly papers over it. The RAW figure is the detector's honest
-    # score; the smoothed one is what actually reaches the crops.
-    raw_jit = _jitter(arr)
+    stats = {"n_frames": n, "n_detected": len(valid),
+             "detected_frac": len(valid) / max(1, n)}
+    if not valid:
+        return [None] * n, 0.0, 0.0, stats
+
+    arr_v = np.array([boxes[i] for i in valid], dtype=float)
+    raw_jit = _jitter(arr_v, t[valid])
+
+    gaps = np.diff(valid)
+    stats["longest_gap_s"] = float((gaps.max() if len(gaps) else 0)
+                                   * np.median(np.diff(t)) if n > 1 else 0.0)
+
+    arr = np.empty((n, 4), dtype=float)
+    for k in range(4):
+        arr[:, k] = np.interp(t, t[valid], arr_v[:, k])
+
     if smooth_s > 0:
         out = np.empty_like(arr)
         for i in range(n):
             m = np.abs(t - t[i]) <= smooth_s
             out[i] = arr[m].mean(0)
         arr = out
-    return [tuple(b) for b in arr], _jitter(arr), raw_jit
-
-
-def upscale_crop(crop, mode, max_pixels, cap=3.0):
-    """Enlarge a crop so it actually fills the ViT's token budget.
-
-    Without this the local branch is strictly worse than the global one.
-    Qwen's smart_resize only DOWNSCALES to fit max_pixels and never upscales
-    to fill it, and the source frames (1280x480) barely exceed that budget, so
-    the global branch already runs at 0.984x linear. Measured token counts for
-    one eye:
-
-        global branch, per eye      360 tokens   853 native px per token
-        fixed crop 384x312          154 tokens   778 px per token (1.10x)
-        tighter crop 200x150         35 tokens   857 px per token (no gain)
-        the 384x312 crop at 2x      594 tokens   202 px per token (4.2x)
-
-    So cropping alone buys nothing, and cropping TIGHTER makes it worse --
-    fewer pixels under a fixed patch size is fewer patches. Upscaling adds no
-    real detail, but it does put several times more ViT patches on the hand,
-    which is the whole point of a local branch.
-
-    'auto' scales to fill max_pixels, capped at `cap` because beyond a few
-    times the source resolution the extra patches are interpolating between
-    pixels that were never measured."""
-    if mode in (None, "none", "1", "1.0"):
-        return crop
-    h, w = crop.shape[:2]
-    k = min(cap, (max_pixels / max(1, h * w)) ** 0.5) if mode == "auto" else float(mode)
-    if k <= 1.0:
-        return crop
-    from PIL import Image
-    return np.asarray(Image.fromarray(crop).resize(
-        (max(1, int(w * k)), max(1, int(h * k))), Image.BICUBIC))
+    return [tuple(b) for b in arr], _jitter(arr), raw_jit, stats
 
 
 def crop_frame(frame, box, min_side=64):
@@ -316,7 +300,7 @@ def main():
                 boxes.append(b)
 
         det_rate = 1.0 - (n_nodet / max(1, len(kept)))
-        sboxes, jitter, raw_jitter = smooth_boxes(boxes, times, a.smooth_s)
+        sboxes, jitter, raw_jitter, bstats = smooth_boxes(boxes, times, a.smooth_s)
         crops = [upscale_crop(crop_frame(f, b), a.upscale, a.max_pixels)
                  for f, b in zip(kept, sboxes)] if sboxes[0] else []
 
@@ -331,14 +315,19 @@ def main():
                       "feats": feats, "times": torch.tensor(times[:len(feats)]),
                       "duration": float(r["duration"]), "segments": segs,
                       "detection_rate": det_rate, "box_jitter_px": jitter,
-                      "box_jitter_raw_px": raw_jitter})
+                      "box_jitter_raw_px": raw_jitter, "box_stats": bstats})
         stats.append((det_rate, jitter, raw_jitter))
+        # Both sides measured over the SAME crops. An earlier version averaged
+        # the raw side over the first 20 frames and the upscaled side over all
+        # of them, so "125 -> 432" compared two different populations and the
+        # upscale factor it implied was fiction.
         mean_side = float(np.mean([min(c.shape[0], c.shape[1]) for c in crops])) if crops else 0.0
         raw_side = float(np.mean([min(crop_frame(f, b).shape[:2])
-                                  for f, b in zip(kept[:20], sboxes[:20])])) if sboxes[0] else 0.0
+                                  for f, b in zip(kept, sboxes)])) if crops else 0.0
         print(f"[{ri+1}/{len(rows)}] {r.get('recording_id')} kept {len(kept)} "
               f"det {det_rate:.2f} jitter {raw_jitter:.1f}->{jitter:.1f}px "
-              f"crop_side {raw_side:.0f}->{mean_side:.0f} "
+              f"gap_max {bstats.get('longest_gap_s', 0):.1f}s "
+              f"crop_side {raw_side:.0f}->{mean_side:.0f} (x{mean_side/max(1,raw_side):.1f}) "
               f"feats {tuple(feats.shape)}", flush=True)
 
         del vr, kept, crops
