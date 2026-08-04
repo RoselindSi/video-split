@@ -59,6 +59,38 @@ import numpy as np
 FIXED = (0.20, 0.35, 0.80, 1.00)
 
 
+def load_sample_points(paths):
+    """{recording_id: [times]} from an events CSV or manifest jsonl.
+
+    Coverage is checked AT THE CANDIDATE MOMENTS, not at random times: the
+    crop only has to work where a boundary decision is actually made, and a
+    box that covers idle stretches but fails during the manipulation itself
+    would look fine under uniform sampling. `t` is read from a column if
+    present, otherwise parsed from the event_id's trailing _t<float>."""
+    import re
+    pts = {}
+    for p in paths or []:
+        if p.endswith(".jsonl"):
+            for line in open(p, encoding="utf-8"):
+                if line.strip():
+                    m = json.loads(line)
+                    if m.get("recording_id"):
+                        pts.setdefault(m["recording_id"], []).append(
+                            float(m["t"]) if m.get("t") is not None else None)
+        else:
+            with open(p, newline="", encoding="utf-8", errors="replace") as f:
+                for r in csv.DictReader(f):
+                    rid = r.get("recording_id")
+                    if not rid:
+                        continue
+                    t = r.get("t")
+                    if t in (None, ""):
+                        mm = re.search(r"_t(\d+(?:\.\d+)?)$", r.get("event_id", ""))
+                        t = mm.group(1) if mm else None
+                    pts.setdefault(rid, []).append(float(t) if t else None)
+    return pts
+
+
 def load_wanted(paths):
     want = set()
     for p in paths or []:
@@ -99,8 +131,21 @@ def main():
                     metavar=("X0", "Y0", "X1", "Y1"),
                     help="fixed crop as fractions of the EYE frame")
     ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--contact_sheet", help="PNG grid of sampled crops for the "
-                                            "eyeball check")
+    ap.add_argument("--sheet_per_rec", type=int, default=3,
+                    help="panels per recording on the contact sheet. Sampling is "
+                         "per-recording, NOT first-N-frames: an earlier version "
+                         "filled a 60-panel sheet in recording order and so showed "
+                         "only the first 5 of 25 recordings while printing '25 "
+                         "recordings', which made the sheet unable to answer the "
+                         "question it existed for.")
+    ap.add_argument("--contact_sheet", help="PNG grid. Each panel shows the FULL "
+                                            "eye frame with the crop rectangle "
+                                            "drawn NEXT TO the crop itself -- the "
+                                            "crop alone cannot show whether a "
+                                            "second hand or the key object was "
+                                            "cut off, which is the whole point.")
+    ap.add_argument("--rating_csv", help="write a pre-filled sheet for the manual "
+                                         "full / partial_but_usable / failed rating")
     ap.add_argument("--out")
     a = ap.parse_args()
 
@@ -114,8 +159,13 @@ def main():
     rng = np.random.RandomState(a.seed)
     if len(rows) > a.n_recordings:
         rows = [rows[i] for i in rng.choice(len(rows), a.n_recordings, replace=False)]
+    ev_pts = load_sample_points(a.recordings_from)
+    n_with_t = sum(1 for r in rows if any(t is not None for t in ev_pts.get(r.get("recording_id"), [])))
     print(f"sampling {a.n_frames} frames from each of {len(rows)} recordings, "
           f"eye={a.eye} box={tuple(a.box)}")
+    print(f"  candidate times available for {n_with_t}/{len(rows)} recordings "
+          f"-> those are sampled AT the candidates (t-1s, t, t+1s); the rest "
+          f"fall back to uniform random times")
 
     try:
         import mediapipe as mp
@@ -141,19 +191,43 @@ def main():
         except Exception as e:
             print(f"  !! {r.get('recording_id')}: {type(e).__name__}")
             continue
-        n = len(vr)
-        idx = sorted(rng.choice(np.arange(int(0.05 * n), int(0.95 * n)),
-                                min(a.n_frames, max(1, int(0.9 * n))), replace=False).tolist())
+        n, vfps = len(vr), vr.get_avg_fps()
+        ts = [t for t in ev_pts.get(r.get("recording_id"), []) if t is not None]
+        if ts:
+            rng.shuffle(ts)
+            idx = []
+            for t in ts[:max(1, a.n_frames // 3)]:
+                for dt in (-1.0, 0.0, 1.0):
+                    j = int(round((t + dt) * vfps))
+                    if 0 <= j < n:
+                        idx.append(j)
+            idx = sorted(set(idx))[:a.n_frames]
+        else:
+            idx = []
+        if len(idx) < 2:
+            idx = sorted(rng.choice(np.arange(int(0.05 * n), int(0.95 * n)),
+                                    min(a.n_frames, max(1, int(0.9 * n))),
+                                    replace=False).tolist())
         frames = vr.get_batch(idx).asnumpy()
+        ftimes = [j / vfps for j in idx]
         if a.eye != "full":
             W = frames.shape[2]
             frames = frames[:, :, :W // 2] if a.eye == "left" else frames[:, :, W // 2:]
         h, w = frames.shape[1:3]
         cx0, cy0, cx1, cy1 = int(x0f * w), int(y0f * h), int(x1f * w), int(y1f * h)
         rec_det = rec_in = 0
-        for f in frames:
-            if len(sheet) < 60:
-                sheet.append(f[cy0:cy1, cx0:cx1])
+        # PER-RECORDING sampling for the sheet. The previous version appended
+        # in frame order until a global cap of 60, which with 12 frames each
+        # meant the sheet showed the first 5 recordings out of 25 while the
+        # log said "25 recordings" -- it could not answer the coverage
+        # question it existed for.
+        pick = set(np.linspace(0, len(frames) - 1,
+                               min(a.sheet_per_rec, len(frames))).round().astype(int).tolist())
+        for fi, f in enumerate(frames):
+            if fi in pick:
+                sheet.append({"eye": f, "crop_box": (cx0, cy0, cx1, cy1),
+                              "recording_id": r.get("recording_id"),
+                              "t": ftimes[fi] if fi < len(ftimes) else None})
             if det is None:
                 continue
             b = hand_box(det, f)
@@ -226,19 +300,58 @@ def main():
               "contact sheet.")
 
     if a.contact_sheet and sheet:
-        from PIL import Image
-        k = min(len(sheet), 60)
-        cols = 10
-        rowsn = (k + cols - 1) // cols
-        th, tw = 96, 120
-        grid = Image.new("RGB", (cols * tw, rowsn * th), (20, 20, 20))
-        for i, c in enumerate(sheet[:k]):
-            grid.paste(Image.fromarray(c).resize((tw, th)), ((i % cols) * tw, (i // cols) * th))
+        from PIL import Image, ImageDraw
+        # Each panel is FULL EYE (with the crop rectangle drawn) beside the
+        # CROP. Showing the crop alone makes it impossible to see whether a
+        # second hand or the key object was cut off -- which is exactly the
+        # judgement the sheet is for.
+        # A gutter between panels, and the crop rendered at its true aspect
+        # ratio. Without the gutter adjacent panels butt together and are hard
+        # to read one at a time, which is the whole task; squashing the crop to
+        # a square distorts exactly the thing being judged.
+        ew, eh, gut = 176, 132, 10
+        b = sheet[0]["crop_box"]
+        cw = max(40, int(eh * (b[2] - b[0]) / max(1, b[3] - b[1])))
+        pw, ph = ew + cw + 6 + gut, eh + 16 + gut
+        cols = 5
+        rowsn = (len(sheet) + cols - 1) // cols
+        grid = Image.new("RGB", (cols * pw, rowsn * ph), (18, 18, 18))
+        dr = ImageDraw.Draw(grid)
+        for i, sm in enumerate(sheet):
+            ox, oy = (i % cols) * pw, (i // cols) * ph
+            f = sm["eye"]
+            h0, w0 = f.shape[:2]
+            cx0, cy0, cx1, cy1 = sm["crop_box"]
+            eim = Image.fromarray(f).resize((ew, eh))
+            grid.paste(eim, (ox, oy + 14))
+            sx, sy = ew / w0, eh / h0
+            dr.rectangle([ox + cx0 * sx, oy + 14 + cy0 * sy,
+                          ox + cx1 * sx, oy + 14 + cy1 * sy], outline=(255, 90, 90), width=2)
+            grid.paste(Image.fromarray(f[cy0:cy1, cx0:cx1]).resize((cw, eh)),
+                       (ox + ew + 6, oy + 14))
+            tt = f"{i}  {sm['recording_id'] or '?'}" + (
+                f"  t={sm['t']:.1f}" if sm.get("t") is not None else "")
+            dr.text((ox + 3, oy + 3), tt[:44], fill=(210, 210, 210))
         os.makedirs(os.path.dirname(os.path.abspath(a.contact_sheet)) or ".", exist_ok=True)
         grid.save(a.contact_sheet)
-        print(f"\nwrote {a.contact_sheet} ({k} crops) -- the eyeball check the "
-              f"review asked for: look for hands on the left, objects at the "
-              f"worktop edge, two-handed interaction, and tools leaving the crop")
+        nrec = len({sm["recording_id"] for sm in sheet})
+        print(f"\nwrote {a.contact_sheet}: {len(sheet)} panels spanning {nrec} "
+              f"recordings (left = full eye + crop rectangle, right = the crop)")
+        print("  look for: hands entering from the left, objects at the worktop "
+              "edge, two-handed interaction split by the box, tools leaving the "
+              "crop -- all of which are invisible if you only see the crop")
+        if a.rating_csv:
+            with open(a.rating_csv, "w", newline="", encoding="utf-8") as f:
+                wcsv = csv.writer(f)
+                wcsv.writerow(["panel", "recording_id", "t", "rating", "note"])
+                for i, sm in enumerate(sheet):
+                    wcsv.writerow([i, sm["recording_id"],
+                                   f"{sm['t']:.2f}" if sm.get("t") is not None else "", "", ""])
+            print(f"wrote {a.rating_csv} -- rate each panel full / "
+                  f"partial_but_usable / failed. Suggested gate: full >= 0.75, "
+                  f"full+partial >= 0.90, failed <= 0.10, AND no single task "
+                  f"family concentrating the failures (an overall 0.90 with a "
+                  f"long-tool family at 0.40 is not a pass).")
 
     if a.out:
         os.makedirs(os.path.dirname(os.path.abspath(a.out)) or ".", exist_ok=True)
