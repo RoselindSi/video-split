@@ -94,6 +94,32 @@ def main():
         print(f"wrote {len(vs)} variant PNGs -> {a.dump_dir}")
 
     from src.boundary.hand_detect import HandDetector
+
+    # The RAW row bypasses HandDetector.boxes() and hands the untouched view
+    # straight to mp.Image. Without it this diagnostic cannot test the very
+    # hypothesis it was written for: boxes() now forces contiguity internally,
+    # so every variant below receives a contiguous buffer no matter what the
+    # "contig" column says about the INPUT array. A test that silently
+    # neutralises the condition it is measuring is worse than no test.
+    W = frame.shape[1]
+    raw_view = frame[:, :W // 2]
+    try:
+        d0 = HandDetector(a.hand_model)
+        if d0.api == "tasks":
+            img = d0.mp.Image(image_format=d0.mp.ImageFormat.SRGB, data=raw_view)
+            n_raw = len(d0.det.detect(img).hand_landmarks or [])
+        else:
+            n_raw = len(d0.det.process(raw_view).multi_hand_landmarks or [])
+        print(f"\nRAW, bypassing boxes() -- non-contiguous view straight to "
+              f"mp.Image: {n_raw} hands")
+        print("  this is the ONLY row that tests the contiguity hypothesis; the "
+              "table below runs through boxes(), which already fixes it")
+        d0.close()
+    except Exception as e:
+        print(f"\nRAW bypass raised {type(e).__name__}: {e}")
+        print("  an exception here is itself the answer: mediapipe rejects the "
+              "non-contiguous buffer rather than misreading it")
+
     print(f"\n{'variant':<46} {'shape':>14} {'contig':>7} " +
           "".join(f"{'conf=' + str(c):>10}" for c in a.min_conf))
     any_hit = False
@@ -107,6 +133,8 @@ def main():
                 raise
             except Exception as e:
                 n = f"ERR:{type(e).__name__}"
+            else:
+                det.close()
             counts.append(n)
             if isinstance(n, int) and n > 0:
                 any_hit = True
