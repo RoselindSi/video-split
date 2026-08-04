@@ -182,6 +182,13 @@ def main():
                          "both files (extract_features_recseg's single --data has "
                          "burned a run before).")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--recordings_from", action="append",
+                    help="CSV with a recording_id column (e.g. a --dump_events "
+                         "file), or a manifest .jsonl. Repeatable. Restricts "
+                         "extraction to those recordings -- the clean-145 dev set "
+                         "is 46 recordings out of several hundred in the recseg "
+                         "jsons, so without this the run spends most of its GPU "
+                         "time on recordings no evaluation will ever read.")
     ap.add_argument("--fps", type=float, default=2.0)
     ap.add_argument("--eye", choices=["left", "right", "full"], default="left",
                     help="which camera of the packed stereo pair to work inside. "
@@ -214,6 +221,33 @@ def main():
     rows = []
     for p in a.data:
         rows.extend(json.load(open(p)))
+    if a.recordings_from:
+        want = set()
+        for p in a.recordings_from:
+            if p.endswith(".jsonl"):
+                for line in open(p, encoding="utf-8"):
+                    if line.strip():
+                        rid = json.loads(line).get("recording_id")
+                        if rid:
+                            want.add(rid)
+            else:
+                import csv as _csv
+                with open(p, newline="", encoding="utf-8", errors="replace") as f:
+                    for r in _csv.DictReader(f):
+                        if r.get("recording_id"):
+                            want.add(r["recording_id"])
+        before = len(rows)
+        rows = [r for r in rows if r.get("recording_id") in want]
+        missing = want - {r.get("recording_id") for r in rows}
+        print(f"--recordings_from: {len(want)} wanted, {len(rows)} matched "
+              f"(of {before} in --data)")
+        if missing:
+            # Loud, because a silently-short extraction produces a cache that
+            # looks fine and then drops events at evaluation time, where the
+            # loss is much harder to trace back to here.
+            print(f"  !! {len(missing)} wanted recordings are NOT in any --data "
+                  f"file and will be missing from the cache: "
+                  f"{sorted(missing)[:5]}")
     if a.limit:
         rows = rows[:a.limit]
     print(f"{len(rows)} recordings, eye={a.eye} detector={a.detector} "
