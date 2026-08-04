@@ -240,8 +240,13 @@ def evaluate(label, events_g, events_l, y, groups, sub_map, gate, a):
     cut_base = matched_threshold(base, n_calls)
     watch = {"regrasp_reposition", "direction_reversal"}
 
+    # FPresc is split out from resc because the two mean completely different
+    # things for this branch. C3 exists to fix same-action false positives; a
+    # run whose rescues are almost all recovered false NEGATIVES has improved
+    # the ranking among positives and left the target errors alone, which "net
+    # +2" on its own would hide.
     print(f"\n{'arm':<30} {'AUROC':>7} {'d':>7} {'95% CI':>18} "
-          f"{'resc':>5} {'harm':>5} {'TPharm':>7} {'net':>5} {'sameFP':>7}")
+          f"{'resc':>5} {'FPresc':>7} {'harm':>5} {'TPharm':>7} {'net':>5} {'sameFP':>7}")
     for name, oof in oofs.items():
         mm = np.isfinite(oof)
         au = _auroc(yk[mm], oof[mm]) if len(set(yk[mm].tolist())) == 2 else float("nan")
@@ -259,8 +264,8 @@ def evaluate(label, events_g, events_l, y, groups, sub_map, gate, a):
                      "same_action_fp_rate": sfp, **rh}
         cis = f"[{ci[0]:+.3f}, {ci[1]:+.3f}]" if ci[0] != "" else "-- baseline --"
         print(f"{name:<30} {au:>7.3f} {au - au_b:>+7.3f} {cis:>18} "
-              f"{rh['rescues']:>5} {rh['harms']:>5} {rh['tp_harms']:>7} "
-              f"{rh['net']:>+5} {sfp:>7.3f}")
+              f"{rh['rescues']:>5} {rh['fp_rescues']:>7} {rh['harms']:>5} "
+              f"{rh['tp_harms']:>7} {rh['net']:>+5} {sfp:>7.3f}")
 
     pf_b = res["P1 (global) alone"]["per_fold"]
     print(f"\n{'arm':<30} {'per-fold delta':<40} {'worst':>7} {'improved':>9}")
@@ -320,6 +325,12 @@ def main():
     ap.add_argument("--same_action_subtype", default="data/gold/same_action_subtype_v1.csv")
     ap.add_argument("--feat_cache", action="append", required=True)
     ap.add_argument("--local_cache", action="append", required=True)
+    ap.add_argument("--batch3_manifest",
+                    help="evaluate on batch3's events instead of the clean-145. "
+                         "batch3 is 101 DIFFERENT recordings, so this is the "
+                         "replication check -- the stereo block probe scored "
+                         "+0.054 on the clean-145 and +0.007 on batch3.")
+    ap.add_argument("--batch3_pair_labels", default="data/gold/batch3_pair_labels_v1.csv")
     ap.add_argument("--gate_config", default="configs/local_gate_c3.json")
     ap.add_argument("--min_detect_frac", type=float, default=0.5,
                     help="an event is 'well detected' when at least this "
@@ -333,10 +344,16 @@ def main():
 
     by_rid = load_feature_caches(a.feat_cache)
     loc_rid = load_feature_caches(a.local_cache)
-    gold = S.load_gold(a.gold)
-    ctx = S.load_context(a.context)
-    events = T.apply_to_events(build_events(gold, ctx, by_rid),
-                               T.load_pair_labels(a.pair_labels))
+    if a.batch3_manifest:
+        from src.boundary.batch3_dev_events import build_events as build_b3
+        events = T.apply_to_events(build_b3(a.batch3_manifest, by_rid),
+                                   T.load_pair_labels(a.batch3_pair_labels))
+        print(f"event source: batch3 manifest ({a.batch3_manifest})")
+    else:
+        events = T.apply_to_events(
+            build_events(S.load_gold(a.gold), S.load_context(a.context), by_rid),
+            T.load_pair_labels(a.pair_labels))
+        print("event source: clean-145")
     print(f"clean events: {len(events)}  "
           f"subtypes={dict(Counter(e.get('temporal_pair_subtype') for e in events))}")
 
