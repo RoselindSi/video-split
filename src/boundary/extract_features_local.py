@@ -163,6 +163,39 @@ def smooth_boxes(boxes, times, smooth_s):
     return [tuple(b) for b in arr], _jitter(arr), raw_jit
 
 
+def upscale_crop(crop, mode, max_pixels, cap=3.0):
+    """Enlarge a crop so it actually fills the ViT's token budget.
+
+    Without this the local branch is strictly worse than the global one.
+    Qwen's smart_resize only DOWNSCALES to fit max_pixels and never upscales
+    to fill it, and the source frames (1280x480) barely exceed that budget, so
+    the global branch already runs at 0.984x linear. Measured token counts for
+    one eye:
+
+        global branch, per eye      360 tokens   853 native px per token
+        fixed crop 384x312          154 tokens   778 px per token (1.10x)
+        tighter crop 200x150         35 tokens   857 px per token (no gain)
+        the 384x312 crop at 2x      594 tokens   202 px per token (4.2x)
+
+    So cropping alone buys nothing, and cropping TIGHTER makes it worse --
+    fewer pixels under a fixed patch size is fewer patches. Upscaling adds no
+    real detail, but it does put several times more ViT patches on the hand,
+    which is the whole point of a local branch.
+
+    'auto' scales to fill max_pixels, capped at `cap` because beyond a few
+    times the source resolution the extra patches are interpolating between
+    pixels that were never measured."""
+    if mode in (None, "none", "1", "1.0"):
+        return crop
+    h, w = crop.shape[:2]
+    k = min(cap, (max_pixels / max(1, h * w)) ** 0.5) if mode == "auto" else float(mode)
+    if k <= 1.0:
+        return crop
+    from PIL import Image
+    return np.asarray(Image.fromarray(crop).resize(
+        (max(1, int(w * k)), max(1, int(h * k))), Image.BICUBIC))
+
+
 def crop_frame(frame, box, min_side=64):
     h, w = frame.shape[:2]
     x0, y0, x1, y1 = box
@@ -200,6 +233,11 @@ def main():
                          "of its size -- a hand with no surroundings cannot show "
                          "WHAT it is interacting with")
     ap.add_argument("--smooth_s", type=float, default=0.5)
+    ap.add_argument("--upscale", default="auto",
+                    help="'auto' (fill the token budget, capped at 3x), 'none', "
+                         "or a float. Without this a crop gets FEWER ViT patches "
+                         "on the hand than the global branch does -- see "
+                         "upscale_crop()'s docstring for the measured numbers.")
     ap.add_argument("--max_pixels", type=int, default=768 * 28 * 28)
     ap.add_argument("--enc_batch", type=int, default=48)
     ap.add_argument("--dec_chunk", type=int, default=200)
@@ -281,7 +319,8 @@ def main():
 
         det_rate = 1.0 - (n_nodet / max(1, len(kept)))
         sboxes, jitter, raw_jitter = smooth_boxes(boxes, times, a.smooth_s)
-        crops = [crop_frame(f, b) for f, b in zip(kept, sboxes)] if sboxes[0] else []
+        crops = [upscale_crop(crop_frame(f, b), a.upscale, a.max_pixels)
+                 for f, b in zip(kept, sboxes)] if sboxes[0] else []
 
         feats = []
         for b0 in range(0, len(crops), a.enc_batch):
@@ -297,9 +336,11 @@ def main():
                       "box_jitter_raw_px": raw_jitter})
         stats.append((det_rate, jitter, raw_jitter))
         mean_side = float(np.mean([min(c.shape[0], c.shape[1]) for c in crops])) if crops else 0.0
+        raw_side = float(np.mean([min(crop_frame(f, b).shape[:2])
+                                  for f, b in zip(kept[:20], sboxes[:20])])) if sboxes[0] else 0.0
         print(f"[{ri+1}/{len(rows)}] {r.get('recording_id')} kept {len(kept)} "
               f"det {det_rate:.2f} jitter {raw_jitter:.1f}->{jitter:.1f}px "
-              f"mean_crop_side {mean_side:.0f} "
+              f"crop_side {raw_side:.0f}->{mean_side:.0f} "
               f"feats {tuple(feats.shape)}", flush=True)
 
         del vr, kept, crops
