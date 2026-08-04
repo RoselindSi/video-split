@@ -176,6 +176,39 @@ def smooth_boxes(boxes, times, smooth_s):
     return [tuple(b) for b in arr], _jitter(arr), raw_jit, stats
 
 
+def upscale_crop(crop, mode, max_pixels, cap=3.0):
+    """Enlarge a crop so it actually fills the ViT's token budget.
+
+    Without this the local branch is strictly worse than the global one.
+    Qwen's smart_resize only DOWNSCALES to fit max_pixels and never upscales
+    to fill it, and the source frames (1280x480) barely exceed that budget, so
+    the global branch already runs at 0.984x linear. Measured token counts for
+    one eye:
+
+        global branch, per eye      360 tokens   853 native px per token
+        fixed crop 384x312          154 tokens   778 px per token (1.10x)
+        tighter crop 200x150         35 tokens   857 px per token (no gain)
+        the 384x312 crop at 2x      594 tokens   202 px per token (4.2x)
+
+    So cropping alone buys nothing, and cropping TIGHTER makes it worse --
+    fewer pixels under a fixed patch size is fewer patches. Upscaling adds no
+    real detail, but it does put several times more ViT patches on the hand,
+    which is the whole point of a local branch.
+
+    'auto' scales to fill max_pixels, capped at `cap` because beyond a few
+    times the source resolution the extra patches are interpolating between
+    pixels that were never measured."""
+    if mode in (None, "none", "1", "1.0"):
+        return crop
+    h, w = crop.shape[:2]
+    k = min(cap, (max_pixels / max(1, h * w)) ** 0.5) if mode == "auto" else float(mode)
+    if k <= 1.0:
+        return crop
+    from PIL import Image
+    return np.asarray(Image.fromarray(crop).resize(
+        (max(1, int(w * k)), max(1, int(h * k))), Image.BICUBIC))
+
+
 def crop_frame(frame, box, min_side=64):
     h, w = frame.shape[:2]
     x0, y0, x1, y1 = box
