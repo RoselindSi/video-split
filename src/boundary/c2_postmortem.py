@@ -193,9 +193,13 @@ def main():
     print(f"point estimate delta-AUROC: {point_gain:+.4f}")
     print(f"95% grouped-bootstrap CI: [{lo:+.4f}, {hi:+.4f}]")
     if lo <= 0 <= hi:
-        print("  -> CI STRADDLES 0: the +0.003 gain is not distinguishable from "
-              "noise at this sample size. This is the expected, honest reading "
-              "given 145 events / 37 negatives across a handful of recordings.")
+        # The gain is interpolated from the actual point estimate, never
+        # hardcoded -- an earlier version printed v1's "+0.003" verbatim and
+        # kept printing it after v2 moved the point estimate to +0.0065.
+        print(f"  -> CI STRADDLES 0: the {point_gain:+.4f} gain is not distinguishable "
+              f"from noise at this sample size. This is the expected, honest reading "
+              f"given {len(events)} events / {int((1 - y).sum())} negatives across "
+              f"{len(set(e['recording_id'] for e in events))} recordings.")
     else:
         print("  -> CI excludes 0: the gain, while small, is not pure noise "
               "under recording-level resampling.")

@@ -73,8 +73,11 @@ from __future__ import annotations
 
 import argparse
 import csv
+import datetime
 import json
 import os
+import subprocess
+import sys
 from collections import Counter
 
 import numpy as np
@@ -353,15 +356,22 @@ def score_multiseed(models, events, n_frames, device):
     """Averages d_lr/d_l/d_r/q across seeds (per event, ignoring NaN from
     any seed that found an event unscorable -- that should not happen since
     scorability depends only on the data, not the seed, but guarded anyway).
-    Also returns per-event AUROC-relevant spread (std across seeds) as a
-    stability diagnostic."""
+
+    Returns the PER-SEED score matrices as well, not just the mean and the
+    per-event std: a mean per-event std of 0.185 tells you individual scores
+    move a lot, but not whether each seed's model is individually a decent
+    ranker (three good models disagreeing on hard events) or individually a
+    poor one (three noisy models). Those two cases have different meanings
+    for whether the approach is data-starved, so the archival report needs
+    each seed's own pooled OOF AUROC."""
     all_q, all_dlr = [], []
     for model, _ in models:
         d_lr, d_l, d_r, q = score_events(model, events, n_frames, device)
         all_q.append(q); all_dlr.append(d_lr)
     all_q = np.array(all_q); all_dlr = np.array(all_dlr)
-    return (np.nanmean(all_dlr, axis=0), np.nanmean(all_q, axis=0),
-            np.nanstd(all_q, axis=0))
+    return {"dlr": np.nanmean(all_dlr, axis=0), "q": np.nanmean(all_q, axis=0),
+            "q_std": np.nanstd(all_q, axis=0),
+            "per_seed_q": all_q, "per_seed_dlr": all_dlr}
 
 
 def p1_plus_c2_fold_eval(Ls, Rs, X_rel, y, groups, folds, c2_events, n_frames,
@@ -392,7 +402,10 @@ def p1_plus_c2_fold_eval(Ls, Rs, X_rel, y, groups, folds, c2_events, n_frames,
     oof_dl = np.full(len(y), np.nan)
     oof_dr = np.full(len(y), np.nan)
     oof_fixed = np.full(len(y), np.nan)
+    oof_fixed_dlr = np.full(len(y), np.nan)
     oof_nested = np.full(len(y), np.nan)
+    oof_q_per_seed = np.full((n_seeds, len(y)), np.nan)
+    oof_dlr_per_seed = np.full((n_seeds, len(y)), np.nan)
     per_fold_p1, per_fold_fixed, per_fold_nested = [], [], []
     fold_diagnostics = []
 
@@ -419,8 +432,14 @@ def p1_plus_c2_fold_eval(Ls, Rs, X_rel, y, groups, folds, c2_events, n_frames,
 
         models = train_fold_multiseed(events_tr, d_in, n_frames, epochs, device,
                                       base_seed=fi, n_seeds=n_seeds)
-        dlr_te, q_te, q_std_te = score_multiseed(models, events_te, n_frames, device)
-        dlr_tr, q_tr, _ = score_multiseed(models, events_tr, n_frames, device)
+        sc_te = score_multiseed(models, events_te, n_frames, device)
+        sc_tr = score_multiseed(models, events_tr, n_frames, device)
+        dlr_te, q_te, q_std_te = sc_te["dlr"], sc_te["q"], sc_te["q_std"]
+        dlr_tr, q_tr = sc_tr["dlr"], sc_tr["q"]
+        te_idx = np.nonzero(te)[0]
+        for s in range(min(n_seeds, sc_te["per_seed_q"].shape[0])):
+            oof_q_per_seed[s, te_idx] = sc_te["per_seed_q"][s]
+            oof_dlr_per_seed[s, te_idx] = sc_te["per_seed_dlr"][s]
         # d_l/d_r from the first seed only (diagnostic geometry; averaging
         # cosine-derived distances across seeds is fine for q/d_lr since we
         # average the FINAL scores, not intermediate vectors, but for the
@@ -434,11 +453,25 @@ def p1_plus_c2_fold_eval(Ls, Rs, X_rel, y, groups, folds, c2_events, n_frames,
         oof_dl[np.nonzero(te)[0]] = dl_te
         oof_dr[np.nonzero(te)[0]] = dr_te
 
-        finite = q_tr[np.isfinite(q_tr)]
-        lo, hi = (float(finite.min()), float(finite.max())) if len(finite) else (0.0, 1.0)
-        q_te_norm = np.clip((q_te - lo) / max(hi - lo, 1e-6), 0, 1)
-        fixed = np.where(np.isfinite(q_te_norm), 0.5 * p1_te + 0.5 * q_te_norm, p1_te)
-        oof_fixed[np.nonzero(te)[0]] = fixed
+        def _fuse(tr_scores, te_scores):
+            """0.5/0.5 blend of P1's sigmoid and a train-fold min-max
+            normalization of a C2 score (normalizer fit on the TRAINING
+            split only -- using the test fold's own min/max would leak the
+            test distribution into its own scores)."""
+            fin = tr_scores[np.isfinite(tr_scores)]
+            lo, hi = (float(fin.min()), float(fin.max())) if len(fin) else (0.0, 1.0)
+            norm = np.clip((te_scores - lo) / max(hi - lo, 1e-6), 0, 1)
+            return np.where(np.isfinite(norm), 0.5 * p1_te + 0.5 * norm, p1_te)
+
+        oof_fixed[te_idx] = _fuse(q_tr, q_te)
+        # POST-HOC DESCRIPTIVE ONLY -- the same fixed fusion applied to raw
+        # d_lr instead of q. Reported because q and d_lr have materially
+        # different standalone AUROCs, so silently reporting only the q
+        # fusion would itself be selective; NOT a gate result and explicitly
+        # not grounds for reviving C2 (choosing whichever score formula
+        # scores best on this OOF split is precisely the dev-set selection
+        # the review prohibited).
+        oof_fixed_dlr[te_idx] = _fuse(dlr_tr, dlr_te)
 
         if nested_fusion:
             inner_folds = stratified_grouped_folds(
@@ -472,10 +505,19 @@ def p1_plus_c2_fold_eval(Ls, Rs, X_rel, y, groups, folds, c2_events, n_frames,
                     nested = _sigmoid(_impute_scale_apply(st_nest, Xte_i) @ wn + bn)
                     oof_nested[np.nonzero(te)[0]] = nested
 
+        # train-vs-OOF on the SAME quantity (seed 0's d_lr, both sides) --
+        # comparing seed-0 train against a 3-seed-averaged OOF would confound
+        # overfitting with the variance reduction from averaging.
+        tr_dlr_s0, te_dlr_s0 = sc_tr["per_seed_dlr"][0], sc_te["per_seed_dlr"][0]
+        def _au(yy, ss):
+            m = np.isfinite(ss)
+            return (_auroc(yy[m], ss[m])
+                    if m.sum() >= 2 and len(set(yy[m].tolist())) == 2 else None)
         fold_diagnostics.append({"fold": fi,
                                  "loss_components_last_epoch_seed0": models[0][1],
-                                 "train_auroc_seed0": (_auroc(y[tr], dlr_tr)
-                                                       if len(set(y[tr].tolist())) == 2 else None)})
+                                 "train_auroc_seed0": _au(y[tr], tr_dlr_s0),
+                                 "oof_auroc_seed0": _au(y[te], te_dlr_s0),
+                                 "n_train": int(tr.sum()), "n_test": int(te.sum())})
 
     m1 = np.isfinite(oof_p1)
     m2 = np.isfinite(oof_fixed)
@@ -488,24 +530,44 @@ def p1_plus_c2_fold_eval(Ls, Rs, X_rel, y, groups, folds, c2_events, n_frames,
              if len(set(y[np.isfinite(oof_dlr)].tolist())) == 2 else float("nan"))
     au_q = (_auroc(y[np.isfinite(oof_q)], oof_q[np.isfinite(oof_q)])
            if len(set(y[np.isfinite(oof_q)].tolist())) == 2 else float("nan"))
+    # Per-fold AUROCs are collected as ALIGNED (p1, fixed) PAIRS, not as two
+    # independently-filtered lists: the per-fold delta below is only
+    # meaningful if entry i of each list is the same fold, which independent
+    # `if` guards do not guarantee if a fold ever qualifies for one score
+    # and not the other.
+    per_fold_delta = []
     for f in folds:
-        te = np.array([g in f for g in groups]) & m1
-        if te.sum() >= 2 and len(set(y[te].tolist())) == 2:
-            per_fold_p1.append(_auroc(y[te], oof_p1[te]))
-        te2 = np.array([g in f for g in groups]) & m2
-        if te2.sum() >= 2 and len(set(y[te2].tolist())) == 2:
-            per_fold_fixed.append(_auroc(y[te2], oof_fixed[te2]))
-        te3 = np.array([g in f for g in groups]) & m3
+        base = np.array([g in f for g in groups])
+        te, te2, te3 = base & m1, base & m2, base & m3
+        ok1 = te.sum() >= 2 and len(set(y[te].tolist())) == 2
+        ok2 = te2.sum() >= 2 and len(set(y[te2].tolist())) == 2
+        if ok1 and ok2:
+            a1, a2 = _auroc(y[te], oof_p1[te]), _auroc(y[te2], oof_fixed[te2])
+            per_fold_p1.append(a1)
+            per_fold_fixed.append(a2)
+            per_fold_delta.append(a2 - a1)
         if te3.sum() >= 2 and len(set(y[te3].tolist())) == 2:
             per_fold_nested.append(_auroc(y[te3], oof_nested[te3]))
 
+    m4 = np.isfinite(oof_fixed_dlr)
+    au_fixed_dlr = (_auroc(y[m4], oof_fixed_dlr[m4])
+                   if m4.sum() > 0 and len(set(y[m4].tolist())) == 2 else float("nan"))
+    per_seed_au_q, per_seed_au_dlr = [], []
+    for s in range(n_seeds):
+        for arr, dest in ((oof_q_per_seed[s], per_seed_au_q),
+                          (oof_dlr_per_seed[s], per_seed_au_dlr)):
+            ms = np.isfinite(arr)
+            dest.append(_auroc(y[ms], arr[ms])
+                        if ms.sum() >= 2 and len(set(y[ms].tolist())) == 2 else float("nan"))
+
     return {"au_p1": au_p1, "au_dlr": au_dlr, "au_q": au_q,
-            "au_fixed": au_fixed, "au_nested": au_nested,
+            "au_fixed": au_fixed, "au_nested": au_nested, "au_fixed_dlr": au_fixed_dlr,
             "per_fold_p1": per_fold_p1, "per_fold_fixed": per_fold_fixed,
-            "per_fold_nested": per_fold_nested,
+            "per_fold_nested": per_fold_nested, "per_fold_delta": per_fold_delta,
+            "per_seed_au_q": per_seed_au_q, "per_seed_au_dlr": per_seed_au_dlr,
             "oof_p1": oof_p1, "oof_dlr": oof_dlr, "oof_q": oof_q, "oof_q_std": oof_q_std,
             "oof_dl": oof_dl, "oof_dr": oof_dr,
-            "oof_fixed": oof_fixed, "oof_nested": oof_nested,
+            "oof_fixed": oof_fixed, "oof_fixed_dlr": oof_fixed_dlr, "oof_nested": oof_nested,
             "fold_diagnostics": fold_diagnostics}
 
 
@@ -527,6 +589,32 @@ def geometry_report(events, y, oof_dlr, oof_dl, oof_dr, sub_map):
             return float(v.mean()) if len(v) else None
         out[key] = {"n": len(idx), "d_lr_mean": m(oof_dlr), "d_l_mean": m(oof_dl), "d_r_mean": m(oof_dr)}
     return out
+
+
+def _provenance(a):
+    """Everything needed to reproduce this run, embedded in the report so an
+    archived report_v*.json is self-contained: the exact commit, the exact
+    argv, and the fixed hyperparameters (which live as module constants and
+    would otherwise be recoverable only by checking out the right commit)."""
+    def _git(*args):
+        try:
+            return subprocess.run(["git", *args], capture_output=True, text=True,
+                                  timeout=10).stdout.strip() or None
+        except Exception:
+            return None
+    return {
+        "utc": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
+        "git_commit": _git("rev-parse", "HEAD"),
+        "git_dirty": bool(_git("status", "--porcelain")),
+        "argv": sys.argv,
+        "args": vars(a),
+        "fixed_hyperparameters": {
+            "WINDOW_S": WINDOW_S, "EMB": EMB, "TAU_STABILITY": TAU_STABILITY,
+            "GAMMA_VAR": GAMMA_VAR, "LAMBDA_STABILITY": LAMBDA_STABILITY,
+            "LAMBDA_SCALE": LAMBDA_SCALE, "LAMBDA_VAR": LAMBDA_VAR,
+            "ALPHA_INTRA": ALPHA_INTRA, "N_SEEDS": N_SEEDS,
+        },
+    }
 
 
 def main():
@@ -592,24 +680,63 @@ def main():
     print(f"\nP1 alone:              {au_p1:.3f}  per-fold {[round(x,3) for x in res['per_fold_p1']]}")
     print(f"C2 d_lr alone (v1-comparable): {res['au_dlr']:.3f}")
     print(f"C2 q alone (v2 relative score): {res['au_q']:.3f}")
-    print(f"P1 + C2 fixed fusion:  {res['au_fixed']:.3f}  "
+    print(f"P1 + C2 fixed fusion [fuses q, NOT d_lr]:  {res['au_fixed']:.3f}  "
           f"per-fold {[round(x,3) for x in res['per_fold_fixed']]}")
     gain_fixed = res["au_fixed"] - au_p1
-    pf_p1, pf_f = res["per_fold_p1"], res["per_fold_fixed"]
+    pf_p1, pf_f, pf_d = res["per_fold_p1"], res["per_fold_fixed"], res["per_fold_delta"]
     folds_improved = sum(f > p for f, p in zip(pf_f, pf_p1))
-    worst_drop = (min(pf_f) - min(pf_p1)) if pf_f and pf_p1 else float("nan")
-    print(f"  fixed-fusion gain {gain_fixed:+.3f}  folds improved {folds_improved}/{len(pf_p1)}  "
-          f"worst-fold change {worst_drop:+.3f}")
+    # Two DIFFERENT quantities that v1/v2 both printed as one misleading
+    # "worst-fold change". min_fold_auroc_change compares the two score
+    # curves' MINIMA, which need not come from the same fold; the gate's
+    # max_worst_fold_drop was always meant to bound how far any INDIVIDUAL
+    # fold regresses, which is worst_per_fold_delta. The gate below now uses
+    # the latter. This does not retroactively flip v1's or v2's verdict --
+    # both already failed on gain (+0.003 and +0.007 vs a required +0.02) --
+    # but the old quantity could have masked a real per-fold regression in
+    # some other run, so it is fixed rather than merely relabelled.
+    min_fold_auroc_change = (min(pf_f) - min(pf_p1)) if pf_f and pf_p1 else float("nan")
+    worst_per_fold_delta = min(pf_d) if pf_d else float("nan")
+    print(f"  fixed-fusion gain {gain_fixed:+.3f}  folds improved {folds_improved}/{len(pf_p1)}")
+    print(f"  per-fold delta {[round(x, 3) for x in pf_d]}")
+    print(f"  worst per-fold delta {worst_per_fold_delta:+.3f}  (this is what the gate bounds)")
+    print(f"  min fold AUROC {min(pf_p1):.3f} -> {min(pf_f):.3f} "
+          f"({min_fold_auroc_change:+.3f})  (a DIFFERENT quantity: the two minima "
+          f"need not be the same fold)")
     if res["per_fold_nested"]:
         gain_nested = res["au_nested"] - au_p1
         print(f"P1 + C2 nested fusion: {res['au_nested']:.3f}  "
               f"per-fold {[round(x,3) for x in res['per_fold_nested']]}  "
               f"gain {gain_nested:+.3f}  (DIAGNOSTIC ONLY, not the pre-registered result)")
 
+    print(f"\nP1 + C2 fixed fusion on RAW d_lr: {res['au_fixed_dlr']:.3f}  "
+          f"gain {res['au_fixed_dlr'] - au_p1:+.3f}")
+    print("  ^ POST-HOC DESCRIPTIVE ONLY. The pre-registered gate result is the "
+          "q fusion above. Reported so the archive is not selective (q and d_lr "
+          "have different standalone AUROCs), NOT as an alternative result -- "
+          "picking whichever score formula wins on this same dev OOF split is "
+          "exactly the selection the review ruled out.")
+
     print(f"\nseed-to-seed OOF q-score std (mean over events): "
           f"{np.nanmean(res['oof_q_std']):.4f}  "
           f"(high relative to the sharp/same-action score gap means single-seed "
           f"numbers like v1's are not trustworthy)")
+    print(f"per-seed pooled OOF AUROC  q: {[round(x, 3) for x in res['per_seed_au_q']]}  "
+          f"d_lr: {[round(x, 3) for x in res['per_seed_au_dlr']]}")
+    print("  ^ distinguishes 'each seed is a decent ranker, they disagree on hard "
+          "events' from 'each seed is individually noisy' -- the per-event std "
+          "alone cannot tell these apart")
+
+    print("\n=== train vs OOF AUROC (seed 0, d_lr both sides) ===")
+    print(f"{'fold':>4} {'n_tr':>5} {'n_te':>5} {'train':>8} {'OOF':>8} {'gap':>8}")
+    for fd in res["fold_diagnostics"]:
+        tr_a, te_a = fd.get("train_auroc_seed0"), fd.get("oof_auroc_seed0")
+        gap = f"{tr_a - te_a:+.3f}" if (tr_a is not None and te_a is not None) else "n/a"
+        def f3(v): return f"{v:.3f}" if v is not None else "n/a"
+        print(f"{fd['fold']:>4} {fd.get('n_train', 0):>5} {fd.get('n_test', 0):>5} "
+              f"{f3(tr_a):>8} {f3(te_a):>8} {gap:>8}")
+    print("  a large positive gap = the encoder fits its training identities but "
+          "does not transfer (the failure mode synthetic testing could not resolve "
+          "at 5 events/fold); a small gap with low OOF = it never learned much")
 
     print("\n=== geometry by subtype (v2 windows, 2s) ===")
     geo = geometry_report(events, y, res["oof_dlr"], res["oof_dl"], res["oof_dr"], sub_map)
@@ -638,7 +765,7 @@ def main():
             w = csv.writer(f)
             w.writerow(["event_id", "recording_id", "y", "dev_pair_subtype", "same_action_subtype",
                        "oof_d_lr", "oof_d_l", "oof_d_r", "oof_q", "oof_q_std",
-                       "oof_p1", "oof_fixed", "oof_nested"])
+                       "oof_p1", "oof_fixed", "oof_nested", "oof_fixed_dlr"])
             def fmt(v):
                 return "" if v is None or not np.isfinite(v) else f"{v:.6f}"
             for i, e in enumerate(events):
@@ -646,7 +773,8 @@ def main():
                            e.get("temporal_pair_subtype") or "", sub_map.get(e["event_id"], ""),
                            fmt(res["oof_dlr"][i]), fmt(res["oof_dl"][i]), fmt(res["oof_dr"][i]),
                            fmt(res["oof_q"][i]), fmt(res["oof_q_std"][i]),
-                           fmt(res["oof_p1"][i]), fmt(res["oof_fixed"][i]), fmt(res["oof_nested"][i])])
+                           fmt(res["oof_p1"][i]), fmt(res["oof_fixed"][i]),
+                           fmt(res["oof_nested"][i]), fmt(res["oof_fixed_dlr"][i])])
         print(f"\nwrote per-event dump ({len(events)} rows) -> {a.dump_events}")
 
     verdict = "NOT EVALUATED (gate config missing)"
@@ -656,7 +784,7 @@ def main():
                    <= diag["p1_watch_subtype_fp_rate"] + gate["max_watch_subtype_fp_increase"])
         ok = (gain_fixed >= gate["min_auroc_gain"]
               and (folds_improved / len(pf_p1) if pf_p1 else 0) >= gate["min_folds_improved_frac"]
-              and (worst_drop >= -gate["max_worst_fold_drop"] if pf_p1 else False)
+              and (worst_per_fold_delta >= -gate["max_worst_fold_drop"] if pf_d else False)
               and watch_ok)
         verdict = "ADOPT C2" if ok else "DO NOT ADOPT (gate failed)"
     print(f"\nVERDICT (fixed fusion, pre-registered gate): {verdict}")
@@ -671,11 +799,17 @@ def main():
             "p1_plus_c2_fixed": {"pooled": res["au_fixed"], "per_fold": pf_f},
             "p1_plus_c2_nested_diagnostic": {"pooled": res["au_nested"],
                                              "per_fold": res["per_fold_nested"]},
+            "p1_plus_c2_fixed_on_raw_dlr_POSTHOC": res["au_fixed_dlr"],
             "gain_fixed": gain_fixed, "folds_improved": folds_improved,
-            "worst_fold_change": worst_drop,
+            "per_fold_delta": res["per_fold_delta"],
+            "worst_per_fold_delta": worst_per_fold_delta,
+            "min_fold_auroc_change": min_fold_auroc_change,
             "seed_std_mean": float(np.nanmean(res["oof_q_std"])),
+            "per_seed_auroc_q": res["per_seed_au_q"],
+            "per_seed_auroc_dlr": res["per_seed_au_dlr"],
             "geometry_by_subtype": geo, "watch_subtype_diag": diag,
             "fold_diagnostics": res["fold_diagnostics"], "verdict": verdict,
+            "provenance": _provenance(a),
         }, f, ensure_ascii=False, indent=2, default=str)
     print(f"wrote {a.out}")
 
