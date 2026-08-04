@@ -109,6 +109,29 @@ def slice_blocks(by_rid, names, n_blocks=len(BLOCK_NAMES)):
     return out
 
 
+def grouped_bootstrap_delta(y, base_oof, arm_oof, recs, n_boot=2000, seed=0):
+    """95% CI on AUROC(arm) - AUROC(baseline), resampling RECORDINGS with
+    replacement. Events from one recording are correlated, so an event-level
+    bootstrap would understate the uncertainty -- same unit of resampling as
+    every grouped fold and every CI elsewhere in this project."""
+    by_rec = {}
+    for i, r in enumerate(recs):
+        if np.isfinite(base_oof[i]) and np.isfinite(arm_oof[i]):
+            by_rec.setdefault(r, []).append(i)
+    keys = sorted(by_rec)
+    rng = np.random.RandomState(seed)
+    d = []
+    for _ in range(n_boot):
+        idx = [i for k in rng.choice(keys, len(keys), replace=True) for i in by_rec[k]]
+        yy = y[idx]
+        if len(set(yy.tolist())) < 2:
+            continue
+        d.append(_auroc(yy, arm_oof[idx]) - _auroc(yy, base_oof[idx]))
+    if not d:
+        return float("nan"), float("nan")
+    return float(np.percentile(d, 2.5)), float(np.percentile(d, 97.5))
+
+
 def p1_eval(events, folds, groups, y, pca_dim=64, l2=5.0):
     """The project's standard P1 pipeline, refit per fold on the training split
     only -- identical to what slow_latent_c2/predictive_continuity use for
@@ -150,6 +173,13 @@ def main():
     ap.add_argument("--pair_labels", default="data/gold/pair_labels_v1.csv")
     ap.add_argument("--same_action_subtype", default="data/gold/same_action_subtype_v1.csv")
     ap.add_argument("--feat_cache", action="append", required=True)
+    ap.add_argument("--batch3_manifest",
+                    help="run on batch3's events instead of the clean-145. batch3 "
+                         "is a DIFFERENT set of recordings, so this is the check "
+                         "that separates a real effect from having picked the best "
+                         "of six arms on one 145-event dev set.")
+    ap.add_argument("--batch3_pair_labels", default="data/gold/batch3_pair_labels_v1.csv")
+    ap.add_argument("--n_boot", type=int, default=2000)
     ap.add_argument("--pca_dim", type=int, default=64)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out")
@@ -162,9 +192,17 @@ def main():
     if d_total % len(BLOCK_NAMES):
         raise SystemExit("cache is not a --pool multi cache; nothing to slice")
 
-    gold = S.load_gold(a.gold)
-    ctx = S.load_context(a.context)
-    labels = T.load_pair_labels(a.pair_labels)
+    if a.batch3_manifest:
+        from src.boundary.batch3_dev_events import build_events as build_b3
+        labels = T.load_pair_labels(a.batch3_pair_labels)
+        make_events = lambda sl: T.apply_to_events(build_b3(a.batch3_manifest, sl), labels)
+        print(f"event source: batch3 manifest {a.batch3_manifest}")
+    else:
+        gold = S.load_gold(a.gold)
+        ctx = S.load_context(a.context)
+        labels = T.load_pair_labels(a.pair_labels)
+        make_events = lambda sl: T.apply_to_events(build_events(gold, ctx, sl), labels)
+        print("event source: clean-145 (audit_188 gold + pair_labels_v1)")
 
     sub_map = {}
     if os.path.exists(a.same_action_subtype):
@@ -177,7 +215,7 @@ def main():
     baseline_key = "all (current P1 baseline)"
     for arm, names in ARMS.items():
         sliced = slice_blocks(by_rid, names)
-        events = T.apply_to_events(build_events(gold, ctx, sliced), labels)
+        events = make_events(sliced)
         y = np.array([e["y"] for e in events], dtype=float)
         groups = [e["recording_id"] for e in events]
         folds = stratified_grouped_folds(groups, y, 5, seed=a.seed)
@@ -192,18 +230,42 @@ def main():
         rate = fp / len(neg_watch) if neg_watch else float("nan")
         results[arm] = {"blocks": names, "dim": len(names) * (d_total // len(BLOCK_NAMES)),
                         "auroc": pooled, "per_fold": per_fold,
-                        "watch_fp_rate": rate, "watch_fp": fp, "watch_n": len(neg_watch)}
+                        "watch_fp_rate": rate, "watch_fp": fp, "watch_n": len(neg_watch),
+                        "_oof": oof, "_keep": keep, "_y": yk,
+                        "_recs": [kept_events[i]["recording_id"] for i in range(len(kept_events))]}
         print(f"{arm:<34} dim {results[arm]['dim']:>5}  AUROC {pooled:.3f}  "
               f"per-fold {[round(x, 3) for x in per_fold]}  "
               f"watch FP {fp}/{len(neg_watch)}")
 
     base = results[baseline_key]
-    print(f"\n=== vs the current baseline ({base['auroc']:.3f}) ===")
+    print(f"\n=== vs the current baseline ({base['auroc']:.3f}), "
+          f"grouped bootstrap over recordings (n={a.n_boot}) ===")
+    print(f"  {'arm':<34} {'dAUROC':>8} {'95% CI':>20} {'worst fold':>11} {'improved':>9}")
     for arm, r in results.items():
         if arm == baseline_key:
             continue
-        print(f"  {arm:<34} {r['auroc'] - base['auroc']:+.3f}  "
-              f"watch FP {r['watch_fp_rate'] - base['watch_fp_rate']:+.3f}")
+        # Arms must be aligned event-for-event before differencing. `keep`
+        # depends only on window geometry, not on feature VALUES, so it should
+        # be identical across arms -- checked rather than assumed, because a
+        # silent misalignment would make every delta meaningless.
+        if list(r["_keep"]) != list(base["_keep"]):
+            print(f"  {arm:<34} SKIPPED: event set differs from baseline "
+                  f"({len(r['_keep'])} vs {len(base['_keep'])})")
+            continue
+        lo, hi = grouped_bootstrap_delta(base["_y"], base["_oof"], r["_oof"],
+                                         r["_recs"], n_boot=a.n_boot, seed=a.seed)
+        deltas = [x - z for x, z in zip(r["per_fold"], base["per_fold"])]
+        r["ci95"] = [lo, hi]
+        r["per_fold_delta"] = deltas
+        excl = "" if (lo <= 0 <= hi) else "  *"
+        print(f"  {arm:<34} {r['auroc'] - base['auroc']:>+8.3f} "
+              f"{f'[{lo:+.3f}, {hi:+.3f}]':>20} "
+              f"{(min(deltas) if deltas else float('nan')):>+11.3f} "
+              f"{sum(1 for d in deltas if d > 0)}/{len(deltas):<7}{excl}")
+    print("  * = CI excludes 0. Note these are SIX arms compared on one dev set: "
+          "the best arm's point estimate is optimistically biased by that "
+          "selection, and no CI here corrects for it. A different set of "
+          "recordings is what settles it -- see --batch3_manifest.")
 
     g, l, rr = (results["global only (two eyes mixed)"]["auroc"],
                 results["left eye only"]["auroc"],
@@ -241,9 +303,12 @@ def main():
 
     if a.out:
         os.makedirs(os.path.dirname(os.path.abspath(a.out)) or ".", exist_ok=True)
+        dump = {k: {kk: vv for kk, vv in v.items() if not kk.startswith("_")}
+                for k, v in results.items()}
         with open(a.out, "w", encoding="utf-8") as f:
             json.dump({"feature_dim": d_total, "block_names": BLOCK_NAMES,
-                       "arms": results}, f, ensure_ascii=False, indent=2, default=str)
+                       "event_source": a.batch3_manifest or "clean-145",
+                       "arms": dump}, f, ensure_ascii=False, indent=2, default=str)
         print(f"\nwrote {a.out}")
 
 
