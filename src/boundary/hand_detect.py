@@ -69,7 +69,19 @@ class HandDetector:
         self.api = "tasks"
 
     def boxes(self, frame):
-        """frame: HxWx3 uint8 RGB."""
+        """frame: HxWx3 uint8 RGB.
+
+        The array is forced C-contiguous and uint8 before it reaches
+        mediapipe. mp.Image wraps the buffer it is handed and assumes a
+        row-major contiguous layout, so a non-contiguous VIEW is read with the
+        wrong stride and the model sees a scrambled image -- returning zero
+        hands with no error raised anywhere. That is exactly what a
+        packed-stereo half is: frames[:, :, :W//2] slices axis 2 and is not
+        contiguous. Copying here rather than at every call site means a future
+        caller cannot reintroduce the failure."""
+        import numpy as np
+        if not frame.flags["C_CONTIGUOUS"] or frame.dtype != np.uint8:
+            frame = np.ascontiguousarray(frame, dtype=np.uint8)
         h, w = frame.shape[:2]
         if self.api == "legacy":
             res = self.det.process(frame)
@@ -84,6 +96,17 @@ class HandDetector:
             if xs and ys:
                 out.append((min(xs), min(ys), max(xs), max(ys)))
         return out
+
+    def close(self):
+        """mediapipe 1.0's HandLandmarker.__del__ raises
+        "TypeError: 'NoneType' object is not callable" during interpreter
+        shutdown when it is left to the garbage collector. Harmless, but it
+        prints a traceback after every run, which trains you to ignore
+        tracebacks."""
+        try:
+            self.det.close()
+        except Exception:
+            pass
 
     def union_box(self, frame):
         """Single box covering every detected hand, or None.

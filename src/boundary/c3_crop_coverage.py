@@ -352,6 +352,9 @@ def main():
                   f"family concentrating the failures (an overall 0.90 with a "
                   f"long-tool family at 0.40 is not a pass).")
 
+    if det is not None:
+        det.close()
+
     if a.out:
         os.makedirs(os.path.dirname(os.path.abspath(a.out)) or ".", exist_ok=True)
         with open(a.out, "w", encoding="utf-8") as f:
