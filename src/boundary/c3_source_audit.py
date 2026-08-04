@@ -2,9 +2,25 @@
 is written. Answers three questions that gate the whole "should we switch to
 1080p" decision, none of which need a model or a GPU:
 
-  1. What resolution are the videos we ACTUALLY extracted features from?
-     If they are already 1080p the question is moot; if they are 720p we need
-     the higher-resolution originals.
+  1. What resolution are the videos we ACTUALLY extracted features from, and
+     what does the model actually see after preprocessing? The first run
+     answered this and overturned the premise: the sources are 1280x480, not
+     720p, and reach the model at 1260x448 -- a 0.984x linear scale, i.e. the
+     pixel budget is already almost entirely spent. Switching to 1920x1080
+     would give 1008x560: MORE vertical resolution but LESS horizontal. It is
+     not a uniform upgrade and has to be compared per axis.
+  1b. What else is sitting in the same recording directory? The real files
+     turned out to be .../recordings/recording_XXXXXX/mid.mp4 -- a name that
+     implies siblings (other views, other resolutions). A higher-resolution
+     original is far likelier to be next to the file we already use than to be
+     found by guessing a root and a filename token, which is what the first
+     run did, finding nothing.
+  1c. Is the frame TWO VIEWS packed into one image? A 1280x480 frame at an 8:3
+     aspect is exactly what a 640x480 stereo pair packed side-by-side looks
+     like. If it is, the hand's effective resolution is half what the frame
+     size suggests and half of every ViT's tokens re-encode the same scene
+     from a shifted viewpoint -- which would make splitting the frame a bigger
+     and far cheaper win than any resolution change.
   2. Do higher-resolution counterparts exist for the recordings that matter
      (the clean-145 dev recordings), and for how many of them? A source that
      covers 12 of 46 dev recordings cannot support a paired 720p-vs-1080p
@@ -162,7 +178,106 @@ def downscale_psnr(candidate, current, w, h, duration=None, t0=5.0, dur=2.0, ffm
         return None, f"{type(e).__name__}: {e}"[:120]
 
 
-def find_candidates(search_root, token="1080", exts=(".mp4", ".mov", ".mkv", ".avi", ".webm")):
+VIDEO_EXTS = (".mp4", ".mov", ".mkv", ".avi", ".webm")
+
+
+def scan_siblings(video, exts=VIDEO_EXTS):
+    """Every other video file sitting in the same directory as `video`.
+
+    The first audit run searched a token ('1080') under a guessed root and
+    found nothing, while the real data turned out to live somewhere else
+    entirely under a per-recording directory whose file was named 'mid.mp4'.
+    A name like that implies siblings (other views, other resolutions), and a
+    higher-resolution original is far more likely to be sitting next to the
+    file we already use than to be found by guessing a root and a filename
+    token. This looks where we already know the data is."""
+    d = os.path.dirname(video)
+    if not os.path.isdir(d):
+        return []
+    out = []
+    for fn in sorted(os.listdir(d)):
+        p = os.path.join(d, fn)
+        if p != video and os.path.splitext(fn)[1].lower() in exts and os.path.isfile(p):
+            out.append(p)
+    return out
+
+
+def _frame_array(path, t0=5.0, duration=None, ffmpeg="ffmpeg"):
+    """Decode a single frame to a numpy array (H,W,3), or None."""
+    import tempfile
+    import numpy as np
+    if duration:
+        t0 = min(t0, max(0.0, duration * 0.25))
+    with tempfile.TemporaryDirectory() as td:
+        png = os.path.join(td, "f.png")
+        try:
+            r = subprocess.run([ffmpeg, "-v", "error", "-ss", str(t0), "-i", path,
+                                "-frames:v", "1", "-y", png],
+                               capture_output=True, text=True, timeout=120)
+            if r.returncode != 0 or not os.path.exists(png):
+                return None
+            from PIL import Image
+            return np.asarray(Image.open(png).convert("RGB"), dtype=float)
+        except Exception:
+            return None
+
+
+def stereo_check(path, t0=5.0, duration=None, ffmpeg="ffmpeg"):
+    """Is this frame two views packed into one image (side-by-side or stacked)?
+
+    A 1280x480 frame at an 8:3 aspect is exactly what a 640x480 stereo pair
+    packed side-by-side looks like, and that would matter a great deal: the
+    hand's effective resolution would be half of what the frame size suggests,
+    and half of every ViT's tokens would be spent re-encoding the same scene
+    from a slightly shifted viewpoint.
+
+    Two views of one scene correlate strongly at some small horizontal
+    disparity, while the two halves of an ordinary wide photograph do not.
+    So: split, then take the maximum normalized cross-correlation over a range
+    of horizontal shifts. Reported for both the side-by-side and the
+    top/bottom split, since either packing is possible."""
+    import numpy as np
+    a = _frame_array(path, t0, duration, ffmpeg)
+    if a is None:
+        return {"error": "could not decode a frame"}
+    g = a.mean(axis=2)
+    h, w = g.shape
+
+    def ncc(x, y):
+        x = x - x.mean(); y = y - y.mean()
+        d = float(np.sqrt((x * x).sum() * (y * y).sum()))
+        return float((x * y).sum() / d) if d > 0 else 0.0
+
+    def best_shift_ncc(l, r, max_shift):
+        best, arg = -1.0, 0
+        for s in range(0, max_shift + 1, max(1, max_shift // 24)):
+            v = ncc(l[:, s:], r[:, :r.shape[1] - s]) if s else ncc(l, r)
+            if v > best:
+                best, arg = v, s
+        return best, arg
+
+    out = {"width": w, "height": h, "aspect": w / h if h else None}
+    lw = w // 2
+    sb, sb_shift = best_shift_ncc(g[:, :lw], g[:, lw:lw * 2], max_shift=max(4, lw // 8))
+    out["side_by_side_ncc"] = sb
+    out["side_by_side_best_shift_px"] = sb_shift
+    hh = h // 2
+    tb = ncc(g[:hh, :], g[hh:hh * 2, :])
+    out["top_bottom_ncc"] = tb
+    # Which split to trust is decided by the frame geometry, not by taking the
+    # max of the two. A horizontally-packed fixture with known ground truth
+    # scored 0.930 on the TOP/BOTTOM test purely because its content repeats
+    # vertically, so an OR over both tests false-positives on anything with a
+    # horizon, a work surface, or repeating texture. A frame twice as wide as
+    # it is tall can only plausibly be side-by-side packing, so that is the
+    # test that decides; top/bottom is still reported, as context.
+    out["decided_by"] = "side_by_side" if out["aspect"] and out["aspect"] >= 2.0 else "either"
+    out["likely_packed_stereo"] = bool(
+        sb >= 0.80 if out["decided_by"] == "side_by_side" else (sb >= 0.80 or tb >= 0.80))
+    return out
+
+
+def find_candidates(search_root, token="1080", exts=VIDEO_EXTS):
     """Walk search_root for video files whose NAME contains `token`. Returns
     the list of paths plus a directory histogram, so an unmatched result can
     be diagnosed (wrong root vs wrong naming) instead of just coming back
@@ -250,6 +365,71 @@ def main():
         if (ow, oh) == (ow2, oh2):
             print("  -> IDENTICAL model input. The GLOBAL branch gains nothing "
                   "from 1080p; only a native-resolution LOCAL crop can use it.")
+        else:
+            print(f"  -> current linear scale {ow / w:.3f}x, 1080p would be "
+                  f"{ow2 / 1920:.3f}x. The pixel budget is already nearly spent "
+                  f"on the current frame, so 'switch to 1080p' is not automatically "
+                  f"an increase in what the model sees -- compare {ow}x{oh} against "
+                  f"{ow2}x{oh2} directly, per axis.")
+        if h and (w / h) > 2.2:
+            print(f"  !! aspect ratio {w / h:.2f} is far wider than a normal camera "
+                  f"frame -- section 1c checks whether this is two views packed "
+                  f"into one image")
+
+    # ---- 1b. what else is sitting next to the file we use ----------------
+    print("\n=== 1b. sibling video files in the same recording directory ===")
+    sib_hist, siblings = Counter(), {}
+    for rid in probe_ids:
+        sibs = scan_siblings(video_path[rid])
+        siblings[rid] = sibs
+        sib_hist[tuple(os.path.basename(s) for s in sibs)] += 1
+    for names, n in sib_hist.most_common(6):
+        print(f"  {n:>4} recordings have siblings: {list(names) or '(none)'}")
+    probed_sibs = {}
+    for rid in probe_ids[:4]:
+        for s in siblings.get(rid, []):
+            info = probe(s, a.ffprobe)
+            probed_sibs[s] = info
+            cur = current.get(rid, {})
+            bigger = (info.get("width") and cur.get("width")
+                      and info["width"] * info["height"] > cur["width"] * cur["height"])
+            print(f"    {os.path.basename(s):<24} "
+                  f"{info.get('width')}x{info.get('height')} "
+                  f"{info.get('codec')} "
+                  f"{'<-- HIGHER RESOLUTION than the file we use' if bigger else ''}")
+    if any(probe(s, a.ffprobe).get("width", 0) or 0 for rid in probe_ids[:1]
+           for s in siblings.get(rid, [])[:1]):
+        print("  -> if a sibling is higher-resolution, THAT is the source to test, "
+              "not a file found by guessing a root and a filename token")
+
+    # ---- 1c. is the frame two views packed into one ----------------------
+    print("\n=== 1c. packed-stereo check (are the two halves the same scene?) ===")
+    stereo = {}
+    for rid in probe_ids[:3]:
+        st = stereo_check(video_path[rid], duration=current.get(rid, {}).get("duration_s"),
+                          ffmpeg=a.ffmpeg)
+        stereo[rid] = st
+        if "error" in st:
+            print(f"  {rid}: {st['error']}")
+            continue
+        print(f"  {rid}: {st['width']}x{st['height']} aspect {st['aspect']:.2f}  "
+              f"side-by-side NCC {st['side_by_side_ncc']:+.3f} "
+              f"(best shift {st['side_by_side_best_shift_px']}px)  "
+              f"top/bottom NCC {st['top_bottom_ncc']:+.3f}  "
+              f"[decided by {st['decided_by']}; top/bottom is inflated by any "
+              f"vertically repeating content and does not decide a wide frame]")
+    packed = [s for s in stereo.values() if s.get("likely_packed_stereo")]
+    if packed:
+        print("  !! LIKELY TWO VIEWS PACKED INTO ONE FRAME. If so the hand's real "
+              "resolution is half the frame width suggests, and half of every "
+              "ViT's tokens re-encode the same scene from a shifted viewpoint. "
+              "Splitting the frame and using ONE view would be a bigger and far "
+              "cheaper win than any resolution change. Confirm by eye on one "
+              "extracted frame before acting.")
+    elif stereo and not any("error" in s for s in stereo.values()):
+        print("  -> halves are not duplicates: this is a genuinely wide single "
+              "view, and the unusual aspect ratio is the camera's, not a packing "
+              "artifact.")
 
     # ---- 2. do higher-resolution sources exist ---------------------------
     print(f"\n=== 2. candidates under {a.search_root} with {a.token!r} in the name ===")
@@ -356,6 +536,9 @@ def main():
                 "n_target_recordings": len(targets),
                 "current_resolution_histogram": dict(res_hist),
                 "current_probe": current,
+                "siblings": {k: v for k, v in siblings.items()},
+                "probed_siblings": probed_sibs,
+                "stereo_check": stereo,
                 "n_candidates_found": len(hits),
                 "candidate_dirs": dict(dirs.most_common(20)),
                 "candidate_examples": hits[:20],
