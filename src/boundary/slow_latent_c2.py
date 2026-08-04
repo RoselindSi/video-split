@@ -328,7 +328,18 @@ def main():
     ap.add_argument("--context", default="data/gold/audit_188_context.jsonl")
     ap.add_argument("--pair_labels", default="data/gold/pair_labels_v1.csv")
     ap.add_argument("--same_action_subtype", default="data/gold/same_action_subtype_v1.csv")
-    ap.add_argument("--feat_cache", action="append", required=True)
+    ap.add_argument("--feat_cache", action="append", required=True,
+                    help="2 fps caches -- used for P1's own baseline features "
+                         "(build_matrices), matching every other P1 baseline "
+                         "number reported throughout this project.")
+    ap.add_argument("--c2_feat_cache", action="append", default=None,
+                    help="caches C2's slow-latent encoder trains/scores on "
+                         "(e.g. 10 fps). Defaults to --feat_cache. Kept SEPARATE "
+                         "from P1's features for the same reason predictive_"
+                         "continuity.py separates --feat_cache/--cont_feat_cache: "
+                         "P1's baseline AUROC must stay reproducible across every "
+                         "report, and fine motion (regrasp, reversal) is exactly "
+                         "what 2 fps under-samples (Nyquist ~1 Hz).")
     ap.add_argument("--clip_windows_at_neighbors", action="store_true")
     ap.add_argument("--epochs", type=int, default=60)
     ap.add_argument("--device", default="cpu")
@@ -338,6 +349,7 @@ def main():
     a = ap.parse_args()
 
     by_rid = load_feature_caches(a.feat_cache)
+    c2_by_rid = load_feature_caches(a.c2_feat_cache) if a.c2_feat_cache else by_rid
     gold = S.load_gold(a.gold)
     ctx = S.load_context(a.context)
     events = build_events(gold, ctx, by_rid)
@@ -351,12 +363,22 @@ def main():
     y = np.array([e["y"] for e in events], dtype=float)
     groups = [e["recording_id"] for e in events]
 
-    n_frames = infer_n_frames(by_rid, WINDOW_S)
+    n_frames = infer_n_frames(c2_by_rid, WINDOW_S)
     print(f"window frames: {n_frames} per {WINDOW_S}s side window "
           f"(from cache's actual frame rate)")
 
+    # C2 windows come from c2_by_rid (may be a different-fps cache); build a
+    # PARALLEL event list carrying that cache's rec, keyed to the same
+    # event_id/recording_id/t/y so P1's grouped folds and C2's windows always
+    # refer to the same underlying event.
+    n_missing_c2 = sum(e["recording_id"] not in c2_by_rid for e in events)
+    if n_missing_c2:
+        print(f"  !! {n_missing_c2} events lack a C2 cache for their recording "
+              f"-- those events will be unscorable for C2 (P1 alone still works)")
+    c2_events = [dict(e, rec=c2_by_rid.get(e["recording_id"])) for e in events]
+
     folds = stratified_grouped_folds(groups, y, 5, seed=0)
-    res = p1_plus_c2_fold_eval(Ls, Rs, X_rel, y, groups, folds, events, n_frames,
+    res = p1_plus_c2_fold_eval(Ls, Rs, X_rel, y, groups, folds, c2_events, n_frames,
                                a.epochs, a.device, clip_neighbors=a.clip_windows_at_neighbors)
 
     au_p1, au_c2, au_fused = res["au_p1"], res["au_c2_only"], res["au_fused"]
