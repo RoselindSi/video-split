@@ -1,0 +1,9 @@
+{
+  "_comment": "Pre-registered BEFORE any C2 result was seen (2026-08-02). Baseline is P1 no-clip on the frozen 145 clean pairs with the same stratified grouped 5-fold CV used throughout this project, seed 0. Fusion is a simple 0.5/0.5 average of P1's calibrated sigmoid score and C2's train-fold-normalized left/right distance -- adopting a more sophisticated fusion (e.g. feeding C2 distance into P1's logistic regression as an extra feature, as C1 did) is a DIFFERENT experiment and needs its own gate, not a retroactive change to this one.",
+  "baseline": "P1_noclip_clean145",
+  "min_auroc_gain": 0.02,
+  "min_folds_improved_frac": 0.8,
+  "max_worst_fold_drop": 0.05,
+  "max_watch_subtype_fp_increase": 0.05,
+  "watch_subtype_note": "regrasp_reposition + direction_reversal false-positive rate (at the median-of-true-positives cutoff) must not increase by more than this much after adding C2 -- this is the specific failure mode C1 exhibited and C2 exists to fix; a pass on overall AUROC that makes THIS worse is not a pass."
+}
