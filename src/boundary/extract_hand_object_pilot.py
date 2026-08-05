@@ -88,40 +88,173 @@ def backend_synthetic(seed=0):
     return run
 
 
-def backend_hoi100doh(repo, ckpt, thresh_hand=0.5, thresh_obj=0.5):
+# cls_dets column layout, read off demo.py rather than assumed. Line 79 of the
+# detection loop concatenates (boxes 4, score 1, contact_indices 1,
+# offset_vector 3, lr 1) = 10 columns, and net_utils.filter_object indexes
+# hand_dets[i,6]*10000*hand_dets[i,7] and [...,8] as the x and y of the
+# predicted object centre -- which fixes 6 as the magnitude and 7,8 as the unit
+# vector. Naming them here is the point: an off-by-one in this block produces
+# boxes that draw fine and mean nothing.
+B_BOX, B_SCORE, B_CONTACT, B_MAG, B_DX, B_DY, B_LR = slice(0, 4), 4, 5, 6, 7, 8, 9
+DOH_N_COLS = 10
+
+
+def backend_hoi100doh(repo, ckpt, cfg_file=None, thresh_hand=0.5, thresh_obj=0.5):
+    """The 100DOH detector, wired against the checkout actually installed.
+
+    Its own offset vector decides which object a hand is interacting with --
+    not proximity. That is the whole reason to prefer this backend: the model
+    was trained to point from a hand to the thing it is manipulating, so it
+    resolves the case a distance threshold cannot, a hand touching one object
+    while another sits closer to its box.
+
+    THE IMAGE IS NOT UPSCALED HERE. Faster R-CNN rescales its input to a
+    600-pixel short side itself, so an upscale before it is discarded work,
+    and worse, the boxes come back divided by that internal scale only -- an
+    upscale we applied would silently leave every box magnified relative to
+    the eye frame the trajectory cache uses.
+
+    It also wants BGR with the mean already subtracted, which is the one
+    convention this project does not use anywhere else."""
     import sys
     if not os.path.isdir(repo):
         raise SystemExit(
-            f"--hoi_repo {repo} not found. The pilot needs the hand_object_"
-            f"detector repo and its checkpoint:\n"
-            f"  git clone https://github.com/ddshan/hand_object_detector "
-            f"{repo}\n"
-            f"  # then build its layers and place faster_rcnn_1_8_132028.pth\n"
-            f"Run --backend synthetic first to confirm the rest of this "
-            f"pipeline works, so a failure here is attributable.")
+            f"--hoi_repo {repo} not found:\n"
+            f"  git clone https://github.com/ddshan/hand_object_detector {repo}\n"
+            f"Run --backend synthetic first so a failure here is attributable.")
     sys.path.insert(0, repo)
-    from model.utils.config import cfg           # noqa: E402
-    from model.faster_rcnn.resnet import resnet  # noqa: E402
-    from model.rpn.bbox_transform import bbox_transform_inv, clip_boxes  # noqa
-    from model.roi_layers import nms             # noqa: E402
+    sys.path.insert(0, os.path.join(repo, "lib"))
+    import cv2
+    from model.utils.config import cfg, cfg_from_file
+    from model.utils.blob import im_list_to_blob
+    from model.faster_rcnn.resnet import resnet
+    from model.rpn.bbox_transform import bbox_transform_inv, clip_boxes
+    from model.roi_layers import nms
 
-    net = resnet(['__background__', 'targetobject', 'hand'], 101,
-                 pretrained=False, class_agnostic=False)
+    if cfg_file:
+        cfg_from_file(cfg_file)
+    cuda = torch.cuda.is_available()
+    cfg.USE_GPU_NMS = cuda
+    cfg.CUDA = cuda
+    classes = np.asarray(["__background__", "targetobject", "hand"])
+    net = resnet(classes, 101, pretrained=False, class_agnostic=False)
     net.create_architecture()
     sd = torch.load(ckpt, map_location="cpu")
     net.load_state_dict(sd["model"])
+    if "pooling_mode" in sd:
+        cfg.POOLING_MODE = sd["pooling_mode"]
     net.eval()
-    if torch.cuda.is_available():
-        net.cuda()
-    cfg.CUDA = torch.cuda.is_available()
+    dev = torch.device("cuda" if cuda else "cpu")
+    net.to(dev)
+    print(f"  100DOH loaded on {dev}, POOLING_MODE={cfg.POOLING_MODE}, "
+          f"thresh hand/obj {thresh_hand}/{thresh_obj}")
 
-    def run(img, fi, n):
-        raise SystemExit(
-            "the hoi100doh forward pass is a thin wrapper over the repo's "
-            "demo.py and must be pinned to the repo revision actually "
-            "installed -- fill it in against that checkout rather than "
-            "against a guess at its tensor layout, which is how a silently "
-            "wrong box reaches a report that looks fine")
+    def blob_for(im_rgb):
+        im = im_rgb[:, :, ::-1].astype(np.float32, copy=True)   # -> BGR
+        im -= cfg.PIXEL_MEANS
+        lo, hi = min(im.shape[:2]), max(im.shape[:2])
+        out, scales = [], []
+        for target in cfg.TEST.SCALES:
+            sc = float(target) / float(lo)
+            if round(sc * hi) > cfg.TEST.MAX_SIZE:
+                sc = float(cfg.TEST.MAX_SIZE) / float(hi)
+            out.append(cv2.resize(im, None, fx=sc, fy=sc,
+                                  interpolation=cv2.INTER_LINEAR))
+            scales.append(sc)
+        return im_list_to_blob(out), np.array(scales)
+
+    state = {"printed": False}
+
+    def decode(scores, pred_boxes, extra, j, thresh):
+        inds = torch.nonzero(scores[:, j] > thresh).view(-1)
+        if inds.numel() == 0:
+            return None
+        cs = scores[:, j][inds]
+        _, order = torch.sort(cs, 0, True)
+        cb = pred_boxes[inds][:, j * 4:(j + 1) * 4]
+        d = torch.cat((cb, cs.unsqueeze(1), extra[inds]), 1)[order]
+        keep = nms(cb[order, :], cs[order], cfg.TEST.NMS)
+        return d[keep.view(-1).long()].cpu().numpy()
+
+    def run(im_rgb, fi, n):
+        blob, scales = blob_for(im_rgb)
+        im_data = torch.from_numpy(blob).permute(0, 3, 1, 2).to(dev)
+        im_info = torch.tensor([[blob.shape[1], blob.shape[2], scales[0]]],
+                               dtype=torch.float32, device=dev)
+        z1 = torch.zeros((1, 1, 5), dtype=torch.float32, device=dev)
+        z2 = torch.zeros(1, dtype=torch.float32, device=dev)
+        with torch.no_grad():
+            rois, cls_prob, bbox_pred, _, _, _, _, _, loss_list = net(
+                im_data, im_info, z1, z2, z1)
+        scores = cls_prob.data
+        boxes = rois.data[:, :, 1:5]
+        contact = torch.max(loss_list[0][0], 2)[1].squeeze(0).unsqueeze(-1).float()
+        offset = loss_list[1][0].detach().squeeze(0)
+        lr = (torch.sigmoid(loss_list[2][0].detach()) > 0.5).squeeze(0).float()
+        extra = torch.cat((contact, offset, lr), 1)
+
+        bd = bbox_pred.data.view(-1, 4)
+        std = torch.tensor(cfg.TRAIN.BBOX_NORMALIZE_STDS, device=dev, dtype=torch.float32)
+        mean = torch.tensor(cfg.TRAIN.BBOX_NORMALIZE_MEANS, device=dev, dtype=torch.float32)
+        bd = (bd * std + mean).view(1, -1, 4 * len(classes))
+        pred = clip_boxes(bbox_transform_inv(boxes, bd, 1), im_info.data, 1)
+        pred = (pred / scales[0]).squeeze()
+        scores = scores.squeeze()
+
+        obj_dets = decode(scores, pred, extra, 1, thresh_obj)
+        hand_dets = decode(scores, pred, extra, 2, thresh_hand)
+        if not state["printed"]:
+            state["printed"] = True
+            print(f"  [layout check] hand_dets "
+                  f"{None if hand_dets is None else hand_dets.shape}, obj_dets "
+                  f"{None if obj_dets is None else obj_dets.shape}; expected "
+                  f"{DOH_N_COLS} columns")
+            if hand_dets is not None and hand_dets.shape[1] != DOH_N_COLS:
+                raise SystemExit(
+                    f"cls_dets has {hand_dets.shape[1]} columns, not "
+                    f"{DOH_N_COLS}. This checkout concatenates a different "
+                    f"set than the one the column names were read off, so "
+                    f"every index below is wrong. Re-read demo.py's cls_dets "
+                    f"line before running 36 events against it.")
+            if hand_dets is not None:
+                h = hand_dets[0]
+                print(f"  [layout check] first hand: box "
+                      f"{np.round(h[B_BOX], 1)}  score {h[B_SCORE]:.2f}  "
+                      f"contact {int(h[B_CONTACT])}  mag {h[B_MAG]:.3f}  "
+                      f"d ({h[B_DX]:+.2f},{h[B_DY]:+.2f})  lr {h[B_LR]:.0f}"
+                      f"  frame {im_rgb.shape[1]}x{im_rgb.shape[0]}")
+                print("  Check the box against the frame size above. A box "
+                      "larger than the frame means the internal rescale was "
+                      "not undone.")
+
+        out = []
+        if hand_dets is None:
+            return out
+        ocs = (np.stack([(obj_dets[:, 0] + obj_dets[:, 2]) / 2,
+                         (obj_dets[:, 1] + obj_dets[:, 3]) / 2], 1)
+               if obj_dets is not None else None)
+        for h in hand_dets:
+            st = DOH_CONTACT.get(int(h[B_CONTACT]), UNKNOWN)
+            ob = ok = olab = None
+            osc = float("nan")
+            # the detector's own offset vector picks the object, exactly as
+            # net_utils.filter_object does -- not the nearest box
+            if int(h[B_CONTACT]) > 0 and ocs is not None:
+                hc = np.array([(h[0] + h[2]) / 2, (h[1] + h[3]) / 2])
+                tgt = hc + h[B_MAG] * 10000 * np.array([h[B_DX], h[B_DY]])
+                k = int(np.argmin(((ocs - tgt) ** 2).sum(1)))
+                ob = tuple(float(v) for v in obj_dets[k, B_BOX])
+                osc = float(obj_dets[k, B_SCORE])
+                ok = DOH_OBJECT_KIND.get(int(h[B_CONTACT]))
+            if st in (CONTACT,) and ob is None:
+                st = UNKNOWN     # asserted contact, no object detected
+            out.append(RawInteraction(
+                hand_box=tuple(float(v) for v in h[B_BOX]),
+                hand_score=float(h[B_SCORE]),
+                handedness="Left" if h[B_LR] < 0.5 else "Right",
+                object_box=ob, object_score=osc, object_label=olab,
+                object_kind=ok, contact_state=st))
+        return out
     return run
 
 
@@ -211,6 +344,9 @@ def main():
     ap.add_argument("--backend", choices=["hoi100doh", "synthetic"], required=True)
     ap.add_argument("--hoi_repo")
     ap.add_argument("--hoi_ckpt")
+    ap.add_argument("--hoi_cfg", help="the repo's cfgs/res101.yml")
+    ap.add_argument("--thresh_hand", type=float, default=0.5)
+    ap.add_argument("--thresh_obj", type=float, default=0.5)
     ap.add_argument("--hand_model", help="mediapipe .task, for hand tracks when "
                                          "the backend supplies no handedness")
     ap.add_argument("--audit_sheet", help="group the report by the audit answer")
@@ -228,7 +364,14 @@ def main():
         print("!! SYNTHETIC BACKEND -- this verifies the pipeline, not the "
               "detector. No conclusion about C3.2 may be drawn from its output.")
     else:
-        run = backend_hoi100doh(a.hoi_repo, a.hoi_ckpt)
+        run = backend_hoi100doh(a.hoi_repo, a.hoi_ckpt, a.hoi_cfg,
+                                a.thresh_hand, a.thresh_obj)
+        if a.upscale not in (None, "none"):
+            print(f"  --upscale {a.upscale} ignored: this detector rescales "
+                  f"internally and returns boxes in the ORIGINAL frame's "
+                  f"coordinates, so pre-upscaling would leave every box "
+                  f"magnified relative to the eye frame.")
+            a.upscale = "none"
 
     video_path = {}
     for p in a.data:
