@@ -142,6 +142,7 @@ def main():
     from decord import VideoReader
 
     cache, stats = {}, []
+    n_det_exc, first_exc = 0, None
     t0 = time.time()
     for ei, e in enumerate(events):
         try:
@@ -165,8 +166,15 @@ def main():
             try:
                 r = det.detect_full(up, timestamp_ms=int(fi * 1000 / a.fps))
                 ok = True
-            except Exception:
+            except Exception as ex:
+                # Counted and SURFACED. The first version swallowed this into a
+                # per-frame flag that nothing printed, so a detector raising on
+                # every call was indistinguishable from a detector finding no
+                # hands -- and a 0.000 coverage run gave no way to tell which.
                 r, ok = {"landmarks": [], "world": [], "handedness": [], "score": []}, False
+                n_det_exc += 1
+                if first_exc is None:
+                    first_exc = f"{type(ex).__name__}: {ex}"[:200]
             dets = []
             for hi, lm in enumerate(r["landmarks"]):
                 pts = [(p.x, p.y, getattr(p, "z", 0.0)) for p in lm]
@@ -212,6 +220,10 @@ def main():
             torch.save(cache, a.out)
             print(f"  [checkpoint] {len(cache)}/{len(events)} -> {a.out}", flush=True)
 
+    if n_det_exc:
+        print(f"\n  !! the detector RAISED on {n_det_exc} frame(s); first was: "
+              f"{first_exc}\n     zero coverage caused by exceptions is a broken "
+              f"call, not an absent hand -- do not read it as a detection rate")
     if stats:
         s = np.array(stats)
         print(f"\nper-event detection coverage: median {np.median(s):.3f}  "
