@@ -267,6 +267,7 @@ def evaluate(label, events_g, events_l, y, groups, sub_map, gate, a):
               f"{rh['rescues']:>5} {rh['fp_rescues']:>7} {rh['harms']:>5} "
               f"{rh['tp_harms']:>7} {rh['net']:>+5} {sfp:>7.3f}")
 
+    base_sfp = res["P1 (global) alone"]["same_action_fp_rate"]
     pf_b = res["P1 (global) alone"]["per_fold"]
     print(f"\n{'arm':<30} {'per-fold delta':<40} {'worst':>7} {'improved':>9}")
     for name, r in res.items():
@@ -293,17 +294,41 @@ def evaluate(label, events_g, events_l, y, groups, sub_map, gate, a):
                            r["delta"] >= gate["min_auroc_gain"]),
             "worst per-fold": (r["worst_per_fold_delta"], -gate["max_worst_per_fold_drop"],
                                r["worst_per_fold_delta"] >= -gate["max_worst_per_fold_drop"]),
-            "same-action FP": (r["same_action_fp_rate"], gate["max_same_action_fp_rate"],
-                               r["same_action_fp_rate"] <= gate["max_same_action_fp_rate"]),
+            # BOTH readings are reported because they disagree and the
+            # disagreement flips the verdict. The config's 0.074 is P1's
+            # same-action FP rate ON THE CLEAN-145 (2/27); its own comment
+            # states the INTENT as "must not exceed P1's current rate". On
+            # batch3, P1 itself sits at 0.207 -- so the absolute threshold is
+            # unsatisfiable there by ANY arm, P1 included, which cannot have
+            # been the intent. The absolute check is kept exactly as
+            # pre-registered rather than quietly rewritten; the relative one is
+            # added beside it, and a run is only called a pass when it is
+            # stated which reading is meant.
+            "same-action FP (absolute, as pre-registered)":
+                (r["same_action_fp_rate"], gate["max_same_action_fp_rate"],
+                 r["same_action_fp_rate"] <= gate["max_same_action_fp_rate"]),
+            "same-action FP (vs P1 on THIS data)":
+                (r["same_action_fp_rate"], base_sfp,
+                 r["same_action_fp_rate"] <= base_sfp + 1e-9),
             "CI excludes 0": (r["ci95"][0] if r["ci95"] else float("nan"), 0.0,
                               bool(r["ci95"]) and r["ci95"][0] > 0),
         }
         r["gate_checks"] = {k: {"value": v, "threshold": t, "pass": bool(p)}
                             for k, (v, t, p) in checks.items()}
-        r["gate_passed"] = all(p for _, _, p in checks.values())
-        fails = [k for k, (_, _, p) in checks.items() if not p]
-        print(f"  {name:<30} {'ADOPT' if r['gate_passed'] else 'DO NOT ADOPT'}"
-              + (f"  (failed: {', '.join(fails)})" if fails else ""))
+        abs_key = "same-action FP (absolute, as pre-registered)"
+        rel_key = "same-action FP (vs P1 on THIS data)"
+        strict = all(p for k, (_, _, p) in checks.items() if k != rel_key)
+        relative = all(p for k, (_, _, p) in checks.items() if k != abs_key)
+        r["gate_passed"] = strict
+        r["gate_passed_relative_sameaction"] = relative
+        fails_s = [k for k, (_, _, p) in checks.items() if not p and k != rel_key]
+        fails_r = [k for k, (_, _, p) in checks.items() if not p and k != abs_key]
+        print(f"  {name:<30} strict {'ADOPT' if strict else 'NO'}"
+              f" / relative-sameFP {'ADOPT' if relative else 'NO'}")
+        if fails_s or fails_r:
+            print(f"    {'failed(strict): ' + ', '.join(fails_s) if fails_s else ''}")
+            if fails_r != fails_s:
+                print(f"    {'failed(relative): ' + ', '.join(fails_r) if fails_r else 'failed(relative): none'}")
 
     if sub_map:
         n_tagged = sum(1 for i, e in enumerate(ev)
