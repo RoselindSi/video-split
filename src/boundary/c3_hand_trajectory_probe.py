@@ -95,6 +95,8 @@ CLEAN = (SHARP, SAME)
 
 
 MIN_OBS, MIN_UNIQUE = 30, 5
+MIN_MINORITY = 15      # smaller class needed before an observability row is printed
+PF_TABLE_AT = 0.75     # above this, show which columns carry it
 
 
 def eligible(mat, names):
@@ -212,8 +214,15 @@ def observability(traj, feats, names, a):
             lab.append(1.0 if v else 0.0)
         sel = np.array(sel)
         y = np.array(lab)[sel]
-        if sel.sum() < 40 or len(set(y.tolist())) < 2:
-            print(f"  {tag:<34} too few events ({int(sel.sum())})")
+        # gate on the MINORITY class, not the total. The first version
+        # required 40 events and printed "clean vs ambiguous  n=316  313+/3-
+        # AUROC 0.327" with two folds nan: 316 passed the gate while three
+        # negatives carried the entire estimate. A number that unstable is not
+        # a weak result to interpret, it is a line that should not be printed.
+        n_min = int(min(y.sum(), (1 - y).sum()))
+        if sel.sum() < 40 or n_min < MIN_MINORITY:
+            print(f"  {tag:<34} not evaluated: {n_min} in the smaller class "
+                  f"(need {MIN_MINORITY})")
             continue
         g = [x for x, k in zip(grp, sel) if k]
         folds = stratified_grouped_folds(g, y, 5, seed=a.seed)
@@ -226,6 +235,20 @@ def observability(traj, feats, names, a):
               f"per-fold {[round(x, 3) for x in pf]}")
         res[tag] = {"n": int(sel.sum()), "n_pos": int(y.sum()),
                     "auroc": float(au), "per_fold": pf}
+        if au >= PF_TABLE_AT:
+            # An AUROC this high on an EXCLUSION class may be near-tautological:
+            # a human labels an event visibility_or_offscreen because the hands
+            # left the frame, and hand_detect_coverage measures exactly that.
+            # That still buys an automatic router, but it is confirmation that
+            # the label is cheaply reproducible -- not evidence that trajectory
+            # SHAPE carries information. The only way to tell is which columns
+            # do the work, so the table is printed wherever the claim would
+            # otherwise be ambiguous.
+            print(f"    is this just detection coverage? per-feature below; if "
+                  f"coverage and the missing-gap lead and nothing else clears "
+                  f"the baseline, this arm reproduces the label rather than "
+                  f"adding information.")
+            per_feature(tag, y, M[sel], names, g, min(a.n_boot, 1000), a.seed)
     print("  Routing only. A separation here does NOT license using these "
           "features on the sharp-vs-same-action task, which is what the "
           "primary block already answered on its own population.")
