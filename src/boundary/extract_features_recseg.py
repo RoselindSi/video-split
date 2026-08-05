@@ -80,7 +80,19 @@ def encode_frames(frames, proc, model, max_pixels, pool):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--model_base", required=True)
-    ap.add_argument("--data", required=True)
+    ap.add_argument("--data", action="append", required=True,
+                    help="recseg json(s). REPEATABLE. It was a single-value "
+                         "argument until now, so passing --data twice silently "
+                         "kept only the LAST file and extracted a fraction of "
+                         "what was asked for -- that mistake cost a full run "
+                         "once already.")
+    ap.add_argument("--skip_cached", action="append", default=[],
+                    help="existing feature cache .pt file(s); every recording "
+                         "already in them is skipped. Lets a run extract exactly "
+                         "the complement of what exists instead of redoing it.")
+    ap.add_argument("--recordings_from", action="append", default=[],
+                    help="restrict to recording_ids listed in a CSV column or a "
+                         "manifest jsonl")
     ap.add_argument("--out", required=True)
     ap.add_argument("--fps", type=float, default=2.0)
     ap.add_argument("--crop", choices=["none", "left", "right"], default="none",
@@ -108,9 +120,35 @@ def main():
         a.model_base, dtype=torch.bfloat16, device_map="cuda").eval()
 
     from decord import VideoReader
-    rows = json.load(open(a.data))
+    rows = []
+    for p_ in a.data:
+        rows.extend(json.load(open(p_)))
+    print(f"{len(rows)} recordings across {len(a.data)} --data file(s)")
+    if a.recordings_from:
+        want = set()
+        for p_ in a.recordings_from:
+            if p_.endswith(".jsonl"):
+                want |= {json.loads(l)["recording_id"] for l in open(p_) if l.strip()}
+            else:
+                import csv as _csv
+                with open(p_, newline="", encoding="utf-8", errors="replace") as fh:
+                    want |= {r["recording_id"] for r in _csv.DictReader(fh)
+                             if r.get("recording_id")}
+        rows = [r for r in rows if r.get("recording_id") in want]
+        print(f"  --recordings_from: {len(want)} wanted -> {len(rows)} matched")
+    if a.skip_cached:
+        have = set()
+        for p_ in a.skip_cached:
+            for rec in torch.load(p_, weights_only=False, map_location="cpu"):
+                have.add(rec.get("recording_id"))
+        before = len(rows)
+        rows = [r for r in rows if r.get("recording_id") not in have]
+        print(f"  --skip_cached: {len(have)} already extracted -> "
+              f"{before} - {before - len(rows)} = {len(rows)} left to do")
     if a.limit:
         rows = rows[:a.limit]
+    if not rows:
+        raise SystemExit("nothing left to extract")
     cache = []
     for ri, r in enumerate(rows):
         # num_threads=1: decord spawns an internal decode thread pool per
