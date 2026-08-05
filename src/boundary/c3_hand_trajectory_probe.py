@@ -94,17 +94,43 @@ SAME = "same_action_internal_motion"
 CLEAN = (SHARP, SAME)
 
 
-def family_baseline(lab, mat, groups, n_perm, seed):
-    """Best folded AUROC obtainable by chance across ALL columns at once."""
+MIN_OBS, MIN_UNIQUE = 30, 5
+
+
+def eligible(mat, names):
+    """Columns the per-feature table can evaluate, and why the rest are out.
+
+    The SAME set must be used for the family-wise baseline. The first version
+    filtered the table on >=30 observations and >=5 distinct values but let the
+    baseline range over every column at >=20 observations, so the printed
+    "baseline over 26 features" was a maximum taken over 29. More columns means
+    a higher chance maximum, so the threshold every feature was judged against
+    was raised by columns that were never shown -- conservative, but not the
+    quantity it claimed to be."""
+    keep, drop = [], {}
+    for j, nm in enumerate(names):
+        m = np.isfinite(mat[:, j])
+        u = len(set(mat[m, j].tolist()))
+        if m.sum() < MIN_OBS:
+            drop[nm] = f"only {int(m.sum())} finite values (need {MIN_OBS})"
+        elif u < MIN_UNIQUE:
+            drop[nm] = f"only {u} distinct values (need {MIN_UNIQUE})"
+        else:
+            keep.append(j)
+    return keep, drop
+
+
+def family_baseline(lab, mat, cols, n_perm, seed):
+    """Best folded AUROC obtainable by chance across the evaluated columns."""
     rng = np.random.RandomState(seed)
     out = []
     for _ in range(n_perm):
         p = rng.permutation(lab)
         best = 0.0
-        for j in range(mat.shape[1]):
+        for j in cols:
             v = mat[:, j]
             m = np.isfinite(v)
-            if m.sum() < 20 or len(set(p[m].tolist())) < 2:
+            if len(set(p[m].tolist())) < 2:
                 continue
             au = _auroc(p[m], v[m])
             best = max(best, max(au, 1 - au))
@@ -114,24 +140,29 @@ def family_baseline(lab, mat, groups, n_perm, seed):
 
 def per_feature(label, lab, mat, names, groups, n_boot, seed):
     print(f"\n  --- per-feature separability: {label} ---")
+    cols, dropped = eligible(mat, names)
+    if dropped:
+        print(f"    {len(dropped)} of {len(names)} features not evaluable here "
+              f"(and excluded from the baseline too):")
+        for nm, why in sorted(dropped.items()):
+            print(f"      {nm:<36} {why}")
     print(f"    {'feature':<34} {'AUROC':>7} {'95% CI':>18} {'dir':>7}")
     res = {}
-    for j, nm in enumerate(names):
+    for j in cols:
         v = mat[:, j]
         m = np.isfinite(v)
-        if m.sum() < 30 or len(set(v[m].tolist())) < 5:
-            continue
         st = auroc_stats(lab[m], v[m], [g for g, k in zip(groups, m) if k],
                          n_boot, n_boot, seed)
         if st:
-            res[nm] = st
-    fam = family_baseline(lab, mat, groups, min(n_boot, 500), seed)
+            res[names[j]] = st
+    fam = family_baseline(lab, mat, cols, min(n_boot, 500), seed)
     for nm, st in sorted(res.items(), key=lambda kv: -kv[1]["folded"])[:10]:
         flag = "" if st["folded"] > fam else "  (not above chance)"
         ci = f"[{st['ci95'][0]:.3f}, {st['ci95'][1]:.3f}]"
         print(f"    {nm:<34} {st['folded']:>7.3f} {ci:>18} "
               f"{st['direction']:>7}{flag}")
-    print(f"    family-wise chance baseline over {len(res)} features: {fam:.3f}")
+    print(f"    family-wise chance baseline over the {len(cols)} evaluated "
+          f"features: {fam:.3f}")
     win = {k: v for k, v in res.items() if v["folded"] > fam}
     if not win:
         print("    nothing beats the family-wise baseline")
@@ -144,6 +175,60 @@ def per_feature(label, lab, mat, names, groups, n_boot, seed):
     for k, v in res.items():
         v["family_wise_p95"] = fam
         v["beats_family_wise"] = bool(v["folded"] > fam)
+    return res
+
+
+def observability(traj, feats, names, a):
+    """SECONDARY, pre-registered: is an event CLEAN-OBSERVABLE at all?
+
+    A different question from the primary one and it must not be allowed to
+    rescue it. The primary asks whether trajectories separate sharp from
+    same-action among events a human already has to watch. This asks whether
+    they separate those clean events from the ones the taxonomy excludes --
+    offscreen, camera motion, ambiguous. A positive result here buys routing
+    (send the unobservable ones somewhere else), never a verifier.
+
+    It runs on ALL cached events, not the taxonomy-kept subset, so it needs no
+    P1 features: the trajectory arm alone is the whole question. Recordings are
+    the CV group here as everywhere else, because one recording contributes
+    many events and its camera behaviour is shared across them."""
+    ids = sorted(traj)
+    sub = [str(traj[i].get("subtype") or "") for i in ids]
+    grp = [traj[i]["recording_id"] for i in ids]
+    M = np.array([[feats[i].get(n, np.nan) for n in names] for i in ids])
+    print(f"\n{'#' * 72}\n### SECONDARY: is the event clean-observable?"
+          f"\n{'#' * 72}")
+    print(f"  {len(ids)} cached events by subtype: {dict(Counter(sub))}")
+
+    res = {}
+    for tag, pos in [("clean vs everything else", lambda s: s in CLEAN)] + \
+            [(f"clean vs {k}", (lambda kk: (lambda s: s in CLEAN if s in CLEAN
+                                            else (None if s != kk else False)))(k))
+             for k in sorted({x for x in sub if x and x not in CLEAN})]:
+        lab, sel = [], []
+        for s_ in sub:
+            v = pos(s_)
+            sel.append(v is not None)
+            lab.append(1.0 if v else 0.0)
+        sel = np.array(sel)
+        y = np.array(lab)[sel]
+        if sel.sum() < 40 or len(set(y.tolist())) < 2:
+            print(f"  {tag:<34} too few events ({int(sel.sum())})")
+            continue
+        g = [x for x, k in zip(grp, sel) if k]
+        folds = stratified_grouped_folds(g, y, 5, seed=a.seed)
+        oof, pf = run_cv_extra_only(M[sel], y, g, folds)
+        m = np.isfinite(oof)
+        au = (_auroc(y[m], oof[m]) if len(set(y[m].tolist())) == 2
+              else float("nan"))
+        print(f"  {tag:<34} n={int(sel.sum()):>4}  "
+              f"{int(y.sum())}+/{int((1 - y).sum())}-  AUROC {au:.3f}   "
+              f"per-fold {[round(x, 3) for x in pf]}")
+        res[tag] = {"n": int(sel.sum()), "n_pos": int(y.sum()),
+                    "auroc": float(au), "per_fold": pf}
+    print("  Routing only. A separation here does NOT license using these "
+          "features on the sharp-vs-same-action task, which is what the "
+          "primary block already answered on its own population.")
     return res
 
 
@@ -219,7 +304,7 @@ def main():
               "PCA-derived ones can be swamped; this says whether the signal "
               "exists at all)")
         r = report(title, y[sel], oa, ob, pa, pb, g, folds, is_sharp[sel],
-                   a.n_boot, a.seed)
+                   a.n_boot, a.seed, arm_name="hand_trajectory")
         pf = per_feature(title, np.where(is_sharp[sel], 1.0, 0.0), Tm[sel], names,
                          g, a.n_boot, a.seed)
         out[tag] = {"combined": r, "per_feature": pf,
@@ -229,6 +314,7 @@ def main():
 
     rev = np.array([dec.get(e["event_id"], {}).get("decision") == "REVIEW" for e in ev])
     primary = block(f"PRIMARY: REVIEW band clean verifier", rev, "primary_review_band")
+    out["secondary_observability"] = observability(traj, feats, names, a)
     block("DIAGNOSTIC: all clean events (not an adoption reason)",
           np.ones(len(ev), bool), "diagnostic_all_clean")
 

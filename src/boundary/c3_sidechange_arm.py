@@ -139,7 +139,8 @@ def automatable(scores, is_sharp, groups, folds, target=0.95):
             "per_fold_n": per_fold}
 
 
-def report(label, y, oof_a, oof_b, pf_a, pf_b, groups, folds, is_sharp, n_boot, seed):
+def report(label, y, oof_a, oof_b, pf_a, pf_b, groups, folds, is_sharp, n_boot,
+           seed, arm_name="side_change"):
     m = np.isfinite(oof_a) & np.isfinite(oof_b)
     au_a = _auroc(y[m], oof_a[m])
     au_b = _auroc(y[m], oof_b[m])
@@ -148,7 +149,7 @@ def report(label, y, oof_a, oof_b, pf_a, pf_b, groups, folds, is_sharp, n_boot, 
           f"{len({g for g, k in zip(groups, m) if k})} recordings) ===")
     print(f"  P1 alone            {au_a:.3f}   per-fold "
           f"{[round(x, 3) for x in pf_a]}")
-    print(f"  P1 + side_change    {au_b:.3f}   per-fold "
+    print(f"  {'P1 + ' + arm_name:<20}{au_b:.3f}   per-fold "
           f"{[round(x, 3) for x in pf_b]}")
     d = [b - a for a, b in zip(pf_a, pf_b) if np.isfinite(a) and np.isfinite(b)]
     print(f"  delta {au_b - au_a:+.3f}   per-fold delta {[round(x, 3) for x in d]}   "
@@ -174,11 +175,11 @@ def report(label, y, oof_a, oof_b, pf_a, pf_b, groups, folds, is_sharp, n_boot, 
     aa = automatable(oof_a, is_sharp, groups, folds)
     ab = automatable(oof_b, is_sharp, groups, folds)
     print(f"  automatable at >=0.95 precision, out-of-fold:")
-    for nm, r in (("P1 alone", aa), ("P1 + side_change", ab)):
+    for nm, r in (("P1 alone", aa), ("P1 + " + arm_name, ab)):
         lo, hi = r["precision_wilson"]
         print(f"    {nm:<20} {r['n_auto']:>4} events, precision "
               f"{r['precision']:.3f} [{lo:.2f}, {hi:.2f}]  per-fold {r['per_fold_n']}")
-    return {"auroc_p1": au_a, "auroc_arm": au_b, "delta": au_b - au_a,
+    return {"arm_name": arm_name, "auroc_p1": au_a, "auroc_arm": au_b, "delta": au_b - au_a,
             "ci95": ci, "per_fold_delta": d,
             "automatable_p1": aa, "automatable_arm": ab}
 

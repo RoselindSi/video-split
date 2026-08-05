@@ -28,6 +28,38 @@ from src.boundary.hand_trajectory import box_iou, interpolate_gaps, savgol
 NEAR = 0.5          # seconds counted as "near the candidate"
 STOP_FRAC = 0.25    # speed below this fraction of the window median is a stop
 
+def _reduce(fn, x):
+    """np.nan* over a possibly all-NaN slice, without the RuntimeWarning.
+
+    Identical values to the numpy call -- an all-NaN slice already returned NaN,
+    it just warned while doing so. The warnings are not noise to suppress: they
+    say some events have no valid velocity in the pre-, post- or near-candidate
+    region at all, which is exactly what hand_detect_coverage records and what
+    the fold-internal imputer then has to fill."""
+    x = np.asarray(x, dtype=float)
+    return float(fn(x)) if x.size and np.isfinite(x).any() else float("nan")
+
+
+def _nanmean(x):
+    return _reduce(np.nanmean, x)
+
+
+def _nanmin(x):
+    return _reduce(np.nanmin, x)
+
+
+def _nanmax(x):
+    return _reduce(np.nanmax, x)
+
+
+def _nanmedian(x):
+    return _reduce(np.nanmedian, x)
+
+
+def _nanstd(x):
+    return _reduce(np.nanstd, x)
+
+
 
 def _series(frames, key="centre"):
     """Per-frame value for the LONGEST-LIVED track, plus its validity mask.
@@ -64,7 +96,7 @@ def _speed(cen, box, ok, dt, max_gap=2):
     good = okx & oky
     cx, cy = savgol(cx, good), savgol(cy, good)
     diag = np.hypot(box[:, 2] - box[:, 0], box[:, 3] - box[:, 1])
-    scale = np.nanmedian(diag[ok]) if ok.any() else 1.0
+    scale = _nanmedian(diag[ok]) if ok.any() else 1.0
     scale = scale if np.isfinite(scale) and scale > 1e-6 else 1.0
     vx = np.gradient(cx) / dt / scale
     vy = np.gradient(cy) / dt / scale
@@ -105,12 +137,12 @@ def observability(frames, dt, rel_t):
             for i in range(n - 1) if ok[i] and ok[i + 1]]
     out["median_consecutive_box_iou"] = float(np.median(ious)) if ious else np.nan
     diag = np.hypot(box[:, 2] - box[:, 0], box[:, 3] - box[:, 1])
-    scale = np.nanmedian(diag[ok]) if ok.any() else 1.0
+    scale = _nanmedian(diag[ok]) if ok.any() else 1.0
     d = np.linalg.norm(np.diff(cen, axis=0), axis=1)
     pair = ok[:-1] & ok[1:]
-    out["box_center_jitter"] = float(np.nanmedian(d[pair]) / max(scale, 1e-6)) \
+    out["box_center_jitter"] = float(_nanmedian(d[pair]) / max(scale, 1e-6)) \
         if pair.any() else np.nan
-    out["box_scale_jitter"] = float(np.nanmedian(np.abs(np.diff(diag))[pair]) /
+    out["box_scale_jitter"] = float(_nanmedian(np.abs(np.diff(diag))[pair]) /
                                     max(scale, 1e-6)) if pair.any() else np.nan
     _, okx, filled = interpolate_gaps(cen[:, 0], ok, 2)
     out["interpolated_fraction"] = float(filled.mean())
@@ -129,12 +161,12 @@ def direction(frames, dt, rel_t):
     pre, post = (rel_t < 0) & good, (rel_t >= 0) & good
     sp = np.hypot(vx, vy)
     if pre.any():
-        out["pre_motion_speed"] = float(np.nanmean(sp[pre]))
+        out["pre_motion_speed"] = float(_nanmean(sp[pre]))
     if post.any():
-        out["post_motion_speed"] = float(np.nanmean(sp[post]))
+        out["post_motion_speed"] = float(_nanmean(sp[post]))
     if pre.any() and post.any():
-        a = np.array([np.nanmean(vx[pre]), np.nanmean(vy[pre])])
-        b = np.array([np.nanmean(vx[post]), np.nanmean(vy[post])])
+        a = np.array([_nanmean(vx[pre]), _nanmean(vy[pre])])
+        b = np.array([_nanmean(vx[post]), _nanmean(vy[post])])
         na, nb = np.linalg.norm(a), np.linalg.norm(b)
         out["direction_cosine_pre_vs_post"] = float(a @ b / (na * nb)) \
             if na > 1e-9 and nb > 1e-9 else np.nan
@@ -151,7 +183,7 @@ def direction(frames, dt, rel_t):
         # diagonal motion and miss one aligned with neither axis
         pc = np.linalg.svd(v[m] - v[m].mean(0), full_matrices=False)[2][0]
         proj = v[m] @ pc
-        floor = 0.25 * np.nanmedian(np.abs(proj))
+        floor = 0.25 * _nanmedian(np.abs(proj))
         s = np.sign(np.where(np.abs(proj) > floor, proj, 0))
         s = s[s != 0]
         out["reversal_count"] = float((np.diff(s) != 0).sum()) if len(s) > 1 else 0.0
@@ -171,10 +203,10 @@ def stop_start(frames, dt, rel_t):
         return out
     vx, vy, good, _ = _speed(cen, box, ok, dt)
     sp = np.hypot(vx, vy)
-    med = np.nanmedian(sp[good]) if good.any() else np.nan
+    med = _nanmedian(sp[good]) if good.any() else np.nan
     near = (np.abs(rel_t) <= NEAR) & good
     if near.any():
-        out["minimum_speed_near_candidate"] = float(np.nanmin(sp[near]))
+        out["minimum_speed_near_candidate"] = float(_nanmin(sp[near]))
         stopped = sp[near] < STOP_FRAC * med if np.isfinite(med) else np.zeros(near.sum(), bool)
         out["stop_duration_near_candidate"] = float(np.sum(stopped) * dt)
     pre = (rel_t < -NEAR / 2) & good
@@ -182,12 +214,12 @@ def stop_start(frames, dt, rel_t):
     if pre.any() and post.any() and near.any() and np.isfinite(med) and med > 0:
         # high when motion runs, pauses at the candidate, then runs again --
         # the regrasp signature, and NOT the same thing as a low mean speed
-        lo = np.nanmin(sp[near])
+        lo = _nanmin(sp[near])
         out["stop_then_start_score"] = float(
-            (np.nanmean(sp[pre]) + np.nanmean(sp[post])) / 2.0 / max(lo, 1e-6) / max(med, 1e-6))
+            (_nanmean(sp[pre]) + _nanmean(sp[post])) / 2.0 / max(lo, 1e-6) / max(med, 1e-6))
     diag = np.hypot(box[:, 2] - box[:, 0], box[:, 3] - box[:, 1])
     if pre.any() and post.any():
-        a, b = np.nanmedian(diag[pre]), np.nanmedian(diag[post])
+        a, b = _nanmedian(diag[pre]), _nanmedian(diag[post])
         out["box_scale_change_across_candidate"] = float(abs(b - a) / max(a, 1e-6))
     lm = [f["tracks"] for f in frames]
     ang = []
@@ -226,7 +258,7 @@ def periodicity(frames, dt, rel_t, min_lag_s=0.3, max_lag_s=1.5, n_perm=200):
     s[~good] = np.nan
     if np.isfinite(s).sum() < 12:
         return out
-    s = np.nan_to_num(s - np.nanmean(s))
+    s = np.nan_to_num(s - _nanmean(s))
     denom = float(s @ s)
     if denom <= 0:
         return out
@@ -288,12 +320,12 @@ def two_hand(frames, dt, rel_t):
     out["two_hand_presence_change"] = float((np.diff(both.astype(int)) != 0).sum())
     pre, post = (rel_t < 0) & np.isfinite(d), (rel_t >= 0) & np.isfinite(d)
     if pre.any() and post.any():
-        out["inter_hand_distance_change"] = float(abs(np.nanmedian(d[post]) -
-                                                      np.nanmedian(d[pre])))
+        out["inter_hand_distance_change"] = float(abs(_nanmedian(d[post]) -
+                                                      _nanmedian(d[pre])))
     if np.isfinite(d).sum() >= 6:
-        dd = np.diff(np.nan_to_num(d, nan=np.nanmean(d)))
-        out["two_hand_synchrony"] = float(1.0 - np.std(dd) / (np.nanmean(np.abs(dd)) + 1e-9)) \
-            if np.nanmean(np.abs(dd)) > 0 else np.nan
+        dd = np.diff(np.nan_to_num(d, nan=_nanmean(d)))
+        out["two_hand_synchrony"] = float(1.0 - np.std(dd) / (_nanmean(np.abs(dd)) + 1e-9)) \
+            if _nanmean(np.abs(dd)) > 0 else np.nan
     return out
 
 
