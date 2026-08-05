@@ -1,0 +1,50 @@
+{
+  "_comment": "Pre-registered selective-policy search space, written BEFORE any policy result exists (2026-08-05). Only the three families below may be searched, and only over the grids listed here. This file is the whole of what is allowed to vary: adding a family, widening a grid, or relaxing the selection rule after seeing a result is the failure mode the file exists to prevent. Development data is the clean-145 plus batch3 (313 events, zero recording overlap, verified). Batch4 takes no part in choosing anything.",
+
+  "reliability_column": "detect_coverage",
+  "_reliability_comment": "Per-event fraction of frames in [t-4, t+4] that were a REAL hand detection rather than an interpolated box. This is the only reliability signal currently computable for BOTH development sets from the cached features, so it is the only one used. Box jitter, hand count, missing-run length and crop temporal consistency are all listed in the review as worth having and none of them are stored per event today; adding them means re-extracting, and using a feature available on one set and not the other would be worse than using a coarse one available on both. The coverage split already did real work: it is what separated batch3's +0.034 (CI straddling zero) from +0.076 (CI [+0.012, +0.144]) on the well-detected subset.",
+
+  "selection": {
+    "min_auto_keep_precision": 0.95,
+    "max_sharp_false_reject_rate": 0.05,
+    "objective": "maximize_automatic_coverage",
+    "_comment": "Precision-first, in this order: an auto-keep stream that is not trustworthy is worse than no automation, so precision is a constraint rather than something traded off. The sharp false-reject cap stops the policy from buying precision by rejecting real boundaries. Only then is automatic coverage maximised. Ties go to the higher auto-keep precision. These three numbers are fixed here; if nothing satisfies them the honest output is 'nothing qualifies', not a relaxed threshold."
+  },
+
+  "families": [
+    {
+      "name": "A_p1_threshold_with_reliability_abstention",
+      "_comment": "P1 alone decides; the local branch only gates. This is the control the other two have to beat -- if it wins, the local branch is not earning its place in the decision layer, whatever it does to ranking.",
+      "family": "threshold",
+      "score": "P1 (global) alone",
+      "grid": {
+        "keep_above": [0.80, 0.85, 0.90, 0.95],
+        "reject_below": [0.20, 0.30, 0.40, 0.50],
+        "min_reliability": [0.0, 0.5, 0.7]
+      }
+    },
+    {
+      "name": "B_global_local_agreement",
+      "_comment": "Both branches must agree to act; disagreement routes to REVIEW. This is the form that matches what the evaluation actually found -- the local branch improves ranking but destroys some correct boundaries, so it should be able to force a human look rather than to overrule P1 on its own.",
+      "family": "agreement",
+      "score_a": "P1 (global) alone",
+      "score_b": "local alone",
+      "grid": {
+        "keep_above": [0.75, 0.80, 0.85, 0.90],
+        "reject_below": [0.20, 0.30, 0.40, 0.50],
+        "min_reliability": [0.0, 0.5, 0.7]
+      }
+    },
+    {
+      "name": "C_fused_threshold_with_reliability_abstention",
+      "_comment": "The feature-level fused score with the same abstention gate. Highest ranking AUROC of the arms measured, but it is also the arm that produced 8 true-positive harms on the clean-145, so precision at the operating point is not implied by its AUROC.",
+      "family": "fused",
+      "score": "P1 + local, feature-level",
+      "grid": {
+        "keep_above": [0.80, 0.85, 0.90, 0.95],
+        "reject_below": [0.20, 0.30, 0.40, 0.50],
+        "min_reliability": [0.0, 0.5, 0.7]
+      }
+    }
+  ]
+}

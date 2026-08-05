@@ -286,13 +286,13 @@ def evaluate(label, events_g, events_l, y, groups, sub_map, gate, a):
         if name == "P1 (global) alone":
             continue
         checks = {
-            "net rescues-harms": (r["net"], gate["min_rescues_minus_harms"],
+            "net rescues-harms >= min": (r["net"], gate["min_rescues_minus_harms"],
                                   r["net"] >= gate["min_rescues_minus_harms"]),
-            "true-positive harms": (r["tp_harms"], gate["max_true_positive_harms"],
+            "TP harms <= max": (r["tp_harms"], gate["max_true_positive_harms"],
                                     r["tp_harms"] <= gate["max_true_positive_harms"]),
-            "AUROC gain": (r["delta"], gate["min_auroc_gain"],
+            "AUROC gain >= min": (r["delta"], gate["min_auroc_gain"],
                            r["delta"] >= gate["min_auroc_gain"]),
-            "worst per-fold": (r["worst_per_fold_delta"], -gate["max_worst_per_fold_drop"],
+            "worst per-fold >= -max": (r["worst_per_fold_delta"], -gate["max_worst_per_fold_drop"],
                                r["worst_per_fold_delta"] >= -gate["max_worst_per_fold_drop"]),
             # BOTH readings are reported because they disagree and the
             # disagreement flips the verdict. The config's 0.074 is P1's
@@ -310,8 +310,11 @@ def evaluate(label, events_g, events_l, y, groups, sub_map, gate, a):
             "same-action FP (vs P1 on THIS data)":
                 (r["same_action_fp_rate"], base_sfp,
                  r["same_action_fp_rate"] <= base_sfp + 1e-9),
-            "CI excludes 0": (r["ci95"][0] if r["ci95"] else float("nan"), 0.0,
-                              bool(r["ci95"]) and r["ci95"][0] > 0),
+            # Named as the REQUIREMENT, not as a conclusion. The failure list
+            # prints these names verbatim, so "CI excludes 0" appearing after
+            # "failed:" read as the opposite of what happened.
+            "CI lower bound > 0": (r["ci95"][0] if r["ci95"] else float("nan"), 0.0,
+                                   bool(r["ci95"]) and r["ci95"][0] > 0),
         }
         r["gate_checks"] = {k: {"value": v, "threshold": t, "pass": bool(p)}
                             for k, (v, t, p) in checks.items()}
@@ -434,10 +437,18 @@ def main():
         with open(os.path.expanduser(a.dump_events), "w", newline="", encoding="utf-8") as f:
             w = csv.writer(f)
             names = list(r["oofs"])
-            w.writerow(["event_id", "recording_id", "y", "detect_coverage"] + names)
+            # subtype is required by c3_selective_policy: without it every
+            # event is treated as clean-binary and the taxonomy table -- the
+            # one that shows whether camera/offscreen candidates are being
+            # auto-accepted -- comes out empty.
+            w.writerow(["event_id", "recording_id", "y", "subtype",
+                        "detect_coverage"] + names)
             covmap = {e["event_id"]: c for e, c in zip(events, cov)}
+            submap = {e["event_id"]: (e.get("temporal_pair_subtype") or "")
+                      for e in events}
             for i, eid in enumerate(r["event_ids"]):
                 w.writerow([eid, r["recording_ids"][i], int(r["y"][i]),
+                            submap.get(eid, ""),
                             f"{covmap.get(eid, float('nan')):.3f}"]
                            + [f"{r['oofs'][n][i]:.6f}" if np.isfinite(r["oofs"][n][i]) else ""
                               for n in names])
