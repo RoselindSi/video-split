@@ -181,6 +181,9 @@ def evaluate(rows, pol, n_boot=0, seed=0):
     rp = sum(1 for e in rej if e["y"] == 0)
     m = {
         "n_clean": n, "n_positive": len(pos), "n_negative": len(neg),
+        "n_auto_keep": len(keep), "n_auto_reject": len(rej),
+        "sharp_false_reject_count": sum(1 for e in pos if e["decision"] == REJECT),
+        "same_action_false_accept_count": sum(1 for e in neg if e["decision"] == KEEP),
         "auto_keep_coverage": len(keep) / n if n else float("nan"),
         "auto_keep_precision": kp / len(keep) if keep else float("nan"),
         "auto_keep_precision_wilson": wilson(kp, len(keep)),
@@ -218,13 +221,98 @@ def evaluate(rows, pol, n_boot=0, seed=0):
     return m, tax
 
 
-def passes(m, sel):
-    return (np.isfinite(m["auto_keep_precision"])
-            and m["auto_keep_precision"] >= sel["min_auto_keep_precision"]
-            and m["auto_keep_coverage"] > 0
-            and (not np.isfinite(m["sharp_false_reject_rate"])
-                 or m["sharp_false_reject_rate"] <= sel["max_sharp_false_reject_rate"]))
+def passes(m, sel, rule="frontier"):
+    """rule='frontier': the constraints as written, which by construction lands
+    on the edge of the feasible region -- the selected point spends both safety
+    budgets exactly and has no event-level slack.
 
+    rule='one_error_buffered': the same constraints, but the policy must still
+    satisfy them after ONE MORE error of each kind. Expressed in event COUNTS
+    rather than by tightening the rates, because that is the thing actually
+    being worried about ("would one additional mistake break it?") and because
+    a rate expressed as a rounded count is what the constraint reduces to at
+    these sample sizes. Tightening to, say, precision >= 0.97 instead would be
+    an arbitrary number; this one is derived.
+
+    Not implemented as a Wilson lower bound: requiring the 95% lower bound to
+    clear 0.95 turns "choose a policy expected to be 95% precise" into
+    "certify from 313 development events that it IS", which needs 73 out of 73
+    consecutive correct auto-keeps before the bound even reaches 0.95 (checked:
+    61/61 gives 0.9408, 73/73 gives 0.9500). At n_auto_keep = 61 with 3 errors
+    it is unreachable, so it would return 'no solution' rather than a usable
+    policy."""
+    if not np.isfinite(m["auto_keep_precision"]) or m["n_auto_keep"] <= 0:
+        return False
+    max_fk = math.floor(m["n_auto_keep"] * (1 - sel["min_auto_keep_precision"]))
+    max_fr = math.floor(m["n_positive"] * sel["max_sharp_false_reject_rate"])
+    if rule == "one_error_buffered":
+        max_fk -= 1
+        max_fr -= 1
+    return (m["false_keep_count"] <= max_fk
+            and m["sharp_false_reject_count"] <= max_fr)
+
+
+
+def enumerate_policies(fams):
+    """Every (family, threshold) combination in the pre-listed grids."""
+    out = []
+    for fam in fams:
+        grid = fam.get("grid", {})
+        keys = sorted(grid)
+        for combo in itertools.product(*(grid[k] for k in keys)):
+            pol = {**{k: v for k, v in fam.items()
+                      if k != "grid" and not k.startswith("_")},
+                   **dict(zip(keys, combo))}
+            if pol["keep_above"] > pol["reject_below"]:
+                out.append(pol)
+    return out
+
+
+def select_one(rows, pols, sel, rule):
+    """-> (policy, metrics) or (None, closest_metrics). Ties on coverage go to
+    the higher auto-keep precision so the choice is deterministic rather than
+    dependent on grid iteration order."""
+    scored = [(p, evaluate(rows, p)[0]) for p in pols]
+    ok = [(p, m) for p, m in scored if passes(m, sel, rule)]
+    if not ok:
+        closest = max(scored, key=lambda pm: pm[1]["auto_keep_precision"]
+                      if np.isfinite(pm[1]["auto_keep_precision"]) else -1)
+        return None, closest
+    return max(ok, key=lambda pm: (pm[1]["automatic_coverage"],
+                                   pm[1]["auto_keep_precision"]))
+
+
+def nested_selection_diagnostic(rows, pols, sel, rule, k=5, seed=0):
+    """How much of the selected policy's development performance is selection
+    optimism?
+
+    Outer grouped folds over RECORDINGS. Within each, the whole selection is
+    re-run on the training recordings only, and the policy it picks is scored
+    on the held-out recordings. This does NOT choose a policy -- it estimates
+    how far a frontier point chosen this way falls when it meets recordings it
+    was not selected on, which is exactly the question Batch4 will answer once
+    and cannot answer twice. If the nested numbers already breach the
+    constraints, the risk of a Batch4 breach has evidence behind it rather than
+    being a hunch."""
+    recs = sorted({r["recording_id"] for r in rows})
+    rng = np.random.RandomState(seed)
+    rng.shuffle(recs)
+    folds = [set(recs[i::k]) for i in range(k)]
+    out = []
+    for i, f in enumerate(folds):
+        tr = [r for r in rows if r["recording_id"] not in f]
+        te = [r for r in rows if r["recording_id"] in f]
+        if len(te) < 10 or len({r["y"] for r in te}) < 2:
+            continue
+        pol, res = select_one(tr, pols, sel, rule)
+        if pol is None:
+            out.append({"fold": i, "selected": None,
+                        "note": "nothing satisfied the constraints on this "
+                                "fold's training recordings"})
+            continue
+        m, _ = evaluate(te, pol)
+        out.append({"fold": i, "selected": pol, "held_out": m})
+    return out
 
 def print_report(label, m, tax):
     print(f"\n=== {label} ===")
@@ -296,7 +384,11 @@ def main():
         raise SystemExit(f"{a.config} is already frozen; re-selecting on it would "
                          f"discard the point of freezing it.")
 
-    fams = cfg["families"] if a.select else [cfg["policy"]]
+    # A frozen config holds one entry per ROLE, so the score columns to load
+    # are the union across roles -- reading only the primary's would drop the
+    # column the secondary needs and score it on NaNs.
+    fams = cfg["families"] if a.select else [
+        e["policy"] for e in cfg["policies"].values() if e]
     cols = sorted({c for f in fams for k in ("score", "score_a", "score_b")
                    if (c := f.get(k))})
     rows = load_events(a.events, cols, cfg["reliability_column"])
@@ -324,82 +416,164 @@ def main():
               "sources": dict(Counter(r["source"] for r in rows))}
 
     if a.select:
-        sel = cfg["selection"]
-        print(f"\nselection rule (from the config, not chosen while looking at "
-              f"results):\n  auto_keep_precision >= {sel['min_auto_keep_precision']}, "
-              f"sharp_false_reject_rate <= {sel['max_sharp_false_reject_rate']}, "
-              f"then MAXIMISE automatic coverage")
-        cands = []
-        for fam in fams:
-            grid = fam.get("grid", {})
-            keys = sorted(grid)
-            for combo in itertools.product(*(grid[k] for k in keys)):
-                # underscore keys are documentation in the config; carrying
-                # them into the frozen policy makes the printed rule unreadable
-                pol = {**{k: v for k, v in fam.items()
-                          if k != "grid" and not k.startswith("_")},
-                       **dict(zip(keys, combo))}
-                if pol["keep_above"] <= pol["reject_below"]:
-                    continue
-                m, _ = evaluate(rows, pol)
-                cands.append((pol, m))
-        print(f"  evaluated {len(cands)} threshold combinations across "
-              f"{len(fams)} pre-listed families")
-        ok = [(p, m) for p, m in cands if passes(m, sel)]
-        print(f"  {len(ok)} satisfy the precision and false-reject constraints")
-        if not ok:
-            best = max(cands, key=lambda pm: pm[1]["auto_keep_precision"]
-                       if np.isfinite(pm[1]["auto_keep_precision"]) else -1)
-            print("\n  !! NOTHING satisfies the constraints. The closest by "
-                  "auto-keep precision is shown below; do NOT relax the "
-                  "constraints to make something pass -- that is the decision "
-                  "the constraints exist to prevent.")
-            m, tax = evaluate(rows, best[0], a.n_boot, a.seed)
-            print(f"  closest policy: {best[0]}")
-            print_report("CLOSEST (NOT SELECTED)", m, tax)
-            report["selected"] = None
-            report["closest"] = {"policy": best[0], "metrics": m}
-        else:
-            pol, _ = max(ok, key=lambda pm: pm[1]["automatic_coverage"])
+        pols = enumerate_policies(fams)
+        print(f"\n{len(pols)} threshold combinations across {len(fams)} pre-listed "
+              f"families")
+        frozen_policies = {}
+        for role in cfg["roles"]:
+            sel, rule = role["selection"], role["rule"]
+            print(f"\n{'#' * 72}\n# ROLE {role['role']}  (rule: {rule})\n"
+                  f"#   auto_keep_precision >= {sel['min_auto_keep_precision']}, "
+                  f"sharp_false_reject_rate <= {sel['max_sharp_false_reject_rate']}"
+                  + ("\n#   AND still satisfied after one additional error of each "
+                     "kind" if rule == "one_error_buffered" else "")
+                  + f"\n#   then MAXIMISE automatic coverage\n{'#' * 72}")
+            pol, res = select_one(rows, pols, sel, rule)
+            if pol is None:
+                m, tax = evaluate(rows, res[0], a.n_boot, a.seed)
+                print("  !! NOTHING satisfies this role's constraints. Closest by "
+                      "auto-keep precision shown; do NOT relax the constraints to "
+                      "make something pass -- that is the decision they exist to "
+                      "prevent.")
+                print(f"  closest: {json.dumps(res[0])}")
+                print_report(f"CLOSEST FOR {role['role']} (NOT SELECTED)", m, tax)
+                frozen_policies[role["role"]] = None
+                continue
             m, tax = evaluate(rows, pol, a.n_boot, a.seed)
-            print(f"\nselected policy: {json.dumps(pol)}")
-            print_report("DEVELOPMENT (145 + batch3)", m, tax)
-            report["selected"] = {"policy": pol, "metrics": m, "taxonomy": tax}
-            if a.out_config:
-                frozen = {"frozen": True, "policy": pol,
-                          "reliability_column": cfg["reliability_column"],
-                          "selection": sel, "selected_on": a.events,
-                          "n_dev_events": len(rows),
-                          "source_config": a.config,
-                          "source_config_sha256": hashlib.sha256(
-                              open(a.config, "rb").read()).hexdigest()[:16],
-                          "dev_metrics": m}
-                with open(a.out_config, "w", encoding="utf-8") as f:
-                    json.dump(frozen, f, ensure_ascii=False, indent=2, default=str)
-                print(f"\nwrote frozen config -> {a.out_config}")
-                print("  COMMIT THIS before generating any held-out scores. Its "
-                      "dev metrics are recorded inside it, so a later run can be "
-                      "checked against what was promised rather than against "
-                      "memory.")
+            print(f"selected: {json.dumps(pol)}")
+            print_report(f"DEVELOPMENT ({role['role']})", m, tax)
+            max_fk = math.floor(m["n_auto_keep"] * (1 - sel["min_auto_keep_precision"]))
+            max_fr = math.floor(m["n_positive"] * sel["max_sharp_false_reject_rate"])
+            slack_k = max_fk - m["false_keep_count"]
+            slack_r = max_fr - m["sharp_false_reject_count"]
+            print(f"  EVENT-LEVEL SLACK: {slack_k} more false keep(s) and "
+                  f"{slack_r} more false reject(s) before a constraint breaks "
+                  f"({m['false_keep_count']}/{max_fk} and "
+                  f"{m['sharp_false_reject_count']}/{max_fr} used)")
+            if slack_k <= 0 or slack_r <= 0:
+                print("    ^ ZERO slack on at least one constraint. This is a "
+                      "frontier point: maximising coverage under active "
+                      "constraints always lands here, and frontier points are "
+                      "the least transportable part of the feasible region. A "
+                      "breach on held-out data is plausible and must NOT trigger "
+                      "retuning.")
+            frozen_policies[role["role"]] = {
+                "policy": pol, "role": role["role"],
+                "selection_rule": role.get("_rule_text", rule),
+                "dev_metrics": m, "dev_taxonomy": tax,
+                "dev_counts": {"auto_keep": m["n_auto_keep"],
+                               "false_keep": m["false_keep_count"],
+                               "sharp": m["n_positive"],
+                               "sharp_false_reject": m["sharp_false_reject_count"]},
+                "event_level_margin": {"additional_false_keep_tolerated": slack_k,
+                                       "additional_false_reject_tolerated": slack_r},
+                "expected_external_behavior": role.get("expected_external_behavior", ""),
+            }
+
+        nd = cfg.get("nested_diagnostic")
+        nested = {}
+        if nd:
+            print(f"\n{'=' * 72}\nNESTED SELECTION DIAGNOSTIC (development only, "
+                  f"selects nothing)\n{'=' * 72}")
+            print("  Re-runs the ENTIRE selection inside grouped training folds and "
+                  "scores the chosen policy on held-out recordings. It measures how "
+                  "far a frontier point falls on recordings it was not selected on "
+                  "-- the question Batch4 answers once and cannot answer twice.")
+            for role in cfg["roles"]:
+                res = nested_selection_diagnostic(rows, pols, role["selection"],
+                                                  role["rule"], nd.get("folds", 5),
+                                                  nd.get("seed", 0))
+                nested[role["role"]] = res
+                print(f"\n  {role['role']}")
+                print(f"    {'fold':>4} {'keepP':>7} {'keepN':>6} {'sharpFR':>8} "
+                      f"{'autoCov':>8} {'review':>7}")
+                kp, fr = [], []
+                for r in res:
+                    if r.get("selected") is None:
+                        print(f"    {r['fold']:>4}  {r.get('note', 'no policy')}")
+                        continue
+                    h = r["held_out"]
+                    kp.append(h["auto_keep_precision"])
+                    fr.append(h["sharp_false_reject_rate"])
+                    print(f"    {r['fold']:>4} {h['auto_keep_precision']:>7.3f} "
+                          f"{h['n_auto_keep']:>6} {h['sharp_false_reject_rate']:>8.3f} "
+                          f"{h['automatic_coverage']:>8.3f} {h['review_rate']:>7.3f}")
+                kp = [x for x in kp if np.isfinite(x)]
+                fr = [x for x in fr if np.isfinite(x)]
+                if kp:
+                    nb = sum(1 for x in kp
+                             if x < role["selection"]["min_auto_keep_precision"])
+                    nr = sum(1 for x in fr
+                             if x > role["selection"]["max_sharp_false_reject_rate"])
+                    print(f"    median held-out auto-keep precision {np.median(kp):.3f}; "
+                          f"{nb}/{len(kp)} folds below the precision constraint, "
+                          f"{nr}/{len(fr)} above the false-reject constraint")
+                    if nb or nr:
+                        print("    ^ the constraints are ALREADY breached under "
+                              "nested selection on development data, so a Batch4 "
+                              "breach has evidence behind it rather than being a "
+                              "prediction")
+
+        report["selected"] = frozen_policies
+        report["nested_diagnostic"] = nested
+        if a.out_config and any(frozen_policies.values()):
+            frozen = {"frozen": True, "policies": frozen_policies,
+                      "reliability_column": cfg["reliability_column"],
+                      "roles": cfg["roles"], "selected_on": a.events,
+                      "n_dev_events": len(rows), "source_config": a.config,
+                      "source_config_sha256": hashlib.sha256(
+                          open(a.config, "rb").read()).hexdigest()[:16],
+                      "nested_diagnostic": nested,
+                      "primary_role": cfg["roles"][0]["role"],
+                      "_reporting_note": "On held-out data report COUNTS (e.g. "
+                                         "31/33) with Wilson and grouped-bootstrap "
+                                         "intervals, not a bare PASS/FAIL at 0.95: "
+                                         "at the auto-keep volume this policy "
+                                         "produces, one event moves precision by "
+                                         "about 3 points. Report BOTH roles; do not "
+                                         "pick the better one afterwards."}
+            with open(a.out_config, "w", encoding="utf-8") as f:
+                json.dump(frozen, f, ensure_ascii=False, indent=2, default=str)
+            print(f"\nwrote frozen config -> {a.out_config}")
+            print("  COMMIT THIS before generating any held-out scores.")
     else:
-        pol = cfg["policy"]
-        m, tax = evaluate(rows, pol, a.n_boot, a.seed)
-        print(f"\napplying frozen policy: {json.dumps(pol)}")
-        print(f"  frozen from {cfg.get('source_config')} "
+        pols = cfg["policies"]
+        print(f"\nfrozen from {cfg.get('source_config')} "
               f"(sha {cfg.get('source_config_sha256')}), selected on "
               f"{cfg.get('n_dev_events')} development events")
-        print_report("HELD-OUT (one shot, no tuning)", m, tax)
-        dev = cfg.get("dev_metrics") or {}
-        if dev:
-            print(f"\n  vs development, the numbers that were promised:")
-            for k in ("auto_keep_precision", "auto_keep_coverage",
-                      "same_action_false_accept_rate", "sharp_false_reject_rate",
-                      "review_rate"):
-                if k in dev and np.isfinite(m.get(k, float("nan"))):
-                    print(f"    {k:<32} dev {dev[k]:.3f} -> held-out {m[k]:.3f} "
-                          f"({m[k] - dev[k]:+.3f})")
-        report["applied"] = {"policy": pol, "metrics": m, "taxonomy": tax,
+        print(f"primary role: {cfg.get('primary_role')}")
+        applied = {}
+        for role, entry in pols.items():
+            if entry is None:
+                print(f"\n{role}: no policy was frozen for this role")
+                continue
+            pol = entry["policy"]
+            m, tax = evaluate(rows, pol, a.n_boot, a.seed)
+            print(f"\n{'#' * 72}\n# {role}"
+                  + ("  (PRIMARY)" if role == cfg.get("primary_role") else "  (secondary)")
+                  + f"\n{'#' * 72}")
+            print(f"policy: {json.dumps(pol)}")
+            if entry.get("expected_external_behavior"):
+                print(f"pre-registered expectation: {entry['expected_external_behavior']}")
+            print_report("HELD-OUT (one shot, no tuning)", m, tax)
+            dev = entry.get("dev_metrics") or {}
+            if dev:
+                print("\n  vs development, the numbers promised before this ran:")
+                for k in ("auto_keep_precision", "auto_keep_coverage",
+                          "same_action_false_accept_rate", "sharp_false_reject_rate",
+                          "review_rate", "automatic_coverage"):
+                    if k in dev and np.isfinite(m.get(k, float("nan"))):
+                        print(f"    {k:<32} dev {dev[k]:.3f} -> held-out {m[k]:.3f} "
+                              f"({m[k] - dev[k]:+.3f})")
+                print(f"    auto-keep counts: dev "
+                      f"{dev.get('n_auto_keep', 0) - dev.get('false_keep_count', 0)}"
+                      f"/{dev.get('n_auto_keep', 0)} -> held-out "
+                      f"{m['n_auto_keep'] - m['false_keep_count']}/{m['n_auto_keep']}")
+            applied[role] = {"policy": pol, "metrics": m, "taxonomy": tax,
                              "dev_metrics": dev}
+        report["applied"] = applied
+        print("\nReport both roles as they stand. Choosing whichever performed "
+              "better here would convert a held-out test into a selection step.")
 
     if a.dump_decisions:
         with open(a.dump_decisions, "w", newline="", encoding="utf-8") as f:
