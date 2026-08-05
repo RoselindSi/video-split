@@ -223,10 +223,19 @@ def main():
     sheet = os.path.join(a.out_dir, "audit_sheet.csv")
     with open(sheet, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
-        w.writerow(["event_id", "answer(" + "|".join(ANSWERS) + ")",
+        # your_call and confidence come FIRST and are answered before the
+        # observability question, for two reasons. They measure whether the
+        # REVIEW band is resolvable by a human at all -- an upper bound on
+        # anything that could be built for it, which nothing so far has
+        # established -- and answering "what evidence would settle this"
+        # before attempting the decision invites a plausible-sounding
+        # explanation for a judgement never actually made.
+        w.writerow(["event_id", "your_call(sharp|same|cannot)",
+                    "confidence(1_guess|2_lean|3_sure)",
+                    "answer(" + "|".join(ANSWERS) + ")",
                     "what_evidence_would_settle_it", "notes"])
         for _, r in picked:
-            w.writerow([r["event_id"], "", "", ""])
+            w.writerow([r["event_id"], "", "", "", "", ""])
 
     # The key is written SEPARATELY so the sheet a reviewer opens carries no
     # stratum, no label and no coverage -- knowing an event was drawn from the
