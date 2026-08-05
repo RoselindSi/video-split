@@ -80,9 +80,18 @@ def auroc_stats(y, v, recs, n_boot=2000, n_perm=2000, seed=0):
     for _ in range(n_perm):
         perm.append(_auroc(rng.permutation(y), v))
     fold = lambda x: max(x, 1 - x)
-    return {"auroc": au, "folded": fold(au),
-            "ci95": [float(np.percentile(bs, 2.5)), float(np.percentile(bs, 97.5))]
-                    if bs else [float("nan")] * 2,
+    # The CI is folded THE SAME WAY as the point estimate. Reporting a folded
+    # 0.673 next to a raw CI of [0.239, 0.417] invites the reader to compare
+    # it against a row whose CI is on the other side of 0.5; both then look
+    # like they say different things when they say the same one. Folding a
+    # below-0.5 interval means mirroring it about 0.5 and swapping the ends.
+    lo_hi = ([float(np.percentile(bs, 2.5)), float(np.percentile(bs, 97.5))]
+             if bs else [float("nan")] * 2)
+    if au < 0.5:
+        lo_hi = [1 - lo_hi[1], 1 - lo_hi[0]]
+    return {"auroc": au, "folded": fold(au), "direction": "higher" if au >= 0.5 else "lower",
+            "ci95": lo_hi, "ci95_raw": ([float(np.percentile(bs, 2.5)),
+                                         float(np.percentile(bs, 97.5))] if bs else None),
             "perm_folded_p95": float(np.percentile([fold(x) for x in perm], 95)),
             "n_recordings": len(keys), "n_positive": int(y.sum())}
 

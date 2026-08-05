@@ -236,7 +236,8 @@ def main():
     if len(set(lab.tolist())) < 2:
         print("  only one class present -- nothing to separate")
     else:
-        print(f"  {'feature':<32} {'AUROC':>7} {'95% CI':>18} {'chance p95':>11}")
+        print(f"  {'feature':<32} {'AUROC':>7} {'95% CI':>18} {'chance p95':>11} "
+              f"{'dir':>7}")
         obs, best = {}, None
         for c in sorted(score_cols):
             v = np.array([float(r[c]) if r.get(c) not in (None, "") else np.nan
@@ -249,9 +250,9 @@ def main():
                 continue
             obs[c] = st
             flag = "" if st["folded"] > st["perm_folded_p95"] else "  (below chance)"
-            print(f"  {c:<32} {st['folded']:>7.3f} "
-                  f"[{st['ci95'][0]:.3f}, {st['ci95'][1]:.3f}]".rjust(19)
-                  + f" {st['perm_folded_p95']:>11.3f}{flag}")
+            ci = f"[{st['ci95'][0]:.3f}, {st['ci95'][1]:.3f}]"
+            print(f"  {c:<32} {st['folded']:>7.3f} {ci:>18} "
+                  f"{st['perm_folded_p95']:>11.3f} {st['direction']:>7}{flag}")
             if best is None or st["folded"] > obs[best]["folded"]:
                 best = c
         report["observability"] = obs
