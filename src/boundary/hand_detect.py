@@ -30,7 +30,8 @@ class HandDetector:
     """detector(frame_rgb_uint8) -> list of (x0, y0, x1, y1) pixel boxes, one
     per detected hand. Empty list when nothing is found."""
 
-    def __init__(self, model_path=None, max_hands=2, min_confidence=0.3):
+    def __init__(self, model_path=None, max_hands=2, min_confidence=0.3,
+                 running_mode="image"):
         import mediapipe as mp
         self.mp = mp
         self.api = None
@@ -60,13 +61,43 @@ class HandDetector:
                 "venv that is otherwise working).")
         from mediapipe.tasks import python as mp_python
         from mediapipe.tasks.python import vision
+        self.mode = running_mode
         self.det = vision.HandLandmarker.create_from_options(
             vision.HandLandmarkerOptions(
                 base_options=mp_python.BaseOptions(model_asset_path=model_path),
-                running_mode=vision.RunningMode.IMAGE,
+                running_mode=(vision.RunningMode.VIDEO if running_mode == "video"
+                              else vision.RunningMode.IMAGE),
                 num_hands=max_hands,
                 min_hand_detection_confidence=min_confidence))
         self.api = "tasks"
+
+    def detect_full(self, frame, timestamp_ms=None):
+        """Full result -- landmarks, world landmarks, handedness, scores -- not
+        just boxes. VIDEO mode requires STRICTLY INCREASING timestamps within
+        one detector instance, and it carries tracking state between calls, so
+        a single detector walked across unrelated event windows would let one
+        event's hand track bleed into the next and manufacture continuity that
+        was never observed. Callers processing disjoint windows must construct
+        one detector per window."""
+        import numpy as np
+        if not frame.flags["C_CONTIGUOUS"] or frame.dtype != np.uint8:
+            frame = np.ascontiguousarray(frame, dtype=np.uint8)
+        if self.api == "legacy":
+            r = self.det.process(frame)
+            hands = [lm.landmark for lm in (r.multi_hand_landmarks or [])]
+            world = [lm.landmark for lm in (getattr(r, "multi_hand_world_landmarks", None) or [])]
+            handed = [h.classification[0].label for h in (r.multi_handedness or [])]
+            score = [h.classification[0].score for h in (r.multi_handedness or [])]
+        else:
+            img = self.mp.Image(image_format=self.mp.ImageFormat.SRGB, data=frame)
+            r = (self.det.detect_for_video(img, int(timestamp_ms))
+                 if self.mode == "video" else self.det.detect(img))
+            hands = list(r.hand_landmarks or [])
+            world = list(getattr(r, "hand_world_landmarks", None) or [])
+            handed = [c[0].category_name for c in (r.handedness or [])]
+            score = [c[0].score for c in (r.handedness or [])]
+        return {"landmarks": hands, "world": world,
+                "handedness": handed, "score": score}
 
     def boxes(self, frame):
         """frame: HxWx3 uint8 RGB.
