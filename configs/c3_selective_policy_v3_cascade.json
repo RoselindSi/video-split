@@ -1,0 +1,62 @@
+{
+  "_comment": "SEPARATE from v2, which stays frozen and untouched as the transportability frontier diagnostic. v3 exists to test one narrow question -- after a FIXED Stage 1, is there a small, mechanically motivated Stage 2 that safely resolves part of the middle band -- rather than to widen v2's search. Adding cascade as a fourth family there would have taken the space from 144 combinations to about 570, and the evidence says the problem is not that 144 was too few: v2's nested diagnostic found no feasible policy on 3 of 5 folds' training splits, and the two folds that did select landed at held-out auto-keep precision 0.909 and 0.846 with sharp false-reject 0.067 and 0.097. 313 events cannot stably choose an operating point pressed against 0.95/0.05; quadrupling the search space would find a point that happens to work on the pooled OOF, not one that transports.",
+
+  "reliability_column": "detect_coverage",
+
+  "_stage1_frozen": "Stage 1 is v2's selected agreement rule, carried over verbatim and NOT re-searched: reliability >= 0.70, both branches >= 0.75 to AUTO_KEEP, both <= 0.30 to AUTO_REJECT, disagreement to REVIEW. Only Stage 2's two thresholds vary.",
+
+  "roles": [
+    {
+      "role": "cascade_review_reduction",
+      "rule": "frontier",
+      "_rule_text": "Stage 1 fixed; select only Stage 2's two thresholds, maximising FULL-TAXONOMY automatic coverage subject to full-taxonomy auto-keep precision >= 0.95, sharp false-reject <= 0.05, and per-subtype auto-keep caps",
+      "selection": {
+        "constraint_scope": "full_taxonomy",
+        "min_auto_keep_precision": 0.95,
+        "max_sharp_false_reject_rate": 0.05,
+        "max_auto_keep_rate_by_subtype": {
+          "visibility_or_offscreen": 0.0,
+          "camera_or_viewpoint_shift": 0.0,
+          "ambiguous": 0.0,
+          "annotation_convention": 0.0,
+          "gradual_phase_transition": 0.05
+        },
+        "_scope_comment": "FULL taxonomy, not clean binary. v2 was selected on clean-binary precision, which leaves every auto-kept non-clean event out of the denominator: on the development set that reads 0.951 while counting all 64 auto-keeps gives 58/64 = 0.906, and review reads 0.540 against a true 251/412 = 0.609. A cascade optimised on the clean-binary number could reduce review by automatically accepting gradual and ambiguous candidates and never show the cost. The per-subtype caps are DEVELOPMENT constraints only -- the policy never sees a subtype at inference -- and they are zero for offscreen, camera shift, ambiguous and annotation convention because none of those is a boundary decision the system is entitled to make alone."
+      },
+      "expected_external_behavior": "Buys automatic coverage back from Stage 1's middle band using a score that improves ranking but was never allowed to overrule a confident P1. If it clears the internal gate below it goes to batch4 alongside v2's frontier policy, both frozen, both reported, with no post-hoc choice between them."
+    }
+  ],
+
+  "_internal_gate_before_batch4": {
+    "_comment": "v3 must clear ALL of these on development data before it is allowed anywhere near batch4. Failing them means the evidence supports a useful local representation but not a stable low-review cascade, and the honest response is to leave v3 out of the batch4 run rather than to relax anything here.",
+    "min_nested_folds_feasible": 4,
+    "min_nested_folds_total": 5,
+    "full_auto_keep_precision_not_below_stage1": true,
+    "max_sharp_false_reject_rate": 0.05,
+    "min_full_review_rate_reduction": 0.05,
+    "no_new_auto_keep_in": ["ambiguous", "visibility_or_offscreen",
+                            "camera_or_viewpoint_shift", "annotation_convention"],
+    "not_driven_by_a_single_fold": true
+  },
+
+  "nested_diagnostic": {"folds": 5, "seed": 0},
+
+  "families": [
+    {
+      "name": "cascade_stage1_frozen",
+      "family": "cascade",
+      "score_a": "P1 (global) alone",
+      "score_b": "local alone",
+      "score_fused": "P1 + local, feature-level",
+      "keep_above": 0.75,
+      "reject_below": 0.30,
+      "min_reliability": 0.70,
+      "stage2_min_reliability": 0.70,
+      "_grid_comment": "NINE candidates, not hundreds. Stage 2 only ever sees what Stage 1 left as insufficient_margin at reliability >= 0.70; low-reliability events and explicit global/local disagreements are deliberately out of its reach, because letting it decide those would make it unconditional fusion again -- and unconditional fusion is the thing that destroyed 8 correct boundaries on the clean-145.",
+      "grid": {
+        "stage2_keep_above": [0.85, 0.90, 0.95],
+        "stage2_reject_below": [0.05, 0.10, 0.15]
+      }
+    }
+  ]
+}

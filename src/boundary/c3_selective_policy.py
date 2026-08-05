@@ -229,6 +229,36 @@ def evaluate(rows, pol, n_boot=0, seed=0):
     for reason, c in Counter(e["reason"] for e in rev).items():
         m[f"abstain_{reason}_rate"] = c / n if n else float("nan")
 
+    # FULL-TAXONOMY metrics. The clean-binary numbers above exclude
+    # non-clean-binary events from every denominator, so an event that is
+    # auto-accepted despite being a gradual transition, a camera shift or
+    # ambiguous shows up in the taxonomy table and NOWHERE in the precision.
+    # That inflates the number the whole policy is selected on: on the real
+    # development set, clean-binary auto-keep precision reads 0.951 while
+    # counting all auto-kept events gives 58/64 = 0.906, and review reads
+    # 0.540 against a true 251/412 = 0.609. Only sharp_visible_transition is
+    # a correct auto-keep; everything else auto-kept is wrong, including
+    # events that have no y at all.
+    def _correct_keep(e):
+        if e["subtype"]:
+            return e["subtype"] == "sharp_visible_transition"
+        return e["y"] == 1          # older dumps without a subtype column
+    all_keep = [e for e in rows if e["decision"] == KEEP]
+    all_rev = [e for e in rows if e["decision"] == REVIEW]
+    ck = sum(1 for e in all_keep if _correct_keep(e))
+    m.update({
+        "n_all": len(rows), "n_all_auto_keep": len(all_keep),
+        "full_auto_keep_precision": ck / len(all_keep) if all_keep else float("nan"),
+        "full_auto_keep_precision_wilson": wilson(ck, len(all_keep)),
+        "full_false_keep_count": len(all_keep) - ck,
+        "full_auto_keep_coverage": len(all_keep) / len(rows) if rows else float("nan"),
+        "full_review_rate": len(all_rev) / len(rows) if rows else float("nan"),
+        "full_automatic_coverage": 1 - (len(all_rev) / len(rows)) if rows else float("nan"),
+    })
+    for st in sorted({e["subtype"] for e in rows if e["subtype"]}):
+        g = [e for e in rows if e["subtype"] == st]
+        m[f"auto_keep_rate::{st}"] = sum(1 for e in g if e["decision"] == KEEP) / len(g)
+
     if n_boot and keep:
         def kprec(s):
             k = [e for e in s if e["decision"] == KEEP and
@@ -245,6 +275,19 @@ def evaluate(rows, pol, n_boot=0, seed=0):
                        "auto_keep_rate": sum(1 for e in g if e["decision"] == KEEP) / len(g),
                        "auto_reject_rate": sum(1 for e in g if e["decision"] == REJECT) / len(g)}
     return m, tax
+
+
+def _per_class_ok(m, sel):
+    """Per-subtype auto-keep caps. Development-only constraints: the policy
+    never sees a subtype at inference time, these only decide whether a
+    candidate policy is allowed to be selected. offscreen / camera-shift /
+    ambiguous default to ZERO auto-keeps because none of them is a boundary
+    decision the system is entitled to make on its own."""
+    for st, cap in (sel.get("max_auto_keep_rate_by_subtype") or {}).items():
+        v = m.get(f"auto_keep_rate::{st}")
+        if v is not None and v > cap + 1e-9:
+            return False, f"{st} auto-keep {v:.3f} > {cap}"
+    return True, ""
 
 
 def passes(m, sel, rule="frontier"):
@@ -267,15 +310,26 @@ def passes(m, sel, rule="frontier"):
     61/61 gives 0.9408, 73/73 gives 0.9500). At n_auto_keep = 61 with 3 errors
     it is unreachable, so it would return 'no solution' rather than a usable
     policy."""
-    if not np.isfinite(m["auto_keep_precision"]) or m["n_auto_keep"] <= 0:
+    # scope decides WHICH auto-keep precision is constrained. 'clean_binary'
+    # is v1/v2's behaviour, kept so their frozen results stay reproducible;
+    # 'full_taxonomy' counts every auto-kept event, which is the number that
+    # describes the actual workflow.
+    scope = sel.get("constraint_scope", "clean_binary")
+    if scope == "full_taxonomy":
+        n_keep, n_fk = m["n_all_auto_keep"], m["full_false_keep_count"]
+    else:
+        n_keep, n_fk = m["n_auto_keep"], m["false_keep_count"]
+    if n_keep <= 0:
         return False
-    max_fk = math.floor(m["n_auto_keep"] * (1 - sel["min_auto_keep_precision"]))
+    ok, _ = _per_class_ok(m, sel)
+    if not ok:
+        return False
+    max_fk = math.floor(n_keep * (1 - sel["min_auto_keep_precision"]))
     max_fr = math.floor(m["n_positive"] * sel["max_sharp_false_reject_rate"])
     if rule == "one_error_buffered":
         max_fk -= 1
         max_fr -= 1
-    return (m["false_keep_count"] <= max_fk
-            and m["sharp_false_reject_count"] <= max_fr)
+    return n_fk <= max_fk and m["sharp_false_reject_count"] <= max_fr
 
 
 
@@ -361,6 +415,21 @@ def print_report(label, m, tax):
     print(f"  sharp FALSE REJECT rate        {m['sharp_false_reject_rate']:.3f}")
     print(f"  sharp recall after automatic   {m['sharp_recall_after_automatic']:.3f}")
     print(f"  automatic coverage             {m['automatic_coverage']:.3f}")
+    if np.isfinite(m.get("full_auto_keep_precision", float("nan"))):
+        lo, hi = m["full_auto_keep_precision_wilson"]
+        print(f"\n  --- FULL TAXONOMY (every event the policy actually sees) ---")
+        print(f"  AUTO_KEEP    {m['n_all_auto_keep']} of {m['n_all']} events, "
+              f"precision {m['full_auto_keep_precision']:.3f} "
+              f"[Wilson {lo:.3f}, {hi:.3f}]  wrong keeps "
+              f"{m['full_false_keep_count']}")
+        print(f"  REVIEW       rate {m['full_review_rate']:.3f}   "
+              f"automatic coverage {m['full_automatic_coverage']:.3f}")
+        if np.isfinite(m["auto_keep_precision"]):
+            d = m["auto_keep_precision"] - m["full_auto_keep_precision"]
+            print(f"  clean-binary precision reads {m['auto_keep_precision']:.3f}, "
+                  f"i.e. {d:+.3f} optimistic, because non-clean auto-keeps are "
+                  f"absent from its denominator")
+
     if tax:
         print(f"\n  --- non-clean-binary taxonomy (should mostly be REVIEW) ---")
         print(f"  {'subtype':<32} {'n':>4} {'review':>8} {'keep':>7} {'reject':>7}")
@@ -448,9 +517,14 @@ def main():
         frozen_policies = {}
         for role in cfg["roles"]:
             sel, rule = role["selection"], role["rule"]
+            scope = sel.get("constraint_scope", "clean_binary")
+            caps = sel.get("max_auto_keep_rate_by_subtype") or {}
             print(f"\n{'#' * 72}\n# ROLE {role['role']}  (rule: {rule})\n"
-                  f"#   auto_keep_precision >= {sel['min_auto_keep_precision']}, "
+                  f"#   [{scope}] auto_keep_precision >= "
+                  f"{sel['min_auto_keep_precision']}, "
                   f"sharp_false_reject_rate <= {sel['max_sharp_false_reject_rate']}"
+                  + ("".join(f"\n#   auto-keep rate for {k} <= {v}"
+                             for k, v in sorted(caps.items())) if caps else "")
                   + ("\n#   AND still satisfied after one additional error of each "
                      "kind" if rule == "one_error_buffered" else "")
                   + f"\n#   then MAXIMISE automatic coverage\n{'#' * 72}")
@@ -461,6 +535,10 @@ def main():
                       "auto-keep precision shown; do NOT relax the constraints to "
                       "make something pass -- that is the decision they exist to "
                       "prevent.")
+                cm, _ = evaluate(rows, res[0])
+                bad, why = _per_class_ok(cm, sel)
+                if not bad:
+                    print(f"     (closest also breaches a per-subtype cap: {why})")
                 print(f"  closest: {json.dumps(res[0])}")
                 print_report(f"CLOSEST FOR {role['role']} (NOT SELECTED)", m, tax)
                 frozen_policies[role["role"]] = None
