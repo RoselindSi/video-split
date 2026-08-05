@@ -336,15 +336,39 @@ def loro_fit_predict(X, y, groups, l2=1.0):
 
 
 def _auroc(y, p):
-    """Rank-based AUROC; nan if either class is empty."""
+    """Rank-based AUROC; nan if either class is empty. TIES COUNT AS 0.5.
+
+    The previous implementation ranked by argsort POSITION, which splits tied
+    scores arbitrarily by array order, and then counted strict `>`. A feature
+    with a single constant value scored 0.222 instead of 0.5 -- the answer was
+    determined by how the rows happened to be ordered. Continuous model scores
+    have essentially no ties, so every AUROC reported for P1, local, fused and
+    the C1/C2 arms is unaffected (verified: identical to 12 decimal places on
+    tie-free inputs). Discrete FEATURES are a different matter: detect_coverage
+    is exactly 1.000 for most events and detect_longest_gap_s exactly 0.00, so
+    any separability number computed on those was biased by row order.
+
+    Average ranks with the Mann-Whitney identity handle ties correctly."""
     m = ~np.isnan(p)
     y_, p_ = np.asarray(y)[m], np.asarray(p)[m]
     if len(set(y_.tolist())) < 2:
         return float("nan")
-    order = np.argsort(p_)
-    ranks = np.empty(len(p_)); ranks[order] = np.arange(len(p_))
-    pos, neg = ranks[y_ == 1], ranks[y_ == 0]
-    return float((pos[:, None] > neg[None, :]).mean())
+    order = np.argsort(p_, kind="mergesort")
+    r = np.empty(len(p_), dtype=float)
+    r[order] = np.arange(1, len(p_) + 1)
+    # average rank within each group of equal values
+    sp = p_[order]
+    i = 0
+    while i < len(sp):
+        j = i
+        while j + 1 < len(sp) and sp[j + 1] == sp[i]:
+            j += 1
+        if j > i:
+            r[order[i:j + 1]] = (i + j + 2) / 2.0
+        i = j + 1
+    n_pos = int((y_ == 1).sum())
+    n_neg = int((y_ == 0).sum())
+    return float((r[y_ == 1].sum() - n_pos * (n_pos + 1) / 2.0) / (n_pos * n_neg))
 
 
 def report_arm(name, y, p, target=0.90):

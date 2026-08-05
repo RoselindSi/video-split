@@ -51,6 +51,41 @@ import numpy as np
 
 from src.boundary.state_adapter import _auroc
 
+
+def auroc_stats(y, v, recs, n_boot=2000, n_perm=2000, seed=0):
+    """AUROC with a recording-grouped bootstrap CI and a permutation baseline.
+
+    A folded AUROC of 0.637 computed on 14 positives, quoted bare, cannot be
+    told apart from what shuffling the labels produces at that sample size.
+    The permutation column says what to expect by chance HERE, and the CI says
+    how much a different draw of recordings would move it. Both are needed
+    before 'no feature separates the errors' can be said as anything stronger
+    than 'no feature separates them strongly enough to build on'."""
+    m = np.isfinite(v)
+    y, v, recs = y[m], v[m], [r for r, k in zip(recs, m) if k]
+    if len(set(y.tolist())) < 2:
+        return {}
+    au = _auroc(y, v)
+    by = {}
+    for i, r in enumerate(recs):
+        by.setdefault(r, []).append(i)
+    keys = sorted(by)
+    rng = np.random.RandomState(seed)
+    bs = []
+    for _ in range(n_boot):
+        idx = [i for k in rng.choice(keys, len(keys), replace=True) for i in by[k]]
+        if len(set(y[idx].tolist())) == 2:
+            bs.append(_auroc(y[idx], v[idx]))
+    perm = []
+    for _ in range(n_perm):
+        perm.append(_auroc(rng.permutation(y), v))
+    fold = lambda x: max(x, 1 - x)
+    return {"auroc": au, "folded": fold(au),
+            "ci95": [float(np.percentile(bs, 2.5)), float(np.percentile(bs, 97.5))]
+                    if bs else [float("nan")] * 2,
+            "perm_folded_p95": float(np.percentile([fold(x) for x in perm], 95)),
+            "n_recordings": len(keys), "n_positive": int(y.sum())}
+
 CORRECT = "sharp_visible_transition"
 SKIP = {"event_id", "recording_id", "source", "y", "subtype", "decision",
         "reason", "policy_role"}
@@ -76,6 +111,7 @@ def main():
     ap.add_argument("--score_a", default="P1 (global) alone")
     ap.add_argument("--score_b", default="local alone")
     ap.add_argument("--n_boot", type=int, default=2000)
+    ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out")
     a = ap.parse_args()
 
@@ -150,31 +186,46 @@ def main():
     print("  AUROC 0.5 = the feature knows nothing. Values are folded above 0.5 "
           "with the direction shown, since a feature that predicts correctness "
           "is as usable as one that predicts error.")
-    print(f"  {'feature':<34} {'AUROC':>7} {'dir':>5} {'err median':>11} "
-          f"{'ok median':>10}")
+    recs = [r["recording_id"] for r in auto]
+    n_err_rec = len({r["recording_id"] for r, e in zip(auto, err) if e})
+    print(f"  the {int(err.sum())} errors come from {n_err_rec} recordings, so the "
+          f"effective sample size for any of this is closer to {n_err_rec} than "
+          f"to {int(err.sum())}")
+    print(f"  {'feature':<30} {'AUROC':>7} {'95% CI':>18} {'chance p95':>11} "
+          f"{'dir':>6}")
     feats, results = [c for c in auto[0] if c not in SKIP], {}
     for c in sorted(feats):
         v = col(c)
         m = np.isfinite(v)
         if m.sum() < len(auto) * 0.5 or len(set(v[m].tolist())) < 3:
             continue
-        au = _auroc(err[m], v[m])
-        folded = max(au, 1 - au)
-        d = "higher" if au >= 0.5 else "lower"
+        st = auroc_stats(err, v, recs, a.n_boot, a.n_boot, a.seed)
+        if not st:
+            continue
+        folded, d = st["folded"], "higher" if st["auroc"] >= 0.5 else "lower"
         em, om = np.median(v[m & (err == 1)]), np.median(v[m & (err == 0)])
-        results[c] = {"auroc": au, "folded": folded, "err_median": float(em),
-                      "ok_median": float(om)}
-        print(f"  {c:<34} {folded:>7.3f} {d:>5} {em:>11.3f} {om:>10.3f}")
+        results[c] = {**st, "err_median": float(em), "ok_median": float(om)}
+        beats = "" if folded > st["perm_folded_p95"] else "  (below chance)"
+        ci = f"[{st['ci95'][0]:.3f}, {st['ci95'][1]:.3f}]"
+        print(f"  {c:<30} {folded:>7.3f} {ci:>18} "
+              f"{st['perm_folded_p95']:>11.3f} {d:>6}{beats}")
 
     best = max(results.items(), key=lambda kv: kv[1]["folded"]) if results else None
     print()
     if best is None or best[1]["folded"] < 0.65:
-        print("  NOTHING separates the errors: the best feature reaches "
-              f"{best[1]['folded']:.3f} if any. The information a Stage 0 gate "
-              "would need is not in these features, so building one on them "
-              "would be fitting noise. That is a result -- it says the next "
-              "move is a NEW observable, not a new classifier over the old "
-              "ones.")
+        b = best[1] if best else {}
+        print(f"  NO feature separates the errors strongly enough to build on: "
+              f"the best reaches {b.get('folded', float('nan')):.3f}"
+              + (f", against {b.get('perm_folded_p95', float('nan')):.3f} "
+                 f"reachable by chance at this sample size, with CI "
+                 f"[{b.get('ci95', [float('nan')]*2)[0]:.3f}, "
+                 f"{b.get('ci95', [float('nan')]*2)[1]:.3f}]" if b else ""))
+        print("  Stated carefully: this is NOT proof that no signal exists. "
+              "With this many errors from this few recordings, a weak real "
+              "effect and noise look the same. What it does support is the "
+              "engineering call -- do not train a Stage 0 gate on these "
+              "scalars, because whatever is there is not separable enough to "
+              "deploy and would be fitted to a handful of events.")
     else:
         print(f"  best separator: {best[0]} at AUROC {best[1]['folded']:.3f} "
               f"(error median {best[1]['err_median']:.3f} vs correct "
