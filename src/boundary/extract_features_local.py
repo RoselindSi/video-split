@@ -154,6 +154,7 @@ def smooth_boxes(boxes, times, smooth_s):
     stats = {"n_frames": n, "n_detected": len(valid),
              "detected_frac": len(valid) / max(1, n)}
     stats["detected_mask"] = [b is not None for b in boxes]
+    stats["n_hands"] = [0 if b is None else 1 for b in boxes]
     if not valid:
         return [None] * n, 0.0, 0.0, stats
 
@@ -360,7 +361,18 @@ def main():
                       # bias the set toward whichever task families keep hands
                       # in view.
                       "detected": torch.tensor(bstats.get("detected_mask",
-                                                          [True] * len(feats))[:len(feats)])})
+                                                          [True] * len(feats))[:len(feats)]),
+                      # PER-FRAME BOXES, so per-event reliability beyond raw
+                      # coverage (centre jitter, scale jitter, longest missing
+                      # run inside the window) can be computed later WITHOUT
+                      # re-extracting. The detected mask alone cannot give any
+                      # of them. Stored after smoothing, i.e. what the crops
+                      # actually used; the mask says which of them were real.
+                      "boxes": torch.tensor(np.array(sboxes[:len(feats)], dtype=np.float32))
+                      if sboxes and sboxes[0] is not None else None,
+                      "n_hands": torch.tensor(
+                          bstats.get("n_hands", [0] * len(feats))[:len(feats)],
+                          dtype=torch.int8)})
         stats.append((det_rate, jitter, raw_jitter))
         # Both sides measured over the SAME crops. An earlier version averaged
         # the raw side over the first 20 frames and the upscaled side over all

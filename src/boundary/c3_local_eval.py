@@ -102,6 +102,35 @@ def detect_coverage(rec, t, half=WIDEST):
     return float(d[:n][m].mean()) if m.any() else 0.0
 
 
+def detect_longest_gap_s(rec, t, half=WIDEST):
+    """Longest run of CONSECUTIVE undetected frames inside the window, in
+    seconds. Computable from the existing caches, unlike box jitter, and it
+    separates two cases that the coverage fraction alone conflates: a detector
+    missing scattered single frames around a stable trajectory, versus one
+    that lost the hand for a continuous stretch and had the whole stretch
+    interpolated across. The extraction now also stores per-frame boxes so
+    centre and scale jitter become available too, but only for caches built
+    after that change -- using them would mean re-extracting both development
+    sets, and a reliability feature present on one set and absent on the other
+    is worse than a coarse one present on both."""
+    d = rec.get("detected")
+    if d is None:
+        return 0.0
+    times = rec["times"].numpy() if hasattr(rec["times"], "numpy") else np.asarray(rec["times"])
+    d = d.numpy() if hasattr(d, "numpy") else np.asarray(d)
+    n = min(len(times), len(d))
+    m = (times[:n] >= t - half) & (times[:n] <= t + half)
+    if not m.any():
+        return float(2 * half)
+    seq, tt = d[:n][m], times[:n][m]
+    best = run = 0
+    for i, v in enumerate(seq):
+        run = 0 if v else run + 1
+        best = max(best, run)
+    step = float(np.median(np.diff(tt))) if len(tt) > 1 else 0.5
+    return float(best * step)
+
+
 def cos_dist(a, b):
     na, nb = np.linalg.norm(a, axis=1), np.linalg.norm(b, axis=1)
     return 1.0 - (a * b).sum(1) / np.maximum(na * nb, 1e-8)
@@ -149,11 +178,19 @@ def grouped_bootstrap(y, base, cand, recs, n_boot=2000, seed=0):
     return float(np.percentile(d, 2.5)), float(np.percentile(d, 97.5))
 
 
-def run_folds(blocks, X_rel, y, groups, folds, extra=None, pca_dim=64, l2=5.0):
+def run_folds(blocks, X_rel, y, groups, folds, extra=None, pca_dim=64, l2=5.0,
+              oos=None):
     """blocks: list of raw side-vector pairs [(L, R), ...] each PCA'd
     separately and concatenated as pair_blocks. extra: [n, k] extra scalar
-    columns. Everything is fit on the training split of each fold only."""
+    columns. Everything is fit on the training split of each fold only.
+
+    oos: optional (blocks, X_rel, groups, extra) for events that must be
+    SCORED but never fitted -- the non-clean-binary taxonomy, which has no y.
+    Each such event is scored by the fold whose test split contains its
+    recording, i.e. by a model that never saw that recording, exactly like the
+    clean events' OOF scores. Returns (oof, oof_oos)."""
     oof = np.full(len(y), np.nan)
+    oos_oof = np.full(len(oos[2]), np.nan) if oos else np.zeros(0)
     for f in folds:
         te = np.array([g in f for g in groups])
         tr = ~te
@@ -174,7 +211,18 @@ def run_folds(blocks, X_rel, y, groups, folds, extra=None, pca_dim=64, l2=5.0):
         stP = _impute_scale_fit(Ptr)
         w, b = fit_logreg(_impute_scale_apply(stP, Ptr), y[tr], l2=l2)
         oof[te] = _sigmoid(_impute_scale_apply(stP, build(te)) @ w + b)
-    return oof
+        if oos:
+            ob, orel, ogr, oex = oos
+            om = np.array([g in f for g in ogr])
+            if om.any():
+                parts = [pair_block(pca_apply(p, L[om]), pca_apply(p, R[om]))
+                         for p, (L, R) in zip(pcas, ob)]
+                parts.append(_impute_scale_apply(st_rel, orel[om]))
+                if oex is not None:
+                    parts.append(oex[om])
+                oos_oof[om] = _sigmoid(
+                    _impute_scale_apply(stP, np.concatenate(parts, 1)) @ w + b)
+    return (oof, oos_oof) if oos else oof
 
 
 def per_fold_auroc(y, oof, groups, folds):
@@ -189,7 +237,8 @@ def per_fold_auroc(y, oof, groups, folds):
     return out
 
 
-def evaluate(label, events_g, events_l, y, groups, sub_map, gate, a):
+def evaluate(label, events_g, events_l, y, groups, sub_map, gate, a,
+             oos_g=None, oos_l=None):
     """One full comparison on whatever event subset is passed in."""
     print(f"\n{'=' * 72}\n{label}: {len(y)} events "
           f"({int(y.sum())}+ / {int((1 - y).sum())}-), "
@@ -218,15 +267,47 @@ def evaluate(label, events_g, events_l, y, groups, sub_map, gate, a):
 
     disagree = (cos_dist(Lg, Rg) - cos_dist(Ll, Rl)).reshape(-1, 1)
 
+    oos = None
+    oos_events = []
+    if oos_g:
+        _, oLg, oRg, oXrel, ok_g, _ = build_matrices(oos_g, False)
+        _, oLl, oRl, _, ok_l, _ = build_matrices(oos_l, False)
+        okeep = sorted(set(ok_g) & set(ok_l))
+        if okeep:
+            ogi = {k: i for i, k in enumerate(ok_g)}
+            oli = {k: i for i, k in enumerate(ok_l)}
+            og = np.array([ogi[k] for k in okeep]); ol = np.array([oli[k] for k in okeep])
+            oLg, oRg, oXrel = oLg[og], oRg[og], oXrel[og]
+            oLl, oRl = oLl[ol], oRl[ol]
+            oos_events = [oos_g[k] for k in okeep]
+            oos = ([(oLg, oRg), (oLl, oRl)], oXrel,
+                   [e["recording_id"] for e in oos_events],
+                   (cos_dist(oLg, oRg) - cos_dist(oLl, oRl)).reshape(-1, 1))
+            print(f"  scoring {len(okeep)} non-clean-binary events alongside "
+                  f"(never fitted on)")
+
+    # Block INDICES, not object identity: the out-of-sample scoring path has to
+    # pick the same blocks for an arm as the in-sample path, and matching them
+    # by `is` breaks the moment two arms share an array.
+    ALL_BLOCKS = [(Lg, Rg), (Ll, Rl)]
     arms = {
-        "P1 (global) alone": ([(Lg, Rg)], None),
-        "local alone": ([(Ll, Rl)], None),
-        "P1 + local, feature-level": ([(Lg, Rg), (Ll, Rl)], None),
-        "P1 + disagreement scalar": ([(Lg, Rg)], disagree),
+        "P1 (global) alone": ([0], False),
+        "local alone": ([1], False),
+        "P1 + local, feature-level": ([0, 1], False),
+        "P1 + disagreement scalar": ([0], True),
     }
-    oofs, res = {}, {}
-    for name, (blocks, extra) in arms.items():
-        oofs[name] = run_folds(blocks, X_rel, yk, gk, folds, extra, a.pca_dim)
+    oofs, res, oos_oofs = {}, {}, {}
+    for name, (bidx, use_disagree) in arms.items():
+        blocks = [ALL_BLOCKS[i] for i in bidx]
+        extra = disagree if use_disagree else None
+        if oos:
+            ob, orel, ogr, oex = oos
+            r = run_folds(blocks, X_rel, yk, gk, folds, extra, a.pca_dim,
+                          oos=([ob[i] for i in bidx], orel, ogr,
+                               oex if use_disagree else None))
+            oofs[name], oos_oofs[name] = r
+        else:
+            oofs[name] = run_folds(blocks, X_rel, yk, gk, folds, extra, a.pca_dim)
 
     # score-level fusion, min-max normalised on each fold's training scores
     base, loc = oofs["P1 (global) alone"], oofs["local alone"]
@@ -339,9 +420,12 @@ def evaluate(label, events_g, events_l, y, groups, sub_map, gate, a):
         print(f"\n  note: {n_tagged} of {int((1 - yk).sum())} negatives carry a fine "
               f"subtype tag; batch3's negatives have only the coarse label, so the "
               f"same-action column above is coarse by design")
-    return {"n_events": len(keep), "arms": res, "oofs": {k: v.tolist() for k, v in oofs.items()},
+    return {"n_events": len(keep), "arms": res,
+            "oofs": {k: v.tolist() for k, v in oofs.items()},
             "event_ids": [e["event_id"] for e in ev], "y": yk.tolist(),
-            "recording_ids": gk}
+            "recording_ids": gk,
+            "oos_oofs": {k: v.tolist() for k, v in oos_oofs.items()},
+            "oos_events": oos_events}
 
 
 def main():
@@ -360,6 +444,17 @@ def main():
                          "+0.054 on the clean-145 and +0.007 on batch3.")
     ap.add_argument("--batch3_pair_labels", default="data/gold/batch3_pair_labels_v1.csv")
     ap.add_argument("--gate_config", default="configs/local_gate_c3.json")
+    ap.add_argument("--score_all_taxonomy", action="store_true",
+                    help="ALSO score and dump events whose supervision is not "
+                         "clean binary (soft_transition, exclude, ...). They "
+                         "take no part in fitting -- they have no y -- but they "
+                         "are scored by the fold model that did not see their "
+                         "recording, so the decision layer can be told what it "
+                         "does with camera/offscreen/gradual candidates. Without "
+                         "this they are dropped by apply_to_events long before "
+                         "the dump, and c3_selective_policy's taxonomy safety "
+                         "table is structurally empty -- it can never show a "
+                         "policy auto-accepting nuisance candidates.")
     ap.add_argument("--min_detect_frac", type=float, default=0.5,
                     help="an event is 'well detected' when at least this "
                          "fraction of frames in [t-4, t+4] were real detections")
@@ -374,14 +469,30 @@ def main():
     loc_rid = load_feature_caches(a.local_cache)
     if a.batch3_manifest:
         from src.boundary.batch3_dev_events import build_events as build_b3
-        events = T.apply_to_events(build_b3(a.batch3_manifest, by_rid),
-                                   T.load_pair_labels(a.batch3_pair_labels))
+        raw_events = build_b3(a.batch3_manifest, by_rid)
+        labels = T.load_pair_labels(a.batch3_pair_labels)
         print(f"event source: batch3 manifest ({a.batch3_manifest})")
     else:
-        events = T.apply_to_events(
-            build_events(S.load_gold(a.gold), S.load_context(a.context), by_rid),
-            T.load_pair_labels(a.pair_labels))
+        raw_events = build_events(S.load_gold(a.gold), S.load_context(a.context), by_rid)
+        labels = T.load_pair_labels(a.pair_labels)
         print("event source: clean-145")
+    events = T.apply_to_events(raw_events, labels)
+    if a.score_all_taxonomy:
+        clean_ids = {e["event_id"] for e in events}
+        extra = []
+        for e in raw_events:
+            if e["event_id"] in clean_ids:
+                continue
+            lab = labels.get(e["event_id"])
+            if lab is None or not lab.get("pair_supervision"):
+                continue
+            extra.append(dict(e, y=None, pair_supervision=lab["pair_supervision"],
+                              temporal_pair_subtype=lab.get("temporal_pair_subtype")))
+        print(f"  --score_all_taxonomy: +{len(extra)} non-clean-binary events "
+              f"{dict(Counter(e['pair_supervision'] for e in extra))} "
+              f"-- scored but NEVER fitted on (they have no y)")
+    else:
+        extra = []
     print(f"clean events: {len(events)}  "
           f"subtypes={dict(Counter(e.get('temporal_pair_subtype') for e in events))}")
 
@@ -395,6 +506,7 @@ def main():
     if not events:
         raise SystemExit("no events have local features")
 
+    extra = [e for e in extra if e["recording_id"] in loc_rid]
     events_l = [dict(e, rec=loc_rid[e["recording_id"]]) for e in events]
     y = np.array([e["y"] for e in events], dtype=float)
     groups = [e["recording_id"] for e in events]
@@ -412,8 +524,10 @@ def main():
 
     report = {"min_detect_frac": a.min_detect_frac,
               "coverage_median": float(np.median(cov))}
+    extra_l = [dict(e, rec=loc_rid[e["recording_id"]]) for e in extra]
     report["all_events"] = evaluate("ALL EVENTS WITH LOCAL FEATURES",
-                                    events, events_l, y, groups, sub_map, gate, a)
+                                    events, events_l, y, groups, sub_map, gate, a,
+                                    oos_g=extra or None, oos_l=extra_l or None)
 
     sel = cov >= a.min_detect_frac
     if sel.sum() >= 20 and sel.sum() < len(cov):
@@ -442,16 +556,30 @@ def main():
             # one that shows whether camera/offscreen candidates are being
             # auto-accepted -- comes out empty.
             w.writerow(["event_id", "recording_id", "y", "subtype",
-                        "detect_coverage"] + names)
+                        "detect_coverage", "detect_longest_gap_s"] + names)
             covmap = {e["event_id"]: c for e, c in zip(events, cov)}
             submap = {e["event_id"]: (e.get("temporal_pair_subtype") or "")
+                      for e in events}
+            gapmap = {e["event_id"]: detect_longest_gap_s(loc_rid[e["recording_id"]], e["t"])
                       for e in events}
             for i, eid in enumerate(r["event_ids"]):
                 w.writerow([eid, r["recording_ids"][i], int(r["y"][i]),
                             submap.get(eid, ""),
-                            f"{covmap.get(eid, float('nan')):.3f}"]
+                            f"{covmap.get(eid, float('nan')):.3f}",
+                            f"{gapmap.get(eid, float('nan')):.2f}"]
                            + [f"{r['oofs'][n][i]:.6f}" if np.isfinite(r["oofs"][n][i]) else ""
                               for n in names])
+            # non-clean-binary rows: y is left EMPTY rather than filled with 0.
+            # They have no boundary label; writing 0 would silently enter them
+            # into every precision denominator as negatives.
+            for i, e in enumerate(r.get("oos_events", [])):
+                cv = detect_coverage(loc_rid[e["recording_id"]], e["t"])
+                w.writerow([e["event_id"], e["recording_id"], "",
+                            e.get("temporal_pair_subtype") or "", f"{cv:.3f}",
+                            f"{detect_longest_gap_s(loc_rid[e['recording_id']], e['t']):.2f}"]
+                           + [f"{r['oos_oofs'][n][i]:.6f}"
+                              if n in r["oos_oofs"] and np.isfinite(r["oos_oofs"][n][i])
+                              else "" for n in names])
         print(f"\nwrote {a.dump_events}")
 
     if a.out:

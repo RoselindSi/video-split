@@ -127,6 +127,32 @@ def decide(e, pol):
         if s <= lo:
             return REJECT, "high_confidence_negative"
         return REVIEW, "insufficient_margin"
+    if fam == "cascade":
+        # Stage 1 is the agreement rule unchanged: both branches must agree at
+        # confident scores. Stage 2 only sees what Stage 1 left in the middle,
+        # and only at high reliability -- so the fused score never overrules a
+        # confident P1, it only decides events that would otherwise have been
+        # REVIEW. That is the shape the evaluation supports: fused improves
+        # ranking but destroyed 8 correct boundaries on the clean-145 when it
+        # was allowed to decide everything.
+        a = e.get(pol["score_a"], float("nan"))
+        b = e.get(pol["score_b"], float("nan"))
+        fz = e.get(pol["score_fused"], float("nan"))
+        if not (np.isfinite(a) and np.isfinite(b)):
+            return REVIEW, "missing_score"
+        if a >= hi and b >= hi:
+            return KEEP, "stage1_consensus_positive"
+        if a <= lo and b <= lo:
+            return REJECT, "stage1_consensus_negative"
+        if (a >= hi and b <= lo) or (a <= lo and b >= hi):
+            return REVIEW, "global_local_disagreement"
+        if e["reliability"] >= pol.get("stage2_min_reliability", 1.01) and np.isfinite(fz):
+            if fz >= pol.get("stage2_keep_above", 2.0):
+                return KEEP, "stage2_fused_positive"
+            if fz <= pol.get("stage2_reject_below", -1.0):
+                return REJECT, "stage2_fused_negative"
+        return REVIEW, "insufficient_margin"
+
     if fam == "agreement":
         a = e.get(pol["score_a"], float("nan"))
         b = e.get(pol["score_b"], float("nan"))
