@@ -237,6 +237,18 @@ def main():
     print(f"{len(rows)} events -> {len(ok)} with a trajectory "
           f"(no time in id: {n_no_t}, no 10fps cache: {n_no_rec}, "
           f"too few frames: {n_no_traj})")
+    if n_no_rec > len(rows) * 0.2:
+        miss = sorted({r["recording_id"] for r in rows
+                       if r["recording_id"] not in by_rid})
+        print(f"  !! {n_no_rec} events ({n_no_rec / len(rows):.0%}) DROPPED for want "
+              f"of a 10 fps cache, spanning {len(miss)} recordings. Everything "
+              f"below is computed on whatever is left, which is a SUBSET chosen "
+              f"by which recordings happen to have been extracted at 10 fps -- "
+              f"not by anything about the events. If the survivors are one "
+              f"development set and the missing ones another, this reproduces "
+              f"exactly the configuration in which the stereo block probe "
+              f"scored +0.054 and then +0.007 on the other set. Missing e.g. "
+              f"{miss[:4]}")
     if len(ok) < 50:
         raise SystemExit("too few events with trajectories -- check the caches "
                          "cover these recordings at 10 fps")
@@ -271,22 +283,45 @@ def main():
     anyA = _any("A_verifier_all_clean")
     anyB = _any("B_observability")
     anyC = _any("C_verifier_review_band")
+    def _winners(task):
+        return {k: v for k, v in report["tasks"][task].items()
+                if v.get("beats_family_wise")}
+
+    conc_names = [k for k in {kk for t in report["tasks"].values() for kk in t}
+                  if k.startswith("conc_")]
+    conc_win = any(k in conc_names for t in report["tasks"] for k in _winners(t))
+    print(f"CONCENTRATION specifically -- the hypothesis this probe was built "
+          f"around -- {'beats' if conc_win else 'does NOT beat'} the family-wise "
+          f"baseline on any task.")
+    for t, label in (("A_verifier_all_clean", "A verifier"),
+                     ("B_observability", "B observability"),
+                     ("C_verifier_review_band", "C review band")):
+        w = _winners(t)
+        if not w:
+            print(f"  {label}: nothing")
+            continue
+        b = max(w.items(), key=lambda kv: kv[1]["folded"])
+        fam = b[1]["family_wise_p95"]
+        marginal = b[1]["ci95"][0] <= fam
+        print(f"  {label}: {b[0]} at {b[1]['folded']:.3f} vs {fam:.3f}"
+              + (f"  -- MARGINAL, its CI [{b[1]['ci95'][0]:.3f}, "
+                 f"{b[1]['ci95'][1]:.3f}] contains the baseline, so this is not "
+                 f"distinguishable from chance" if marginal else "  -- CI clears "
+                 f"the baseline"))
     if not (anyA or anyB or anyC):
-        print("Concentration carries no signal above chance on ANY task, measured "
+        print("Nothing carries signal above chance on ANY task, measured "
               "on global features. Computing it on hand crops needs a 10 fps "
               "local extraction over 147 recordings; this says do not spend that "
               "on this idea. It does NOT rule out the other C3-T components "
               "(hand motion reversal, periodicity, contact continuity), which "
               "measure something concentration cannot see.")
     else:
-        got = [n for n, f in (("A verifier", anyA), ("B observability", anyB),
-                              ("C review band", anyC)) if f]
-        print(f"Concentration beats chance on: {', '.join(got)}. That is the "
-              f"evidence for computing it on LOCAL crops, where C3 showed the "
-              f"complementary information lives -- with the caveat that beating "
-              f"a permutation baseline is a long way from a deployable "
-              f"threshold, and task C is the one that bears on review "
-              f"reduction.")
+        print("Read the per-task lines above rather than a single verdict: what "
+              "beats the baseline on task A need not be what matters, since "
+              "task C is the one that bears on review reduction, and a winner "
+              "whose CI contains the baseline has not been distinguished from "
+              "chance. Whatever survives here is also worth re-running once "
+              "every development recording has a 10 fps cache.")
 
     if a.dump:
         with open(a.dump, "w", newline="", encoding="utf-8") as f:
