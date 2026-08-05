@@ -394,6 +394,35 @@ def nested_selection_diagnostic(rows, pols, sel, rule, k=5, seed=0):
         out.append({"fold": i, "selected": pol, "held_out": m})
     return out
 
+
+def dump_decisions(path, rows, pol, role, cols):
+    """Re-evaluate with THIS policy immediately before writing.
+
+    evaluate() assigns e["decision"] in place, and select mode evaluates every
+    grid candidate, then the winner, then the next role, then every nested
+    fold -- on subsets holding the SAME dict objects. Whatever ran last is
+    what a dump taken at the end contains, which is a mixture of policies and
+    folds belonging to none of them. The first audit run showed 42 AUTO_KEEP
+    with 4 wrong while the selected policy has 64 with 6, and nothing in the
+    output said the two disagreed. One file per role, each freshly evaluated,
+    removes the ambiguity entirely."""
+    evaluate(rows, pol)
+    base, ext = os.path.splitext(path)
+    out = f"{base}.{role}{ext or '.csv'}"
+    with open(out, "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["event_id", "recording_id", "source", "y", "subtype",
+                    "reliability", "decision", "reason", "policy_role"] + cols)
+        for e in rows:
+            w.writerow([e["event_id"], e["recording_id"], e["source"], e["y"],
+                        e["subtype"], f"{e['reliability']:.3f}",
+                        e.get("decision", ""), e.get("reason", ""), role]
+                       + [f"{e[c]:.6f}" if np.isfinite(e[c]) else "" for c in cols])
+    n_k = sum(1 for e in rows if e["decision"] == KEEP)
+    print(f"  wrote {out}  ({n_k} AUTO_KEEP)")
+    return out
+
+
 def print_report(label, m, tax):
     print(f"\n=== {label} ===")
     print(f"  clean binary events: {m['n_clean']} ({m['n_positive']}+ / {m['n_negative']}-)")
@@ -561,6 +590,8 @@ def main():
                       "the least transportable part of the feasible region. A "
                       "breach on held-out data is plausible and must NOT trigger "
                       "retuning.")
+            if a.dump_decisions:
+                dump_decisions(a.dump_decisions, rows, pol, role["role"], cols)
             frozen_policies[role["role"]] = {
                 "policy": pol, "role": role["role"],
                 "selection_rule": role.get("_rule_text", rule),
@@ -673,23 +704,13 @@ def main():
                       f"{dev.get('n_auto_keep', 0) - dev.get('false_keep_count', 0)}"
                       f"/{dev.get('n_auto_keep', 0)} -> held-out "
                       f"{m['n_auto_keep'] - m['false_keep_count']}/{m['n_auto_keep']}")
+            if a.dump_decisions:
+                dump_decisions(a.dump_decisions, rows, pol, role, cols)
             applied[role] = {"policy": pol, "metrics": m, "taxonomy": tax,
                              "dev_metrics": dev}
         report["applied"] = applied
         print("\nReport both roles as they stand. Choosing whichever performed "
               "better here would convert a held-out test into a selection step.")
-
-    if a.dump_decisions:
-        with open(a.dump_decisions, "w", newline="", encoding="utf-8") as f:
-            w = csv.writer(f)
-            w.writerow(["event_id", "recording_id", "source", "y", "subtype",
-                        "reliability", "decision", "reason"] + cols)
-            for e in rows:
-                w.writerow([e["event_id"], e["recording_id"], e["source"], e["y"],
-                            e["subtype"], f"{e['reliability']:.3f}",
-                            e.get("decision", ""), e.get("reason", "")]
-                           + [f"{e[c]:.6f}" if np.isfinite(e[c]) else "" for c in cols])
-        print(f"\nwrote {a.dump_decisions}")
 
     if a.out:
         os.makedirs(os.path.dirname(os.path.abspath(a.out)) or ".", exist_ok=True)
