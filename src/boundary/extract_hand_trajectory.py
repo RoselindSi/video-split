@@ -67,11 +67,28 @@ def event_time(eid):
     return float(m.group(1)) if m else None
 
 
-def eye_slice(frame, eye):
+def eye_slice(frames, eye):
+    """Half of a packed side-by-side stereo frame. Accepts a single frame
+    [H,W,3] or a batch [N,H,W,3] and always slices the WIDTH axis.
+
+    The first version took shape[1] as the width and sliced axis 1. Called with
+    a BATCH that is the height axis, so it returned the TOP HALF of the packed
+    frame -- 1280x240, the upper portion of both cameras -- and since hands
+    enter an egocentric frame from below, they were cropped away entirely.
+    That is what produced a 0.000 detection rate, and the size was printed on
+    the first line of every run before anyone read it."""
     if eye == "full":
-        return frame
-    W = frame.shape[1]
-    return frame[:, :W // 2] if eye == "left" else frame[:, W // 2:]
+        return frames
+    ax = 2 if frames.ndim == 4 else 1
+    W = frames.shape[ax]
+    sl = slice(0, W // 2) if eye == "left" else slice(W // 2, W)
+    out = frames[:, :, sl] if frames.ndim == 4 else frames[:, sl]
+    h, w = (out.shape[1], out.shape[2]) if out.ndim == 4 else out.shape[:2]
+    if not 0.8 <= w / max(h, 1) <= 2.2:
+        print(f"  !! eye slice is {w}x{h}, aspect {w / max(h, 1):.2f} -- a single "
+              f"camera should be near 1.33. A wrong slice axis produces exactly "
+              f"this and silently removes the hands.")
+    return out
 
 
 def upscale_frame(f, mode, target_long=960, cap=2.0):
