@@ -73,9 +73,21 @@ from src.boundary.pairwise_verifier import (
 from src.boundary.hal_vlm_fusion import fit_logreg, _sigmoid
 from src.boundary.c3_local_eval import detect_coverage, detect_longest_gap_s
 
-# the names the policy config references; they must not drift
+# The names the policy config references; they must not drift, and ALL of them
+# must be produced. The pre-registered search space is 144 combinations over
+# three scores; dumping two of them would silently run a smaller search than
+# the one that was frozen, which is a different experiment wearing the same
+# name.
 P1_NAME = "P1 (global) alone"
 LOCAL_NAME = "local alone"
+FUSED_NAME = "P1 + local, feature-level"
+
+
+def arm_blocks(Lg, Rg, Ll, Rl):
+    """Which raw side-vector blocks each named score is fitted on."""
+    return {P1_NAME: [(Lg, Rg)],
+            LOCAL_NAME: [(Ll, Rl)],
+            FUSED_NAME: [(Lg, Rg), (Ll, Rl)]}
 
 
 def file_identity(path, sha=True):
@@ -259,18 +271,18 @@ def main():
         groups = [e["recording_id"] for e in ev]
         folds = stratified_grouped_folds(groups, y, 5, seed=0)
         frozen_oof = {}
-        for nm, blocks in ((P1_NAME, (Lg, Rg)), (LOCAL_NAME, (Ll, Rl))):
-            L, R = blocks
-            ins = apply_one(fit_one([(L, R)], X_rel, y, a.pca_dim),
-                            [(L, R)], X_rel)
+        for nm, blocks in arm_blocks(Lg, Rg, Ll, Rl).items():
+            ins = apply_one(fit_one(blocks, X_rel, y, a.pca_dim), blocks, X_rel)
             oof = np.full(len(y), np.nan)
             for f in folds:
                 te = np.array([g in f for g in groups])
                 tr = ~te
                 if te.sum() < 2 or tr.sum() < 4 or len(set(y[tr].tolist())) < 2:
                     continue
-                m = fit_one([(L[tr], R[tr])], X_rel[tr], y[tr], a.pca_dim)
-                oof[te] = apply_one(m, [(L[te], R[te])], X_rel[te])
+                m = fit_one([(L[tr], R[tr]) for L, R in blocks],
+                            X_rel[tr], y[tr], a.pca_dim)
+                oof[te] = apply_one(m, [(L[te], R[te]) for L, R in blocks],
+                                    X_rel[te])
             frozen_oof[nm] = oof
             k = np.isfinite(oof)
             print(f"\n  {nm}")
@@ -319,7 +331,7 @@ def main():
             # thresholds on.
             with open(a.dump_events, "w", newline="", encoding="utf-8") as f:
                 w = csv.writer(f)
-                names = [P1_NAME, LOCAL_NAME]
+                names = [P1_NAME, LOCAL_NAME, FUSED_NAME]
                 w.writerow(["event_id", "recording_id", "y", "subtype",
                             "detect_coverage", "detect_longest_gap_s",
                             "source"] + names)
@@ -356,10 +368,8 @@ def main():
 
     if a.fit:
         model = {
-            "scorers": {
-                P1_NAME: fit_one([(Lg, Rg)], X_rel, y, a.pca_dim),
-                LOCAL_NAME: fit_one([(Ll, Rl)], X_rel, y, a.pca_dim),
-            },
+            "scorers": {nm: fit_one(b, X_rel, y, a.pca_dim)
+                        for nm, b in arm_blocks(Lg, Rg, Ll, Rl).items()},
             "fit_event_ids": [e["event_id"] for e in ev],
             "fit_recordings": sorted({e["recording_id"] for e in ev}),
             "fit_base_rate": float(y.mean()),
@@ -435,8 +445,15 @@ def main():
               f"recording with training data, so this is not a clean "
               f"recording-level held-out set: {rec_overlap[:4]}")
 
-    scores = {P1_NAME: apply_one(model["scorers"][P1_NAME], [(Lg, Rg)], X_rel),
-              LOCAL_NAME: apply_one(model["scorers"][LOCAL_NAME], [(Ll, Rl)], X_rel)}
+    blocks = arm_blocks(Lg, Rg, Ll, Rl)
+    missing = [n for n in blocks if n not in model["scorers"]]
+    if missing:
+        raise SystemExit(f"this model has no scorer for {missing}. It predates "
+                         f"the arm and the policy config references it, so the "
+                         f"search space it was selected under cannot be "
+                         f"reproduced -- refit.")
+    scores = {n: apply_one(model["scorers"][n], b, X_rel)
+              for n, b in blocks.items()}
     for n, s in scores.items():
         print(f"  {n:<22} median {np.median(s):.3f}  "
               f">=0.75 {np.mean(s >= 0.75):.3f}")
@@ -446,13 +463,14 @@ def main():
     ex_rows = []
     if all_extra:
         ex, eLg, eRg, eLl, eRl, eX = matrices(all_extra, loc_rid)
-        es = {P1_NAME: apply_one(model["scorers"][P1_NAME], [(eLg, eRg)], eX),
-              LOCAL_NAME: apply_one(model["scorers"][LOCAL_NAME], [(eLl, eRl)], eX)}
-        ex_rows = list(zip(ex, es[P1_NAME], es[LOCAL_NAME]))
+        eb = arm_blocks(eLg, eRg, eLl, eRl)
+        es = {n: apply_one(model["scorers"][n], b, eX) for n, b in eb.items()}
+        ex_rows = [(e, [es[n][i] for n in blocks])
+                   for i, e in enumerate(ex)]
         print(f"  scored {len(ex_rows)} non-clean-binary events (no y)")
 
     if a.dump_events:
-        names = [P1_NAME, LOCAL_NAME]
+        names = list(blocks)
         with open(a.dump_events, "w", newline="", encoding="utf-8") as f:
             w = csv.writer(f)
             w.writerow(["event_id", "recording_id", "y", "subtype",
@@ -465,12 +483,13 @@ def main():
                             f"{detect_longest_gap_s(loc_rid[e['recording_id']], e['t']):.2f}",
                             int(e["event_id"] in fit_ids)]
                            + [f"{scores[n][i]:.6f}" for n in names])
-            for e, s1, s2 in ex_rows:
+            for e, ss in ex_rows:
                 w.writerow([e["event_id"], e["recording_id"], "",
                             e.get("temporal_pair_subtype") or "",
                             f"{detect_coverage(loc_rid[e['recording_id']], e['t']):.3f}",
                             f"{detect_longest_gap_s(loc_rid[e['recording_id']], e['t']):.2f}",
-                            int(e["event_id"] in fit_ids), f"{s1:.6f}", f"{s2:.6f}"])
+                            int(e["event_id"] in fit_ids)]
+                           + [f"{v:.6f}" for v in ss])
         print(f"\nwrote {a.dump_events}")
         print("  `in_sample` is per row. A file with any 1 in that column is "
               "not a held-out result, whatever the aggregate says.")

@@ -523,8 +523,19 @@ def main():
           f"median {np.median([r['reliability'] for r in rows]):.3f}")
     missing = [c for c in cols if all(not np.isfinite(r[c]) for r in rows)]
     if missing:
-        raise SystemExit(f"score column(s) absent from every input row: {missing}. "
-                         f"Available: {sorted(set(next(iter(rows)).keys()))}")
+        # "Available" used to list the row keys, which INCLUDES the missing
+        # column -- load_events inserts it as NaN -- so the message named a
+        # column and then listed it as present. Report what actually carries
+        # finite values.
+        have = sorted(c for c in cols
+                      if any(np.isfinite(r[c]) for r in rows))
+        raise SystemExit(
+            f"score column(s) present but never finite: {missing}.\n"
+            f"  carrying values: {have}\n"
+            f"  The config's search space references a score this event file "
+            f"does not contain. Do not drop it from the config to make the run "
+            f"pass -- that silently runs a smaller search than the frozen one. "
+            f"Produce the missing score.")
 
     n_sub = sum(1 for r in rows if r["subtype"])
     if n_sub == 0:
