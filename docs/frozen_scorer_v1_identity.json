@@ -1,0 +1,57 @@
+{
+  "fit_base_rate": 0.43506493506493504,
+  "commit": "12bbcd7fdfdfd164de3603f3f2911cdb6765cb75",
+  "pca_dim": 64,
+  "reliability": {
+    "column": "detect_coverage",
+    "definition": "fraction of frames in [t-4, t+4] that were a real hand detection rather than an interpolated box"
+  },
+  "feat_cache": [
+    {
+      "path": "/workspace/tr1/data_recseg/feat_train_full_noblur_multi.pt",
+      "size": 5508918301,
+      "mtime": 1784215716,
+      "sha256": "4ae015dd37ea0e2ad5f9e4094366cedb69b5acb7f64c8b43015f5e31e9aed51d"
+    },
+    {
+      "path": "/workspace/tr1/data_recseg/feat_val_full_noblur_multi.pt",
+      "size": 881946005,
+      "mtime": 1784184935,
+      "sha256": "37f6ab5d92c6627a80643ed898643af1ff372f2cd664c71ad72b1624ec1f8f48"
+    },
+    {
+      "path": "/workspace/tr1/data_recseg_part2/feat_part2_full_noblur_multi.pt",
+      "size": 764604709,
+      "mtime": 1784722276,
+      "sha256": "dea9e5c58953088c6c0b3038d3058457682e7f61d959319ba0b742894e06a406"
+    }
+  ],
+  "local_cache": [
+    {
+      "path": "/workspace/tr1/data_recseg/feat_local_dev.pt",
+      "size": 281485083,
+      "mtime": 1785842010,
+      "sha256": "dfc0a9f090461c3a03f03035ba2374d1f8e8532c2e5527482b0336a3420179ac"
+    },
+    {
+      "path": "/workspace/tr1/data_recseg/feat_local_batch3.pt",
+      "size": 770666939,
+      "mtime": 1785860873,
+      "sha256": "b2426d66bee66e68af58cea5f31e0d7febe9de960aefe2d7c79f31f1529f15a0"
+    }
+  ],
+  "pair_labels": [
+    {
+      "path": "/workspace/tr1/vs/data/gold/pair_labels_v1.csv",
+      "size": 84286,
+      "mtime": 1785315049,
+      "sha256": "b733a1a86aaceb12babf701ae90c9b6d806a87c353ccc544f8c483b4c830cf03"
+    },
+    {
+      "path": "/workspace/tr1/vs/data/gold/batch3_pair_labels_v1_relabel_v1.csv",
+      "size": 20295,
+      "mtime": 1786006677,
+      "sha256": "7181302841a62ad30ed862fda8d98fe742329db6e59159acc1cfca0009b6aeb5"
+    }
+  ]
+}
