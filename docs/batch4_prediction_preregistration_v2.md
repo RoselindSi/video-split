@@ -68,6 +68,38 @@ to both development sub-populations makes their score distributions directly
 comparable, which is the only way prevalence and conditional shift can be
 separated.
 
+## Development operating characteristics, measured per sub-population
+
+Added while still pre-blind: the numbers below are development data, and they
+make quantity C computable rather than a formula with no inputs.
+
+The **actual frozen policy** -- agreement between P1 and local, both above
+0.75, reliability at least 0.5 -- not a P1-only threshold. v1 and the first
+version of this section used a P1 threshold as a stand-in and it gave the
+opposite answer; the real rule is far more conservative and behaves
+differently.
+
+| | prevalence | TPR | FPR | PPV | auto-keep coverage | review |
+|---|---|---|---|---|---|---|
+| original 145 pool | 0.745 | 0.519 | 0.027 | 0.982 | 57/145 = 0.393 | 0.500 |
+| batch3, relabelled | 0.435 | 0.284 | 0.011 | 0.950 | 20/154 = 0.130 | 0.693 |
+
+Substituting only prevalence into the original pool's rates predicts, for
+batch3:
+
+- PPV 0.937 against an observed **0.950** — residual gap **+0.013**, i.e. none
+- auto-keep coverage 0.241 against an observed **0.130** — barely half
+
+So the two quantities behave oppositely. **Precision transports; coverage does
+not.** TPR falls from 0.519 to 0.284 and FPR from 0.027 to 0.011 -- both drop
+together, which preserves their ratio and halves the yield. The policy does
+not become unsafe on the harder population; it stops doing much.
+
+These are out-of-fold scores from two SEPARATE fits, so a score-scale
+component is still confounded into the TPR/FPR gap. Re-running both
+sub-populations through one frozen scorer removes it and is a precondition for
+reading the numbers above as purely conditional.
+
 ## The prediction, restated as a decomposition
 
 No single-cause claim. On batch4, report four quantities and let them separate
@@ -99,6 +131,15 @@ Fixed in advance:
   whatever prevalence contributes. This is evidence about the representation
   or about recording-level generalisation.
 - Both → report both; the split between them is D.
+
+**Concretely, given the development rates above:** the precision constraint is
+now expected to HOLD on batch4 at any plausible prevalence, and the failure --
+if there is one -- is expected in coverage. Predicted auto-keep coverage from
+prevalence alone is `pi*0.519 + (1-pi)*0.027`; batch3 came in at 54% of that
+figure. A batch4 coverage similarly far below its prevalence-only prediction
+is a conditional transport failure that a precision-only report would miss
+entirely, because precision would look fine while the system automated almost
+nothing.
 
 Also fixed in advance, independent of the above: the nested-selection
 diagnostic already breaches on development (primary 1/5 folds below the
