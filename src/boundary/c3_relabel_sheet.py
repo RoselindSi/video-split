@@ -59,6 +59,13 @@ def main():
                     help="restrict to the event_ids in this file (first column, "
                          "'#' comments and a header skipped) -- e.g. "
                          "data/gold/claude_labelled_events.txt")
+    ap.add_argument("--exclude_events",
+                    help="file of event_ids to LEAVE OUT (first column) -- e.g. "
+                         "the events already relabelled")
+    ap.add_argument("--sample_n", type=int, default=0,
+                    help="draw a RANDOM sample of this many, for estimating an "
+                         "error rate on a population too large to relabel whole")
+    ap.add_argument("--sample_seed", type=int, default=0)
     ap.add_argument("--clean_only", action="store_true",
                     help="drop rows the current labels exclude. NOT the default: "
                          "those exclusions were made by the labels under review")
@@ -93,6 +100,16 @@ def main():
             print(f"    {len(missing)} listed events are not in "
                   f"{a.pair_labels} -- they belong to another label file or "
                   f"never made it into one")
+    if a.exclude_events:
+        drop = set()
+        for ln in open(a.exclude_events, encoding="utf-8"):
+            ln = ln.strip()
+            if not ln or ln.startswith("#") or ln.startswith("event_id"):
+                continue
+            drop.add(ln.split(",")[0].strip())
+        before = len(ids)
+        ids = [e for e in ids if e not in drop]
+        print(f"  --exclude_events removed {before - len(ids)}")
     if a.clean_only:
         ids = [e for e in ids if stored[e]["pair_supervision"] in CLEAN_BINARY]
         print(f"  --clean_only: {len(ids)} rows. The excluded rows are dropped "
@@ -102,6 +119,18 @@ def main():
         before = len(ids)
         ids = [e for e in ids if e not in done]
         print(f"  --exclude_audited removed {before - len(ids)}")
+    if a.sample_n and a.sample_n < len(ids):
+        # A RANDOM sample, not a stratified one. The quantity wanted here is an
+        # unbiased error rate for a population, and stratifying would give
+        # coverage of the corners at the cost of the very number being
+        # estimated. Stratify when the goal is to understand failure modes;
+        # sample at random when it is to decide whether the rest needs doing.
+        import random
+        random.Random(a.sample_seed).shuffle(ids)
+        ids = sorted(ids[:a.sample_n])
+        print(f"  --sample_n: a RANDOM {len(ids)} drawn (seed "
+              f"{a.sample_seed}); the disagreement rate on these estimates the "
+              f"rate for the whole remaining population")
     print(f"{len(ids)} events to re-annotate")
 
     pos = {}
