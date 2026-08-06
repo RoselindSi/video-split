@@ -69,8 +69,11 @@ ANSWERS = ("1_hand_kinematic", "2_object_relative", "3_semantic_context",
            "4_not_resolvable")
 
 
+# utf-8-sig, not utf-8: a spreadsheet writes a BOM and the FIRST column
+# name comes back as "\ufeffyour_call(...)", so a prefix match on it
+# fails and the file looks like it is missing the column it plainly has.
 def read_csv(path):
-    with open(path, newline="", encoding="utf-8", errors="replace") as f:
+    with open(path, newline="", encoding="utf-8-sig", errors="replace") as f:
         return list(csv.DictReader(f))
 
 

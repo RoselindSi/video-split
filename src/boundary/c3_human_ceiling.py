@@ -50,8 +50,11 @@ import numpy as np
 from src.boundary.c3_selective_policy import wilson
 
 
+# utf-8-sig, not utf-8: a spreadsheet writes a BOM and the FIRST column
+# name comes back as "\ufeffyour_call(...)", so a prefix match on it
+# fails and the file looks like it is missing the column it plainly has.
 def read_csv(p):
-    with open(p, newline="", encoding="utf-8", errors="replace") as f:
+    with open(p, newline="", encoding="utf-8-sig", errors="replace") as f:
         return list(csv.DictReader(f))
 
 

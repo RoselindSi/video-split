@@ -397,7 +397,9 @@ def main():
 
     answers = {}
     if a.audit_sheet:
-        with open(a.audit_sheet, newline="", encoding="utf-8") as f:
+        # utf-8-sig: a spreadsheet round trip puts a BOM on the first column
+        # name, and every lookup against it silently misses.
+        with open(a.audit_sheet, newline="", encoding="utf-8-sig") as f:
             for r in csv.DictReader(f):
                 col = next((k for k in r if k.startswith("answer")), None)
                 if col and r[col].strip():
