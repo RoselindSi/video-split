@@ -88,6 +88,8 @@ def main():
     ap.add_argument("--feat_cache", action="append", required=True)
     ap.add_argument("--pca_dim", type=int, default=64)
     ap.add_argument("--n_boot", type=int, default=2000)
+    ap.add_argument("--n_null", type=int, default=50,
+                    help="random-flip draws; the scale for the observed delta")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out")
     a = ap.parse_args()
@@ -169,6 +171,64 @@ def main():
                         "oof": oof}
         d = res["corrected"]["auroc"] - res["original"]["auroc"]
         print(f"  delta {d:+.3f}")
+
+        # DECOMPOSITION. A relabelled event whose score already sat on the
+        # annotators' side raises AUROC the moment its label flips, with no
+        # change in the model. That is real information -- the label was wrong
+        # and the model was not -- but it is not evidence that cleaner labels
+        # produce a better model. The events whose labels did NOT change
+        # separate the two: their targets are identical in both arms, so any
+        # movement there comes only from the corrected rows sitting in other
+        # folds' TRAINING data.
+        unch = np.array([e["event_id"] not in flipped
+                         for e, k in zip(ev, sel) if k])
+        if unch.sum() >= 40 and len(set(y_o[sel][unch].tolist())) == 2:
+            u = {}
+            for tag in ("original", "corrected"):
+                o = np.asarray(res[tag]["oof"])[unch]
+                yy = y_o[sel][unch]
+                m = np.isfinite(o)
+                u[tag] = (_auroc(yy[m], o[m])
+                          if len(set(yy[m].tolist())) == 2 else float("nan"))
+            print(f"  on the {int(unch.sum())} events whose labels did NOT "
+                  f"change: {u['original']:.3f} -> {u['corrected']:.3f} "
+                  f"({u['corrected'] - u['original']:+.3f})")
+            print(f"    identical targets in both arms, so this movement is "
+                  f"the model learning from cleaner TRAINING labels -- the "
+                  f"part that generalises. The rest of the "
+                  f"{d:+.3f} is the corrected rows scoring against their own "
+                  f"fixed labels.")
+            res["unchanged_only"] = {"original": float(u["original"]),
+                                     "corrected": float(u["corrected"]),
+                                     "delta": float(u["corrected"] - u["original"])}
+
+        # NULL. Flipping the same number of labels at random should not help.
+        # Without this, "+0.066 after changing 8 labels" has no scale: any
+        # perturbation of a 169-event AUROC moves it somewhat.
+        rng = np.random.RandomState(a.seed)
+        idx = np.nonzero(sel)[0]
+        null = []
+        for _ in range(a.n_null):
+            yr = y_o.copy()
+            pick = rng.choice(idx, min(len(flipped), len(idx)), replace=False)
+            yr[pick] = 1 - yr[pick]
+            oof, _ = run_cv(Ls[sel], Rs[sel], X_rel[sel], yr[sel], g, fo,
+                            None, a.pca_dim)
+            m = np.isfinite(oof)
+            if len(set(yr[sel][m].tolist())) == 2:
+                null.append(_auroc(yr[sel][m], oof[m])
+                            - res["original"]["auroc"])
+        if null:
+            null = np.array(null)
+            p = float((null >= d).mean())
+            print(f"  null: flipping {len(flipped)} labels at random moves it "
+                  f"{null.mean():+.3f} on average "
+                  f"[{np.percentile(null, 5):+.3f}, "
+                  f"{np.percentile(null, 95):+.3f}] over {len(null)} draws; "
+                  f"p = {p:.3f}")
+            res["null"] = {"mean": float(null.mean()), "p": p,
+                           "p05": float(np.percentile(null, 5)),
+                           "p95": float(np.percentile(null, 95))}
         if nf:
             print(f"  {nf} of {int(sel.sum())} labels changed "
                   f"({nf / sel.sum():.1%}). A rise is a LOWER BOUND on full "
