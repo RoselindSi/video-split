@@ -199,8 +199,13 @@ def main():
     ap.add_argument("--dump_events")
     ap.add_argument("--out")
     a = ap.parse_args()
-    if a.fit == a.apply:
-        raise SystemExit("give exactly one of --fit / --apply")
+    # three modes, not two. The first version tested `a.fit == a.apply`, which
+    # is True when neither is given -- so --selfcheck, added later, was
+    # rejected by a guard that predated it.
+    modes = [m for m in ("fit", "apply", "selfcheck") if getattr(a, m)]
+    if len(modes) != 1:
+        raise SystemExit(f"give exactly one of --fit / --apply / --selfcheck "
+                         f"(got {modes or 'none'})")
     if len(a.batch3_manifest) != len(a.batch3_pair_labels):
         raise SystemExit("--batch3_manifest and --batch3_pair_labels must pair up")
 
