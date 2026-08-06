@@ -18,12 +18,28 @@ So the honest reading is asymmetric, and stated as such rather than left to
 the reader. This run cannot vindicate the label set. It can only show whether
 a small measured correction moves things in the direction the audit predicts.
 
-THE EVENT SET MUST NOT CHANGE. A correction that turned a clean subtype into
-gradual or ambiguous would drop the event from the population, and the two
-arms would then be scored on different events -- a difference in the number of
-hard events, reported as a difference in model quality. Every correction here
-is sharp<->same and both stay in the clean binary, but that is asserted rather
-than assumed, and the run stops if the populations differ.
+THE EVENT SET CHANGES, AND THAT IS HANDLED RATHER THAN FORBIDDEN. Two-annotator
+corrections were all sharp<->same, so the population stayed fixed and the run
+refused to continue otherwise. A full relabel is different by construction: on
+the first 40 rows of the batch3 relabel, 15 of 40 events crossed the clean-set
+boundary while only 3 flipped sign inside it -- the repair is mostly about
+WHICH events belong, not how the ones that belong are signed. Refusing to run
+would refuse to measure the main effect.
+
+So two arms, and they answer different questions:
+
+  MATCHED    only events in both clean sets. Same events, same folds, only the
+             target differs -- the one arm whose delta means "the model got
+             better", and the only one the null and the decomposition apply to.
+  FULL       each label set on its own population. The two AUROCs are computed
+             on DIFFERENT events, so their difference is NOT a gain and is
+             never printed as a delta. It answers "what will the number be from
+             now on", which is a separate and also necessary thing to know.
+
+The composition change is reported first, before either arm. The batch3
+held-out failure was diagnosed as a base-rate shift, so a relabel that moves
+events in and out of the clean set perturbs the exact quantity that diagnosis
+rested on.
 
 FOLDS ARE BUILT ONCE, FROM THE ORIGINAL LABELS, AND REUSED. Stratified
 grouped folds depend on the labels, so rebuilding them under the corrected set
@@ -90,6 +106,9 @@ def main():
     ap.add_argument("--n_boot", type=int, default=2000)
     ap.add_argument("--n_null", type=int, default=50,
                     help="random-flip draws; the scale for the observed delta")
+    ap.add_argument("--allow_population_change", action="store_true",
+                    help="expected for a full relabel, a bug for a two-annotator "
+                         "correction; adds the matched and full arms")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out")
     a = ap.parse_args()
@@ -99,39 +118,50 @@ def main():
                  a.batch3_manifest, a.batch3_pair_labels)
     ev_c = build(a.gold, a.context, by_rid, a.pair_labels_corrected,
                  a.batch3_manifest, a.batch3_pair_labels_corrected)
-    id_o = [e["event_id"] for e in ev_o]
-    id_c = [e["event_id"] for e in ev_c]
-    print(f"original clean events {len(id_o)}, corrected {len(id_c)}")
-    if set(id_o) != set(id_c):
-        only_o, only_c = set(id_o) - set(id_c), set(id_c) - set(id_o)
+    id_o = {e["event_id"] for e in ev_o}
+    id_c = {e["event_id"] for e in ev_c}
+    only_o, only_c = sorted(id_o - id_c), sorted(id_c - id_o)
+    rate = lambda evs: float(np.mean([e["y"] for e in evs])) if evs else float("nan")
+    print(f"\n{'=' * 68}\nCOMPOSITION\n{'=' * 68}")
+    print(f"  original clean set {len(id_o)} events, base rate {rate(ev_o):.3f}")
+    print(f"  relabelled         {len(id_c)} events, base rate {rate(ev_c):.3f}")
+    print(f"  {len(only_o)} left the clean set, {len(only_c)} entered, "
+          f"{len(id_o & id_c)} in both")
+    for e in only_o:
+        print(f"    LEFT   {e}")
+    for e in only_c:
+        print(f"    ENTER  {e}")
+    if only_o or only_c:
+        print("  The batch3 held-out failure was diagnosed as a base-rate "
+              "shift, so this movement perturbs the quantity that diagnosis "
+              "rested on.")
+    if not a.allow_population_change and (only_o or only_c):
         raise SystemExit(
-            f"the populations differ: {len(only_o)} dropped, {len(only_c)} "
-            f"added. A correction moved an event in or out of the clean set, "
-            f"so the two arms would be scored on different events and the "
-            f"difference in how many hard events each contains would be "
-            f"reported as model quality. Examples: "
-            f"{sorted(only_o)[:3]} / {sorted(only_c)[:3]}")
+            "the populations differ. For a two-annotator correction that is a "
+            "bug -- the arms would be scored on different events. For a full "
+            "relabel it is the point. Pass --allow_population_change to get "
+            "the matched and full arms.")
 
-    # align the corrected events to the original order so one feature build
-    # serves both arms and only the target vector differs
-    by_id = {e["event_id"]: e for e in ev_c}
-    ev_c = [by_id[i] for i in id_o]
+    shared = [e["event_id"] for e in ev_o if e["event_id"] in id_c]
+    by_o = {e["event_id"]: e for e in ev_o}
+    by_c = {e["event_id"]: e for e in ev_c}
 
-    X_v1, Ls, Rs, X_rel, keep, _ = build_matrices(ev_o, False)
-    ev = [ev_o[i] for i in keep]
-    evc = [ev_c[i] for i in keep]
+    # MATCHED: same events, one feature build, only the target differs
+    ev_m = [by_o[i] for i in shared]
+    X_v1, Ls, Rs, X_rel, keep, _ = build_matrices(ev_m, False)
+    ev = [ev_m[i] for i in keep]
     y_o = np.array([e["y"] for e in ev], float)
-    y_c = np.array([e["y"] for e in evc], float)
+    y_c = np.array([by_c[e["event_id"]]["y"] for e in ev], float)
     groups = [e["recording_id"] for e in ev]
     flipped = [e["event_id"] for e, a_, b_ in zip(ev, y_o, y_c) if a_ != b_]
-    print(f"{len(ev)} poolable, {len(set(groups))} recordings, "
-          f"{len(flipped)} labels differ between the arms")
+    print(f"\nmatched population: {len(ev)} poolable, {len(set(groups))} "
+          f"recordings, {len(flipped)} labels differ")
     for f in flipped:
         print(f"    {f}")
     if not flipped:
-        raise SystemExit("no label differs inside the poolable set -- the "
-                         "corrections did not reach the events P1 is scored "
-                         "on, so this comparison has nothing to measure")
+        print("  !! no label differs inside the matched population, so the "
+              "matched arm has nothing to measure. The whole effect of this "
+              "relabel is the population change, which the full arm reports.")
 
     dec = {}
     if a.decisions:
@@ -240,10 +270,42 @@ def main():
         res["delta"] = float(d)
         return res
 
-    out["all_clean"] = arm("ALL CLEAN EVENTS", np.ones(len(ev), bool))
-    if dec:
-        rev = np.array([dec.get(e["event_id"]) == "REVIEW" for e in ev])
-        out["review_band"] = arm("REVIEW BAND", rev)
+    if flipped:
+        out["matched_all_clean"] = arm("MATCHED: ALL CLEAN EVENTS",
+                                       np.ones(len(ev), bool))
+        if dec:
+            rev = np.array([dec.get(e["event_id"]) == "REVIEW" for e in ev])
+            out["matched_review_band"] = arm("MATCHED: REVIEW BAND", rev)
+
+    # FULL: each label set on its own population. NOT a delta -- the two
+    # numbers are computed on different events, and subtracting them would
+    # report a change in which events are being scored as a change in model
+    # quality. It answers what the baseline becomes from here on.
+    print(f"\n{'=' * 68}\nFULL POPULATIONS (NOT a like-for-like comparison)"
+          f"\n{'=' * 68}")
+    full = {}
+    for tag, evs in (("original", ev_o), ("relabelled", ev_c)):
+        _, L, R, Xr, kp, _ = build_matrices(evs, False)
+        e2 = [evs[i] for i in kp]
+        yy = np.array([e["y"] for e in e2], float)
+        gg = [e["recording_id"] for e in e2]
+        ff = stratified_grouped_folds(gg, yy, 5, seed=a.seed)
+        oof, pf = run_cv(L, R, Xr, yy, gg, ff, None, a.pca_dim)
+        m = np.isfinite(oof)
+        au = (_auroc(yy[m], oof[m]) if len(set(yy[m].tolist())) == 2
+              else float("nan"))
+        aut = automatable(oof, yy.astype(bool), gg, ff)
+        print(f"  {tag:<12} {len(e2):>4} events, base rate {yy.mean():.3f}, "
+              f"AUROC {au:.3f}   per-fold {[round(x, 3) for x in pf]}")
+        print(f"  {'':<12} automatable at >=0.95: {aut['n_auto']} events, "
+              f"precision {aut['precision']:.3f}")
+        full[tag] = {"n": len(e2), "base_rate": float(yy.mean()),
+                     "auroc": float(au), "per_fold": pf, "automatable": aut}
+    print("  These two AUROCs are computed on DIFFERENT events. Their "
+          "difference is not a gain and is deliberately not printed as one;\n"
+          "  the matched arm above is the comparison that means the model "
+          "changed.")
+    out["full_populations"] = full
 
     if a.out:
         os.makedirs(os.path.dirname(os.path.abspath(a.out)) or ".", exist_ok=True)
