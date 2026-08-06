@@ -1,0 +1,672 @@
+{
+  "frozen": true,
+  "policies": {
+    "primary_transportability_frontier": {
+      "policy": {
+        "name": "A_p1_threshold_with_reliability_abstention",
+        "family": "threshold",
+        "score": "P1 (global) alone",
+        "keep_above": 0.95,
+        "min_reliability": 0.7,
+        "reject_below": -1.0
+      },
+      "role": "primary_transportability_frontier",
+      "selection_rule": "maximise automatic coverage subject to point auto_keep_precision >= 0.95 and sharp_false_reject_rate <= 0.05",
+      "dev_metrics": {
+        "n_clean": 299,
+        "n_positive": 175,
+        "n_negative": 124,
+        "n_auto_keep": 60,
+        "n_auto_reject": 0,
+        "sharp_false_reject_count": 0,
+        "same_action_false_accept_count": 2,
+        "auto_keep_coverage": 0.20066889632107024,
+        "auto_keep_precision": 0.9666666666666667,
+        "auto_keep_precision_wilson": [
+          0.8863601247107462,
+          0.9908108735098498
+        ],
+        "false_keep_count": 2,
+        "same_action_false_accept_rate": 0.016129032258064516,
+        "auto_reject_coverage": 0.0,
+        "auto_reject_precision": NaN,
+        "auto_reject_precision_wilson": [
+          NaN,
+          NaN
+        ],
+        "sharp_false_reject_rate": 0.0,
+        "review_rate": 0.7993311036789298,
+        "automatic_coverage": 0.20066889632107024,
+        "sharp_recall_after_automatic": 1.0,
+        "abstain_insufficient_margin_rate": 0.5484949832775919,
+        "abstain_low_local_reliability_rate": 0.2508361204013378,
+        "n_all": 370,
+        "n_all_auto_keep": 70,
+        "full_auto_keep_precision": 0.8285714285714286,
+        "full_auto_keep_precision_wilson": [
+          0.7238313393501764,
+          0.8991237428798945
+        ],
+        "full_false_keep_count": 12,
+        "full_auto_keep_coverage": 0.1891891891891892,
+        "full_review_rate": 0.8108108108108109,
+        "full_automatic_coverage": 0.18918918918918914,
+        "auto_keep_rate::ambiguous": 0.6666666666666666,
+        "auto_keep_rate::annotation_convention": 0.09090909090909091,
+        "auto_keep_rate::camera_or_viewpoint_shift": 0.08333333333333333,
+        "auto_keep_rate::gradual_phase_transition": 0.1724137931034483,
+        "auto_keep_rate::same_action_internal_motion": 0.016129032258064516,
+        "auto_keep_rate::sharp_visible_transition": 0.3314285714285714,
+        "auto_keep_rate::visibility_or_offscreen": 0.0,
+        "auto_keep_precision_bootstrap": [
+          0.9122807017543859,
+          1.0
+        ]
+      },
+      "dev_taxonomy": {
+        "ambiguous": {
+          "n": 3,
+          "review_rate": 0.3333333333333333,
+          "auto_keep_rate": 0.6666666666666666,
+          "auto_reject_rate": 0.0
+        },
+        "annotation_convention": {
+          "n": 22,
+          "review_rate": 0.9090909090909091,
+          "auto_keep_rate": 0.09090909090909091,
+          "auto_reject_rate": 0.0
+        },
+        "camera_or_viewpoint_shift": {
+          "n": 12,
+          "review_rate": 0.9166666666666666,
+          "auto_keep_rate": 0.08333333333333333,
+          "auto_reject_rate": 0.0
+        },
+        "gradual_phase_transition": {
+          "n": 29,
+          "review_rate": 0.8275862068965517,
+          "auto_keep_rate": 0.1724137931034483,
+          "auto_reject_rate": 0.0
+        },
+        "visibility_or_offscreen": {
+          "n": 5,
+          "review_rate": 1.0,
+          "auto_keep_rate": 0.0,
+          "auto_reject_rate": 0.0
+        }
+      },
+      "dev_counts": {
+        "auto_keep": 60,
+        "false_keep": 2,
+        "sharp": 175,
+        "sharp_false_reject": 0
+      },
+      "event_level_margin": {
+        "additional_false_keep_tolerated": 1,
+        "additional_false_reject_tolerated": 8
+      },
+      "expected_external_behavior": "Both development constraints are active with zero event-level slack, so this point carries selection optimism by construction. A regression below one or both constraints on batch4 is plausible and will NOT trigger retuning. What this policy is for is measuring whether a development-maximum-coverage frontier point transports to new recordings at all."
+    },
+    "secondary_one_error_buffered": {
+      "policy": {
+        "name": "A_p1_threshold_with_reliability_abstention",
+        "family": "threshold",
+        "score": "P1 (global) alone",
+        "keep_above": 0.95,
+        "min_reliability": 0.7,
+        "reject_below": -1.0
+      },
+      "role": "secondary_one_error_buffered",
+      "selection_rule": "maximise automatic coverage while retaining one additional error of slack on BOTH safety constraints: observed false keeps <= floor(0.05 * n_auto_keep) - 1 and observed sharp false rejects <= floor(0.05 * n_sharp) - 1",
+      "dev_metrics": {
+        "n_clean": 299,
+        "n_positive": 175,
+        "n_negative": 124,
+        "n_auto_keep": 60,
+        "n_auto_reject": 0,
+        "sharp_false_reject_count": 0,
+        "same_action_false_accept_count": 2,
+        "auto_keep_coverage": 0.20066889632107024,
+        "auto_keep_precision": 0.9666666666666667,
+        "auto_keep_precision_wilson": [
+          0.8863601247107462,
+          0.9908108735098498
+        ],
+        "false_keep_count": 2,
+        "same_action_false_accept_rate": 0.016129032258064516,
+        "auto_reject_coverage": 0.0,
+        "auto_reject_precision": NaN,
+        "auto_reject_precision_wilson": [
+          NaN,
+          NaN
+        ],
+        "sharp_false_reject_rate": 0.0,
+        "review_rate": 0.7993311036789298,
+        "automatic_coverage": 0.20066889632107024,
+        "sharp_recall_after_automatic": 1.0,
+        "abstain_insufficient_margin_rate": 0.5484949832775919,
+        "abstain_low_local_reliability_rate": 0.2508361204013378,
+        "n_all": 370,
+        "n_all_auto_keep": 70,
+        "full_auto_keep_precision": 0.8285714285714286,
+        "full_auto_keep_precision_wilson": [
+          0.7238313393501764,
+          0.8991237428798945
+        ],
+        "full_false_keep_count": 12,
+        "full_auto_keep_coverage": 0.1891891891891892,
+        "full_review_rate": 0.8108108108108109,
+        "full_automatic_coverage": 0.18918918918918914,
+        "auto_keep_rate::ambiguous": 0.6666666666666666,
+        "auto_keep_rate::annotation_convention": 0.09090909090909091,
+        "auto_keep_rate::camera_or_viewpoint_shift": 0.08333333333333333,
+        "auto_keep_rate::gradual_phase_transition": 0.1724137931034483,
+        "auto_keep_rate::same_action_internal_motion": 0.016129032258064516,
+        "auto_keep_rate::sharp_visible_transition": 0.3314285714285714,
+        "auto_keep_rate::visibility_or_offscreen": 0.0,
+        "auto_keep_precision_bootstrap": [
+          0.9122807017543859,
+          1.0
+        ]
+      },
+      "dev_taxonomy": {
+        "ambiguous": {
+          "n": 3,
+          "review_rate": 0.3333333333333333,
+          "auto_keep_rate": 0.6666666666666666,
+          "auto_reject_rate": 0.0
+        },
+        "annotation_convention": {
+          "n": 22,
+          "review_rate": 0.9090909090909091,
+          "auto_keep_rate": 0.09090909090909091,
+          "auto_reject_rate": 0.0
+        },
+        "camera_or_viewpoint_shift": {
+          "n": 12,
+          "review_rate": 0.9166666666666666,
+          "auto_keep_rate": 0.08333333333333333,
+          "auto_reject_rate": 0.0
+        },
+        "gradual_phase_transition": {
+          "n": 29,
+          "review_rate": 0.8275862068965517,
+          "auto_keep_rate": 0.1724137931034483,
+          "auto_reject_rate": 0.0
+        },
+        "visibility_or_offscreen": {
+          "n": 5,
+          "review_rate": 1.0,
+          "auto_keep_rate": 0.0,
+          "auto_reject_rate": 0.0
+        }
+      },
+      "dev_counts": {
+        "auto_keep": 60,
+        "false_keep": 2,
+        "sharp": 175,
+        "sharp_false_reject": 0
+      },
+      "event_level_margin": {
+        "additional_false_keep_tolerated": 1,
+        "additional_false_reject_tolerated": 8
+      },
+      "expected_external_behavior": "Buys margin with review rate. Expected to be more conservative and to hold its constraints better on batch4 than the frontier point, at a higher review rate. If it does NOT hold them either, the shortfall is about transport rather than about how the operating point was chosen."
+    }
+  },
+  "reliability_column": "detect_coverage",
+  "roles": [
+    {
+      "role": "primary_transportability_frontier",
+      "rule": "frontier",
+      "_rule_text": "maximise automatic coverage subject to point auto_keep_precision >= 0.95 and sharp_false_reject_rate <= 0.05",
+      "selection": {
+        "min_auto_keep_precision": 0.95,
+        "max_sharp_false_reject_rate": 0.05
+      },
+      "expected_external_behavior": "Both development constraints are active with zero event-level slack, so this point carries selection optimism by construction. A regression below one or both constraints on batch4 is plausible and will NOT trigger retuning. What this policy is for is measuring whether a development-maximum-coverage frontier point transports to new recordings at all."
+    },
+    {
+      "role": "secondary_one_error_buffered",
+      "rule": "one_error_buffered",
+      "_rule_text": "maximise automatic coverage while retaining one additional error of slack on BOTH safety constraints: observed false keeps <= floor(0.05 * n_auto_keep) - 1 and observed sharp false rejects <= floor(0.05 * n_sharp) - 1",
+      "selection": {
+        "min_auto_keep_precision": 0.95,
+        "max_sharp_false_reject_rate": 0.05
+      },
+      "expected_external_behavior": "Buys margin with review rate. Expected to be more conservative and to hold its constraints better on batch4 than the frontier point, at a higher review rate. If it does NOT hold them either, the shortfall is about transport rather than about how the operating point was chosen."
+    }
+  ],
+  "selected_on": [
+    "/workspace/tr1/results/hal/c3/scored_frozen_oof.csv"
+  ],
+  "n_dev_events": 370,
+  "source_config": "configs/c3_selective_policy_v4_keep_only_option.json",
+  "source_config_sha256": "361da410c62b12be",
+  "nested_diagnostic": {
+    "primary_transportability_frontier": [
+      {
+        "fold": 0,
+        "selected": {
+          "name": "A_p1_threshold_with_reliability_abstention",
+          "family": "threshold",
+          "score": "P1 (global) alone",
+          "keep_above": 0.95,
+          "min_reliability": 0.7,
+          "reject_below": -1.0
+        },
+        "held_out": {
+          "n_clean": 56,
+          "n_positive": 33,
+          "n_negative": 23,
+          "n_auto_keep": 11,
+          "n_auto_reject": 0,
+          "sharp_false_reject_count": 0,
+          "same_action_false_accept_count": 0,
+          "auto_keep_coverage": 0.19642857142857142,
+          "auto_keep_precision": 1.0,
+          "auto_keep_precision_wilson": [
+            0.7411599827511859,
+            1.0
+          ],
+          "false_keep_count": 0,
+          "same_action_false_accept_rate": 0.0,
+          "auto_reject_coverage": 0.0,
+          "auto_reject_precision": NaN,
+          "auto_reject_precision_wilson": [
+            NaN,
+            NaN
+          ],
+          "sharp_false_reject_rate": 0.0,
+          "review_rate": 0.8035714285714286,
+          "automatic_coverage": 0.19642857142857142,
+          "sharp_recall_after_automatic": 1.0,
+          "abstain_insufficient_margin_rate": 0.6071428571428571,
+          "abstain_low_local_reliability_rate": 0.19642857142857142,
+          "n_all": 73,
+          "n_all_auto_keep": 13,
+          "full_auto_keep_precision": 0.8461538461538461,
+          "full_auto_keep_precision_wilson": [
+            0.5776482949136899,
+            0.9567427368172621
+          ],
+          "full_false_keep_count": 2,
+          "full_auto_keep_coverage": 0.1780821917808219,
+          "full_review_rate": 0.821917808219178,
+          "full_automatic_coverage": 0.17808219178082196,
+          "auto_keep_rate::annotation_convention": 0.4,
+          "auto_keep_rate::camera_or_viewpoint_shift": 0.0,
+          "auto_keep_rate::gradual_phase_transition": 0.0,
+          "auto_keep_rate::same_action_internal_motion": 0.0,
+          "auto_keep_rate::sharp_visible_transition": 0.3333333333333333,
+          "auto_keep_rate::visibility_or_offscreen": 0.0
+        }
+      },
+      {
+        "fold": 1,
+        "selected": {
+          "name": "B_global_local_agreement",
+          "family": "agreement",
+          "score_a": "P1 (global) alone",
+          "score_b": "local alone",
+          "keep_above": 0.75,
+          "min_reliability": 0.7,
+          "reject_below": 0.4
+        },
+        "held_out": {
+          "n_clean": 64,
+          "n_positive": 30,
+          "n_negative": 34,
+          "n_auto_keep": 17,
+          "n_auto_reject": 19,
+          "sharp_false_reject_count": 9,
+          "same_action_false_accept_count": 4,
+          "auto_keep_coverage": 0.265625,
+          "auto_keep_precision": 0.7647058823529411,
+          "auto_keep_precision_wilson": [
+            0.5273775411082839,
+            0.9044511092832406
+          ],
+          "false_keep_count": 4,
+          "same_action_false_accept_rate": 0.11764705882352941,
+          "auto_reject_coverage": 0.296875,
+          "auto_reject_precision": 0.5263157894736842,
+          "auto_reject_precision_wilson": [
+            0.3170748251182511,
+            0.7267049451255145
+          ],
+          "sharp_false_reject_rate": 0.3,
+          "review_rate": 0.4375,
+          "automatic_coverage": 0.5625,
+          "sharp_recall_after_automatic": 0.7,
+          "abstain_insufficient_margin_rate": 0.265625,
+          "abstain_low_local_reliability_rate": 0.15625,
+          "abstain_global_local_disagreement_rate": 0.015625,
+          "n_all": 83,
+          "n_all_auto_keep": 18,
+          "full_auto_keep_precision": 0.7222222222222222,
+          "full_auto_keep_precision_wilson": [
+            0.49126922453805477,
+            0.8750043085364452
+          ],
+          "full_false_keep_count": 5,
+          "full_auto_keep_coverage": 0.21686746987951808,
+          "full_review_rate": 0.4457831325301205,
+          "full_automatic_coverage": 0.5542168674698795,
+          "auto_keep_rate::ambiguous": 0.0,
+          "auto_keep_rate::annotation_convention": 0.0,
+          "auto_keep_rate::camera_or_viewpoint_shift": 0.0,
+          "auto_keep_rate::gradual_phase_transition": 0.14285714285714285,
+          "auto_keep_rate::same_action_internal_motion": 0.11764705882352941,
+          "auto_keep_rate::sharp_visible_transition": 0.43333333333333335,
+          "auto_keep_rate::visibility_or_offscreen": 0.0
+        }
+      },
+      {
+        "fold": 2,
+        "selected": {
+          "name": "A_p1_threshold_with_reliability_abstention",
+          "family": "threshold",
+          "score": "P1 (global) alone",
+          "keep_above": 0.95,
+          "min_reliability": 0.0,
+          "reject_below": -1.0
+        },
+        "held_out": {
+          "n_clean": 54,
+          "n_positive": 28,
+          "n_negative": 26,
+          "n_auto_keep": 10,
+          "n_auto_reject": 0,
+          "sharp_false_reject_count": 0,
+          "same_action_false_accept_count": 2,
+          "auto_keep_coverage": 0.18518518518518517,
+          "auto_keep_precision": 0.8,
+          "auto_keep_precision_wilson": [
+            0.49015684672072335,
+            0.9433190520193067
+          ],
+          "false_keep_count": 2,
+          "same_action_false_accept_rate": 0.07692307692307693,
+          "auto_reject_coverage": 0.0,
+          "auto_reject_precision": NaN,
+          "auto_reject_precision_wilson": [
+            NaN,
+            NaN
+          ],
+          "sharp_false_reject_rate": 0.0,
+          "review_rate": 0.8148148148148148,
+          "automatic_coverage": 0.18518518518518517,
+          "sharp_recall_after_automatic": 1.0,
+          "abstain_insufficient_margin_rate": 0.8148148148148148,
+          "n_all": 64,
+          "n_all_auto_keep": 12,
+          "full_auto_keep_precision": 0.6666666666666666,
+          "full_auto_keep_precision_wilson": [
+            0.3906175873976138,
+            0.8618821601026385
+          ],
+          "full_false_keep_count": 4,
+          "full_auto_keep_coverage": 0.1875,
+          "full_review_rate": 0.8125,
+          "full_automatic_coverage": 0.1875,
+          "auto_keep_rate::ambiguous": 1.0,
+          "auto_keep_rate::annotation_convention": 0.0,
+          "auto_keep_rate::camera_or_viewpoint_shift": 0.3333333333333333,
+          "auto_keep_rate::gradual_phase_transition": 0.0,
+          "auto_keep_rate::same_action_internal_motion": 0.07692307692307693,
+          "auto_keep_rate::sharp_visible_transition": 0.2857142857142857,
+          "auto_keep_rate::visibility_or_offscreen": 0.0
+        }
+      },
+      {
+        "fold": 3,
+        "selected": {
+          "name": "A_p1_threshold_with_reliability_abstention",
+          "family": "threshold",
+          "score": "P1 (global) alone",
+          "keep_above": 0.95,
+          "min_reliability": 0.7,
+          "reject_below": -1.0
+        },
+        "held_out": {
+          "n_clean": 68,
+          "n_positive": 46,
+          "n_negative": 22,
+          "n_auto_keep": 20,
+          "n_auto_reject": 0,
+          "sharp_false_reject_count": 0,
+          "same_action_false_accept_count": 0,
+          "auto_keep_coverage": 0.29411764705882354,
+          "auto_keep_precision": 1.0,
+          "auto_keep_precision_wilson": [
+            0.8388698745050667,
+            1.0
+          ],
+          "false_keep_count": 0,
+          "same_action_false_accept_rate": 0.0,
+          "auto_reject_coverage": 0.0,
+          "auto_reject_precision": NaN,
+          "auto_reject_precision_wilson": [
+            NaN,
+            NaN
+          ],
+          "sharp_false_reject_rate": 0.0,
+          "review_rate": 0.7058823529411765,
+          "automatic_coverage": 0.29411764705882354,
+          "sharp_recall_after_automatic": 1.0,
+          "abstain_low_local_reliability_rate": 0.23529411764705882,
+          "abstain_insufficient_margin_rate": 0.47058823529411764,
+          "n_all": 81,
+          "n_all_auto_keep": 22,
+          "full_auto_keep_precision": 0.9090909090909091,
+          "full_auto_keep_precision_wilson": [
+            0.7218461934161422,
+            0.9747051037171621
+          ],
+          "full_false_keep_count": 2,
+          "full_auto_keep_coverage": 0.2716049382716049,
+          "full_review_rate": 0.7283950617283951,
+          "full_automatic_coverage": 0.2716049382716049,
+          "auto_keep_rate::ambiguous": 1.0,
+          "auto_keep_rate::annotation_convention": 0.0,
+          "auto_keep_rate::camera_or_viewpoint_shift": 0.0,
+          "auto_keep_rate::gradual_phase_transition": 0.3333333333333333,
+          "auto_keep_rate::same_action_internal_motion": 0.0,
+          "auto_keep_rate::sharp_visible_transition": 0.43478260869565216,
+          "auto_keep_rate::visibility_or_offscreen": 0.0
+        }
+      },
+      {
+        "fold": 4,
+        "selected": {
+          "name": "A_p1_threshold_with_reliability_abstention",
+          "family": "threshold",
+          "score": "P1 (global) alone",
+          "keep_above": 0.95,
+          "min_reliability": 0.0,
+          "reject_below": -1.0
+        },
+        "held_out": {
+          "n_clean": 57,
+          "n_positive": 38,
+          "n_negative": 19,
+          "n_auto_keep": 22,
+          "n_auto_reject": 0,
+          "sharp_false_reject_count": 0,
+          "same_action_false_accept_count": 3,
+          "auto_keep_coverage": 0.38596491228070173,
+          "auto_keep_precision": 0.8636363636363636,
+          "auto_keep_precision_wilson": [
+            0.6666458812053,
+            0.9525108273576373
+          ],
+          "false_keep_count": 3,
+          "same_action_false_accept_rate": 0.15789473684210525,
+          "auto_reject_coverage": 0.0,
+          "auto_reject_precision": NaN,
+          "auto_reject_precision_wilson": [
+            NaN,
+            NaN
+          ],
+          "sharp_false_reject_rate": 0.0,
+          "review_rate": 0.6140350877192983,
+          "automatic_coverage": 0.38596491228070173,
+          "sharp_recall_after_automatic": 1.0,
+          "abstain_insufficient_margin_rate": 0.6140350877192983,
+          "n_all": 69,
+          "n_all_auto_keep": 26,
+          "full_auto_keep_precision": 0.7307692307692307,
+          "full_auto_keep_precision_wilson": [
+            0.5391659658023868,
+            0.8629572447493261
+          ],
+          "full_false_keep_count": 7,
+          "full_auto_keep_coverage": 0.37681159420289856,
+          "full_review_rate": 0.6231884057971014,
+          "full_automatic_coverage": 0.37681159420289856,
+          "auto_keep_rate::annotation_convention": 0.25,
+          "auto_keep_rate::camera_or_viewpoint_shift": 0.0,
+          "auto_keep_rate::gradual_phase_transition": 0.42857142857142855,
+          "auto_keep_rate::same_action_internal_motion": 0.15789473684210525,
+          "auto_keep_rate::sharp_visible_transition": 0.5
+        }
+      }
+    ],
+    "secondary_one_error_buffered": [
+      {
+        "fold": 0,
+        "selected": null,
+        "note": "nothing satisfied the constraints on this fold's training recordings"
+      },
+      {
+        "fold": 1,
+        "selected": {
+          "name": "B_global_local_agreement",
+          "family": "agreement",
+          "score_a": "P1 (global) alone",
+          "score_b": "local alone",
+          "keep_above": 0.75,
+          "min_reliability": 0.7,
+          "reject_below": 0.3
+        },
+        "held_out": {
+          "n_clean": 64,
+          "n_positive": 30,
+          "n_negative": 34,
+          "n_auto_keep": 17,
+          "n_auto_reject": 16,
+          "sharp_false_reject_count": 7,
+          "same_action_false_accept_count": 4,
+          "auto_keep_coverage": 0.265625,
+          "auto_keep_precision": 0.7647058823529411,
+          "auto_keep_precision_wilson": [
+            0.5273775411082839,
+            0.9044511092832406
+          ],
+          "false_keep_count": 4,
+          "same_action_false_accept_rate": 0.11764705882352941,
+          "auto_reject_coverage": 0.25,
+          "auto_reject_precision": 0.5625,
+          "auto_reject_precision_wilson": [
+            0.33178195606776517,
+            0.7690163666481448
+          ],
+          "sharp_false_reject_rate": 0.23333333333333334,
+          "review_rate": 0.484375,
+          "automatic_coverage": 0.515625,
+          "sharp_recall_after_automatic": 0.7666666666666667,
+          "abstain_insufficient_margin_rate": 0.3125,
+          "abstain_low_local_reliability_rate": 0.15625,
+          "abstain_global_local_disagreement_rate": 0.015625,
+          "n_all": 83,
+          "n_all_auto_keep": 18,
+          "full_auto_keep_precision": 0.7222222222222222,
+          "full_auto_keep_precision_wilson": [
+            0.49126922453805477,
+            0.8750043085364452
+          ],
+          "full_false_keep_count": 5,
+          "full_auto_keep_coverage": 0.21686746987951808,
+          "full_review_rate": 0.4939759036144578,
+          "full_automatic_coverage": 0.5060240963855422,
+          "auto_keep_rate::ambiguous": 0.0,
+          "auto_keep_rate::annotation_convention": 0.0,
+          "auto_keep_rate::camera_or_viewpoint_shift": 0.0,
+          "auto_keep_rate::gradual_phase_transition": 0.14285714285714285,
+          "auto_keep_rate::same_action_internal_motion": 0.11764705882352941,
+          "auto_keep_rate::sharp_visible_transition": 0.43333333333333335,
+          "auto_keep_rate::visibility_or_offscreen": 0.0
+        }
+      },
+      {
+        "fold": 2,
+        "selected": null,
+        "note": "nothing satisfied the constraints on this fold's training recordings"
+      },
+      {
+        "fold": 3,
+        "selected": null,
+        "note": "nothing satisfied the constraints on this fold's training recordings"
+      },
+      {
+        "fold": 4,
+        "selected": {
+          "name": "A_p1_threshold_with_reliability_abstention",
+          "family": "threshold",
+          "score": "P1 (global) alone",
+          "keep_above": 0.95,
+          "min_reliability": 0.7,
+          "reject_below": -1.0
+        },
+        "held_out": {
+          "n_clean": 57,
+          "n_positive": 38,
+          "n_negative": 19,
+          "n_auto_keep": 15,
+          "n_auto_reject": 0,
+          "sharp_false_reject_count": 0,
+          "same_action_false_accept_count": 2,
+          "auto_keep_coverage": 0.2631578947368421,
+          "auto_keep_precision": 0.8666666666666667,
+          "auto_keep_precision_wilson": [
+            0.6211750079348376,
+            0.9626395301086407
+          ],
+          "false_keep_count": 2,
+          "same_action_false_accept_rate": 0.10526315789473684,
+          "auto_reject_coverage": 0.0,
+          "auto_reject_precision": NaN,
+          "auto_reject_precision_wilson": [
+            NaN,
+            NaN
+          ],
+          "sharp_false_reject_rate": 0.0,
+          "review_rate": 0.7368421052631579,
+          "automatic_coverage": 0.2631578947368421,
+          "sharp_recall_after_automatic": 1.0,
+          "abstain_insufficient_margin_rate": 0.5087719298245614,
+          "abstain_low_local_reliability_rate": 0.22807017543859648,
+          "n_all": 69,
+          "n_all_auto_keep": 18,
+          "full_auto_keep_precision": 0.7222222222222222,
+          "full_auto_keep_precision_wilson": [
+            0.49126922453805477,
+            0.8750043085364452
+          ],
+          "full_false_keep_count": 5,
+          "full_auto_keep_coverage": 0.2608695652173913,
+          "full_review_rate": 0.7391304347826086,
+          "full_automatic_coverage": 0.26086956521739135,
+          "auto_keep_rate::annotation_convention": 0.0,
+          "auto_keep_rate::camera_or_viewpoint_shift": 0.0,
+          "auto_keep_rate::gradual_phase_transition": 0.42857142857142855,
+          "auto_keep_rate::same_action_internal_motion": 0.10526315789473684,
+          "auto_keep_rate::sharp_visible_transition": 0.34210526315789475
+        }
+      }
+    ]
+  },
+  "primary_role": "primary_transportability_frontier",
+  "_reporting_note": "On held-out data report COUNTS (e.g. 31/33) with Wilson and grouped-bootstrap intervals, not a bare PASS/FAIL at 0.95: at the auto-keep volume this policy produces, one event moves precision by about 3 points. Report BOTH roles; do not pick the better one afterwards."
+}
