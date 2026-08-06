@@ -1,19 +1,34 @@
 """36-event hand-object pilot: can the relation be observed at all?
 
-Runs on the audit sample ONLY. The audit found 21 of 36 REVIEW events needing
-object-relative evidence, which is a reason to test feasibility, not a reason
-to spend a detector pass on all 412 -- a stratified sample of 36 does not carry
-the band's natural proportions, and nothing yet shows a detector can recover
-the relation on even one of those 21.
+Runs on the audit sample ONLY, and its motivating number does not exist yet.
+
+An earlier version of this docstring said "the audit found 21 of 36 events
+needing object-relative evidence". That figure was quoted into a directive and
+propagated here as fact; the returned sheet has your_call and confidence
+filled for all 36 rows and the four-way answer column EMPTY. Nobody has
+classified what evidence these events need. The claim is withdrawn rather than
+softened, because a pilot justified by a measurement that was never taken is
+not a pilot, and this file was about to be the place that laundered it.
+
+What the audit did establish is a ceiling: 33 of 36 REVIEW events were decided
+at "sure" and 3 at "cannot". So the band is resolvable by a human, and the
+0.528 and 0.513 of the two failed rounds cannot be explained away as events
+carrying no evidence. That justifies looking for a better observable. It does
+not say the missing observable is object-relative -- that is the hypothesis
+this pilot tests, and the grouped report below is the test, so it needs the
+answer column filled before its output means anything.
 
 The output is built to be LOOKED AT, not scored. There is no classifier here
 and no AUROC. A contact sheet per event carries the hand box, the active-object
 box, the contact state and the object track id, and the report groups events by
 the audit's own answer, because the question is not what fraction of objects a
-detector finds. It is whether the 21 events where a human needed object
-evidence are the ones where the machine can supply it. A backend with excellent
-average recall that fails on exactly those 21 has answered the pilot in the
-negative, and an aggregate number would hide that.
+detector finds. It is whether the events where a human needed object evidence
+are the events where the machine can supply it. A backend with excellent
+average recall that fails on exactly those has answered the pilot in the
+negative, and an aggregate number would hide that. With the answer column
+empty the report degrades to one aggregate row, which is precisely the reading
+this file exists to prevent -- it says so at runtime rather than printing it
+anyway.
 
 BACKENDS ARE PLUGGABLE AND NONE IS BUILT IN. `--backend hoi100doh` loads the
 hand_object_detector released with "Understanding Human Hands in Contact at
@@ -389,6 +404,13 @@ def main():
                     answers[r["event_id"]] = r[col].strip()
         print(f"audit answers joined for {len(answers)}/{len(events)} events: "
               f"{dict(Counter(answers.values()))}")
+        if not answers:
+            print("  !! THE ANSWER COLUMN IS EMPTY. The grouped report is the "
+                  "only thing this pilot produces that can decide anything, "
+                  "and without it the output is one aggregate row -- exactly "
+                  "the number the design says not to read. The run continues "
+                  "so the detector can be smoke-tested, but its result cannot "
+                  "support or reject the object-relative hypothesis.")
 
     n_frames = int(round(2 * a.window * a.fps)) + 1
     media_dir = os.path.join(a.out_dir, "hand_object_pilot_media")
