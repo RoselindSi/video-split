@@ -226,6 +226,11 @@ def main():
         sub = argparse.Namespace(**vars(a))
         sub.batch3_manifest, sub.batch3_pair_labels = man, pl
         ev, ex = gather(sub, by_rid, loc_rid)
+        tag = "clean-145" if man is None else os.path.basename(man)
+        for e in ev:
+            e["_source"] = tag
+        for e in ex:
+            e["_source"] = tag
         print(f"  {'clean-145' if man is None else os.path.basename(man)}: "
               f"{len(ev)} clean + {len(ex)} non-clean")
         all_ev += ev
@@ -273,6 +278,34 @@ def main():
             print(f"    frozen path, OOF AUROC {_auroc(y[k], oof[k]):.3f}  "
                   f"median {np.median(oof[k]):.3f}  >=0.75 {np.mean(oof[k] >= 0.75):.3f}  "
                   f"in (0.2,0.8) {np.mean((oof[k] > 0.2) & (oof[k] < 0.8)):.3f}")
+        # PER SOURCE, on the frozen path's out-of-fold scores. This is the
+        # comparison that was impossible before: the two pools were previously
+        # scored by two separate fits, so their medians (0.734 against 0.315)
+        # confounded prevalence, conditional shift and score scale. One fit
+        # removes the third, and whatever gap survives here is the other two.
+        src = [e.get("_source", "?") for e in ev]
+        if len(set(src)) > 1:
+            print(f"\n  PER SOURCE at the policy's 0.75, frozen path OOF "
+                  f"(scale confound removed)")
+            print(f"    {'source':<24} {'n':>4} {'pi':>6} {'median':>7} "
+                  f"{'TPR':>6} {'FPR':>6} {'PPV':>6} {'cov':>6}")
+            for t in sorted(set(src)):
+                sel = np.array([x == t for x in src]) & np.isfinite(oof)
+                if sel.sum() < 10:
+                    continue
+                yy, ss = y[sel], oof[sel]
+                k = ss >= 0.75
+                tp = int(yy[k].sum()); fp = int(k.sum()) - tp
+                P, N = int(yy.sum()), int((1 - yy).sum())
+                print(f"    {t:<24} {int(sel.sum()):>4} {yy.mean():>6.3f} "
+                      f"{np.median(ss):>7.3f} {tp / max(P, 1):>6.3f} "
+                      f"{fp / max(N, 1):>6.3f} "
+                      f"{tp / max(int(k.sum()), 1):>6.3f} "
+                      f"{k.mean():>6.3f}")
+            print("    A gap that survives here is prevalence plus conditional "
+                  "shift only. Compare it against the separate-fit numbers "
+                  "(median 0.734 vs 0.315):\n    whatever closed is score "
+                  "scale, and that part was never a property of the data.")
         print("\n  The SECOND row of each pair is what batch4 will look like: "
               "a model fitted without those recordings, applied cold. If its "
               "median and its\n  fraction above 0.75 are close to the numbers "
