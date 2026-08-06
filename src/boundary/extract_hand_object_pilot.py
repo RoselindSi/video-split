@@ -1,22 +1,23 @@
 """36-event hand-object pilot: can the relation be observed at all?
 
-Runs on the audit sample ONLY, and its motivating number does not exist yet.
+Runs on the audit sample ONLY. 21 of the 36 audited REVIEW events were
+classified as needing object-relative evidence, 12 as hand-kinematic, 3 as not
+resolvable, and ZERO as needing semantic or longer context
+(data/gold/observable_audit_annotator2_36.csv).
 
-An earlier version of this docstring said "the audit found 21 of 36 events
-needing object-relative evidence". That figure was quoted into a directive and
-propagated here as fact; the returned sheet has your_call and confidence
-filled for all 36 rows and the four-way answer column EMPTY. Nobody has
-classified what evidence these events need. The claim is withdrawn rather than
-softened, because a pilot justified by a measurement that was never taken is
-not a pilot, and this file was about to be the place that laundered it.
+That last count matters as much as the first: nobody found the 6-second window
+to be the limitation, which is evidence against extending it and for the
+object-relative hypothesis this pilot tests.
 
-What the audit did establish is a ceiling: 33 of 36 REVIEW events were decided
-at "sure" and 3 at "cannot". So the band is resolvable by a human, and the
-0.528 and 0.513 of the two failed rounds cannot be explained away as events
-carrying no evidence. That justifies looking for a better observable. It does
-not say the missing observable is object-relative -- that is the hypothesis
-this pilot tests, and the grouped report below is the test, so it needs the
-answer column filled before its output means anything.
+It is still a feasibility test and not a licence to run all 412. The sample is
+stratified and does not carry the band's natural proportions, the
+classification is one annotator's, and nothing yet shows a detector recovers
+the relation on even one of those 21.
+
+(An earlier revision of this docstring withdrew the "21" as a number nobody
+had produced. That was wrong: it had been produced, in a file this repo had
+not yet seen. The withdrawal is itself withdrawn, and the source is now cited
+rather than quoted from a directive.)
 
 The output is built to be LOOKED AT, not scored. There is no classifier here
 and no AUROC. A contact sheet per event carries the hand box, the active-object
