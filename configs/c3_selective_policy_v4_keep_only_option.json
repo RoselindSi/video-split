@@ -1,0 +1,115 @@
+{
+  "_comment": "v4 = v2 with ONE addition to the action space and NO change to any constraint. Amended after the v2 search returned no feasible point on correctly-scaled (single-fit) scores, and that timing is stated rather than hidden. The v2 grids offer reject_below in [0.2..0.5], so every one of the 144 candidates is FORCED to auto-reject something; the closest candidate met auto_keep_precision 0.967 against a 0.95 requirement and failed only on sharp_false_reject 0.120 against 0.05. reject_below = -1.0 adds the option of not auto-rejecting at all, which makes sharp_false_reject zero by construction. This is not the forbidden 'relax the constraints to make something pass': the constraints are identical, and the added option is strictly MORE conservative -- it can only lower automatic coverage, which is the quantity being maximised, so it cannot make any pre-existing candidate look better. What it can do is turn an infeasible search into a feasible one at a much lower coverage, and that lower number is the honest answer to 'how much can be automated safely'. batch4 must be reported against this amended space with the amendment's timing stated.\n\nPRIOR v2 COMMENT: Supersedes c3_selective_policy_v1.json, amended BEFORE batch4 was touched and therefore a legitimate change to the pre-registration; v1 is kept in the repo as the record of what was tried first. The amendment is the two-role structure. v1 selected ONE policy by maximising automatic coverage under active constraints, which by construction lands on the edge of the feasible region: the selected point spent both safety budgets exactly (3/3 false keeps allowed, 8/8 false rejects allowed, zero event-level slack), and frontier points are the least transportable part of a feasible region. Rather than choose between a frontier point and an unreachable statistical certification, both are frozen now with different jobs, and BOTH are reported on batch4 with no post-hoc choice between them.",
+  "reliability_column": "detect_coverage",
+  "_reliability_comment": "Per-event fraction of frames in [t-4, t+4] that were a real hand detection rather than an interpolated box. Still the only reliability signal computable for both development sets from the cached features. Box jitter, hand count, missing-run length and tracked/interpolated provenance would all be better and none are stored per event today; adding them requires re-extraction, and a feature present on one development set and absent on the other would be worse than a coarse one present on both.",
+  "roles": [
+    {
+      "role": "primary_transportability_frontier",
+      "rule": "frontier",
+      "_rule_text": "maximise automatic coverage subject to point auto_keep_precision >= 0.95 and sharp_false_reject_rate <= 0.05",
+      "selection": {
+        "min_auto_keep_precision": 0.95,
+        "max_sharp_false_reject_rate": 0.05
+      },
+      "expected_external_behavior": "Both development constraints are active with zero event-level slack, so this point carries selection optimism by construction. A regression below one or both constraints on batch4 is plausible and will NOT trigger retuning. What this policy is for is measuring whether a development-maximum-coverage frontier point transports to new recordings at all."
+    },
+    {
+      "role": "secondary_one_error_buffered",
+      "rule": "one_error_buffered",
+      "_rule_text": "maximise automatic coverage while retaining one additional error of slack on BOTH safety constraints: observed false keeps <= floor(0.05 * n_auto_keep) - 1 and observed sharp false rejects <= floor(0.05 * n_sharp) - 1",
+      "selection": {
+        "min_auto_keep_precision": 0.95,
+        "max_sharp_false_reject_rate": 0.05
+      },
+      "expected_external_behavior": "Buys margin with review rate. Expected to be more conservative and to hold its constraints better on batch4 than the frontier point, at a higher review rate. If it does NOT hold them either, the shortfall is about transport rather than about how the operating point was chosen."
+    }
+  ],
+  "_why_not_wilson": "A Wilson 95% lower bound of 0.95 was considered and rejected as the constraint. It changes the task from 'choose a policy expected to be 95% precise' to 'certify from 313 development events that it is', which needs 73 consecutive correct auto-keeps before the bound even reaches 0.95 (verified: 61/61 gives 0.9408, 73/73 gives 0.9500). At the auto-keep volume this data produces it is unreachable, so it would return 'no solution' instead of a usable policy -- a true statement about sample size, but not one that gets a policy to batch4. The one-error buffer expresses the same worry in the units the constraint actually reduces to at these counts.",
+  "nested_diagnostic": {
+    "folds": 5,
+    "seed": 0,
+    "_comment": "Development-only. Re-runs the ENTIRE selection inside grouped training folds and scores the winner on held-out recordings, estimating how much of a frontier point's development performance is selection optimism. It selects nothing. If the constraints are already breached here, the risk of a batch4 breach has evidence rather than being a prediction."
+  },
+  "_batch4_reporting": "Report COUNTS with Wilson and grouped-bootstrap intervals, not a bare PASS/FAIL at 0.95. If batch4's clean-binary subset resembles batch3's (roughly 160-170 events) and auto-keep coverage stays near 20%, batch4 yields only ~30-35 auto-keeps, where a single event moves precision by about 3 points -- so whether 0.95 is cleared may be decided by one event. Report the false keeps' subtypes, the coverage shift against development, and both roles side by side.",
+  "families": [
+    {
+      "name": "A_p1_threshold_with_reliability_abstention",
+      "_comment": "P1 alone decides; the local branch only gates. The control the other two must beat -- if it wins, the local branch is not earning its place in the decision layer whatever it does to ranking.",
+      "family": "threshold",
+      "score": "P1 (global) alone",
+      "grid": {
+        "keep_above": [
+          0.8,
+          0.85,
+          0.9,
+          0.95
+        ],
+        "reject_below": [
+          -1.0,
+          0.2,
+          0.3,
+          0.4,
+          0.5
+        ],
+        "min_reliability": [
+          0.0,
+          0.5,
+          0.7
+        ]
+      }
+    },
+    {
+      "name": "B_global_local_agreement",
+      "_comment": "Both branches must agree to act; disagreement routes to REVIEW. Matches what the evaluation found -- the local branch improves ranking but destroys some correct boundaries, so it should be able to force a human look rather than overrule P1 alone.",
+      "family": "agreement",
+      "score_a": "P1 (global) alone",
+      "score_b": "local alone",
+      "grid": {
+        "keep_above": [
+          0.75,
+          0.8,
+          0.85,
+          0.9
+        ],
+        "reject_below": [
+          -1.0,
+          0.2,
+          0.3,
+          0.4,
+          0.5
+        ],
+        "min_reliability": [
+          0.0,
+          0.5,
+          0.7
+        ]
+      }
+    },
+    {
+      "name": "C_fused_threshold_with_reliability_abstention",
+      "_comment": "Feature-level fused score with the same abstention gate. Highest ranking AUROC of the arms measured, but also the arm that produced 8 true-positive harms on the clean-145, so precision at an operating point is not implied by its AUROC.",
+      "family": "fused",
+      "score": "P1 + local, feature-level",
+      "grid": {
+        "keep_above": [
+          0.8,
+          0.85,
+          0.9,
+          0.95
+        ],
+        "reject_below": [
+          -1.0,
+          0.2,
+          0.3,
+          0.4,
+          0.5
+        ],
+        "min_reliability": [
+          0.0,
+          0.5,
+          0.7
+        ]
+      }
+    }
+  ]
+}
