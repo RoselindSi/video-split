@@ -270,7 +270,18 @@ def main():
         from src.boundary.state_adapter import _auroc
         groups = [e["recording_id"] for e in ev]
         folds = stratified_grouped_folds(groups, y, 5, seed=0)
-        frozen_oof = {}
+        # The non-clean taxonomy rows must be scored too. They carry no y and
+        # are never fitted on, but the policy's full-taxonomy constraints are
+        # about exactly them -- whether camera/offscreen/annotation candidates
+        # get auto-accepted. The first version of this dump wrote clean events
+        # only, so the selection it fed saw 299 events where the previous one
+        # saw 412, and any difference in the outcome confounded the scoring
+        # change with a change of population.
+        ex, eLg, eRg, eLl, eRl, eX = (matrices(all_extra, loc_rid)
+                                      if all_extra else ([],) + (None,) * 5)
+        eblocks = (arm_blocks(eLg, eRg, eLl, eRl) if all_extra else {})
+        egroups = [e["recording_id"] for e in ex]
+        frozen_oof, frozen_oof_ex = {}, {}
         for nm, blocks in arm_blocks(Lg, Rg, Ll, Rl).items():
             ins = apply_one(fit_one(blocks, X_rel, y, a.pca_dim), blocks, X_rel)
             oof = np.full(len(y), np.nan)
@@ -283,6 +294,14 @@ def main():
                             X_rel[tr], y[tr], a.pca_dim)
                 oof[te] = apply_one(m, [(L[te], R[te]) for L, R in blocks],
                                     X_rel[te])
+                if all_extra:
+                    om = np.array([g in f for g in egroups])
+                    if om.any():
+                        eoof = frozen_oof_ex.setdefault(
+                            nm, np.full(len(ex), np.nan))
+                        eoof[om] = apply_one(
+                            m, [(L[om], R[om]) for L, R in eblocks[nm]],
+                            eX[om])
             frozen_oof[nm] = oof
             k = np.isfinite(oof)
             print(f"\n  {nm}")
@@ -335,6 +354,19 @@ def main():
                 w.writerow(["event_id", "recording_id", "y", "subtype",
                             "detect_coverage", "detect_longest_gap_s",
                             "source"] + names)
+                for i, e in enumerate(ex):
+                    # y left EMPTY, never 0: these have no boundary label and
+                    # writing 0 would enter them into every precision
+                    # denominator as negatives
+                    if not all(np.isfinite(frozen_oof_ex.get(n, [np.nan])[i])
+                               for n in names):
+                        continue
+                    w.writerow([e["event_id"], e["recording_id"], "",
+                                e.get("temporal_pair_subtype") or "",
+                                f"{detect_coverage(loc_rid[e['recording_id']], e['t']):.3f}",
+                                f"{detect_longest_gap_s(loc_rid[e['recording_id']], e['t']):.2f}",
+                                e.get("_source", "")]
+                               + [f"{frozen_oof_ex[n][i]:.6f}" for n in names])
                 for i, e in enumerate(ev):
                     if not all(np.isfinite(frozen_oof[n][i]) for n in names):
                         continue
@@ -344,7 +376,8 @@ def main():
                                 f"{detect_longest_gap_s(loc_rid[e['recording_id']], e['t']):.2f}",
                                 e.get("_source", "")]
                                + [f"{frozen_oof[n][i]:.6f}" for n in names])
-            print(f"\n  wrote {a.dump_events}")
+            print(f"\n  wrote {a.dump_events}  "
+                  f"({len(ev)} clean + {len(ex)} non-clean)")
             print("  These are out-of-fold scores from ONE combined fit. The "
                   "existing frozen policy config was selected on out-of-fold "
                   "scores from TWO\n  separate fits, at a different scale, so "
