@@ -55,6 +55,10 @@ def main():
     ap.add_argument("--blind_csv", action="append", default=[])
     ap.add_argument("--exclude_audited", action="append", default=[],
                     help="audit sheets whose events to leave out")
+    ap.add_argument("--only_events",
+                    help="restrict to the event_ids in this file (first column, "
+                         "'#' comments and a header skipped) -- e.g. "
+                         "data/gold/claude_labelled_events.txt")
     ap.add_argument("--clean_only", action="store_true",
                     help="drop rows the current labels exclude. NOT the default: "
                          "those exclusions were made by the labels under review")
@@ -74,6 +78,21 @@ def main():
     for p in a.exclude_audited:
         done |= set(load_sheet(p))
     ids = sorted(stored)
+    if a.only_events:
+        want = set()
+        for ln in open(a.only_events, encoding="utf-8"):
+            ln = ln.strip()
+            if not ln or ln.startswith("#") or ln.startswith("event_id"):
+                continue
+            want.add(ln.split(",")[0].strip())
+        missing = want - set(ids)
+        ids = [e for e in ids if e in want]
+        print(f"  --only_events: {len(ids)} of {len(want)} listed events found "
+              f"in this label file")
+        if missing:
+            print(f"    {len(missing)} listed events are not in "
+                  f"{a.pair_labels} -- they belong to another label file or "
+                  f"never made it into one")
     if a.clean_only:
         ids = [e for e in ids if stored[e]["pair_supervision"] in CLEAN_BINARY]
         print(f"  --clean_only: {len(ids)} rows. The excluded rows are dropped "
