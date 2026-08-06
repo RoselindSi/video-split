@@ -94,6 +94,18 @@ def main():
         print("\n  no --decisions given, so the REVIEW-band question -- the "
               "one this file exists for -- is not answered.")
     else:
+        if not os.path.exists(a.decisions):
+            raise SystemExit(
+                f"--decisions {a.decisions} does not exist.\n"
+                f"The relabelled decisions are produced by the policy refit, "
+                f"so that has to run first:\n"
+                f"  1. c3_local_eval  --batch3_pair_labels <relabelled> "
+                f"--dump_events <scored csv>\n"
+                f"  2. c3_selective_policy --events <scored csv> --select "
+                f"--dump_decisions <prefix>\n"
+                f"Until then, pass the OLD decisions file to see the "
+                f"composition against the old partition -- valid as a "
+                f"before/after stratum, stale for anything forward-looking.")
         dec = {}
         with open(a.decisions, newline="", encoding="utf-8") as f:
             for r in csv.DictReader(f):
