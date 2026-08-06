@@ -1,0 +1,342 @@
+"""Fit the scorers once, save everything, and apply them without fitting.
+
+Until now nothing in this repository persisted a fitted model. Every score was
+out-of-fold from a fit performed inside the evaluation, and c3_local_eval fits
+on either the original pool or batch3, never both. Two consequences, both
+blocking:
+
+  BATCH4 COULD NOT BE A HELD-OUT TEST. Any score it received would come from a
+  model fitted with batch4's own labels in its training folds. That measures
+  whether the method works on batch4, not whether this artefact transfers to
+  it, and only the second is what a reserved set is for. Freezing the policy
+  config freezes thresholds and nothing that produces the numbers they apply
+  to.
+
+  THE TWO DEVELOPMENT SUB-POPULATIONS WERE NOT COMPARABLE. Their scores came
+  from separate fits, so the gap between them (median 0.734 against 0.315)
+  mixes prevalence, conditional shift and score scale, and no amount of
+  arithmetic on those numbers separates the three. One scorer applied to both
+  is the only thing that does.
+
+WHAT IS SAVED. Not just weights: the PCA basis, the imputer and scaler
+statistics for every stage, the logistic weights and intercept for each named
+score, the reliability definition, the identity of every feature cache (path,
+size, mtime and optionally sha256) and the commit that produced them. A
+threshold applied to scores from a different feature build is not the frozen
+artefact, and without the cache identities nothing detects that.
+
+IN-SAMPLE SCORES ARE REFUSED BY DEFAULT. The frozen model is fitted on ALL
+development events, so its scores on those events are in-sample and are not
+development performance. The out-of-fold path in c3_local_eval remains the
+only source of that. `--apply` therefore errors when asked to score an event
+that was in the fit set, unless --allow_in_sample is passed, and it stamps
+`in_sample` on every such row so a file cannot be mistaken for a held-out one
+after the fact.
+
+Usage:
+    # once, before any held-out data is touched
+    python -m src.boundary.frozen_scorer --fit \
+        --batch3_manifest .../batch3_manifest.jsonl \
+        --batch3_pair_labels data/gold/batch3_pair_labels_v1_relabel_v1.csv \
+        --feat_cache ... --local_cache ... \
+        --out /workspace/tr1/results/hal/c3/frozen_scorer_v1.pt
+
+    # later, on held-out events
+    python -m src.boundary.frozen_scorer --apply \
+        --model /workspace/tr1/results/hal/c3/frozen_scorer_v1.pt \
+        --batch3_manifest .../batch4_manifest.jsonl \
+        --batch3_pair_labels .../batch4_pair_labels.csv \
+        --feat_cache ... --local_cache ... \
+        --dump_events /workspace/tr1/results/hal/c3/scored_batch4.csv
+"""
+from __future__ import annotations
+
+import argparse
+import csv
+import hashlib
+import json
+import os
+import subprocess
+from collections import Counter
+
+import numpy as np
+import torch
+
+from src.auditor import gold_schema as S
+from src.boundary import pair_taxonomy as T
+from src.boundary.hal_features import load_feature_caches
+from src.boundary.state_adapter import build_events
+from src.boundary.pairwise_verifier import (
+    build_matrices, pca_fit, pca_apply, pair_block,
+    _impute_scale_fit, _impute_scale_apply,
+)
+from src.boundary.hal_vlm_fusion import fit_logreg, _sigmoid
+from src.boundary.c3_local_eval import detect_coverage, detect_longest_gap_s
+
+# the names the policy config references; they must not drift
+P1_NAME = "P1 (global) alone"
+LOCAL_NAME = "local alone"
+
+
+def file_identity(path, sha=True):
+    st = os.stat(path)
+    out = {"path": os.path.abspath(path), "size": st.st_size,
+           "mtime": int(st.st_mtime)}
+    if sha:
+        h = hashlib.sha256()
+        with open(path, "rb") as f:
+            for chunk in iter(lambda: f.read(1 << 22), b""):
+                h.update(chunk)
+        out["sha256"] = h.hexdigest()
+    return out
+
+
+def git_commit():
+    try:
+        return subprocess.check_output(["git", "rev-parse", "HEAD"],
+                                       stderr=subprocess.DEVNULL).decode().strip()
+    except Exception:
+        return None
+
+
+def fit_one(blocks, X_rel, y, pca_dim=64, l2=5.0):
+    """One scorer, fitted on everything passed in. Mirrors run_folds' per-fold
+    body exactly -- same PCA, same two imputer/scaler stages, same L2 -- so a
+    frozen score and an out-of-fold score differ only in what they were fitted
+    on and never in how they are computed."""
+    pcas = [pca_fit(np.concatenate([L, R], 0), pca_dim) for L, R in blocks]
+    st_rel = _impute_scale_fit(X_rel)
+    parts = [pair_block(pca_apply(p, L), pca_apply(p, R))
+             for p, (L, R) in zip(pcas, blocks)]
+    parts.append(_impute_scale_apply(st_rel, X_rel))
+    P = np.concatenate(parts, 1)
+    stP = _impute_scale_fit(P)
+    w, b = fit_logreg(_impute_scale_apply(stP, P), y, l2=l2)
+    return {"pcas": pcas, "st_rel": st_rel, "stP": stP, "w": w, "b": float(b),
+            "pca_dim": pca_dim, "l2": l2, "n_blocks": len(blocks)}
+
+
+def apply_one(m, blocks, X_rel):
+    if len(blocks) != m["n_blocks"]:
+        raise SystemExit(f"this scorer was fitted on {m['n_blocks']} block(s) "
+                         f"and was given {len(blocks)} -- the arms do not match")
+    parts = [pair_block(pca_apply(p, L), pca_apply(p, R))
+             for p, (L, R) in zip(m["pcas"], blocks)]
+    parts.append(_impute_scale_apply(m["st_rel"], X_rel))
+    P = np.concatenate(parts, 1)
+    return _sigmoid(_impute_scale_apply(m["stP"], P) @ m["w"] + m["b"])
+
+
+def gather(a, by_rid, loc_rid):
+    """Every event with both global and local features, plus the non-clean
+    taxonomy rows, which are SCORED but carry no y."""
+    events, extra = [], []
+    if a.batch3_manifest:
+        from src.boundary.batch3_dev_events import build_events as build_b3
+        raw = build_b3(a.batch3_manifest, by_rid)
+        labels = T.load_pair_labels(a.batch3_pair_labels)
+    else:
+        raw = build_events(S.load_gold(a.gold), S.load_context(a.context), by_rid)
+        labels = T.load_pair_labels(a.pair_labels)
+    clean = T.apply_to_events(raw, labels)
+    ids = {e["event_id"] for e in clean}
+    for e in raw:
+        if e["event_id"] in ids:
+            continue
+        lab = labels.get(e["event_id"])
+        if lab and lab.get("pair_supervision"):
+            extra.append(dict(e, y=None,
+                              pair_supervision=lab["pair_supervision"],
+                              temporal_pair_subtype=lab.get("temporal_pair_subtype")))
+    events = [e for e in clean if e["recording_id"] in loc_rid]
+    extra = [e for e in extra if e["recording_id"] in loc_rid]
+    return events, extra
+
+
+def matrices(events, loc_rid):
+    """Aligned global and local matrices, dropping events poolable in only one
+    branch -- the local cache has its own time grid, and an event present in
+    one and absent in the other would silently shift the row alignment."""
+    ev_l = [dict(e, rec=loc_rid[e["recording_id"]]) for e in events]
+    _, Lg, Rg, X_rel, keep_g, _ = build_matrices(events, False)
+    _, Ll, Rl, _, keep_l, _ = build_matrices(ev_l, False)
+    keep = sorted(set(keep_g) & set(keep_l))
+    gi = {k: i for i, k in enumerate(keep_g)}
+    li = {k: i for i, k in enumerate(keep_l)}
+    g = np.array([gi[k] for k in keep], int)
+    l = np.array([li[k] for k in keep], int)
+    return ([events[k] for k in keep], Lg[g], Rg[g], Ll[l], Rl[l], X_rel[g])
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--fit", action="store_true")
+    ap.add_argument("--apply", action="store_true")
+    ap.add_argument("--model", help="frozen scorer, for --apply")
+    ap.add_argument("--gold", default="data/gold/audit_188_gold_v2.jsonl")
+    ap.add_argument("--context", default="data/gold/audit_188_context.jsonl")
+    ap.add_argument("--pair_labels", default="data/gold/pair_labels_v1.csv")
+    ap.add_argument("--batch3_manifest", action="append", default=[])
+    ap.add_argument("--batch3_pair_labels", action="append", default=[])
+    ap.add_argument("--feat_cache", action="append", required=True)
+    ap.add_argument("--local_cache", action="append", required=True)
+    ap.add_argument("--pca_dim", type=int, default=64)
+    ap.add_argument("--no_sha", action="store_true",
+                    help="skip cache hashing; faster, and the artefact can no "
+                         "longer prove which features produced it")
+    ap.add_argument("--allow_in_sample", action="store_true")
+    ap.add_argument("--dump_events")
+    ap.add_argument("--out")
+    a = ap.parse_args()
+    if a.fit == a.apply:
+        raise SystemExit("give exactly one of --fit / --apply")
+    if len(a.batch3_manifest) != len(a.batch3_pair_labels):
+        raise SystemExit("--batch3_manifest and --batch3_pair_labels must pair up")
+
+    by_rid = load_feature_caches(a.feat_cache)
+    loc_rid = load_feature_caches(a.local_cache)
+
+    sources = [(None, None)] if not a.batch3_manifest else []
+    sources += list(zip(a.batch3_manifest, a.batch3_pair_labels))
+    if a.fit and not any(m is None for m, _ in sources):
+        print("  note: no non-batch3 source given, so the fit covers only the "
+              "manifests listed")
+
+    all_ev, all_extra = [], []
+    for man, pl in sources:
+        sub = argparse.Namespace(**vars(a))
+        sub.batch3_manifest, sub.batch3_pair_labels = man, pl
+        ev, ex = gather(sub, by_rid, loc_rid)
+        print(f"  {'clean-145' if man is None else os.path.basename(man)}: "
+              f"{len(ev)} clean + {len(ex)} non-clean")
+        all_ev += ev
+        all_extra += ex
+    if not all_ev:
+        raise SystemExit("no events with both global and local features")
+
+    ev, Lg, Rg, Ll, Rl, X_rel = matrices(all_ev, loc_rid)
+    y = np.array([e["y"] for e in ev], float)
+    print(f"\n{len(ev)} events poolable in BOTH branches "
+          f"({int(y.sum())}+ / {int((1 - y).sum())}-), "
+          f"{len({e['recording_id'] for e in ev})} recordings, "
+          f"base rate {y.mean():.3f}")
+
+    if a.fit:
+        model = {
+            "scorers": {
+                P1_NAME: fit_one([(Lg, Rg)], X_rel, y, a.pca_dim),
+                LOCAL_NAME: fit_one([(Ll, Rl)], X_rel, y, a.pca_dim),
+            },
+            "fit_event_ids": [e["event_id"] for e in ev],
+            "fit_recordings": sorted({e["recording_id"] for e in ev}),
+            "fit_base_rate": float(y.mean()),
+            "reliability": {"column": "detect_coverage",
+                            "definition": "fraction of frames in [t-4, t+4] "
+                                          "that were a real hand detection "
+                                          "rather than an interpolated box"},
+            "feat_cache": [file_identity(p, not a.no_sha) for p in a.feat_cache],
+            "local_cache": [file_identity(p, not a.no_sha) for p in a.local_cache],
+            "pair_labels": [file_identity(p, not a.no_sha)
+                            for p in [a.pair_labels] + list(a.batch3_pair_labels)
+                            if os.path.exists(p)],
+            "pca_dim": a.pca_dim,
+            "commit": git_commit(),
+        }
+        if not a.out:
+            raise SystemExit("--out is required for --fit")
+        os.makedirs(os.path.dirname(os.path.abspath(a.out)) or ".", exist_ok=True)
+        torch.save(model, a.out)
+        print(f"\nwrote {a.out}")
+        print(f"  commit {model['commit']}")
+        for k in ("feat_cache", "local_cache"):
+            for f in model[k]:
+                print(f"  {k:<12} {os.path.basename(f['path'])}  "
+                      f"{f['size'] / 1e6:.0f}MB  "
+                      f"{f.get('sha256', '(unhashed)')[:16]}")
+        print("\nThese scores are IN-SAMPLE on the events just fitted. They are "
+              "not development performance -- the out-of-fold path in "
+              "c3_local_eval remains the only\nsource of that. Commit this "
+              "file's identity before any held-out data is labelled.")
+        return
+
+    # ------------------------------------------------------------- apply
+    model = torch.load(a.model, weights_only=False, map_location="cpu")
+    print(f"\nfrozen scorer from commit {model.get('commit')}, fitted on "
+          f"{len(model['fit_event_ids'])} events across "
+          f"{len(model['fit_recordings'])} recordings, base rate "
+          f"{model['fit_base_rate']:.3f}")
+    for k in ("feat_cache", "local_cache"):
+        now = {os.path.abspath(p): file_identity(p, not a.no_sha)
+               for p in (a.feat_cache if k == "feat_cache" else a.local_cache)}
+        for f in model[k]:
+            cur = now.get(f["path"])
+            if cur is None:
+                print(f"  !! {k} {os.path.basename(f['path'])} was used at fit "
+                      f"time and is NOT among the caches given now")
+            elif "sha256" in f and "sha256" in cur and f["sha256"] != cur["sha256"]:
+                raise SystemExit(
+                    f"{f['path']} has changed since the fit "
+                    f"({f['sha256'][:12]} -> {cur['sha256'][:12]}). Scores from "
+                    f"different features are not this frozen artefact, and a "
+                    f"threshold carried across that change means nothing.")
+
+    fit_ids = set(model["fit_event_ids"])
+    fit_recs = set(model["fit_recordings"])
+    inside = [e["event_id"] for e in ev if e["event_id"] in fit_ids]
+    rec_overlap = sorted({e["recording_id"] for e in ev} & fit_recs)
+    if inside and not a.allow_in_sample:
+        raise SystemExit(
+            f"{len(inside)} of {len(ev)} events were in the fit set, so their "
+            f"scores would be in-sample and are not held-out performance. Pass "
+            f"--allow_in_sample to score them anyway; every such row is stamped "
+            f"in_sample=1. e.g. {inside[:3]}")
+    if rec_overlap:
+        print(f"  !! {len(rec_overlap)} recording(s) appear in BOTH the fit set "
+              f"and this data. Even events that are individually new share a "
+              f"recording with training data, so this is not a clean "
+              f"recording-level held-out set: {rec_overlap[:4]}")
+
+    scores = {P1_NAME: apply_one(model["scorers"][P1_NAME], [(Lg, Rg)], X_rel),
+              LOCAL_NAME: apply_one(model["scorers"][LOCAL_NAME], [(Ll, Rl)], X_rel)}
+    for n, s in scores.items():
+        print(f"  {n:<22} median {np.median(s):.3f}  "
+              f">=0.75 {np.mean(s >= 0.75):.3f}")
+
+    # non-clean taxonomy rows: scored, y left EMPTY. Writing 0 would enter them
+    # into every precision denominator as negatives.
+    ex_rows = []
+    if all_extra:
+        ex, eLg, eRg, eLl, eRl, eX = matrices(all_extra, loc_rid)
+        es = {P1_NAME: apply_one(model["scorers"][P1_NAME], [(eLg, eRg)], eX),
+              LOCAL_NAME: apply_one(model["scorers"][LOCAL_NAME], [(eLl, eRl)], eX)}
+        ex_rows = list(zip(ex, es[P1_NAME], es[LOCAL_NAME]))
+        print(f"  scored {len(ex_rows)} non-clean-binary events (no y)")
+
+    if a.dump_events:
+        names = [P1_NAME, LOCAL_NAME]
+        with open(a.dump_events, "w", newline="", encoding="utf-8") as f:
+            w = csv.writer(f)
+            w.writerow(["event_id", "recording_id", "y", "subtype",
+                        "detect_coverage", "detect_longest_gap_s",
+                        "in_sample"] + names)
+            for i, e in enumerate(ev):
+                w.writerow([e["event_id"], e["recording_id"], int(y[i]),
+                            e.get("temporal_pair_subtype") or "",
+                            f"{detect_coverage(loc_rid[e['recording_id']], e['t']):.3f}",
+                            f"{detect_longest_gap_s(loc_rid[e['recording_id']], e['t']):.2f}",
+                            int(e["event_id"] in fit_ids)]
+                           + [f"{scores[n][i]:.6f}" for n in names])
+            for e, s1, s2 in ex_rows:
+                w.writerow([e["event_id"], e["recording_id"], "",
+                            e.get("temporal_pair_subtype") or "",
+                            f"{detect_coverage(loc_rid[e['recording_id']], e['t']):.3f}",
+                            f"{detect_longest_gap_s(loc_rid[e['recording_id']], e['t']):.2f}",
+                            int(e["event_id"] in fit_ids), f"{s1:.6f}", f"{s2:.6f}"])
+        print(f"\nwrote {a.dump_events}")
+        print("  `in_sample` is per row. A file with any 1 in that column is "
+              "not a held-out result, whatever the aggregate says.")
+
+
+if __name__ == "__main__":
+    main()
