@@ -553,6 +553,67 @@ def main():
         for r in bad:
             print(f"    {r['event_id']:<44} obj "
                   f"{r['object_visible_frac']:.2f}  tracks {r['n_object_tracks']}")
+    # ------------------------------------------------- go / no-go, frozen
+    # Fixed BEFORE the detector ran. Two of the four are decidable from the
+    # extraction; two are not, and pretending otherwise would be the whole
+    # failure this pilot exists to avoid -- "did the release/recontact get
+    # preserved" cannot be checked without knowing what actually happened,
+    # which is what the contact sheets are for. Those two are emitted as a
+    # review sheet with the exact question printed per event, not scored here.
+    obj = [r for r in rows if r["audit_answer"] == "2_object_relative"]
+    kin = [r for r in rows if r["audit_answer"] == "1_hand_kinematic"]
+    nres = [r for r in rows if r["audit_answer"] == "4_not_resolvable"]
+    print(f"\n{'=' * 72}\nGO / NO-GO, criteria fixed before the run\n{'=' * 72}")
+    if not obj and not kin:
+        print("  the audit answers did not join, so none of this can be "
+              "evaluated -- fix --audit_sheet first")
+    else:
+        usable = [r for r in obj if r["object_visible_frac"] >= 0.5
+                  and r["n_object_tracks"] >= 1]
+        c1 = len(usable) >= 14
+        forced = [r for r in nres if r["contact_frac"] >= 0.5]
+        c4 = len(forced) == 0
+        print(f"  {'PASS' if c1 else 'FAIL'}  1. >=14 of the "
+              f"{len(obj)} object-relative events carry a usable relation "
+              f"track -- {len(usable)} do (active object visible in at least "
+              f"half the window, at least one object track)")
+        print(f"  {'PASS' if c4 else 'FAIL'}  4. none of the {len(nres)} "
+              f"not-resolvable events is forced into confident contact "
+              f"evidence -- {len(forced)} were")
+        for r in forced:
+            print(f"        {r['event_id']:<48} contact "
+                  f"{r['contact_frac']:.2f}")
+        print(f"  MANUAL  2. release/recontact and object/target switches "
+              f"preserved on at least two thirds of applicable events")
+        print(f"  MANUAL  3. at most 2 of the {len(kin)} hand-kinematic events "
+              f"show a spurious relation reset")
+        print("    Criteria 2 and 3 need the contact sheets: whether a "
+              "detected reset really happened cannot be read off the "
+              "extraction, only off the video.\n    A review sheet is written "
+              "for them; the pilot is NOT decided until it comes back.")
+        sheet = os.path.join(a.out_dir, "pilot_gonogo_review.csv")
+        with open(sheet, "w", newline="", encoding="utf-8") as f:
+            w = csv.writer(f)
+            w.writerow(["event_id", "audit_answer", "n_release",
+                        "n_recontact_same", "n_recontact_other",
+                        "n_target_switch", "object_visible_frac",
+                        "question", "verdict(correct|spurious|missed|n_a)",
+                        "notes"])
+            for r in obj + kin:
+                q = ("did the release/recontact or object switch this reports "
+                     "actually happen" if r["audit_answer"] == "2_object_relative"
+                     else "is any reported relation reset spurious")
+                w.writerow([r["event_id"], r["audit_answer"], r["n_release"],
+                            r["n_recontact_same"], r["n_recontact_other"],
+                            r["n_target_switch"],
+                            f"{r['object_visible_frac']:.2f}", q, "", ""])
+        print(f"    wrote {sheet}")
+        if not (c1 and c4):
+            print("\n  A fixed criterion already failed. The pre-registered "
+                  "response is to STOP C3.2 rather than install the full "
+                  "412-event pipeline -- criteria 2 and 3 cannot rescue it, "
+                  "they can only fail too.")
+
     print(f"\nNext step is to LOOK at {media_dir} for the object-relative "
           f"events before any number here is believed -- active-object recall, "
           f"contact validity, track continuity and false interactions with the "

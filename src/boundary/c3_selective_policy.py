@@ -321,6 +321,12 @@ def passes(m, sel, rule="frontier"):
         n_keep, n_fk = m["n_auto_keep"], m["false_keep_count"]
     if n_keep <= 0:
         return False
+    # A minimum SIZE, separate from the precision floor. Precision alone is
+    # satisfied trivially by a policy that keeps three events and gets them
+    # right, and such a point maximises nothing a reviewer notices while
+    # carrying an interval so wide it cannot be distinguished from chance.
+    if n_keep < sel.get("min_auto_keep_count", 0):
+        return False
     ok, _ = _per_class_ok(m, sel)
     if not ok:
         return False
