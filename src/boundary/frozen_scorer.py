@@ -177,6 +177,13 @@ def main():
     ap.add_argument("--gold", default="data/gold/audit_188_gold_v2.jsonl")
     ap.add_argument("--context", default="data/gold/audit_188_context.jsonl")
     ap.add_argument("--pair_labels", default="data/gold/pair_labels_v1.csv")
+    ap.add_argument("--clean145", action="store_true",
+                    help="include the original gold+context pool. OPT-IN and "
+                         "not implied by anything: the first version added it "
+                         "only when no manifest was given, so passing a "
+                         "manifest silently dropped it and the 'one fit over "
+                         "both populations' this file exists for became a fit "
+                         "over one")
     ap.add_argument("--batch3_manifest", action="append", default=[])
     ap.add_argument("--batch3_pair_labels", action="append", default=[])
     ap.add_argument("--feat_cache", action="append", required=True)
@@ -186,6 +193,9 @@ def main():
                     help="skip cache hashing; faster, and the artefact can no "
                          "longer prove which features produced it")
     ap.add_argument("--allow_in_sample", action="store_true")
+    ap.add_argument("--selfcheck", action="store_true",
+                    help="does the frozen PATH reproduce the out-of-fold score "
+                         "distribution the thresholds were chosen on?")
     ap.add_argument("--dump_events")
     ap.add_argument("--out")
     a = ap.parse_args()
@@ -197,11 +207,14 @@ def main():
     by_rid = load_feature_caches(a.feat_cache)
     loc_rid = load_feature_caches(a.local_cache)
 
-    sources = [(None, None)] if not a.batch3_manifest else []
-    sources += list(zip(a.batch3_manifest, a.batch3_pair_labels))
-    if a.fit and not any(m is None for m, _ in sources):
-        print("  note: no non-batch3 source given, so the fit covers only the "
-              "manifests listed")
+    sources = ([(None, None)] if a.clean145 else []) \
+        + list(zip(a.batch3_manifest, a.batch3_pair_labels))
+    if not sources:
+        raise SystemExit("no event source: pass --clean145 and/or "
+                         "--batch3_manifest/--batch3_pair_labels")
+    print(f"event sources ({len(sources)}): "
+          + ", ".join("clean-145" if m is None else os.path.basename(m)
+                      for m, _ in sources))
 
     all_ev, all_extra = [], []
     for man, pl in sources:
@@ -221,6 +234,48 @@ def main():
           f"({int(y.sum())}+ / {int((1 - y).sum())}-), "
           f"{len({e['recording_id'] for e in ev})} recordings, "
           f"base rate {y.mean():.3f}")
+
+    if a.selfcheck:
+        # THE QUESTION THIS ANSWERS. pair_block turns PCA-64 into 4*64 = 256
+        # columns, plus 7 scalars: 263 features for ~300 samples. In-sample the
+        # fit separates the classes perfectly (PPV 1.000, FPR 0.000), which is
+        # what that much capacity does. The thresholds in the frozen policy
+        # were chosen on OUT-OF-FOLD scores, so they are only meaningful on
+        # batch4 if the frozen path -- fit on training recordings, applied
+        # cold to held-out ones -- produces the same kind of distribution the
+        # OOF path did. Nothing about batch4 is needed to check that.
+        from src.boundary.pairwise_verifier import stratified_grouped_folds
+        from src.boundary.state_adapter import _auroc
+        groups = [e["recording_id"] for e in ev]
+        folds = stratified_grouped_folds(groups, y, 5, seed=0)
+        for nm, blocks in ((P1_NAME, (Lg, Rg)), (LOCAL_NAME, (Ll, Rl))):
+            L, R = blocks
+            ins = apply_one(fit_one([(L, R)], X_rel, y, a.pca_dim),
+                            [(L, R)], X_rel)
+            oof = np.full(len(y), np.nan)
+            for f in folds:
+                te = np.array([g in f for g in groups])
+                tr = ~te
+                if te.sum() < 2 or tr.sum() < 4 or len(set(y[tr].tolist())) < 2:
+                    continue
+                m = fit_one([(L[tr], R[tr])], X_rel[tr], y[tr], a.pca_dim)
+                oof[te] = apply_one(m, [(L[te], R[te])], X_rel[te])
+            k = np.isfinite(oof)
+            print(f"\n  {nm}")
+            print(f"    in-sample        AUROC {_auroc(y, ins):.3f}  "
+                  f"median {np.median(ins):.3f}  >=0.75 {np.mean(ins >= 0.75):.3f}  "
+                  f"in (0.2,0.8) {np.mean((ins > 0.2) & (ins < 0.8)):.3f}")
+            print(f"    frozen path, OOF AUROC {_auroc(y[k], oof[k]):.3f}  "
+                  f"median {np.median(oof[k]):.3f}  >=0.75 {np.mean(oof[k] >= 0.75):.3f}  "
+                  f"in (0.2,0.8) {np.mean((oof[k] > 0.2) & (oof[k] < 0.8)):.3f}")
+        print("\n  The SECOND row of each pair is what batch4 will look like: "
+              "a model fitted without those recordings, applied cold. If its "
+              "median and its\n  fraction above 0.75 are close to the numbers "
+              "the policy thresholds were selected on, the thresholds carry "
+              "over. If the in-sample row is\n  far more extreme -- it will be "
+              "-- that is capacity, not evidence, and it is why the frozen "
+              "scorer's own development scores are refused by default.")
+        return
 
     if a.fit:
         model = {
@@ -243,6 +298,12 @@ def main():
             "pca_dim": a.pca_dim,
             "commit": git_commit(),
         }
+        if len(sources) == 1:
+            print("\n  !! FITTED ON ONE SOURCE. A scorer fitted on a single "
+                  "sub-population inherits its prevalence and its score scale, "
+                  "which is exactly the\n     confound this file exists to "
+                  "remove. Pass every development source, or accept that this "
+                  "artefact is not comparable across them.")
         if not a.out:
             raise SystemExit("--out is required for --fit")
         os.makedirs(os.path.dirname(os.path.abspath(a.out)) or ".", exist_ok=True)
