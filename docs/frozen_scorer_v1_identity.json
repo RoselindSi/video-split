@@ -1,6 +1,6 @@
 {
-  "fit_base_rate": 0.43506493506493504,
-  "commit": "12bbcd7fdfdfd164de3603f3f2911cdb6765cb75",
+  "fit_base_rate": 0.5852842809364549,
+  "commit": "ee2feb4eb0e6ae03d2368148213d24345d447f7c",
   "pca_dim": 64,
   "reliability": {
     "column": "detect_coverage",
