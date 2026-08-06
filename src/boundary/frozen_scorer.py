@@ -258,6 +258,7 @@ def main():
         from src.boundary.state_adapter import _auroc
         groups = [e["recording_id"] for e in ev]
         folds = stratified_grouped_folds(groups, y, 5, seed=0)
+        frozen_oof = {}
         for nm, blocks in ((P1_NAME, (Lg, Rg)), (LOCAL_NAME, (Ll, Rl))):
             L, R = blocks
             ins = apply_one(fit_one([(L, R)], X_rel, y, a.pca_dim),
@@ -270,6 +271,7 @@ def main():
                     continue
                 m = fit_one([(L[tr], R[tr])], X_rel[tr], y[tr], a.pca_dim)
                 oof[te] = apply_one(m, [(L[te], R[te])], X_rel[te])
+            frozen_oof[nm] = oof
             k = np.isfinite(oof)
             print(f"\n  {nm}")
             print(f"    in-sample        AUROC {_auroc(y, ins):.3f}  "
@@ -306,6 +308,43 @@ def main():
                   "shift only. Compare it against the separate-fit numbers "
                   "(median 0.734 vs 0.315):\n    whatever closed is score "
                   "scale, and that part was never a property of the data.")
+        if a.dump_events:
+            # THE THRESHOLDS HAVE TO BE RE-SELECTED ON THESE. The frozen policy
+            # config was selected on out-of-fold scores from two SEPARATE fits,
+            # whose scale differs from a single combined fit's -- so those
+            # thresholds are not applicable to any cold-scoring path built on
+            # this model, whatever form that path takes. These are single-fold
+            # models from one combined fit, produced by the same code that will
+            # score batch4, which makes them the right scores to choose
+            # thresholds on.
+            with open(a.dump_events, "w", newline="", encoding="utf-8") as f:
+                w = csv.writer(f)
+                names = [P1_NAME, LOCAL_NAME]
+                w.writerow(["event_id", "recording_id", "y", "subtype",
+                            "detect_coverage", "detect_longest_gap_s",
+                            "source"] + names)
+                for i, e in enumerate(ev):
+                    if not all(np.isfinite(frozen_oof[n][i]) for n in names):
+                        continue
+                    w.writerow([e["event_id"], e["recording_id"], int(y[i]),
+                                e.get("temporal_pair_subtype") or "",
+                                f"{detect_coverage(loc_rid[e['recording_id']], e['t']):.3f}",
+                                f"{detect_longest_gap_s(loc_rid[e['recording_id']], e['t']):.2f}",
+                                e.get("_source", "")]
+                               + [f"{frozen_oof[n][i]:.6f}" for n in names])
+            print(f"\n  wrote {a.dump_events}")
+            print("  These are out-of-fold scores from ONE combined fit. The "
+                  "existing frozen policy config was selected on out-of-fold "
+                  "scores from TWO\n  separate fits, at a different scale, so "
+                  "it does not carry over -- re-select on this file and freeze "
+                  "the result before batch4.")
+            print("  NOTE the residual: an out-of-fold score comes from a "
+                  "model fitted on 4/5 of the data, and batch4 will be scored "
+                  "by one fitted on 5/5,\n  which is slightly sharper. No "
+                  "cold-scoring path reproduces the out-of-fold statistic "
+                  "exactly -- a 5-model ensemble is sharper still. This is the "
+                  "closest\n  available match and the direction of the "
+                  "remaining mismatch is known.")
         print("\n  The SECOND row of each pair is what batch4 will look like: "
               "a model fitted without those recordings, applied cold. If its "
               "median and its\n  fraction above 0.75 are close to the numbers "
