@@ -1,4 +1,14 @@
-# Pre-registration: what batch4 will show, and what each outcome means
+# Pre-registration v1 -- SUPERSEDED, kept as the record
+
+> **Superseded by `batch4_prediction_preregistration_v2.md`.** The central
+> argument below is wrong: it used `precision / prevalence` as evidence that
+> discrimination was unchanged, and that ratio is itself prevalence-dependent.
+> Reconstructing TPR and FPR shows a conditional shift as well
+> (0.667/0.108 versus 0.478/0.149), and a prevalence-only prediction gives
+> 0.826 against an observed 0.711. This file is left unedited because a
+> pre-registration that gets rewritten after the fact is not one.
+
+# What batch4 will show, and what each outcome means
 
 Written 2026-08-06, **before batch4 is labelled**. batch4 exists and its
 media is rendered; its `temporal_truth` column is empty. Nothing below was
