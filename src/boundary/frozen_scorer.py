@@ -281,6 +281,25 @@ def main():
                                       if all_extra else ([],) + (None,) * 5)
         eblocks = (arm_blocks(eLg, eRg, eLl, eRl) if all_extra else {})
         egroups = [e["recording_id"] for e in ex]
+        # A non-clean event is scored by the fold whose TEST split holds its
+        # recording. Folds are built from the CLEAN events' recordings, so a
+        # recording contributing no clean event is in no fold and its non-clean
+        # events were silently dropped from the dump -- 42 of 113, and not at
+        # random: offscreen kept 5 of 18, because a recording where the action
+        # is unobservable tends to have no clean events to anchor it.
+        #
+        # Those recordings are in no fold's TRAINING split either, so every
+        # fold model is out-of-fold for them and any one may score them. They
+        # are assigned round-robin, which gives them exactly the treatment the
+        # others get: one model, chosen without reference to their labels,
+        # that never saw their recording.
+        assigned = {g for f in folds for g in f}
+        orphan = sorted({g for g in egroups if g not in assigned})
+        if orphan:
+            print(f"  {len(orphan)} recording(s) carry non-clean events but no "
+                  f"clean event, so they belong to no fold; assigned "
+                  f"round-robin (every fold model is out-of-fold for them)")
+            folds = [list(f) + orphan[i::len(folds)] for i, f in enumerate(folds)]
         frozen_oof, frozen_oof_ex = {}, {}
         for nm, blocks in arm_blocks(Lg, Rg, Ll, Rl).items():
             ins = apply_one(fit_one(blocks, X_rel, y, a.pca_dim), blocks, X_rel)
@@ -376,8 +395,18 @@ def main():
                                 f"{detect_longest_gap_s(loc_rid[e['recording_id']], e['t']):.2f}",
                                 e.get("_source", "")]
                                + [f"{frozen_oof[n][i]:.6f}" for n in names])
+            n_ex = sum(1 for i in range(len(ex))
+                       if all(np.isfinite(frozen_oof_ex.get(n, [np.nan])[i])
+                              for n in names))
             print(f"\n  wrote {a.dump_events}  "
-                  f"({len(ev)} clean + {len(ex)} non-clean)")
+                  f"({len(ev)} clean + {n_ex} of {len(ex)} non-clean)")
+            if n_ex < len(ex):
+                print(f"  !! {len(ex) - n_ex} non-clean events still have no "
+                      f"score and are ABSENT from the file. They do not vanish "
+                      f"in deployment -- an unscoreable candidate goes to "
+                      f"REVIEW --\n     so any review rate computed from this "
+                      f"file has the wrong denominator until they are "
+                      f"accounted for.")
             print("  These are out-of-fold scores from ONE combined fit. The "
                   "existing frozen policy config was selected on out-of-fold "
                   "scores from TWO\n  separate fits, at a different scale, so "
