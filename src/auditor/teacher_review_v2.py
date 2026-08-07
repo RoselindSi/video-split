@@ -177,6 +177,13 @@ def main():
     ap.add_argument("--v1_review", help="v1 result file, to verify the sample "
                                         "is identical")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--repeats", type=int, default=1,
+                    help="review each event this many times. Two identical v1 "
+                         "runs at temperature 0 disagreed on 9 of 32 events "
+                         "while their aggregate counts barely moved, so a "
+                         "single run cannot tell a 9/16 from a 12/16 and the "
+                         "pre-registered threshold is not measurable without "
+                         "this.")
     ap.add_argument("--dry_run", action="store_true")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
@@ -250,18 +257,38 @@ def main():
         tr, tt = frames_b64(vp, t, cfg["transition_window_s"], n_tr,
                             cfg["eye"], cfg["long_side"])
         imgs, rel = ctx + tr, ct + tt
-        try:
-            raw = call(client, cfg["model"], imgs, rel,
-                       cfg["prompt"] + "\n\n" + cfg["schema"],
-                       cfg["temperature"])
-        except Exception as ex:
-            print(f"  !! {s['event_id']}: {type(ex).__name__}: {str(ex)[:110]}")
+        # repeated identically; the model is not reproducible at temperature 0
+        draws = []
+        for _ in range(max(1, a.repeats)):
+            try:
+                raw = call(client, cfg["model"], imgs, rel,
+                           cfg["prompt"] + "\n\n" + cfg["schema"],
+                           cfg["temperature"])
+            except Exception as ex:
+                print(f"  !! {s['event_id']}: {type(ex).__name__}: "
+                      f"{str(ex)[:110]}")
+                continue
+            bb = parse_json(raw)
+            draws.append({"review": bb,
+                          "unparsed": None if bb else (raw or "")[:400],
+                          "eligible": eligible(bb, cfg["eligibility"])[0],
+                          "decision": (bb or {}).get("decision")})
+        if not draws:
             continue
-        b = parse_json(raw)
+        # the FIRST draw carries forward, so a single-repeat run is unchanged;
+        # the rest are kept to show how far the answer moves
+        b = draws[0]["review"]
+        raw = draws[0]["unparsed"]
         ok, why = eligible(b, cfg["eligibility"])
-        rec = {**s, "review": b, "unparsed": None if b else (raw or "")[:400],
+        n_el = sum(1 for d in draws if d["eligible"])
+        rec = {**s, "review": b, "unparsed": draws[0]["unparsed"],
                "eligible": ok, "eligibility_failures": why,
-               "contradiction": contradiction(b)}
+               "contradiction": contradiction(b),
+               "repeats": len(draws), "eligible_draws": n_el,
+               "decisions_seen": sorted({d["decision"] for d in draws}),
+               "stable": len(draws) == 1 or n_el in (0, len(draws)),
+               "draws": [{k: d[k] for k in ("decision", "eligible")}
+                         for d in draws]}
         # the safety pass costs a call and only runs where one is warranted
         if ok and cfg["safety_pass"]["enabled"]:
             n_safety += 1
@@ -320,6 +347,22 @@ def main():
           f"{sum(1 for r in over if r['arm'] == 'true_keep')} were real boundaries "
           f"(cost), {sum(1 for r in over if r['arm'] == 'false_keep')} were "
           f"wrong admissions (benefit)")
+
+    if a.repeats > 1:
+        unstable = [r for r in results if not r["stable"]]
+        print(f"\n{'=' * 74}\nREPRODUCIBILITY over {a.repeats} identical "
+              f"calls\n{'=' * 74}")
+        print(f"  events whose admission flipped between draws: "
+              f"{len(unstable)}/{len(results)}")
+        for r in unstable:
+            print(f"    {r['event_id'][:46]:<46} {r['arm']:<11} "
+                  f"eligible in {r['eligible_draws']}/{r['repeats']} draws, "
+                  f"decisions {r['decisions_seen']}")
+        print("  An aggregate count can look steady while individual events "
+              "move underneath it -- two v1 runs both scored 9/16 on the false "
+              "keeps while\n  disagreeing about 9 of 32 events. A threshold of "
+              "12/16 cannot be read off one draw when the draw itself has this "
+              "much spread.")
 
     print(f"\n  {'route':<28} {'n':>4}   by arm")
     for rt in sorted({r["route"] for r in results}):
