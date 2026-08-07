@@ -1,0 +1,51 @@
+{
+  "_comment": "teacher_review v2. v1 (blind classifier + adversarial second pass) is kept untouched as the baseline; this is a different formulation, not a tuned prompt.\n\nWHAT v1's FAILURE ACTUALLY WAS. On the 7 gradual_phase_transition events it was given, v1 admitted 5. The evidence audit found NOTHING inconsistent -- the descriptions were specific and true -- and the adversarial pass produced the correct objection in four of them ('flows smoothly into rotating it, with no explicit pause', 'at the exact candidate moment the left hand remains in contact with the left faucet handle'). It approved anyway. So the model saw gradual and did not treat it as a blocker.\n\nv1's guideline invited exactly that: it listed release, recontact and target switch as evidence OF a sharp transition, and a gradual event contains every one of them. The two differ only in WHERE the change sits in time. The one v1 case that reasoned about that explicitly (recording_000030_exact_t12.2: 'the release and the recontact occur on either side of the middle, not at the candidate moment itself') got it right.\n\nSo v2 changes the task, not the wording: H1 is a transition LOCALISED at the candidate within the annotation tolerance, temporal localisation is asked for as its own fields before any decision, 'sharp' is removed from the observation stage so it cannot anchor what follows, and admission is decided by a deterministic rule over those fields rather than by the model's own label.",
+  "model": "doubao-seed-2-1-turbo-260628",
+  "base_url": "https://ark.cn-beijing.volces.com/api/v3",
+  "temperature": 0.0,
+  "_windows_comment": "Two scales, and neither is negotiable for speed. The wide view is not there for task semantics -- the observability audit answered semantic/long-context 0 of 36 -- it is there to show WHEN a change starts and ends, which is the one thing a 3-second clip cannot show and the one thing that separates sharp from gradual. The narrow view carries the transition itself.",
+  "context_window_s": 6.0,
+  "context_fps": 1.5,
+  "transition_window_s": 1.5,
+  "transition_fps": 6.0,
+  "eye": "left",
+  "long_side": 640,
+  "_tolerance_comment": "The human annotation is localised to about half a second, so 'a transition somewhere in this clip' is not the question. recording_000206 is the case: the model itself wrote that at t+0.0 the left hand was still on the faucet, and admitted anyway because the faucet-to-strainer switch happened later in the clip.",
+  "candidate_tolerance_s": 0.5,
+  "prompt": "You are reviewing a candidate temporal boundary in an egocentric video.\nThe candidate time is t = 0. The annotation tolerance is approximately +/-0.5 seconds.\n\nYour task is NOT to decide whether \"something changes\" somewhere in the clip.\nYour task is to determine whether there is a SHARP, VISUALLY OBSERVABLE, TEMPORALLY LOCALIZED interaction transition at the candidate time.\n\nH1:\nA meaningful interaction or object-state change occurs, and that change can be localized to a reasonably identifiable transition point near t=0.\nFor H1 to be supported:\n- the change must be concentrated near the candidate;\n- a plausible transition point must be identifiable;\n- that point must lie within approximately +/-0.5 s of t=0;\n- the interaction immediately before and after should be meaningfully different;\n- the states immediately before and after should be comparatively stable.\n\nH0:\nThere is not sufficient visual evidence for such a sharp localized transition.\nH0 includes:\n- continuous same-action motion;\n- gradual phase transitions;\n- overlapping transitions where one interaction continues while another begins;\n- transitions that occur outside the candidate tolerance;\n- camera/viewpoint changes;\n- insufficient visibility;\n- no visible transition;\n- ambiguous evidence.\n\nImportant rules:\n1. \"Something changes in the clip\" is NOT sufficient for H1.\n2. Release, re-contact, object switch, target switch, or object-state change are supporting evidence only. None is sufficient by itself.\n3. Two parts of a smooth process may be describable using different action words without there being a sharp boundary.\n4. If a change begins substantially before t=0 and continues substantially after t=0, that supports H0 as a gradual transition.\n5. A transition occurring somewhere in the surrounding clip does not support H1 unless it is localized to the candidate time.\n6. Do not infer hidden hand-object interactions when visibility is insufficient.\n\nFirst describe only observable interaction facts.\nThen explicitly evaluate: whether the pre-candidate state is stable; whether the post-candidate state is stable; when the change begins; when the change ends; whether the change is concentrated near t=0; whether a unique transition point is visible; whether that transition point lies within +/-0.5 s.\nThen provide BOTH evidence supporting H1 and evidence supporting H0.\nFinally compare the strongest evidence on both sides and output H1, H0, or insufficient_evidence.\n\nThe frames come in two groups: a wide context view spanning about +/-6 s at a low rate, then a close transition view spanning about +/-1.5 s at a higher rate. Each frame is labelled with its time relative to the candidate.",
+  "schema": "Reply with ONLY a JSON object, no prose around it:\n{\n  \"before_interaction\": \"what the hands were doing before the candidate, one clause\",\n  \"after_interaction\": \"what they were doing after, one clause\",\n  \"hand_visibility\": \"clear\"|\"partial\"|\"insufficient\",\n  \"active_object_visibility\": \"clear\"|\"partial\"|\"insufficient\",\n  \"same_active_object_before_after\": \"yes\"|\"no\"|\"unclear\",\n  \"contact_change\": \"none\"|\"release\"|\"recontact\"|\"release_and_recontact\"|\"new_contact\"|\"unclear\",\n  \"object_switch\": \"yes\"|\"no\"|\"unclear\",\n  \"target_switch\": \"yes\"|\"no\"|\"unclear\",\n  \"discrete_object_state_change\": \"yes\"|\"no\"|\"unclear\",\n  \"camera_motion_dominant\": \"yes\"|\"no\"|\"unclear\",\n  \"pre_state_stable\": \"yes\"|\"no\"|\"unclear\",\n  \"post_state_stable\": \"yes\"|\"no\"|\"unclear\",\n  \"change_begins_before_candidate\": \"yes\"|\"no\"|\"unclear\",\n  \"change_continues_after_candidate\": \"yes\"|\"no\"|\"unclear\",\n  \"change_concentrated_near_candidate\": \"yes\"|\"no\"|\"unclear\",\n  \"unique_transition_point_visible\": \"yes\"|\"no\"|\"unclear\",\n  \"transition_within_tolerance\": \"yes\"|\"no\"|\"unclear\",\n  \"evidence_sufficient\": true|false,\n  \"h1_evidence\": [\"what supports a localized sharp transition AT the candidate\"],\n  \"h0_evidence\": [\"what supports no localized sharp transition\"],\n  \"strongest_h1_evidence\": \"the single best point for H1\",\n  \"strongest_h0_evidence\": \"the single best point for H0\",\n  \"decision\": \"H1\"|\"H0\"|\"insufficient_evidence\",\n  \"negative_reason_if_h0\": \"same_action_continuous\"|\"gradual_transition\"|\"overlapping_transition\"|\"transition_outside_tolerance\"|\"camera_dominant\"|\"visibility_insufficient\"|\"no_visible_transition\"|\"ambiguous\"|null\n}\nFill h0_evidence even when you decide H1, and h1_evidence even when you decide H0. Every line must describe something visible in these frames. Do not output a taxonomy label such as \"annotation convention\" -- whether a cut reflects a dataset labelling rule is not visible in the video.",
+  "_eligibility_comment": "The model's own `decision` is NOT the admission decision. In v1 it wrote the correct objection and then approved; generating an objection and letting it count are different things, so the localisation fields decide here and the code applies them. Where the rule and the model disagree, both are recorded -- a rule that silently overrides the model hides how often it has to.",
+  "eligibility": {
+    "require_decision": "H1",
+    "require_evidence_sufficient": true,
+    "require_yes": [
+      "change_concentrated_near_candidate",
+      "unique_transition_point_visible",
+      "transition_within_tolerance"
+    ],
+    "forbid_no": [
+      "pre_state_stable",
+      "post_state_stable"
+    ],
+    "forbid_yes": [
+      "camera_motion_dominant"
+    ],
+    "forbid_insufficient": [
+      "hand_visibility",
+      "active_object_visibility"
+    ]
+  },
+  "_safety_comment": "Second call only for candidates that already passed the deterministic rule, so most events cost one call rather than two. Its job is narrowed to three blockers and it may only object by citing a specific observable contradiction: in v1 the adversarial pass overturned two correct blind approvals on 'another interpretation is possible', which costs true boundaries and buys nothing.",
+  "safety_pass": {
+    "enabled": true,
+    "prompt": "This candidate has passed an automatic check and is about to be admitted with no human looking at it. Your own reading of the clip was:\n\n{first}\n\nCheck ONLY these three admission blockers:\n1. Is the apparent transition actually gradual, or overlapping (one interaction continuing while another begins)?\n2. Does the transition point lie outside approximately +/-0.5 s of t=0?\n3. Is visibility insufficient to justify admitting this without human review?\n\nOnly challenge if you can cite a SPECIFIC observable contradiction in these frames. Do not challenge merely because another interpretation is possible.\n\nReply with ONLY a JSON object:\n{{\n  \"blocker_found\": \"gradual_or_overlapping\"|\"outside_tolerance\"|\"visibility\"|null,\n  \"specific_contradiction\": \"the observable fact that contradicts admission, or null\",\n  \"final\": \"approve\"|\"challenge\"|\"abstain\"\n}}"
+  },
+  "_routing_comment": "H0 never means delete. The product decision is admit-or-show-a-human, not keep-or-discard: gradual, annotation_convention, offscreen and ambiguous events all still need a person, and auto-rejecting them would trade a real uncertainty for a better-looking review rate.",
+  "routing": {
+    "H1_eligible_approved": "provisional_admission",
+    "H1_eligible_challenged": "requires_human_review",
+    "H1_not_eligible": "requires_human_review",
+    "H0": "requires_human_review",
+    "insufficient_evidence": "requires_human_review"
+  }
+}
