@@ -285,7 +285,13 @@ def main():
                "eligible": ok, "eligibility_failures": why,
                "contradiction": contradiction(b),
                "repeats": len(draws), "eligible_draws": n_el,
-               "decisions_seen": sorted({d["decision"] for d in draws}),
+               # a draw whose reply did not parse has decision None, which is
+               # not sortable against strings -- and it is information, not an
+               # error: an unparseable answer is one the reviewer failed to
+               # give, and it belongs in the spread rather than crashing it
+               "decisions_seen": sorted({d["decision"] or "unparsed"
+                                         for d in draws}),
+               "n_unparsed": sum(1 for d in draws if d["decision"] is None),
                "stable": len(draws) == 1 or n_el in (0, len(draws)),
                "draws": [{k: d[k] for k in ("decision", "eligible")}
                          for d in draws]}
@@ -357,7 +363,9 @@ def main():
         for r in unstable:
             print(f"    {r['event_id'][:46]:<46} {r['arm']:<11} "
                   f"eligible in {r['eligible_draws']}/{r['repeats']} draws, "
-                  f"decisions {r['decisions_seen']}")
+                  f"decisions {r['decisions_seen']}"
+                  + (f", {r['n_unparsed']} unparsed" if r.get("n_unparsed")
+                     else ""))
         print("  An aggregate count can look steady while individual events "
               "move underneath it -- two v1 runs both scored 9/16 on the false "
               "keeps while\n  disagreeing about 9 of 32 events. A threshold of "
