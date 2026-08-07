@@ -492,6 +492,16 @@ def main():
     ap.add_argument("--select", action="store_true",
                     help="search the config's pre-listed grid on THIS data and "
                          "freeze the winner. Development data only.")
+    ap.add_argument("--input_role", choices=["held_out", "rescoring"],
+                    help="REQUIRED with --apply. 'held_out' = data the policy "
+                         "has never seen. 'rescoring' = the same development "
+                         "events under a different scoring path. --apply used "
+                         "to assume the first and printed 'HELD-OUT (one shot, "
+                         "no tuning)' over a re-scoring of the development set, "
+                         "with a dev-to-held-out delta table that was actually "
+                         "comparing two scorings of the same events. Nothing in "
+                         "the input distinguishes the two cases, so it is "
+                         "declared.")
     ap.add_argument("--apply", action="store_true",
                     help="run a frozen config once. No search.")
     ap.add_argument("--out_config", help="where to write the frozen config (--select)")
@@ -707,20 +717,30 @@ def main():
             print(f"policy: {json.dumps(pol)}")
             if entry.get("expected_external_behavior"):
                 print(f"pre-registered expectation: {entry['expected_external_behavior']}")
-            print_report("HELD-OUT (one shot, no tuning)", m, tax)
+            held = a.input_role == "held_out"
+            print_report("HELD-OUT (one shot, no tuning)" if held else
+                         "RE-SCORING of the same development events "
+                         "(NOT held-out)", m, tax)
             dev = entry.get("dev_metrics") or {}
             if dev:
-                print("\n  vs development, the numbers promised before this ran:")
+                print("\n  vs the stored development numbers:"
+                      if not held else
+                      "\n  vs development, the numbers promised before this ran:")
                 for k in ("auto_keep_precision", "auto_keep_coverage",
                           "same_action_false_accept_rate", "sharp_false_reject_rate",
                           "review_rate", "automatic_coverage"):
                     if k in dev and np.isfinite(m.get(k, float("nan"))):
-                        print(f"    {k:<32} dev {dev[k]:.3f} -> held-out {m[k]:.3f} "
-                              f"({m[k] - dev[k]:+.3f})")
-                print(f"    auto-keep counts: dev "
+                        print(f"    {k:<32} stored {dev[k]:.3f} -> now "
+                              f"{m[k]:.3f} ({m[k] - dev[k]:+.3f})")
+                print(f"    auto-keep counts: stored "
                       f"{dev.get('n_auto_keep', 0) - dev.get('false_keep_count', 0)}"
-                      f"/{dev.get('n_auto_keep', 0)} -> held-out "
+                      f"/{dev.get('n_auto_keep', 0)} -> now "
                       f"{m['n_auto_keep'] - m['false_keep_count']}/{m['n_auto_keep']}")
+                if not held:
+                    print("    Both columns describe the SAME events. This "
+                          "delta is a change of scoring path, not transport, "
+                          "and must never be\n    reported as held-out "
+                          "performance.")
             if a.dump_decisions:
                 dump_decisions(a.dump_decisions, rows, pol, role, cols)
             applied[role] = {"policy": pol, "metrics": m, "taxonomy": tax,
