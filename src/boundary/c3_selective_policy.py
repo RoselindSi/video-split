@@ -510,6 +510,13 @@ def main():
     ap.add_argument("--out")
     ap.add_argument("--dump_decisions")
     a = ap.parse_args()
+    if a.apply and not a.input_role:
+        raise SystemExit(
+            "--apply needs --input_role. 'held_out' for data the policy has "
+            "never seen, 'rescoring' for the same development events under a "
+            "different scoring path. The report said HELD-OUT either way until "
+            "it was told, and it has already labelled a re-scoring of the "
+            "development set that way once.")
     if a.select == a.apply:
         raise SystemExit("choose exactly one of --select / --apply")
 
