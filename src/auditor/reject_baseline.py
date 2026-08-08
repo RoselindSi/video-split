@@ -120,8 +120,16 @@ def main():
                     help="teacher development events, removed so this arm is "
                          "measured on the same held-out set as the teacher")
     ap.add_argument("--score_col", default=None,
-                    help="column to threshold; default is the first of score, "
-                         "fused_score present in the file")
+                    help="which arm to threshold. Not guessed when several "
+                         "are present: the decisions file carries all three "
+                         "scorers side by side and picking whichever wins "
+                         "after seeing the result is a search, not a baseline")
+    ap.add_argument("--policy", help="policy result json, to read the arm the "
+                                     "frozen operating point actually used")
+    ap.add_argument("--all_arms", action="store_true",
+                    help="report every arm. Only legitimate as a diagnostic: "
+                         "the deployed arm is the baseline, and the best of "
+                         "three chosen afterwards is not")
     ap.add_argument("--n_folds", type=int, default=5)
     ap.add_argument("--n_boot", type=int, default=2000)
     ap.add_argument("--seed", type=int, default=0)
@@ -143,15 +151,26 @@ def main():
             for r in json.load(open(p, encoding="utf-8")).get("results", []):
                 dev.add(r["event_id"])
 
-    rows = []
     with open(a.decisions, newline="", encoding="utf-8") as f:
         rd = csv.DictReader(f)
-        col = a.score_col or next(
-            (c for c in ("score", "fused_score") if c in rd.fieldnames), None)
-        if col is None:
-            raise SystemExit(f"no score column in {a.decisions}; "
-                             f"saw {rd.fieldnames}")
-        for r in rd:
+        fields = list(rd.fieldnames or [])
+        raw = list(rd)
+    NON_SCORE = {"event_id", "recording_id", "source", "y", "subtype",
+                 "reliability", "decision", "reason", "policy_role"}
+    numeric = [c for c in fields if c not in NON_SCORE
+               and sum(1 for r in raw[:50] if _isnum(r.get(c))) > len(raw[:50]) / 2]
+    cols = resolve_cols(a, numeric, raw)
+    print(f"{os.path.basename(a.decisions)} carries {len(numeric)} scorers: "
+          + ", ".join(f"`{c}`" for c in numeric))
+    if len(cols) > 1:
+        print("  !! --all_arms: every arm below is a separate baseline. The "
+              "deployed one is THE baseline; reading off whichever\n     arm "
+              "wins here and comparing the teacher against that would import "
+              "a three-way search into the comparison.")
+
+    for col in cols:
+        rows = []
+        for r in raw:
             e = r["event_id"]
             if e not in safe or not safe[e]["audited"]:
                 continue
@@ -162,7 +181,48 @@ def main():
             rows.append({"event_id": e, "recording_id": r["recording_id"],
                          "score": s, "y": bool(safe[e]["reject_safe"]),
                          "subtype": safe[e]["subtype"], "dev": e in dev})
-    print(f"thresholding `{col}` from {os.path.basename(a.decisions)}")
+        run_arm(a, col, rows, safe, gold)
+    closing()
+
+
+def _isnum(x):
+    try:
+        float(x)
+        return True
+    except (TypeError, ValueError):
+        return False
+
+
+def resolve_cols(a, numeric, raw):
+    """Which arm to threshold. Refuses to guess when several are present."""
+    if a.score_col:
+        if a.score_col not in numeric:
+            raise SystemExit(f"`{a.score_col}` is not one of {numeric}")
+        return [a.score_col]
+    if a.policy and os.path.exists(a.policy):
+        txt = json.dumps(json.load(open(a.policy, encoding="utf-8")))
+        hit = [c for c in numeric if f'"{c}"' in txt]
+        if len(hit) == 1:
+            print(f"  arm read from {os.path.basename(a.policy)}: `{hit[0]}`")
+            return hit
+        print(f"  !! {os.path.basename(a.policy)} names {len(hit)} of the "
+              f"arms, so it does not identify the deployed one")
+    if a.all_arms:
+        return numeric
+    if len(numeric) == 1:
+        return numeric
+    raise SystemExit(
+        "several scorers are present and this file will not pick one for "
+        "you:\n  " + "\n  ".join(numeric) + "\n\nThe deployed arm is the "
+        "baseline the teacher has to beat. Choosing whichever of the three\n"
+        "looks best after the fact would put a three-way search inside the "
+        "number.\n\nEither name it with --score_col, point --policy at the "
+        "result json that recorded the frozen\noperating point, or pass "
+        "--all_arms to see all three as a diagnostic.")
+
+
+def run_arm(a, col, rows, safe, gold):
+    print(f"\n\n{'#' * 78}\n# ARM `{col}`\n{'#' * 78}")
     print(f"  {len(rows)} audited events carry a student score  "
           f"({sum(1 for r in rows if r['y'])} reject-safe)")
     miss = [e for e, v in safe.items()
@@ -252,6 +312,11 @@ def main():
                   f"{dict(Counter(r['subtype'] for i, r in enumerate(sel) if rej[i] and not r['y']))}")
 
         if a.out and tag.startswith("HELD"):
+            # one file per arm, so --all_arms does not silently leave only the
+            # last arm's numbers behind the single name the caller gave
+            base, ext = os.path.splitext(a.out)
+            out = a.out if not a.all_arms else \
+                f"{base}.{col.replace(' ', '_').replace(',', '')}{ext}"
             json.dump({"score_col": col, "n": len(sel),
                        "n_reject": int(rej.sum()), "tp": tp, "fp": fp,
                        "precision": prec, "buffered": buffered(tp, fp),
@@ -261,9 +326,11 @@ def main():
                        "false_rejects": [sel[i]["event_id"]
                                          for i in range(len(sel))
                                          if rej[i] and not sel[i]["y"]]},
-                      open(a.out, "w", encoding="utf-8"), indent=2)
-            print(f"\nwrote {a.out}")
+                      open(out, "w", encoding="utf-8"), indent=2)
+            print(f"\nwrote {out}")
 
+
+def closing():
     print(f"\n{'=' * 78}\nAUTO-REJECT, THE THREE ARMS\n{'=' * 78}")
     print(f"  {'arm':<30} {'n':>5} {'correct':>8} {'wrong':>6} {'precision':>10}")
     print(f"  {'student alone (above)':<30}   see the held-out block")
