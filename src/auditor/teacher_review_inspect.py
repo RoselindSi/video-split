@@ -78,15 +78,22 @@ def admitted(r):
             else verdict(r) == "approve")
 
 
-def checks(b, rule):
+def checks(b, rule, observe_only=False):
     """Every rule item with its outcome, not only the ones that failed.
-    Printing failures alone cannot separate a wrong model from a strict rule."""
+    Printing failures alone cannot separate a wrong model from a strict rule.
+
+    An observe-only run waives the decision check at runtime, so recomputing
+    it from the raw config prints a FAIL on every row for a verdict that was
+    never requested -- and that FAIL then hides which localisation field
+    actually blocked the event, which is the only thing the run was for."""
     if not rule:
         return []
     out = [("evidence_sufficient", bool(b.get("evidence_sufficient")),
-            b.get("evidence_sufficient")),
-           (f"decision == {rule['require_decision']}",
-            b.get("decision") == rule["require_decision"], b.get("decision"))]
+            b.get("evidence_sufficient"))]
+    if rule.get("require_decision") is not None and not observe_only:
+        out.append((f"decision == {rule['require_decision']}",
+                    b.get("decision") == rule["require_decision"],
+                    b.get("decision")))
     for k in rule["require_yes"]:
         out.append((f"{k} == yes", b.get(k) == "yes", b.get(k)))
     for k in rule["forbid_no"]:
@@ -98,7 +105,7 @@ def checks(b, rule):
     return out
 
 
-def show(r, rule, args):
+def show(r, rule, args, observe_only=False):
     b = rev(r)
     print(f"\n{'-' * 74}\n  {r['event_id']}")
     print(f"    human subtype {r['subtype']}   arm {r.get('arm')}   "
@@ -129,8 +136,10 @@ def show(r, rule, args):
         print(f"    ADJUDICATION  decision={b.get('decision')}"
               f"  negative_reason={b.get('negative_reason_if_h0')}")
     if (args.show_eligibility or args.verbose) and rule:
-        cs = checks(b, rule)
-        print("    ELIGIBILITY")
+        cs = checks(b, rule, observe_only)
+        print("    ELIGIBILITY"
+              + ("   (observe-only: no decision was requested, so that check "
+                 "is not applied)" if observe_only else ""))
         for name, ok, val in cs:
             print(f"      {'PASS' if ok else 'FAIL'}  {name:<42} ({val})")
         bad = [n for n, ok, _ in cs if not ok]
@@ -185,6 +194,10 @@ def main():
     blob = json.load(open(a.review, encoding="utf-8"))
     res = blob["results"]
     v2 = any(is_v2(r) for r in res)
+    # files written before the flag was recorded are detected by the thing the
+    # flag describes: a run that asked for no decision has none anywhere
+    observe_only = bool(blob.get("observe_only")) or (
+        v2 and res and all(rev(r).get("decision") is None for r in res))
     rule = None
     cfgp = a.config or blob.get("config")
     if v2 and cfgp and os.path.exists(cfgp):
@@ -193,13 +206,14 @@ def main():
         print("  !! no eligibility config found, so the rule cannot be "
               "recomputed; --show_eligibility will be empty")
     print(f"{os.path.basename(a.review)}: {len(res)} events, "
-          f"format {'v2' if v2 else 'v1'}")
+          f"format {'v2' if v2 else 'v1'}"
+          + ("   observe-only" if observe_only else ""))
 
     if a.event:
         for r in res:
             if r["event_id"] == a.event:
                 a.verbose = True
-                show(r, rule, a)
+                show(r, rule, a, observe_only)
                 return
         raise SystemExit(f"{a.event} not in this file")
 
@@ -215,7 +229,7 @@ def main():
     print(f"  {len(sel)} after filters")
 
     for r in sel:
-        show(r, rule, a)
+        show(r, rule, a, observe_only)
 
     # the grid that decides the next change: for each event, whether the model
     # marked the change as sitting at the candidate at all

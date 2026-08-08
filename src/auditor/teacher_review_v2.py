@@ -418,6 +418,10 @@ def main():
               f"anything.")
 
     blob = {"config": os.path.abspath(a.config), "model": cfg["model"],
+            # without this the inspector recomputes eligibility from the raw
+            # config, whose rule requires decision == H1, and every observe-only
+            # row prints a FAIL for a decision the run never asked for
+            "observe_only": bool(a.observe_only),
             "n": len(results), "n_calls": len(results) + n_safety,
             "false_keeps_blocked": [n_ch_bad, len(fk)],
             "true_keeps_retained": [n_ap_good, len(tk)],
