@@ -343,6 +343,48 @@ def run_arm(a, col, rows, safe, gold):
             print(f"\n  false rejects by subtype: "
                   f"{dict(Counter(r['subtype'] for i, r in enumerate(sel) if rej[i] and not r['y']))}")
 
+        # ------------------------------------------------- what the tail holds
+        # The nested selection above answers "is there a deployable cut". When
+        # the answer is no, the next question is how far off it is and what is
+        # standing in the way -- a tail that is 0.90 clean needs a teacher to
+        # remove a couple of events, and one that is 0.60 clean needs the
+        # teacher to do the whole job. Both look identical as "n 0".
+        #
+        # THIS IS POOLED AND THEREFORE OPTIMISTIC. Every cut below is read off
+        # the same events it is scored on, which is exactly the selection this
+        # file refuses to make for the operating point. It is a description of
+        # the tail, not a candidate policy, and no threshold here may be
+        # deployed without being re-chosen inside training folds.
+        order = np.argsort(sc)
+        print(f"\n  THE LOW TAIL, POOLED (optimistic by construction -- a "
+              f"description of what is there, never an operating point):")
+        print(f"    {'k':>4} {'cut':>8} {'safe':>6} {'wrong':>6} "
+              f"{'precision':>10} {'buffered':>9}")
+        for k in (5, 10, 15, 20, 25, 30, 35, 40, 50):
+            if k > len(order):
+                break
+            idx = order[:k]
+            t = int(y[idx].sum())
+            fpk = k - t
+            print(f"    {k:>4} {sc[order[k - 1]]:>8.4f} {t:>6} {fpk:>6} "
+                  f"{t / k:>10.3f} {buffered(t, fpk):>9.3f}")
+        best = max(((buffered(int(y[order[:k]].sum()),
+                              k - int(y[order[:k]].sum())), k)
+                    for k in range(MIN_N, len(order) + 1)), default=(0, 0))
+        print(f"    best buffered precision at n>={MIN_N}, pooled: "
+              f"{best[0]:.3f} at n={best[1]}   (target {MIN_PRECISION})")
+
+        contam = [sel[i] for i in order[:40] if not sel[i]["y"]]
+        print(f"\n  what contaminates the lowest-scoring 40: {len(contam)} of "
+              f"40 are not safe to delete")
+        for st, n in Counter(c["subtype"] for c in contam).most_common():
+            ex = next(c for c in contam if c["subtype"] == st)
+            print(f"    {n:>3}  {st:<32} e.g. {ex['event_id'][-40:]}")
+        print("    This is the teacher's actual job on this branch: these are "
+              "the events it has to recognise and refuse, and\n    the ones "
+              "whose subtypes it has already been shown to handle badly are "
+              "the reason to expect it to be hard.")
+
         if a.out and tag.startswith("HELD"):
             # one file per arm, so --all_arms does not silently leave only the
             # last arm's numbers behind the single name the caller gave
