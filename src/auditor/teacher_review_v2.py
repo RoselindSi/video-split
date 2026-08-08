@@ -119,7 +119,8 @@ def eligible(b, rule):
     if not b:
         return False, ["no parseable response"]
     fail = []
-    if b.get("decision") != rule["require_decision"]:
+    if rule.get("require_decision") is not None \
+            and b.get("decision") != rule["require_decision"]:
         fail.append(f"decision={b.get('decision')}")
     if rule["require_evidence_sufficient"] and not b.get("evidence_sufficient"):
         fail.append("evidence_sufficient=false")
@@ -177,6 +178,13 @@ def main():
     ap.add_argument("--v1_review", help="v1 result file, to verify the sample "
                                         "is identical")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--observe_only", action="store_true",
+                    help="ask for the SAME fields with no decision requested "
+                         "and no H1/H0 framing. In the v2 run the fields "
+                         "tracked the decision rather than the video -- an "
+                         "h0_evidence line saying the transition starts 0.4s "
+                         "early sat beside change_concentrated=yes -- so this "
+                         "removes the decision and changes nothing else.")
     ap.add_argument("--repeats", type=int, default=1,
                     help="review each event this many times. Two identical v1 "
                          "runs at temperature 0 disagreed on 9 of 32 events "
@@ -261,8 +269,9 @@ def main():
         draws = []
         for _ in range(max(1, a.repeats)):
             try:
+                blk = cfg["observe_only"] if a.observe_only else cfg
                 raw = call(client, cfg["model"], imgs, rel,
-                           cfg["prompt"] + "\n\n" + cfg["schema"],
+                           blk["prompt"] + "\n\n" + blk["schema"],
                            cfg["temperature"])
             except Exception as ex:
                 print(f"  !! {s['event_id']}: {type(ex).__name__}: "
@@ -279,7 +288,15 @@ def main():
         # the rest are kept to show how far the answer moves
         b = draws[0]["review"]
         raw = draws[0]["unparsed"]
-        ok, why = eligible(b, cfg["eligibility"])
+        # in observe-only mode there is no decision to require, so eligibility
+        # is evaluated on the localisation fields alone -- which is the whole
+        # point: it shows what the rule WOULD have decided from a description
+        # that never saw a verdict
+        rule = dict(cfg["eligibility"])
+        if a.observe_only:
+            rule = {**rule, "require_decision": None}
+            b = dict(b or {}, decision=None)
+        ok, why = eligible(b, rule)
         n_el = sum(1 for d in draws if d["eligible"])
         rec = {**s, "review": b, "unparsed": draws[0]["unparsed"],
                "eligible": ok, "eligibility_failures": why,
