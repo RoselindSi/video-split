@@ -338,7 +338,10 @@ def main():
                 (b or {}).get("decision", "insufficient_evidence"),
                 "requires_human_review"))
         results.append(rec)
-        d = (b or {}).get("decision", "?")
+        # .get(k, default) only substitutes when the KEY is absent, and
+        # observe-only sets decision explicitly to None -- so the default never
+        # fired and the format string got None
+        d = (b or {}).get("decision") or ("observed" if a.observe_only else "?")
         print(f"  [{i+1}/{len(sample)}] {s['event_id'][:42]:<42} "
               f"{s['arm']:<11} {d:<20} eligible={str(ok):<5} "
               f"{rec['route']}", flush=True)
