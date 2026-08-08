@@ -293,8 +293,13 @@ def main():
                                          for d in draws}),
                "n_unparsed": sum(1 for d in draws if d["decision"] is None),
                "stable": len(draws) == 1 or n_el in (0, len(draws)),
-               "draws": [{k: d[k] for k in ("decision", "eligible")}
-                         for d in draws]}
+               # the FULL observation per draw, not just its verdict. Storing
+               # decision and eligible alone answers "did it flip" and not
+               # "which field flipped", and those point at different problems:
+               # unstable object perception is a different failure from stable
+               # perception with unstable temporal adjudication.
+               "draws": [{"decision": d["decision"], "eligible": d["eligible"],
+                          "review": d["review"]} for d in draws]}
         # the safety pass costs a call and only runs where one is warranted
         if ok and cfg["safety_pass"]["enabled"]:
             n_safety += 1
