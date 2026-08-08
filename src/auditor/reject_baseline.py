@@ -178,9 +178,14 @@ def main():
                 s = float(r[col])
             except (TypeError, ValueError):
                 continue
+            try:
+                rel = float(r.get("reliability"))
+            except (TypeError, ValueError):
+                rel = float("nan")
             rows.append({"event_id": e, "recording_id": r["recording_id"],
                          "score": s, "y": bool(safe[e]["reject_safe"]),
-                         "subtype": safe[e]["subtype"], "dev": e in dev})
+                         "subtype": safe[e]["subtype"], "dev": e in dev,
+                         "reliability": rel, "reason": r.get("reason")})
         run_arm(a, col, rows, safe, gold)
     closing()
 
@@ -271,7 +276,9 @@ def run_arm(a, col, rows, safe, gold):
 
         tp = int(y[rej].sum())
         fp = int(rej.sum() - tp)
-        prec = tp / max(1, tp + fp)
+        # undefined, not zero: rejecting nothing is a refusal to act, and
+        # printing 0.000 reads as "every reject was wrong"
+        prec = tp / (tp + fp) if (tp + fp) else float("nan")
         lo, hi = wilson(tp, tp + fp) if tp + fp else (float("nan"),) * 2
         blo, bhi = grouped_bootstrap(rej, y.astype(bool), groups,
                                      a.n_boot, a.seed)
@@ -286,6 +293,11 @@ def run_arm(a, col, rows, safe, gold):
 
         ok = (int(rej.sum()) >= MIN_N and prec >= MIN_PRECISION
               and buffered(tp, fp) >= MIN_PRECISION)
+        if not rej.sum():
+            print("  No fold found a cut meeting the buffered precision on "
+                  "its own training recordings. That is the correct output,\n"
+                  "  not a crash: the deployed score has no tail this target "
+                  "can be read off at the required precision.")
         print(f"  PRE-REGISTERED BAR (n>={MIN_N}, precision>={MIN_PRECISION}, "
               f"buffered>={MIN_PRECISION}): {'MET' if ok else 'NOT MET'}")
         if ok:
@@ -293,6 +305,26 @@ def run_arm(a, col, rows, safe, gold):
                   "teacher can only add cost unless it raises n\n  at the same "
                   "precision -- so the experiment to run is recall, not "
                   "precision.")
+
+        # the deployed policy sends low-reliability events to REVIEW rather
+        # than acting on them. A reject action is a NEW action and nothing has
+        # decided whether that gate should apply to it too, so this arm leaves
+        # the gate off and shows where the rejects landed instead -- a reject
+        # set concentrated at reliability 0.000 is being produced by scores the
+        # policy itself declines to trust
+        if rej.sum():
+            rel = np.array([r["reliability"] for r in sel], float)[rej]
+            zero = int(np.sum(rel == 0.0))
+            print(f"\n  reliability of the {int(rej.sum())} rejected: "
+                  f"min {np.nanmin(rel):.3f}  median {np.nanmedian(rel):.3f}  "
+                  f"at 0.000: {zero}")
+            byr = Counter(r["reason"] for i, r in enumerate(sel) if rej[i])
+            print(f"  the policy's own reason for those events: {dict(byr)}")
+            if zero:
+                print(f"  !! {zero} of the rejects carry reliability 0.000. "
+                      f"The frozen policy routes those to REVIEW precisely "
+                      f"because it\n     does not trust the score there, and "
+                      f"this arm is deleting them on that same score.")
 
         if fp:
             print(f"\n  THE {fp} FALSE REJECTS, one by one. At this precision "
