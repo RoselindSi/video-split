@@ -110,8 +110,31 @@ def main():
     bad = [(r, why) for r, why in cert
            if not (safe.get(r["event_id"], {}).get("reject_safe"))]
     good = [(r, why) for r, why in cert if r not in [x for x, _ in bad]]
-    print(f"\n  of the {len(cert)} certified: {len(cert) - len(bad)} really "
-          f"are safe to delete, {len(bad)} are NOT")
+    tp = len(cert) - len(bad)
+    pool = [r for r in res if safe.get(r["event_id"], {}).get("reject_safe")]
+    prec = tp / len(cert) if cert else float("nan")
+    print(f"\n  of the {len(cert)} certified: {tp} really are safe to delete, "
+          f"{len(bad)} are NOT")
+    print(f"  precision {prec:.3f}   one-error buffered "
+          f"{tp / (len(cert) + 1):.3f}   (target 0.95)")
+    print(f"  recall {tp}/{len(pool)} of the reject-safe events present in "
+          f"this sample")
+    # the prose and the structured field can disagree, and only the field
+    # decides -- so a certificate granted while the model's own description
+    # names a release or a re-grasp is worth seeing on its own
+    WORDS = ("releas", "let go", "withdraw", "re-enter", "reenter", "grasp",
+             "pick up", "put down", "place", "hand off", "set down")
+    odd = [r for r, _ in cert
+           if any(w in ((rev(r).get("before_interaction") or "") + " "
+                        + (rev(r).get("after_interaction") or "")).lower()
+                  for w in WORDS)]
+    if odd:
+        print(f"\n  !! {len(odd)} of the {len(cert)} certified describe a "
+              f"release, a withdrawal or a re-grasp IN THEIR OWN PROSE while "
+              f"contact_change\n     was recorded as none. The field and the "
+              f"description disagree, and only the field is consulted:")
+        for r in odd:
+            print(f"      {r['event_id'][-46:]}")
 
     if bad:
         print(f"\n  THE {len(bad)} FALSE REJECTS. Each is a boundary this rule "
