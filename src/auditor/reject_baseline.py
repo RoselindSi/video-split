@@ -1,0 +1,279 @@
+"""Arm 1: what does the student alone achieve on AUTO_REJECT? No API calls.
+
+The teacher has to beat this, and the composition of the target says the bar
+may already be high. 35 of the 36 safe-to-delete events are
+`same_action_internal_motion` -- the single class the verifier was actually
+supervised against, since CLEAN_BINARY is sharp versus same_action and nothing
+else. So the teacher is being asked to certify the one discrimination the
+student was built for, and measuring that before spending anything is the
+cheapest decision available.
+
+NO REFIT. This scores the DEPLOYED student output, taken from the frozen
+policy decisions, because that is what a cascade would actually gate on.
+Fitting a fresh head against reject_safe would answer a different question --
+"could a student be built for this" -- and reporting it as the baseline would
+quietly replace a measurement with a search. If this arm is weak, that refit
+becomes the next question rather than a footnote to this one.
+
+THE THRESHOLD IS CHOSEN NESTED. The frozen policy proposes no rejects at all
+(reject_below is -1.0, added as an action-space option and never turned on),
+so there is no threshold to inherit and one has to be picked. It is picked
+inside each outer fold's TRAINING recordings and applied only to that fold's
+held-out ones. Pooling out-of-fold scores over every event and choosing a
+threshold that looks good on them is how every earlier operating point in this
+project was selected, and it is why nested selection kept breaching afterwards.
+
+THE SCORES MUST ALREADY BE OUT-OF-FOLD. This file cannot verify that; it reads
+whatever the decisions file holds. If those scores came from a model that saw
+these recordings in training, every number below is optimistic and the nested
+threshold does not repair it.
+
+EVERY NON-REJECT-SAFE EVENT IS A FALSE REJECT, including the ones whose truth
+is unknown. Deleting an offscreen candidate destroys something whether or not
+the gold can say what, so there is no excluded category -- and each false
+reject is printed individually with its subtype and corrected boundary,
+because at this precision target they are single events, not a rate.
+
+Usage:
+    python -m src.auditor.reject_baseline \
+        --reject_safe /workspace/tr1/results/hal/c3/reject_safe.json \
+        --decisions .../policy_decisions_v4.primary_transportability_frontier.csv \
+        --exclude_review /workspace/tr1/results/hal/c3/teacher_observe_only.json
+"""
+from __future__ import annotations
+
+import argparse
+import csv
+import json
+import os
+from collections import Counter, defaultdict
+
+import numpy as np
+
+from src.boundary.pairwise_verifier import stratified_grouped_folds
+from src.boundary.state_adapter import _auroc
+from src.boundary.c3_selective_policy import wilson
+
+MIN_PRECISION = 0.95
+MIN_N = 20
+
+
+def buffered(tp, fp):
+    """Precision after one more false reject. Written as a formula because
+    'still 0.95 with one extra error' is ambiguous: 19/20 reads as a pass and
+    19/(19+1+1) = 0.905 does not."""
+    return tp / (tp + fp + 1) if (tp + fp + 1) else float("nan")
+
+
+def pick_threshold(scores, y, target=MIN_PRECISION):
+    """The HIGHEST cut whose prefix of lowest-scoring events still satisfies
+    the buffered precision. Reject is the low tail, so the sort is ascending;
+    everything else mirrors the keep-side selection."""
+    m = np.isfinite(scores)
+    if m.sum() < 10 or len(set(y[m].tolist())) < 2:
+        return None
+    order = np.argsort(scores[m])
+    s, yy = scores[m][order], y[m][order]
+    tp = fp = 0
+    th = None
+    for i in range(len(s)):
+        tp += int(yy[i] == 1)
+        fp += int(yy[i] == 0)
+        if buffered(tp, fp) >= target:
+            th = float(s[i])
+    return th
+
+
+def grouped_bootstrap(rej, ok, groups, n_boot, seed):
+    """Recordings are resampled, not events. Events inside one recording share
+    a scene, a camera and an annotator pass, so resampling them independently
+    would treat correlated errors as independent and shrink the interval."""
+    by = defaultdict(list)
+    for r, o, g in zip(rej, ok, groups):
+        by[g].append((r, o))
+    keys = list(by)
+    rng = np.random.default_rng(seed)
+    out = []
+    for _ in range(n_boot):
+        pick = rng.integers(0, len(keys), len(keys))
+        t = f = 0
+        for i in pick:
+            for r, o in by[keys[i]]:
+                if r:
+                    t += int(o)
+                    f += int(not o)
+        if t + f:
+            out.append(t / (t + f))
+    return (float(np.percentile(out, 2.5)),
+            float(np.percentile(out, 97.5))) if out else (float("nan"),) * 2
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--reject_safe", required=True,
+                    help="output of src.auditor.reject_safe --out")
+    ap.add_argument("--decisions", required=True)
+    ap.add_argument("--gold", action="append",
+                    default=["data/gold/audit_188_gold_v2.jsonl"])
+    ap.add_argument("--exclude_review", action="append", default=[],
+                    help="teacher development events, removed so this arm is "
+                         "measured on the same held-out set as the teacher")
+    ap.add_argument("--score_col", default=None,
+                    help="column to threshold; default is the first of score, "
+                         "fused_score present in the file")
+    ap.add_argument("--n_folds", type=int, default=5)
+    ap.add_argument("--n_boot", type=int, default=2000)
+    ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--out")
+    a = ap.parse_args()
+
+    rs = json.load(open(a.reject_safe, encoding="utf-8"))
+    safe = {r["event_id"]: r for r in rs["events"]}
+    gold = {}
+    for p in a.gold:
+        with open(p, encoding="utf-8") as f:
+            for line in f:
+                if line.strip():
+                    r = json.loads(line)
+                    gold[r["event_id"]] = r
+    dev = set()
+    for p in a.exclude_review:
+        if os.path.exists(p):
+            for r in json.load(open(p, encoding="utf-8")).get("results", []):
+                dev.add(r["event_id"])
+
+    rows = []
+    with open(a.decisions, newline="", encoding="utf-8") as f:
+        rd = csv.DictReader(f)
+        col = a.score_col or next(
+            (c for c in ("score", "fused_score") if c in rd.fieldnames), None)
+        if col is None:
+            raise SystemExit(f"no score column in {a.decisions}; "
+                             f"saw {rd.fieldnames}")
+        for r in rd:
+            e = r["event_id"]
+            if e not in safe or not safe[e]["audited"]:
+                continue
+            try:
+                s = float(r[col])
+            except (TypeError, ValueError):
+                continue
+            rows.append({"event_id": e, "recording_id": r["recording_id"],
+                         "score": s, "y": bool(safe[e]["reject_safe"]),
+                         "subtype": safe[e]["subtype"], "dev": e in dev})
+    print(f"thresholding `{col}` from {os.path.basename(a.decisions)}")
+    print(f"  {len(rows)} audited events carry a student score  "
+          f"({sum(1 for r in rows if r['y'])} reject-safe)")
+    miss = [e for e, v in safe.items()
+            if v["audited"] and e not in {r['event_id'] for r in rows}]
+    if miss:
+        print(f"  !! {len(miss)} audited events have no score and are absent "
+              f"from every number below, e.g. {miss[:2]}")
+
+    for tag, sel in (("ALL AUDITED", rows),
+                     ("HELD OUT (teacher-development events removed)",
+                      [r for r in rows if not r["dev"]])):
+        if not sel:
+            continue
+        y = np.array([r["y"] for r in sel], float)
+        sc = np.array([r["score"] for r in sel], float)
+        groups = [r["recording_id"] for r in sel]
+        print(f"\n{'=' * 78}\n{tag}: {len(sel)} events, "
+              f"{int(y.sum())} reject-safe ({y.mean():.3f})\n{'=' * 78}")
+        # ranking quality first: a threshold cannot rescue a score that does
+        # not order the two classes, and this is independent of any cut
+        print(f"  AUROC of the low tail against reject_safe: "
+              f"{_auroc(y, -sc):.3f}")
+
+        folds = stratified_grouped_folds(groups, y, a.n_folds, seed=a.seed)
+        rej = np.zeros(len(sel), bool)
+        print(f"\n  {'fold':>4} {'n_test':>7} {'thr':>8} {'rejected':>9} "
+              f"{'TP':>4} {'FP':>4} {'prec':>6} {'buff':>6}")
+        for fi, f in enumerate(folds):
+            te = np.array([g in f for g in groups])
+            tr = ~te
+            if te.sum() < 2 or tr.sum() < 10:
+                continue
+            th = pick_threshold(sc[tr], y[tr])
+            if th is None:
+                print(f"  {fi:>4} {int(te.sum()):>7} {'none':>8}   "
+                      f"no cut on the training recordings reaches the "
+                      f"buffered precision")
+                continue
+            hit = te & (sc <= th)
+            rej |= hit
+            tp = int(y[hit].sum())
+            fp = int(hit.sum() - tp)
+            print(f"  {fi:>4} {int(te.sum()):>7} {th:>8.4f} "
+                  f"{int(hit.sum()):>9} {tp:>4} {fp:>4} "
+                  f"{(tp / max(1, tp + fp)):>6.3f} {buffered(tp, fp):>6.3f}")
+
+        tp = int(y[rej].sum())
+        fp = int(rej.sum() - tp)
+        prec = tp / max(1, tp + fp)
+        lo, hi = wilson(tp, tp + fp) if tp + fp else (float("nan"),) * 2
+        blo, bhi = grouped_bootstrap(rej, y.astype(bool), groups,
+                                     a.n_boot, a.seed)
+        print(f"\n  AUTO_REJECT n {int(rej.sum())}   correct {tp}   "
+              f"wrong {fp}")
+        print(f"  precision {prec:.3f}   Wilson [{lo:.3f}, {hi:.3f}]   "
+              f"recording-grouped bootstrap [{blo:.3f}, {bhi:.3f}]")
+        print(f"  one-error buffered {buffered(tp, fp):.3f}   "
+              f"(target {MIN_PRECISION})")
+        print(f"  review reduction {rej.sum() / len(sel):.1%} of this set   "
+              f"recall over reject-safe {tp / max(1, int(y.sum())):.1%}")
+
+        ok = (int(rej.sum()) >= MIN_N and prec >= MIN_PRECISION
+              and buffered(tp, fp) >= MIN_PRECISION)
+        print(f"  PRE-REGISTERED BAR (n>={MIN_N}, precision>={MIN_PRECISION}, "
+              f"buffered>={MIN_PRECISION}): {'MET' if ok else 'NOT MET'}")
+        if ok:
+            print("  The student alone already clears the bar on this set. A "
+                  "teacher can only add cost unless it raises n\n  at the same "
+                  "precision -- so the experiment to run is recall, not "
+                  "precision.")
+
+        if fp:
+            print(f"\n  THE {fp} FALSE REJECTS, one by one. At this precision "
+                  f"target they are events, not a rate:")
+            for i, r in enumerate(sel):
+                if not (rej[i] and not r["y"]):
+                    continue
+                g = gold.get(r["event_id"], {})
+                print(f"    {r['event_id'][-46:]:<47} score {r['score']:.4f}")
+                print(f"      subtype {r['subtype']}   truth "
+                      f"{g.get('temporal_truth')}   validity "
+                      f"{g.get('candidate_boundary_validity')}   "
+                      f"corrected {g.get('primary_corrected_boundary_time')}")
+                print(f"      excluded from reject-safe by: "
+                      f"{safe[r['event_id']]['reason']}")
+            print(f"\n  false rejects by subtype: "
+                  f"{dict(Counter(r['subtype'] for i, r in enumerate(sel) if rej[i] and not r['y']))}")
+
+        if a.out and tag.startswith("HELD"):
+            json.dump({"score_col": col, "n": len(sel),
+                       "n_reject": int(rej.sum()), "tp": tp, "fp": fp,
+                       "precision": prec, "buffered": buffered(tp, fp),
+                       "wilson": [lo, hi], "bootstrap": [blo, bhi],
+                       "auroc": float(_auroc(y, -sc)),
+                       "bar_met": bool(ok),
+                       "false_rejects": [sel[i]["event_id"]
+                                         for i in range(len(sel))
+                                         if rej[i] and not sel[i]["y"]]},
+                      open(a.out, "w", encoding="utf-8"), indent=2)
+            print(f"\nwrote {a.out}")
+
+    print(f"\n{'=' * 78}\nAUTO-REJECT, THE THREE ARMS\n{'=' * 78}")
+    print(f"  {'arm':<30} {'n':>5} {'correct':>8} {'wrong':>6} {'precision':>10}")
+    print(f"  {'student alone (above)':<30}   see the held-out block")
+    print(f"  {'teacher certified':<30}     not run")
+    print(f"  {'student + teacher':<30}     not run")
+    print("  The teacher arms stay empty until this one is read. If the "
+          "student already meets the bar, the only question worth an API\n  "
+          "call is whether the teacher raises n at the same precision; if it "
+          "does not, there is nothing left to test.")
+
+
+if __name__ == "__main__":
+    main()
