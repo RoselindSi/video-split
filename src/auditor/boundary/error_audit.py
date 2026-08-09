@@ -348,6 +348,51 @@ def main():
         if old:
             line += "".join(f"{au_score(g, c):>16.3f}" for c in OLD_ARMS)
         print(line)
+    # overlapping intervals are not a test of a difference. The re-checked
+    # and never-re-checked halves are DIFFERENT events, so the difference is
+    # resampled two-sample, both halves grouped by recording.
+    named = dict(groups)
+    rc = named.get("  batch3, re-checked from video")
+    nr = named.get("  batch3, NEVER re-checked")
+    if rc and nr and len(rc) >= 10 and len(nr) >= 10:
+        print(f"\n  RE-CHECKED MINUS NEVER-RE-CHECKED, two-sample, both "
+              f"halves grouped by recording")
+        def two_sample(scorer, n_boot=2000, seed=0):
+            def by_rec(g):
+                d = defaultdict(list)
+                for r in g:
+                    d[r["recording_id"]].append(r)
+                return d
+            A, B = by_rec(rc), by_rec(nr)
+            ka, kb = list(A), list(B)
+            rng = np.random.default_rng(seed)
+            out = []
+            for _ in range(n_boot):
+                sa = [x for i in rng.integers(0, len(ka), len(ka))
+                      for x in A[ka[i]]]
+                sb = [x for i in rng.integers(0, len(kb), len(kb))
+                      for x in B[kb[i]]]
+                va, vb = scorer(sa), scorer(sb)
+                if np.isfinite(va) and np.isfinite(vb):
+                    out.append(va - vb)
+            if len(out) < 50:
+                return float("nan"), float("nan"), float("nan")
+            return (float(np.mean(out)), float(np.percentile(out, 2.5)),
+                    float(np.percentile(out, 97.5)))
+        cols = [("student", lambda g: au(g)[0])]
+        if old:
+            cols += [(c, (lambda g, c=c: au_score(g, c))) for c in OLD_ARMS]
+        for name, fn in cols:
+            d, lo, hi = two_sample(fn)
+            verdict = ("not established" if lo <= 0 <= hi
+                       else "re-checked HIGHER" if lo > 0 else "re-checked lower")
+            print(f"    {name:<28} {d:+.3f}   [{lo:+.3f}, {hi:+.3f}]   "
+                  f"{verdict}")
+        print("    A positive point estimate with an interval spanning zero is "
+              "the direction label cleanup would help in, and no\n    evidence "
+              "that it does. This is the number that decides whether "
+              "re-annotating the rest is worth its cost.")
+
     if old:
         best = OLD_ARMS[-1]
         print(f"\n  {'population':<30} student minus `{best}`, paired and "
