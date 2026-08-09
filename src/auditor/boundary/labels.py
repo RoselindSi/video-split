@@ -69,6 +69,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from collections import Counter, defaultdict
 
 MORPHOLOGY = ["POINT_TRANSITION", "INTERVAL_TRANSITION", "NO_TRANSITION",
@@ -99,6 +100,27 @@ TOL = 0.5
 # past this, the nearest recorded boundary is a different boundary and
 # moving the candidate onto it is not a retime
 MAX_RETIME_S = 2.0
+
+
+RECORDING = re.compile(r"^(recording_\d+)")
+
+
+def recording_of(eid, gold_row):
+    """The recording, from the audit record when there is one and from the
+    event id otherwise.
+
+    NOT string surgery on the tail. The previous fallback took
+    `eid.split("_t")[0].rsplit("_", 1)[0]`, which turns
+    `recording_000001_batch3_gt_boundary_t473.0` into
+    `recording_000001_batch3_gt` -- an id that exists in no cache, so all 240
+    batch3 events looked like missing features when the features were there.
+    Worse, it gave nearly every batch3 event its OWN pseudo-recording, so the
+    recording-grouped folds were grouping nothing and two events from one
+    video could sit on both sides of a split."""
+    if gold_row and gold_row.get("recording_id"):
+        return gold_row["recording_id"]
+    m = RECORDING.match(eid)
+    return m.group(1) if m else eid
 
 
 def cand_time(eid):
@@ -233,8 +255,7 @@ def build(pair_label_paths, gold_paths, tol=TOL,
         rel, off, why_r = relation(eid, g, dup, tol, max_retime_s)
         rows.append({
             "event_id": eid,
-            "recording_id": (g or {}).get("recording_id")
-                            or eid.split("_t")[0].rsplit("_", 1)[0],
+            "recording_id": recording_of(eid, g),
             "subtype": sub,
             "candidate_time": cand_time(eid),
             "morphology": m,
