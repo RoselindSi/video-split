@@ -292,18 +292,78 @@ def main():
         pos, neg = y.sum(), len(y) - y.sum()
         return float((ranks[y == 1].sum() - pos * (pos + 1) / 2) /
                      max(pos * neg, 1))
-    hdr = f"  {'population':<30} {'n':>5} {'POINT':>6} {'NONE':>6} {'student':>8}"
+    def boot_ci(g, scorer, n_boot=2000, seed=0):
+        """Grouped by recording, because two events from one video share a
+        scene and an annotator pass."""
+        by = defaultdict(list)
+        for r in g:
+            by[r["recording_id"]].append(r)
+        keys = list(by)
+        rng = np.random.default_rng(seed)
+        out = []
+        for _ in range(n_boot):
+            s_ = [x for i in rng.integers(0, len(keys), len(keys))
+                  for x in by[keys[i]]]
+            v = scorer(s_)
+            if v is not None and np.isfinite(v):
+                out.append(v)
+        if len(out) < 50:
+            return float("nan"), float("nan")
+        return (float(np.percentile(out, 2.5)),
+                float(np.percentile(out, 97.5)))
+
+    def delta_ci(g, key, n_boot=2000, seed=0):
+        """PAIRED: student minus the frozen arm on the same resample. Two
+        separate intervals on correlated estimates cannot be compared by
+        whether they overlap."""
+        by = defaultdict(list)
+        for r in g:
+            by[r["recording_id"]].append(r)
+        keys = list(by)
+        rng = np.random.default_rng(seed)
+        out = []
+        for _ in range(n_boot):
+            s_ = [x for i in rng.integers(0, len(keys), len(keys))
+                  for x in by[keys[i]]]
+            a_, _n = au(s_)
+            b_ = au_score(s_, key)
+            if np.isfinite(a_) and np.isfinite(b_):
+                out.append(a_ - b_)
+        if len(out) < 50:
+            return float("nan"), float("nan")
+        return (float(np.percentile(out, 2.5)),
+                float(np.percentile(out, 97.5)))
+
+    hdr = f"  {'population':<30} {'n':>5} {'POINT':>6} {'NONE':>6} {'student':>8} {'student 95% CI':>18}"
     if old:
         hdr += "".join(f"{c[:14]:>16}" for c in OLD_ARMS)
     print("\n" + hdr)
     for name, g in groups:
         v, n = au(g)
         npos = sum(1 for r in g if r["morphology_true"] == POINT)
-        line = f"  {name:<30} {n:>5} {npos:>6} {n - npos:>6} {v:>8.3f}"
+        lo, hi = (boot_ci(g, lambda x: au(x)[0]) if n >= 10
+                  else (float("nan"), float("nan")))
+        line = (f"  {name:<30} {n:>5} {npos:>6} {n - npos:>6} {v:>8.3f} "
+                f"[{lo:.3f}, {hi:.3f}]")
         if old:
             line += "".join(f"{au_score(g, c):>16.3f}" for c in OLD_ARMS)
         print(line)
     if old:
+        best = OLD_ARMS[-1]
+        print(f"\n  {'population':<30} student minus `{best}`, paired and "
+              f"bootstrapped by recording")
+        for name, g in groups:
+            if len(g) < 10:
+                continue
+            d = au(g)[0] - au_score(g, best)
+            lo, hi = delta_ci(g, best)
+            verdict = ("no detectable difference" if lo <= 0 <= hi
+                       else "student WORSE" if hi < 0 else "student better")
+            print(f"  {name:<30} {d:+.3f}   [{lo:+.3f}, {hi:+.3f}]   {verdict}")
+        print("  This row is the one that decides whether the temporal "
+              "student is carried forward, and it has to be read on the\n  "
+              "batch3 line rather than the aggregate, because dev is selected "
+              "for extremes.")
         print("\n  The frozen columns are the control. A dev/batch3 gap that "
               "appears in them too is a property of the two\n  populations, "
               "not of this model: dev is the 188-event error audit of the old "

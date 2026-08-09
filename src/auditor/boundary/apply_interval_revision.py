@@ -42,9 +42,11 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import os
 from collections import Counter
+from datetime import datetime, timezone
 
 MORPH = {"sharp_visible_transition": "POINT_TRANSITION",
          "gradual_phase_transition": "INTERVAL_TRANSITION",
@@ -75,6 +77,14 @@ def spearman(a, b):
     return float(np.corrcoef(ra, rb)[0, 1])
 
 
+def sha256(path):
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -83,6 +93,10 @@ def main():
     ap.add_argument("--predictions",
                     help="boundary_v1_oof.json, for the circularity check")
     ap.add_argument("--suffix", default="_ontology_v2")
+    ap.add_argument("--provenance",
+                    default="docs/interval_revision_provenance.json",
+                    help="written alongside --write; the revision is not "
+                         "reproducible without it")
     ap.add_argument("--write", action="store_true")
     a = ap.parse_args()
 
@@ -110,10 +124,12 @@ def main():
                    "ambiguous": 1, "gradual_phase_transition": 2,
                    "sharp_visible_transition": 3}
         if len(have) >= 4:
+            globals()["_rho"] = None
             rho = spearman([p[e] for e in have],
                            [rank_of.get(rev[e]["revised_temporal_pair_subtype"],
                                         1) for e in have])
             print(f"\n{'=' * 78}\nCIRCULARITY CHECK\n{'=' * 78}")
+            globals()["_rho"] = rho
             se = 1.0 / max((len(have) - 1) ** 0.5, 1e-9)
             print(f"  spearman(P(POINT), how point-like the revision is) = "
                   f"{rho:+.3f} over {len(have)} events   (rough se "
@@ -147,6 +163,7 @@ def main():
     # ------------------------------------------------------------- the edit
     print(f"\n{'=' * 78}\nWHAT CHANGES IN THE PAIR LABELS\n{'=' * 78}")
     total = Counter()
+    prov_events, prov_files = [], []
     for path in a.pair_labels:
         with open(path, newline="", encoding="utf-8-sig") as f:
             rd = csv.DictReader(f)
@@ -168,6 +185,19 @@ def main():
                 n_same += 1
                 continue
             moves[f"{MORPH.get(old, 'MASKED')} -> {MORPH.get(new, 'MASKED')}"] += 1
+            prov_events.append({
+                "event_id": e, "file": os.path.basename(path),
+                "from_subtype": old, "to_subtype": new,
+                "from_morphology": MORPH.get(old, "MASKED"),
+                "to_morphology": MORPH.get(new, "MASKED"),
+                "confidence": rev[e].get("ontology_confidence"),
+                "reason": rev[e].get("ontology_reason"),
+                "blind_topology_call":
+                    rev[e].get("interval_morphology_subtype_blind"),
+                "suggested_candidate_relation":
+                    rev[e].get("suggested_candidate_relation") or None,
+                "suggested_corrected_boundary_time":
+                    rev[e].get("suggested_corrected_boundary_time") or None})
             r[col] = new
             # the supervision column is derived from the subtype; leaving a
             # stale value there would let the old call keep acting through a
@@ -187,6 +217,8 @@ def main():
                 w.writeheader()
                 w.writerows(rows)
             print(f"      wrote {out}")
+            prov_files.append({"source": path, "source_sha256": sha256(path),
+                               "output": out, "output_sha256": sha256(out)})
 
     print(f"\n{'=' * 78}\nWHAT IT DOES TO THE MORPHOLOGY POPULATION"
           f"\n{'=' * 78}")
@@ -201,6 +233,43 @@ def main():
               f"this data at all. That is a result about the dataset and it "
               f"should be recorded as one.")
     print(f"  net moves across both files: {dict(total)}")
+    if a.write and prov_files:
+        prov = {
+            "written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "revision_file": os.path.abspath(a.revision),
+            "revision_sha256": sha256(a.revision),
+            "n_revised": len(rev),
+            "n_changed": len(prov_events),
+            "circularity_spearman": globals().get("_rho"),
+            "files": prov_files,
+            "caveats": [
+                "The revising pass saw the blind topology call in the same "
+                "row, so it is not an independent second opinion; only the "
+                "disagreements carry information.",
+                "It answers a DIFFERENT question from the blind audit -- "
+                "whether a boundary exists at the dataset's task granularity, "
+                "not what kind of extended transition an event is. Both can "
+                "hold at once.",
+                "The model's P(POINT) values for the point_like events were "
+                "visible before this pass. The circularity correlation is "
+                "recorded above; at n=37 it can only rule out a large "
+                "anchoring effect.",
+                "INTERVAL_TRANSITION falls to 5 events, below every reporting "
+                "threshold in this project, so POINT-vs-INTERVAL is no longer "
+                "measurable on this data.",
+                "The ORIGINAL files are untouched. Every number reported "
+                "before this date was computed on them and stays "
+                "reproducible.",
+            ],
+            "events": prov_events}
+        os.makedirs(os.path.dirname(os.path.abspath(a.provenance)) or ".",
+                    exist_ok=True)
+        json.dump(prov, open(a.provenance, "w", encoding="utf-8"), indent=2,
+                  ensure_ascii=False)
+        print(f"\n  froze provenance to {a.provenance}: "
+              f"{len(prov_events)} per-event changes, sha256 of every input "
+              f"and output,\n  the circularity correlation, and the four "
+              f"caveats that qualify the revision.")
     if not a.write:
         print(f"\n  --write not given, so nothing was written. Rerun the label "
               f"builder and training after writing, and expect POINT-vs-NONE "
