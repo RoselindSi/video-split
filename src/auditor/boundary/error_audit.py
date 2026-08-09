@@ -92,6 +92,10 @@ def main():
     ap.add_argument("--predictions", required=True)
     ap.add_argument("--decisions", help="frozen scores, for shortcut 1")
     ap.add_argument("--interval_audit", help="the filled 37-row sheet")
+    ap.add_argument("--rechecked", action="append", default=[],
+                    help="files listing batch3 events that were re-annotated "
+                         "from video (first column; '#' comments skipped). "
+                         "Splits batch3 into re-checked and never-checked")
     ap.add_argument("--top_k", type=int, default=12)
     a = ap.parse_args()
 
@@ -117,6 +121,18 @@ def main():
                              if k and k.startswith("your_call")), "")
                 if (call or "").strip():
                     sub[r["event_id"]] = call.strip()
+    checked = set()
+    for pth in a.rechecked:
+        if not os.path.exists(pth):
+            continue
+        with open(pth, encoding="utf-8-sig") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                e = line.split(",")[0].strip()
+                if e and e != "event_id" and not e.startswith("evidence"):
+                    checked.add(e)
     print(f"{len(rows)} events with an out-of-fold P(POINT); "
           f"{sum(1 for r in rows if r['event_id'] in old)} carry the frozen "
           f"scores; {len(sub)} carry an interval subtype")
@@ -237,16 +253,36 @@ def main():
         return float((ranks[y == 1].sum() - pos * (pos + 1) / 2) /
                      max(pos * neg, 1)), len(g)
     pn = [r for r in rows if r.get("morphology_true") in (POINT, NONE)]
+    b3 = [r for r in pn if "_batch3_" in r["event_id"]]
     groups = [("dev (audited-source tags)",
                [r for r in pn if "_batch3_" not in r["event_id"]]),
-              ("batch3", [r for r in pn if "_batch3_" in r["event_id"]]),
-              ("both together", pn)]
+              ("batch3, all", b3)]
+    if checked:
+        # the decisive split. 90 batch3 events were re-annotated from video
+        # after their subtypes were traced to machine-made calls, and 58 of
+        # them changed. The other 150 were never re-checked. If the
+        # re-checked ones score much higher, what is left in batch3 is label
+        # noise and the fix is annotation, not representation.
+        groups += [("  batch3, re-checked from video",
+                    [r for r in b3 if r["event_id"] in checked]),
+                   ("  batch3, NEVER re-checked",
+                    [r for r in b3 if r["event_id"] not in checked])]
+    groups += [("both together", pn)]
     print(f"\n  {'population':<30} {'n':>5} {'POINT':>6} {'NONE':>6} "
           f"{'AUROC':>8}")
     for name, g in groups:
         v, n = au(g)
         npos = sum(1 for r in g if r["morphology_true"] == POINT)
         print(f"  {name:<30} {n:>5} {npos:>6} {n - npos:>6} {v:>8.3f}")
+    if checked:
+        print("\n  The re-checked split is the one that decides the next "
+              "move. Those 90 events were re-annotated from video after\n  "
+              "their subtypes were traced to machine-made calls, and 58 "
+              "changed; the other 150 were never looked at again. If the\n  "
+              "re-checked rows score clearly higher, what remains in batch3 "
+              "is label noise and the fix is annotation, not a new\n  "
+              "representation. If both halves score the same, the labels are "
+              "not the explanation and the features are.")
     print("\n  A near-perfect number on one source beside a weak one on the "
           "other is not a model that half works. Either the two\n  label sets "
           "differ in quality -- batch3 came through a relabel of "
