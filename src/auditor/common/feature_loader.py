@@ -10,14 +10,22 @@ post- mean cannot distinguish a step from a ramp; both give the same distance.
 So this returns the frames, resampled onto a fixed grid around the candidate,
 and the temporal encoder is what collapses them.
 
-RESAMPLING IS NEAREST-FRAME WITH A VALIDITY MASK. The caches are ~2 fps but
-the spacing is not exactly uniform, and near the start or end of a recording
-part of the window does not exist. A frame is marked invalid when the nearest
-cached frame is further than half the target spacing, or when the requested
-time falls outside the recording; invalid positions are zero-filled AND
-masked, never silently filled with the nearest available frame. Padding a
-missing edge with a repeated frame would manufacture "no change is happening
+RESAMPLING IS NEAREST-FRAME WITH A VALIDITY MASK. The caches run at 10 fps for
+the global stream and 2 fps for the local one, the spacing is not exactly
+uniform, and near the start or end of a recording part of the window does not
+exist. A grid position is invalid when the nearest cached frame is further than
+half the COARSER of the grid step and that cache's own frame spacing, or when
+the requested time falls outside the recording. Invalid positions are
+zero-filled AND masked, never filled with the nearest available frame: padding
+a missing edge with a repeated frame manufactures "no change is happening
 here", which is a morphology answer.
+
+The tolerance is derived from the cache rather than fixed at step/2 because
+those two coincide for the 2 fps local stream on a 0.5 s grid, and a candidate
+whose phase sat 0.25 s off would then miss every single grid point and lose
+that entire stream without being dropped. The present data clears it by 0.05 s
+-- the largest phase offset over all 415 events is 0.2 s -- which is luck, not
+a margin.
 
 THE DIFFERENCES ARE TAKEN AFTER PROJECTION, not here. PCA is linear, so the
 projection of a difference equals the difference of projections up to the mean
@@ -64,6 +72,15 @@ def window(rec, t0, half_s=6.0, n_frames=25):
 
     grid = np.linspace(-half_s, half_s, n_frames)
     step = grid[1] - grid[0] if n_frames > 1 else half_s
+    # the tolerance comes from the CACHE's own spacing as well as the grid's.
+    # A cached frame stands for the interval +/- spacing/2 around it, so with a
+    # 0.5s cache on a 0.5s grid the two are equal and a candidate whose phase is
+    # 0.25s off would miss EVERY grid point and lose its whole window in that
+    # stream -- silently, since the event still has the other stream. The
+    # current data escapes this by 0.05s (the largest phase offset is 0.2s),
+    # which is luck rather than design.
+    spacing = float(np.median(np.diff(np.sort(times)))) if len(times) > 1 else step
+    tol = max(step, spacing) / 2 * (1 + 1e-9)
     out = np.zeros((n_frames, feats.shape[1]), np.float32)
     valid = np.zeros(n_frames, bool)
     lo, hi = times.min(), times.max()
@@ -75,7 +92,7 @@ def window(rec, t0, half_s=6.0, n_frames=25):
         # a cached frame further than half the target spacing is not a
         # measurement of this instant, and pretending otherwise would smear a
         # step across the grid
-        if abs(times[j] - t) > step / 2:
+        if abs(times[j] - t) > tol:
             continue
         out[i] = feats[j]
         valid[i] = True
@@ -116,6 +133,17 @@ def build_events(events, gcache, lcache, half_s=6.0, n_frames=25,
     if verbose:
         print(f"  {len(out)} events with sequences, "
               f"{sum(drop.values())} dropped {dict(drop)}")
+        # an event keeps training with one stream entirely unmeasured -- the
+        # mask channel makes that visible to the model, but it must be visible
+        # in the log too, or a stream that silently resolved for nobody would
+        # look like a stream that carried no signal
+        for tag, key in (("global", "coverage_g"), ("local", "coverage_l")):
+            z = [e for e in out if e[key] == 0.0]
+            if z:
+                print(f"  !! {len(z)} events have NO {tag} frames at all in "
+                      f"their window, e.g. {z[0]['event_id']}. They still "
+                      f"train,\n     on the other stream plus a mask channel "
+                      f"that is zero throughout.")
         if out:
             cg = np.array([e["coverage_g"] for e in out])
             cl = np.array([e["coverage_l"] for e in out])
