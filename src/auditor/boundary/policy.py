@@ -141,28 +141,48 @@ def decide_all(preds, onto, subtypes=None):
     return out
 
 
-def morphology_only(pred, onto, spec_name="AUTO_KEEP"):
-    """Would this event clear the LEARNED conditions alone -- morphology,
-    relation and confidence -- with every gate the model cannot currently
-    evaluate set aside?
+def trained_heads(path="configs/auditor/boundary_v1_heads.yaml"):
+    """Heads that actually receive gradient. A head at loss_weight 0 emits an
+    untrained softmax, and treating its output as a gate measures nothing."""
+    try:
+        import yaml
+        cfg = yaml.safe_load(open(path, encoding="utf-8"))
+    except Exception:
+        return {"morphology"}
+    return {k for k, v in cfg["heads"].items() if float(v.get("loss_weight", 0))}
 
-    This is the size of the hole. Those events are held back today by the
-    gold subtype and by gates that block for want of an input; both of those
-    disappear on new video, and what remains is whatever an abstain head
-    learns to catch."""
+
+def morphology_only(pred, onto, trained, spec_name="AUTO_KEEP"):
+    """Would this event clear AUTO_KEEP if only the TRAINED heads gated it?
+
+    The first version applied the relation gate as well, and relation carries
+    loss_weight 0 -- its softmax never reaches 0.95, so the answer came back 0
+    of 413 and read as a safety property. It was an untrained head accidentally
+    blocking, which is not the same thing at all and disappears the moment that
+    head is trained.
+
+    So the gates are applied only for heads that receive gradient, and the ones
+    skipped are named. What this returns is the number of events standing
+    between the current model and an automatic decision, held back today by
+    nothing the model itself knows."""
     spec = (onto["actions"].get(spec_name) or {})
-    m = max(MORPHOLOGY, key=lambda k: pred["morphology"][k])
-    r = max(RELATION, key=lambda k: pred["relation"][k])
-    if m not in _listify(spec.get("morphology", [])):
-        return False
-    if r not in _listify(spec.get("relation", [])):
-        return False
     c = spec.get("min_confidence", 1.1)
-    if pred["morphology"][m] < c or pred["relation"][r] < c:
-        return False
-    lim = spec.get("max_abs_offset_sec")
-    if lim is not None and abs(pred.get("offset") or 0.0) > lim:
-        return False
+    if "morphology" in trained:
+        m = max(MORPHOLOGY, key=lambda k: pred["morphology"][k])
+        if m not in _listify(spec.get("morphology", [])):
+            return False
+        if pred["morphology"][m] < c:
+            return False
+    if "relation" in trained:
+        r = max(RELATION, key=lambda k: pred["relation"][k])
+        if r not in _listify(spec.get("relation", [])):
+            return False
+        if pred["relation"][r] < c:
+            return False
+    if "offset" in trained:
+        lim = spec.get("max_abs_offset_sec")
+        if lim is not None and abs(pred.get("offset") or 0.0) > lim:
+            return False
     return True
 
 
@@ -175,6 +195,8 @@ def main():
                     help="output of src.auditor.boundary.train --out")
     ap.add_argument("--ontology",
                     default="configs/auditor/boundary_ontology_v1.yaml")
+    ap.add_argument("--heads",
+                    default="configs/auditor/boundary_v1_heads.yaml")
     ap.add_argument("--deployment", action="store_true",
                     help="withhold the gold subtype, which is what new video "
                          "looks like")
@@ -210,11 +232,16 @@ def main():
         print(f"  {n:>5}  {k}")
 
     print(f"\n{'=' * 78}\nTHE SIZE OF THE HOLE\n{'=' * 78}")
-    hole = [r for r in rows if morphology_only(r, onto)]
+    trained = trained_heads(a.heads)
+    skipped = sorted({"relation", "offset", "observability",
+                      "nuisance_camera"} - trained)
+    hole = [r for r in rows if morphology_only(r, onto, trained)]
     hm = [r for r in hole if not r.get("morphology_true")]
-    print(f"  {len(hole)} of {len(rows)} events clear the LEARNED AUTO_KEEP "
-          f"conditions on their own -- morphology, relation and\n  confidence, "
-          f"with every gate the model cannot currently evaluate set aside.")
+    print(f"  gates applied: {sorted(trained)}; skipped because those heads "
+          f"receive no gradient: {skipped}")
+    print(f"  {len(hole)} of {len(rows)} events clear AUTO_KEEP on the TRAINED "
+          f"heads alone. Nothing the model itself knows is holding\n  them "
+          f"back -- only the gold subtype and gates whose input does not exist.")
     print(f"  {len(hm)} of those have NO morphology target at all: "
           f"{dict(Counter(r['subtype'] for r in hm))}")
     print(f"  Those are the events an abstain head has to catch. Today they "
