@@ -268,12 +268,49 @@ def main():
                    ("  batch3, NEVER re-checked",
                     [r for r in b3 if r["event_id"] not in checked])]
     groups += [("both together", pn)]
-    print(f"\n  {'population':<30} {'n':>5} {'POINT':>6} {'NONE':>6} "
-          f"{'AUROC':>8}")
+    # the frozen arms on the SAME populations. If they show the same
+    # dev/batch3 gap, the gap is a property of the two populations and not
+    # something this model did -- dev is an error-audit sample of the old
+    # model's failures, so it is selected for extremes, while batch3 is a
+    # broader draw. That would make batch3 the honest deployment estimate and
+    # the aggregate an overstatement.
+    def au_score(g, key):
+        y = np.array([r["morphology_true"] == POINT for r in g], float)
+        p_ = np.array([old[r["event_id"]][key] for r in g
+                       if r["event_id"] in old], float)
+        y = np.array([r["morphology_true"] == POINT for r in g
+                      if r["event_id"] in old], float)
+        if len(set(y.tolist())) < 2 or len(p_) != len(y):
+            return float("nan")
+        o = np.argsort(p_)
+        ranks = np.empty(len(p_), float)
+        ranks[o] = np.arange(len(p_)) + 1.0
+        _, inv, cnt = np.unique(p_, return_inverse=True, return_counts=True)
+        ssum = np.zeros(len(cnt))
+        np.add.at(ssum, inv, ranks)
+        ranks = (ssum / cnt)[inv]
+        pos, neg = y.sum(), len(y) - y.sum()
+        return float((ranks[y == 1].sum() - pos * (pos + 1) / 2) /
+                     max(pos * neg, 1))
+    hdr = f"  {'population':<30} {'n':>5} {'POINT':>6} {'NONE':>6} {'student':>8}"
+    if old:
+        hdr += "".join(f"{c[:14]:>16}" for c in OLD_ARMS)
+    print("\n" + hdr)
     for name, g in groups:
         v, n = au(g)
         npos = sum(1 for r in g if r["morphology_true"] == POINT)
-        print(f"  {name:<30} {n:>5} {npos:>6} {n - npos:>6} {v:>8.3f}")
+        line = f"  {name:<30} {n:>5} {npos:>6} {n - npos:>6} {v:>8.3f}"
+        if old:
+            line += "".join(f"{au_score(g, c):>16.3f}" for c in OLD_ARMS)
+        print(line)
+    if old:
+        print("\n  The frozen columns are the control. A dev/batch3 gap that "
+              "appears in them too is a property of the two\n  populations, "
+              "not of this model: dev is the 188-event error audit of the old "
+              "model's failures and is selected for\n  extremes, while batch3 "
+              "is a broader draw. In that case batch3 is the honest "
+              "deployment estimate and every\n  aggregate reported so far, "
+              "including the 0.799, is an overstatement.")
     if checked:
         print("\n  The re-checked split is the one that decides the next "
               "move. Those 90 events were re-annotated from video after\n  "
