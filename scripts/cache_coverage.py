@@ -27,6 +27,22 @@ from collections import Counter
 import torch
 
 
+def frame_spacing(blob):
+    """Median seconds between cached frames. Caches at different rates can be
+    mixed, and the loader resamples both onto the same grid, but a 10 fps
+    source will land a real frame near every grid point while a 2 fps source
+    will not -- so window coverage differs BY SOURCE, and a coverage gap that
+    tracks the label source is a confound rather than a signal."""
+    import numpy as np
+    for rec in blob:
+        if isinstance(rec, dict) and "times" in rec:
+            t = rec["times"]
+            t = t.detach().cpu().numpy() if hasattr(t, "detach") else np.asarray(t)
+            if len(t) > 1:
+                return float(np.median(np.diff(np.sort(t))))
+    return float("nan")
+
+
 def cache_recordings(path):
     try:
         blob = torch.load(path, weights_only=False, map_location="cpu")
@@ -35,6 +51,7 @@ def cache_recordings(path):
     if not isinstance(blob, list):
         return None, f"not a list of records ({type(blob).__name__})"
     out, has_feats = set(), 0
+    globals()["_spacing"] = frame_spacing(blob)
     for rec in blob:
         if not isinstance(rec, dict):
             continue
@@ -45,12 +62,69 @@ def cache_recordings(path):
     return out, (None if has_feats else "no record carries feats/times")
 
 
+def report_chosen(a, lab, want, clean, batch3):
+    """The two sets exactly as train.py will receive them.
+
+    An event survives only if BOTH streams hold its recording, so the
+    intersection is what gets trained on -- reporting each stream's coverage
+    separately hides the case where each is nearly complete and their overlap
+    is not."""
+    import numpy as np
+    for tag, paths in (("--feat_cache", a.feat_cache),
+                       ("--local_cache", a.local_cache)):
+        print(f"\n{tag}: {len(paths)} file(s)")
+        for p in paths:
+            rec, err = cache_recordings(p)
+            if rec is None:
+                print(f"    !! {os.path.basename(p)}: {err}")
+                continue
+            print(f"    {os.path.basename(p)[:46]:<47} {len(rec):>5} recs   "
+                  f"spacing {globals().get('_spacing', float('nan')):.2f}s")
+    def union(paths):
+        u = set()
+        sp = []
+        for p in paths:
+            rec, err = cache_recordings(p)
+            if rec:
+                u |= rec
+                sp.append(globals().get("_spacing", float("nan")))
+        return u, sp
+    ug, spg = union(a.feat_cache)
+    ul, spl = union(a.local_cache)
+    both = ug & ul
+    print(f"\n{'=' * 78}\nWHAT TRAIN WILL ACTUALLY SEE\n{'=' * 78}")
+    print(f"  global union {len(ug & want)}/{len(want)}   "
+          f"local union {len(ul & want)}/{len(want)}   "
+          f"BOTH {len(both & want)}/{len(want)}")
+    lost = want - both
+    n_ev = sum(1 for e in lab if e["recording_id"] in lost)
+    print(f"  {len(lost)} recordings carry no usable pair, dropping {n_ev} of "
+          f"{len(lab)} events")
+    if lost:
+        by = Counter(e.get("morphology") or "MASKED" for e in lab
+                     if e["recording_id"] in lost)
+        print(f"  the dropped events by class: {dict(by)}")
+        print(f"  audited {len(lost & clean)}, batch3 {len(lost & batch3)}")
+    sp = [x for x in spg + spl if x == x]
+    if sp and (max(sp) / max(min(sp), 1e-9)) > 1.5:
+        print(f"\n  !! frame spacing differs across the caches "
+              f"({min(sp):.2f}s to {max(sp):.2f}s). The loader resamples onto "
+              f"one grid, so this\n     does not break anything, but the denser "
+              f"source will hit more grid points and its window coverage will "
+              f"read\n     higher. If that tracks the label source it is a "
+              f"confound, not a signal -- check the per-source coverage the "
+              f"trainer prints.")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--labels", required=True)
-    ap.add_argument("--root", action="append", required=True)
+    ap.add_argument("--root", action="append", default=[])
     ap.add_argument("--pattern", default="*.pt")
+    ap.add_argument("--feat_cache", action="append", default=[],
+                    help="check the EXACT set you will pass to train")
+    ap.add_argument("--local_cache", action="append", default=[])
     a = ap.parse_args()
 
     lab = json.load(open(a.labels, encoding="utf-8"))["events"]
@@ -62,6 +136,9 @@ def main():
     print(f"{len(lab)} labelled events over {len(want)} recordings "
           f"({len(clean)} audited, {len(batch3)} batch3-only)")
 
+    if a.feat_cache or a.local_cache:
+        report_chosen(a, lab, want, clean, batch3)
+        return
     paths = []
     for r in a.root:
         paths += sorted(glob.glob(os.path.join(r, a.pattern)))
@@ -69,7 +146,7 @@ def main():
         raise SystemExit(f"no {a.pattern} under {a.root}")
 
     print(f"\n  {'cache':<52} {'recs':>6} {'audited':>8} {'batch3':>7} "
-          f"{'frames?':>8}")
+          f"{'frames?':>8} {'spacing':>9}")
     found = {}
     for p in paths:
         rec, err = cache_recordings(p)
@@ -80,7 +157,7 @@ def main():
         found[p] = rec
         print(f"  {os.path.basename(p)[:52]:<52} {len(rec):>6} "
               f"{len(rec & clean):>8} {len(rec & batch3):>7} "
-              f"{'no' if err else 'yes':>8}")
+              f"{'no' if err else 'yes':>8} {globals().get('_spacing', float('nan')):>8.2f}s")
 
     print(f"\n{'=' * 78}\nUNION OF EVERY READABLE CACHE\n{'=' * 78}")
     union = set().union(*found.values()) if found else set()
