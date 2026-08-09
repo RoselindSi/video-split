@@ -1,0 +1,38 @@
+﻿your_call(smooth_ramp|overlapping_transition|multi_step_transition|point_like|ambiguous_interval),confidence(1_guess|2_lean|3_sure),why_one_line,event_id,clip,prev_segment_label,next_segment_label,containing_segment_label
+multi_step_transition,3_sure,从水龙头交互结束，到重新持杯，再到手进入杯内开始 scrub，经过多个离散步骤，没有一个瞬间能独占整个切换。,recording_000022_missed_signal_present_not_top_t366.5,recording_000022_missed_signal_present_not_top_t366.5.mp4,Initiate additional mug rinse,Scrub mug interior,
+smooth_ramp,3_sure,始终是同一圆形部件在 faucet 下连续旋转/清洗/调整，没有明显离散 interaction reset。,recording_000204_batch3_raw_change_peak_t484.0,recording_000204_batch3_raw_change_peak_t484.0.mp4,,,
+overlapping_transition,3_sure,一只手仍维持 drain/strainer interaction 时，另一只手已经开始转向 faucet，新旧 interaction 在一段时间内明显重叠。,recording_000178_batch3_raw_change_peak_t360.0,recording_000178_batch3_raw_change_peak_t360.0.mp4,,,
+multi_step_transition,3_sure,从整理并装入多件物品，到关闭/翻转盒体再进入下一步，转换由多个离散操作组成。,recording_000212_batch3_gt_boundary_t502.2,recording_000212_batch3_gt_boundary_t502.2.mp4,,,
+overlapping_transition,3_sure,手中仍在整理/持有一组物件时，另一部分已经开始被送入盒中，旧的 gathering 与新的 packing 明显重叠。,recording_000212_batch3_raw_change_peak_t248.0,recording_000212_batch3_raw_change_peak_t248.0.mp4,,,
+point_like,2_lean,物体从包装/托盘交互转为独立持起并检查，主要 interaction state change 集中在很短的一段时间内。,recording_000192_batch3_gt_boundary_t485.6,recording_000192_batch3_gt_boundary_t485.6.mp4,,,
+overlapping_transition,3_sure,右手始终持有卷材，左手已经逐步转向并抓住圆形容器，旧动作未结束时新对象交互已开始。,recording_000431_false_near_edge_t440.5,recording_000431_false_near_edge_t440.5.mp4,,,Unroll and tear plastic wrap sheet
+multi_step_transition,3_sure,持卷材、调整小部件、移动卷材并最终转入膜面操作是一串离散步骤，整体转换分散在一段时间内。,recording_000406_false_mid_segment_t29.5,recording_000406_false_mid_segment_t29.5.mp4,,,Drape plastic wrap over the bowl
+smooth_ramp,2_lean,同一张纸巾持续被折、压、调整，物体状态连续演化，没有明显的单点 interaction reset。,recording_000058_batch3_raw_change_peak_t585.0,recording_000058_batch3_raw_change_peak_t585.0.mp4,,,
+point_like,3_sure,持续的小物体/纸巾操作后，手在一个较紧凑时刻离开并转向旁边的新物体/纸巾包，存在清晰 interaction switch。,recording_000049_batch3_gt_boundary_t94.5,recording_000049_batch3_gt_boundary_t94.5.mp4,,,
+point_like,2_lean,连接头从持续检查/展示状态突然重新定向并开始朝左侧设备移动，主要 interaction shift 集中在较短时间内。,recording_000156_batch3_gt_boundary_t254.0,recording_000156_batch3_gt_boundary_t254.0.mp4,,,
+smooth_ramp,2_lean,手持续围绕同一 sink interaction 做调整，前后状态逐步变化，但看不到一个可重复指出的瞬时切换点。,recording_000163_batch3_raw_change_peak_t397.0,recording_000163_batch3_raw_change_peak_t397.0.mp4,,,
+overlapping_transition,3_sure,手中线材仍被持有和整理时，另一只手已经开始打开抽屉并准备放入，旧对象交互与新 target interaction 明显重叠。,recording_000465_early_t599.0,recording_000465_early_t599.0.mp4,Recoil charging cable,Store recoil charging cable in drawer,
+overlapping_transition,3_sure,左手持续持杯时，右手已经离开杯子并转去操作水龙头，旧交互尚未完全结束而新交互已经开始。,recording_000028_batch3_raw_change_peak_t273.0,recording_000028_batch3_raw_change_peak_t273.0.mp4,,,
+multi_step_transition,2_lean,从持卷材并操作小部件，到逐步放开/移动卷材，再转入压平透明膜，由多个步骤组成而非一个独立切点。,recording_000388_false_mid_segment_t618.0,recording_000388_false_mid_segment_t618.0.mp4,,,Unroll plastic wrap to required length
+multi_step_transition,3_sure,先结束 drain interaction、双手释放/短暂停顿，再重新 reach 并接触 faucet，典型 release→idle→reach→new-contact 多步骤转换。,recording_000213_late_t150.0,recording_000213_late_t150.0.mp4,"Remove, rinse and reseat sink strainer","Remove, rinse and reseat sink strainer",
+multi_step_transition,3_sure,从整理/持住卷好的线缆，到将线缆移向桌边/抽屉再放入，经过搬移和放置等多个步骤。,recording_000145_batch3_gt_boundary_t558.0,recording_000145_batch3_gt_boundary_t558.0.mp4,,,
+smooth_ramp,2_lean,始终在同一袋体上连续拉、铺、调整，形态逐渐改变，没有清晰 contact reset 或单一切换瞬间。,recording_000029_batch3_raw_change_peak_t163.0,recording_000029_batch3_raw_change_peak_t163.0.mp4,,,
+ambiguous_interval,2_lean,interaction 从 faucet 区域转到 sink/drain 区域的同时伴随明显视角移动，难以稳定判断变化本身究竟是 compact 还是 extended。,recording_000206_batch3_raw_change_peak_t616.0,recording_000206_batch3_raw_change_peak_t616.0.mp4,,,
+point_like,3_sure,右手持续压平透明膜后，在很短时间内抬起并转为捏持/操作小部件，存在清楚的局部 interaction reset。,recording_000388_false_mid_segment_t375.5,recording_000388_false_mid_segment_t375.5.mp4,,,Cover bowl with wrap
+ambiguous_interval,2_lean,前景手部交互信息不完整，同时远处人物持续进行相似操作；仅凭这段无法稳定确定一个 transition topology。,recording_000048_batch3_raw_change_peak_t528.0,recording_000048_batch3_raw_change_peak_t528.0.mp4,,,
+overlapping_transition,2_lean,卷材交互仍持续时，另一只手已开始处理圆形容器/透明膜区域，两个 interaction regime 有明显并存阶段。,recording_000431_false_mid_segment_t427.5,recording_000431_false_mid_segment_t427.5.mp4,,,Unroll and tear plastic wrap sheet
+multi_step_transition,3_sure,从抽出纸巾、展开、重新抓持到铺到桌面，是一连串离散步骤，而不是单一瞬间完成的切换。,recording_000050_batch3_gt_boundary_t291.5,recording_000050_batch3_gt_boundary_t291.5.mp4,,,
+multi_step_transition,2_lean,从检查/旋转设备到对准包装、接触包装并放入，是 orient→approach→insert 的多步骤转换。,recording_000197_batch3_raw_change_peak_t32.0,recording_000197_batch3_raw_change_peak_t32.0.mp4,,,
+smooth_ramp,3_sure,两个白色物件持续被移动、对齐并排放，状态是逐步形成的，没有一个唯一且突出的切换瞬间。,recording_000158_batch3_gt_boundary_t622.5,recording_000158_batch3_gt_boundary_t622.5.mp4,,,
+multi_step_transition,2_lean,从持取/调整小部件到在 drain 中安置，再到手离开，包含连续几个离散 micro-step，不像单一 switch。,recording_000179_batch3_raw_change_peak_t324.0,recording_000179_batch3_raw_change_peak_t324.0.mp4,,,
+point_like,3_sure,遥控器从背面朝上到按键面朝上的翻转发生在很紧凑的时间段内，是非常明确的 point-like state change。,recording_000150_missed_weak_signal_t9.5,recording_000150_missed_weak_signal_t9.5.mp4,,Flip remote control to opposite side,
+overlapping_transition,3_sure,右手继续稳定持卷材的同时，左手从膜面操作逐渐进入圆形容器交互，是很明确的双 interaction overlap。,recording_000438_false_mid_segment_t476.0,recording_000438_false_mid_segment_t476.0.mp4,,,Unroll plastic wrap from roll and position over bowl
+multi_step_transition,2_lean,围绕同一个盒子先处理封口/边缘，再逐步转为打开盒盖，中间包含多个连续 micro-step，没有单一瞬时切换。,recording_000282_false_mid_segment_t412.5,recording_000282_false_mid_segment_t412.5.mp4,,,Pack USB drive into outer box and seal the other end
+multi_step_transition,3_sure,从局部处理透明膜到压平，再逐渐转向接触并抓取圆形容器，几个阶段连续衔接，没有唯一 transition instant。,recording_000406_exact_t490.3,recording_000406_exact_t490.3.mp4,Handling plastic wrap roll,Position wrap over bowl opening,
+smooth_ramp,2_lean,围绕中心时刻一直在同一 drain/strainer 区域连续操作，随后逐渐从原位操作过渡到提起/转移，没有单一明显 reset。,recording_000161_batch3_raw_change_peak_t599.0,recording_000161_batch3_raw_change_peak_t599.0.mp4,,,
+smooth_ramp,2_lean,手始终围绕同一卷材/小部件连续调整，接触关系与姿态逐渐演化，没有明显的一次 release/recontact 或对象切换。,recording_000406_missed_weak_signal_t556.6,recording_000406_missed_weak_signal_t556.6.mp4,Pick up plastic wrap roll and locate edge,Unroll a sheet of plastic wrap,
+overlapping_transition,3_sure,一侧仍维持卷材/膜面的原有交互时，另一只手已经开始转向圆形容器，新旧 interaction 在时间上明显重叠。,recording_000419_false_mid_segment_t605.5,recording_000419_false_mid_segment_t605.5.mp4,,,Apply new plastic wrap to bowl
+smooth_ramp,3_sure,同一小物体在 faucet 附近持续被旋转、调整并逐渐移向 sink，下一个 phase 是连续形成的。,recording_000185_batch3_raw_change_peak_t407.0,recording_000185_batch3_raw_change_peak_t407.0.mp4,,,
+multi_step_transition,2_lean,对袋/布料边缘的小部件处理逐步从工具/固定转到提起、分离小片，变化由几个连续 micro-events 组成。,recording_000029_batch3_gt_boundary_t519.0,recording_000029_batch3_gt_boundary_t519.0.mp4,,,
+point_like,3_sure,右手从持续捏持/操作小部件较集中地切换为张开手掌并开始压平透明膜，interaction mode 的改变比较紧凑。,recording_000388_false_mid_segment_t124.5,recording_000388_false_mid_segment_t124.5.mp4,,,Unroll plastic wrap from roll
+point_like,2_lean,两组白色垫片原本保持稳定排列，随后其中一组在较短时间内被明显翻转/重排并进入新构型，变化较集中。,recording_000220_exact_t522.0,recording_000220_exact_t522.0.mp4,,Slipper inspection cycle,
