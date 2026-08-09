@@ -133,6 +133,11 @@ def main():
     ap.add_argument("--half_s", type=float, default=6.0)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out_dir", required=True)
+    ap.add_argument("--only_missing_clips", action="store_true",
+                    help="write ONLY a script for the events that have no clip "
+                         "yet. The sheet, the key and the guidelines are left "
+                         "untouched -- rerunning the full builder overwrites a "
+                         "sheet that has already been filled in")
     a = ap.parse_args()
 
     lab = json.load(open(a.labels, encoding="utf-8"))["events"]
@@ -159,6 +164,41 @@ def main():
     rng.shuffle(ev)
 
     os.makedirs(a.out_dir, exist_ok=True)
+    if a.only_missing_clips:
+        have = set()
+        cd = os.path.join(a.out_dir, "clips")
+        if os.path.isdir(cd):
+            have = {f[:-4] for f in os.listdir(cd) if f.endswith(".mp4")}
+        todo = [e for e in ev if e["event_id"] not in have]
+        print(f"  {len(have)} clips already present, {len(todo)} to cut")
+        no_path = [e["event_id"] for e in todo
+                   if not video.get(e["recording_id"])]
+        sh = os.path.join(a.out_dir, "make_missing_clips.sh")
+        with open(sh, "w", encoding="utf-8") as f:
+            f.write('#!/bin/sh\nD="$(dirname "$0")"\nmkdir -p "$D/clips"\n')
+            for e in todo:
+                v = video.get(e["recording_id"])
+                if not v:
+                    continue
+                t0 = max(0.0, float(e["candidate_time"]) - a.half_s)
+                f.write(f'ffmpeg -nostdin -loglevel error -y -ss {t0:.2f} '
+                        f'-i "{v}" -t {2 * a.half_s:.2f} -c:v libx264 -crf 23 '
+                        f'-an "$D/clips/{e["event_id"]}.mp4" '
+                        f'|| echo "FAILED {e["event_id"]}"\n')
+            f.write(f'echo "clips now: $(ls "$D/clips" | wc -l) of {len(ev)}"\n')
+        os.chmod(sh, 0o755)
+        print(f"\n  the {len(todo)} without a clip:")
+        for e in todo:
+            v = video.get(e["recording_id"])
+            print(f"    {e['event_id']:<50} "
+                  + ("no video path in any --data file" if not v else "ok"))
+        if no_path:
+            print(f"\n  !! {len(no_path)} still have no video path. Add the "
+                  f"--data json holding their recordings "
+                  f"({sorted({e.split('_t')[0][:18] for e in no_path})[:4]}...)")
+        print(f"\n  wrote {sh}. The sheet, key and guidelines were NOT "
+              f"touched.")
+        return
     with open(os.path.join(a.out_dir, "GUIDELINES.md"), "w",
               encoding="utf-8") as f:
         f.write(GUIDELINES)
