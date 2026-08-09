@@ -99,11 +99,23 @@ def main():
     ap.add_argument("--weight_decay", type=float, default=1e-2)
     ap.add_argument("--n_folds", type=int, default=5)
     ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--lambda_relation", type=float, default=0.3)
-    ap.add_argument("--lambda_offset", type=float, default=0.1)
+    ap.add_argument("--heads", default="configs/auditor/boundary_v1_heads.yaml",
+                    help="which heads send gradient into the shared encoder. "
+                         "relation/offset/width are weighted 0 there and "
+                         "turning one on is a new run, not a tweak")
     ap.add_argument("--out")
     a = ap.parse_args()
 
+    import yaml
+    hcfg = yaml.safe_load(open(a.heads, encoding="utf-8"))
+    W = {k: float(v.get("loss_weight", 0.0))
+         for k, v in hcfg["heads"].items()}
+    print(f"head loss weights from {os.path.basename(a.heads)}: {W}")
+    off = [k for k, v in W.items() if v == 0.0]
+    if off:
+        print(f"  {off} are interfaces only. They are NOT trained, so a sparse "
+              f"or near-constant target cannot\n  push gradient through the "
+              f"encoder that every morphology event shares.")
     torch.manual_seed(a.seed)
     np.random.seed(a.seed)
     lab = json.load(open(a.labels, encoding="utf-8"))
@@ -132,11 +144,16 @@ def main():
           f"{dict(Counter(e['morphology'] for e in ev if e['morphology']))}")
     rc = Counter(e['candidate_relation'] for e in ev if e['candidate_relation'] in r_idx)
     print(f"  relation classes:   {dict(rc)}")
-    thin = [k for k in RELATION if rc.get(k, 0) < a.n_folds]
+    # recording count, not event count: under recording-grouped CV a class
+    # drawn from two recordings cannot be evaluated across five folds however
+    # many events it has, because three folds contain none of it
+    rrec = {k: len({e["recording_id"] for e in ev
+                    if e["candidate_relation"] == k}) for k in RELATION}
+    print(f"  relation recordings: {rrec}")
+    thin = [k for k in RELATION if rrec[k] < a.n_folds]
     if thin:
-        print(f"  !! {thin} have fewer events than folds. They are trained on "
-              f"but NOT reported: a per-class number from\n     fewer than one "
-              f"event per fold is decided by which fold the events landed in.")
+        print(f"  !! {thin} span fewer recordings than folds, so no per-class "
+              f"number for them can be read across folds.")
 
     G = stack(ev, "g")
     L = stack(ev, "l")
@@ -201,9 +218,15 @@ def main():
         for ep in range(a.epochs):
             opt.zero_grad()
             out = model(X, M)
-            loss = masked_ce(out["morphology"], ym, mm, wm) \
-                + a.lambda_relation * masked_ce(out["relation"], yr, mr) \
-                + a.lambda_offset * masked_l1(out["offset"], yo, mo)
+            loss = W.get("morphology", 1.0) * masked_ce(out["morphology"],
+                                                        ym, mm, wm)
+            if W.get("relation", 0.0):
+                loss = loss + W["relation"] * masked_ce(out["relation"],
+                                                        yr, mr)
+            if W.get("offset", 0.0):
+                loss = loss + W["offset"] * masked_l1(out["offset"], yo, mo)
+            # width is never added: there is no width gold, and deriving one
+            # from the subtype would be a pseudo-target measured against itself
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             opt.step()

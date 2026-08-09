@@ -69,8 +69,18 @@ class BoundaryModel(nn.Module):
 
 
 def build_input(pg, pl, valid_g, valid_l):
-    """[B,T,4*d]: projected global and local levels, then their first
-    differences.
+    """[B,T,4*d+2]: projected global and local levels, their first
+    differences, and the two validity masks as explicit channels.
+
+    THE MASK IS AN INPUT, not only a gate. No masked convolution makes a
+    missing frame neutral -- renormalising by the valid tap count over-corrects
+    by about as much as zero-filling under-corrects (+2.2% against -2.3% on a
+    constant input), and renormalising by the valid weight sum is unstable.
+    Since the artefact cannot be removed, the model is given the information
+    needed to identify it, so "no measurement here" and "nothing changed here"
+    are separable rather than confounded. That is the same distinction
+    UNOBSERVABLE exists to express, and hiding it from the input while asking a
+    head to predict it would be incoherent.
 
     The differences are what a step and a ramp differ in -- levels alone let a
     head answer from the endpoints, which is the summary feature this model
@@ -89,5 +99,7 @@ def build_input(pg, pl, valid_g, valid_l):
     x = torch.cat([pg * valid_g.unsqueeze(-1),
                    pl * valid_l.unsqueeze(-1),
                    dg * vg.unsqueeze(-1),
-                   dl * vl.unsqueeze(-1)], -1)
+                   dl * vl.unsqueeze(-1),
+                   valid_g.unsqueeze(-1).to(pg.dtype),
+                   valid_l.unsqueeze(-1).to(pg.dtype)], -1)
     return x, valid_g

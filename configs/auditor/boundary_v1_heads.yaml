@@ -1,0 +1,49 @@
+# Which heads exist, and which are allowed to send gradient into the SHARED
+# temporal encoder. Interface and belief are separate things.
+#
+# relation, offset and width are delivered as interfaces and weighted 0. On the
+# current gold they carry 6 EARLY, 4 LATE, no DUPLICATE at all, and 83 of 97
+# offset targets that are essentially zero. Training on that does not merely
+# produce a weak head -- it pushes a sparse, biased target through the encoder
+# every morphology event also depends on. The heads turn on when the labels
+# arrive, and turning one on is a new run with a new name, not a tweak.
+
+version: 1
+
+heads:
+  morphology:
+    enabled: true
+    loss_weight: 1.0
+    class_weighting: inverse_frequency   # UNOBSERVABLE is 19 events
+  relation:
+    enabled: true
+    loss_weight: 0.0
+    reason: "6 EARLY and 4 LATE over 8 recordings; DUPLICATE absent"
+  offset:
+    enabled: true
+    loss_weight: 0.0
+    reason: "83 of 97 targets are within 0.5s, so the target is near-constant"
+  width:
+    enabled: true
+    loss_weight: 0.0
+    # there is NO width gold. `gradual_phase_transition` licenses
+    # INTERVAL_TRANSITION and nothing more -- deriving "width = 3.2s" from the
+    # subtype would be inventing a pseudo-ground-truth and then measuring
+    # against it. Turn this on when interval endpoints are annotated.
+    reason: "no transition_start / transition_end has ever been annotated"
+  observability:
+    enabled: true
+    loss_weight: 0.0
+    reason: "visibility_or_offscreen gives one class; the other levels are unlabelled"
+  nuisance_camera:
+    enabled: true
+    loss_weight: 0.0
+    reason: "camera_or_viewpoint_shift gives positives only, no labelled negatives"
+
+reporting:
+  # a class is scored only if it appears in at least this many DISTINCT
+  # recordings. Event count is the wrong test under recording-grouped CV: ten
+  # EARLY events drawn from two recordings cannot be evaluated across five
+  # folds however many events they are.
+  min_recordings_per_class: 5
+  min_events_per_class: 5
