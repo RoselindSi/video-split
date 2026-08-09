@@ -114,20 +114,32 @@ def main():
                            [rank_of.get(rev[e]["revised_temporal_pair_subtype"],
                                         1) for e in have])
             print(f"\n{'=' * 78}\nCIRCULARITY CHECK\n{'=' * 78}")
+            se = 1.0 / max((len(have) - 1) ** 0.5, 1e-9)
             print(f"  spearman(P(POINT), how point-like the revision is) = "
-                  f"{rho:+.3f} over {len(have)} events")
-            if rho > 0.3:
-                print(f"  !! The revision moves WITH the model. The P(POINT) "
-                      f"values were visible before this pass, so the\n     "
-                      f"relabelled target may have absorbed the model's "
-                      f"opinion and every number computed on it afterwards\n"
-                      f"     is circular. Do not train on this without a "
-                      f"genuinely blind pass.")
+                  f"{rho:+.3f} over {len(have)} events   (rough se "
+                  f"{se:.3f})")
+            # three bands, not two. An earlier version branched on rho > 0.3
+            # and called everything else "at or below zero", which reported
+            # +0.169 as a clean pass -- a claim about circularity that the
+            # number did not support.
+            if rho > 2 * se and rho > 0.3:
+                print(f"  !! The revision moves WITH the model, by more than "
+                      f"twice the standard error. The P(POINT) values were\n"
+                      f"     visible before this pass, so the relabelled "
+                      f"target may have absorbed the model's opinion and\n"
+                      f"     every number computed on it afterwards is "
+                      f"circular. Do not train on this without a blind pass.")
+            elif rho > se:
+                print(f"  Positive but within about {rho / se:.1f} standard "
+                      f"errors of zero. Not distinguishable from no "
+                      f"relationship, and not\n  a demonstration of "
+                      f"independence either -- at this n the check can only "
+                      f"rule out a LARGE anchoring effect.")
             else:
-                print(f"  At or below zero, so the revision did not follow the "
-                      f"score. That is the check passing, not proof of\n  "
-                      f"independence -- it only rules out the anchoring that "
-                      f"the visible scores made possible.")
+                print(f"  Within one standard error of zero, so no anchoring "
+                      f"effect is visible. That is the check failing to fire, "
+                      f"not\n  proof of independence: at this n only a large "
+                      f"effect would show.")
             for e in sorted(have, key=lambda x: -p[x])[:6]:
                 print(f"    {e[-44:]:<45} P(POINT) {p[e]:.3f}  -> "
                       f"{rev[e]['revised_temporal_pair_subtype']}")
