@@ -98,6 +98,9 @@ def main():
     ap.add_argument("--predictions", required=True)
     ap.add_argument("--decisions", help="the frozen policy decisions csv, for "
                                         "the three old scorers")
+    ap.add_argument("--min_support", type=int, default=5,
+                    help="a pair is withheld unless its MINORITY class has at "
+                         "least this many events AND this many recordings")
     ap.add_argument("--n_folds", type=int, default=5)
     ap.add_argument("--n_boot", type=int, default=2000)
     ap.add_argument("--seed", type=int, default=0)
@@ -141,8 +144,23 @@ def main():
         for c in OLD_ARMS:
             cells.append(au(common, lambda r, c=c: old[r["event_id"]][c])
                          if common else None)
-        results[(pos, neg)] = (sel, common, stu, cells)
+        # the minority class is what the number rests on. After the ontology
+        # revision INTERVAL holds 5 events, and an AUROC computed against 5
+        # negatives is decided by those 5 -- this file printed 0.674 and 0.651
+        # for it before the guard existed, which reads exactly like a result.
+        n_min = min(sum(1 for r in sel if r["_y"] == 1),
+                    sum(1 for r in sel if r["_y"] == 0))
+        rec_min = min(len({r["recording_id"] for r in sel if r["_y"] == 1}),
+                      len({r["recording_id"] for r in sel if r["_y"] == 0}))
+        results[(pos, neg)] = (sel, common, stu, cells,
+                               n_min >= a.min_support and
+                               rec_min >= a.min_support)
         label = f"{pos.split('_')[0]} vs {neg.split('_')[0]}"
+        if n_min < a.min_support or rec_min < a.min_support:
+            print(f"  {label:<34} {len(sel):>5} {nrec:>5} "
+                  + f"{'WITHHELD':>20}" * len(cells)
+                  + f"   minority class {n_min} events / {rec_min} recordings")
+            continue
         print(f"  {label:<34} {len(sel):>5} {nrec:>5} "
               + "".join(f"{(v if v is not None else float('nan')):>20.3f}"
                         for v in cells))
@@ -153,8 +171,8 @@ def main():
 
     print(f"\n{'=' * 96}\nSTUDENT MINUS THE BEST OLD ARM, paired and "
           f"bootstrapped by recording\n{'=' * 96}")
-    for (pos, neg), (sel, common, stu, cells) in results.items():
-        if not common or all(c is None for c in cells[1:]):
+    for (pos, neg), (sel, common, stu, cells, ok) in results.items():
+        if not ok or not common or all(c is None for c in cells[1:]):
             continue
         best_i = int(np.nanargmax([c if c is not None else -1
                                    for c in cells[1:]]))
@@ -175,7 +193,9 @@ def main():
         print(f"      delta {d:+.3f}   [{lo:+.3f}, {hi:+.3f}]   {verdict}")
 
     print(f"\n{'=' * 96}\nPER-FOLD STABILITY of the student\n{'=' * 96}")
-    for (pos, neg), (sel, _, stu, _) in results.items():
+    for (pos, neg), (sel, _, stu, _, ok) in results.items():
+        if not ok:
+            continue
         y = np.array([r["_y"] for r in sel], float)
         g = [r["recording_id"] for r in sel]
         folds = stratified_grouped_folds(g, y, a.n_folds, seed=a.seed)
