@@ -211,6 +211,50 @@ def main():
     print("    The last line is the part of the score that the candidate "
           "generator explains and the label does not.")
 
+    # ------------------------------------------- 2c dev against batch3
+    print(f"\n{'=' * 92}\n2c  THE SPLIT THAT 2b ACTUALLY FOUND: dev against "
+          f"batch3\n{'=' * 92}")
+    print("  Conditioned on the truth class, the generator ordering in section "
+          "2 disappears: every dev source sits at 0.95-1.00\n  for POINT and "
+          "0.001-0.065 for NONE. The tag was standing in for the LABEL SOURCE, "
+          "because gt_boundary and\n  raw_change_peak occur only in batch3. "
+          "So the question is not which generator but which dataset.")
+    def au(g):
+        y = np.array([r["morphology_true"] == POINT for r in g], float)
+        if len(set(y.tolist())) < 2:
+            return float("nan"), 0
+        p_ = np.array([r["_p"] for r in g])
+        o = np.argsort(p_)
+        yy = y[o]
+        pos, neg = yy.sum(), len(yy) - yy.sum()
+        # rank-based AUROC, ties at 0.5
+        ranks = np.empty(len(p_), float)
+        ranks[o] = np.arange(len(p_)) + 1.0
+        _, inv, cnt = np.unique(p_, return_inverse=True, return_counts=True)
+        ssum = np.zeros(len(cnt))
+        np.add.at(ssum, inv, ranks)
+        ranks = (ssum / cnt)[inv]
+        return float((ranks[y == 1].sum() - pos * (pos + 1) / 2) /
+                     max(pos * neg, 1)), len(g)
+    pn = [r for r in rows if r.get("morphology_true") in (POINT, NONE)]
+    groups = [("dev (audited-source tags)",
+               [r for r in pn if "_batch3_" not in r["event_id"]]),
+              ("batch3", [r for r in pn if "_batch3_" in r["event_id"]]),
+              ("both together", pn)]
+    print(f"\n  {'population':<30} {'n':>5} {'POINT':>6} {'NONE':>6} "
+          f"{'AUROC':>8}")
+    for name, g in groups:
+        v, n = au(g)
+        npos = sum(1 for r in g if r["morphology_true"] == POINT)
+        print(f"  {name:<30} {n:>5} {npos:>6} {n - npos:>6} {v:>8.3f}")
+    print("\n  A near-perfect number on one source beside a weak one on the "
+          "other is not a model that half works. Either the two\n  label sets "
+          "differ in quality -- batch3 came through a relabel of "
+          "machine-made calls, and 58 of the 90 re-checked\n  there were "
+          "changed -- or the model has something on dev that it should not "
+          "have. Both are worth more than another\n  point of aggregate "
+          "AUROC, and the aggregate hides both.")
+
     # --------------------------------------------------- 3 the recording
     print(f"\n{'=' * 92}\n3  IS P(POINT) A PROPERTY OF THE RECORDING?"
           f"\n{'=' * 92}")
