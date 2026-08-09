@@ -1,0 +1,84 @@
+# What the model's observations MEAN for this dataset. Not learned.
+#
+# The student answers "what kind of change is this and where is it". Whether a
+# gradual phase deserves a cut, whether an annotation-convention split should
+# be reproduced, how far a candidate may sit from its boundary -- those are
+# properties of this dataset's annotation scheme, not of the video. They were
+# previously inside the network's target, which is why the head was penalised
+# for failing to reproduce a labelling rule the pixels do not encode.
+#
+# Editing this file changes what the system does. Retraining is not required.
+
+version: 1
+candidate_tolerance_sec: 0.5
+
+morphology:
+  POINT_TRANSITION:
+    boundary_exists: true
+    representation: point
+    direct_point_admission: true
+  INTERVAL_TRANSITION:
+    boundary_exists: true
+    representation: interval
+    # a real change with no instant. Forcing it into a point is the framing
+    # error the old binary target made, so it is never auto-admitted and never
+    # auto-rejected; the ontology may later decide to store it as an interval
+    # or to emit no point boundary at all
+    direct_point_admission: false
+    automatic_decision: false
+  NO_TRANSITION:
+    boundary_exists: false
+    direct_point_admission: false
+  UNOBSERVABLE:
+    # "the evidence is not visible" is not "there is no boundary"
+    boundary_exists: unknown
+    automatic_decision: false
+
+subtype_overrides:
+  annotation_convention:
+    # the split exists by labelling rule. Deleting the candidate does not fix
+    # the annotation, and reproducing it is an annotation-side decision
+    automatic_decision: false
+  ambiguous:
+    automatic_decision: false
+
+nuisance:
+  camera_dominant:
+    # a moving camera makes the evidence harder to read; it does not mean the
+    # interaction was unchanged, so on its own it blocks automation rather
+    # than producing a verdict
+    blocks_automatic_decision: true
+
+observability:
+  require_for_automation:
+    hand_visibility: [clear, partial]
+    interaction_visibility: [clear, partial]
+
+actions:
+  AUTO_KEEP:
+    morphology: POINT_TRANSITION
+    relation: EXACT
+    max_abs_offset_sec: 0.5
+    min_confidence: 0.95
+  SUGGEST_RETIME:
+    morphology: POINT_TRANSITION
+    relation: [EARLY, LATE]
+    min_confidence: 0.90
+    # v1 never executes a retime; it emits a suggestion for a human
+    execute: false
+    # and it is disabled outright until the relation head has supervision:
+    # 6 EARLY and 4 LATE over 8 recordings cannot support an action
+    enabled: false
+  AUTO_REJECT:
+    morphology: NO_TRANSITION
+    relation: NO_VALID
+    min_confidence: 0.95
+    forbid_subtypes: [annotation_convention, ambiguous]
+    require_no_nearby_point_transition_sec: 2.0
+    # closed in v1. The student alone found no cut at any depth on this target
+    # (pooled best buffered precision 0.550) and the teacher certificate ran
+    # at 0.200, so nothing has earned the action yet
+    enabled: false
+  REVIEW:
+    # the default for everything the rules above do not claim
+    default: true
