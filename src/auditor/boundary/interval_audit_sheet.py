@@ -200,22 +200,49 @@ def main():
     sh = os.path.join(a.out_dir, "make_clips.sh")
     miss = []
     with open(sh, "w", encoding="utf-8") as f:
+        # NO `set -e`. One unreadable source must not abort the other 36 and
+        # leave a silently short folder; the failures are collected and named
+        # at the end instead.
         f.write("#!/bin/sh\n# clips centred on the candidate; the candidate "
                 "is the MIDDLE of each clip and is not marked,\n# because a "
                 "marker would tell the annotator where the answer is "
-                "supposed to be.\nset -e\n")
-        f.write(f'mkdir -p "$(dirname "$0")/clips"\n')
+                "supposed to be.\n")
+        f.write('D="$(dirname "$0")"\nmkdir -p "$D/clips"\nfail=0\n')
+        n_cmd = 0
         for e in ev:
             v = video.get(e["recording_id"])
             if not v:
                 miss.append(e["event_id"])
                 continue
+            n_cmd += 1
             t0 = max(0.0, float(e["candidate_time"]) - a.half_s)
-            f.write(f'ffmpeg -nostdin -loglevel error -y -ss {t0:.2f} '
+            out = f'$D/clips/{e["event_id"]}.mp4'
+            f.write(f'if [ ! -f "{v}" ]; then echo "MISSING SOURCE '
+                    f'{e["event_id"]}: {v}"; fail=$((fail+1)); else\n')
+            f.write(f'  ffmpeg -nostdin -loglevel error -y -ss {t0:.2f} '
                     f'-i "{v}" -t {2 * a.half_s:.2f} '
-                    f'-c:v libx264 -crf 23 -an '
-                    f'"$(dirname "$0")/clips/{e["event_id"]}.mp4"\n')
+                    f'-c:v libx264 -crf 23 -an "{out}" '
+                    f'|| {{ echo "FFMPEG FAILED {e["event_id"]}"; '
+                    f'fail=$((fail+1)); }}\n')
+            f.write("fi\n")
+        # the sheet has one row per event; a folder with fewer clips than rows
+        # is the failure mode that prompted this, so the script counts for you
+        f.write(f'\nn=$(ls "$D/clips" | wc -l)\n'
+                f'echo "clips written: $n of {len(ev)} sheet rows '
+                f'({n_cmd} had a source path, {len(miss)} had none)"\n'
+                f'if [ "$n" -lt {len(ev)} ]; then\n'
+                f'  echo "MISSING, in sheet order:"\n'
+                f'  while IFS=, read -r c1 c2 c3 eid rest; do\n'
+                f'    [ "$eid" = "event_id" ] && continue\n'
+                f'    [ -n "$eid" ] && [ ! -f "$D/clips/$eid.mp4" ] '
+                f'&& echo "  $eid"\n'
+                f'  done < "$D/interval_audit_sheet.csv"\n'
+                f'fi\n')
     os.chmod(sh, 0o755)
+    if miss:
+        with open(os.path.join(a.out_dir, "no_video_path.txt"), "w",
+                  encoding="utf-8") as f:
+            f.write("\n".join(miss) + "\n")
 
     print(f"\nwrote {a.out_dir}/")
     print(f"  GUIDELINES.md                 the five subtypes, with examples")
@@ -226,8 +253,18 @@ def main():
     print(f"  make_clips.sh                 +/-{a.half_s}s clips, candidate "
           f"unmarked at the centre")
     if miss:
-        print(f"  !! {len(miss)} events have no video path and got no clip "
-              f"command: {miss[:3]}")
+        rec = sorted({e["recording_id"] for e in ev
+                      if e["event_id"] in set(miss)})
+        print(f"\n  !! {len(miss)} of {len(ev)} events have NO VIDEO PATH and "
+              f"got no clip command. The sheet still has {len(ev)} rows, so "
+              f"the clip\n     folder will be short by exactly that many and "
+              f"the sheet cannot be filled in full.")
+        print(f"     They span {len(rec)} recordings not present in any "
+              f"--data file: {rec[:6]}")
+        print(f"     Written to {a.out_dir}/no_video_path.txt. Add the "
+              f"--data json that holds those recordings and rerun; the batch3 "
+              f"recordings\n     are usually in a different file from the "
+              f"dev ones.")
     leaked = [c for c in LEAKS if any(c in (ctx.get(e["event_id"]) or {})
                                       for e in ev)]
     print(f"\n  columns deliberately NOT carried into the sheet: {LEAKS}")
