@@ -159,6 +159,58 @@ def main():
           "is a source whose score is high or\n  low against its own class "
           "mix.")
 
+    # ------------------------------- 2b source WITHIN a fixed truth class
+    print(f"\n{'=' * 92}\n2b  THE CONFIRMATION: does the source still move "
+          f"the score INSIDE one truth class?\n{'=' * 92}")
+    print("  If P(POINT) varies across sources among events that share a "
+          "morphology truth, the head is reading the candidate\n  generator "
+          "rather than the video. The class is held fixed, so nothing about "
+          "the class mix can explain it.")
+    srcs = [s for s, n in Counter(r["_src"] for r in rows).most_common()
+            if n >= 8]
+    for cls in (POINT, NONE):
+        g = [r for r in rows if r.get("morphology_true") == cls]
+        if len(g) < 10:
+            continue
+        print(f"\n  truth = {cls}, {len(g)} events")
+        print(f"    {'source':<30} {'n':>4} {'median P(POINT)':>16} "
+              f"{'batch3?':>9}")
+        for s_ in srcs:
+            h = [r for r in g if r["_src"] == s_]
+            if len(h) < 3:
+                continue
+            b3 = sum(1 for r in h if "_batch3_" in r["event_id"])
+            print(f"    {s_:<30} {len(h):>4} "
+                  f"{np.median([r['_p'] for r in h]):>16.3f} "
+                  f"{b3}/{len(h):>7}")
+    print("\n  The batch3 column is there because the source tag almost "
+          "partitions the two label sources -- gt_boundary and\n  "
+          "raw_change_peak occur only in batch3, the rest only in dev. A "
+          "source effect that is really a DATASET effect and one\n  that is "
+          "really a generator effect look identical until they are separated, "
+          "and this table separates them only\n  where a class holds both.")
+
+    # a single number for the whole thing: how much of P(POINT) does source
+    # explain once the truth class is already known?
+    print(f"\n  variance of P(POINT) explained, nested:")
+    allp = np.array([r["_p"] for r in rows])
+    tot = allp.var()
+    def resid(keyfn):
+        out = []
+        by = defaultdict(list)
+        for r in rows:
+            by[keyfn(r)].append(r["_p"])
+        for v in by.values():
+            out += list(np.array(v) - np.mean(v))
+        return np.var(out)
+    r_cls = resid(lambda r: r.get("morphology_true") or "MASKED")
+    r_both = resid(lambda r: (r.get("morphology_true") or "MASKED", r["_src"]))
+    print(f"    truth class alone            {1 - r_cls / tot:>6.1%}")
+    print(f"    truth class + source         {1 - r_both / tot:>6.1%}")
+    print(f"    what source adds ON TOP      {(r_cls - r_both) / tot:>6.1%}")
+    print("    The last line is the part of the score that the candidate "
+          "generator explains and the label does not.")
+
     # --------------------------------------------------- 3 the recording
     print(f"\n{'=' * 92}\n3  IS P(POINT) A PROPERTY OF THE RECORDING?"
           f"\n{'=' * 92}")
