@@ -244,7 +244,32 @@ def main():
           f"back -- only the gold subtype and gates whose input does not exist.")
     print(f"  {len(hm)} of those have NO morphology target at all: "
           f"{dict(Counter(r['subtype'] for r in hm))}")
-    print(f"  Those are the events an abstain head has to catch. Today they "
+
+    # what would actually enter the dataset. Two different failures live in
+    # this set and they need different work: an event whose morphology is
+    # simply wrong is a perception problem, and an event with no target at all
+    # is an abstention problem. Adding them into one precision hides which.
+    spec = onto["actions"].get("AUTO_KEEP") or {}
+    want = set(_listify(spec.get("morphology", [])))
+    right = [r for r in hole if r.get("morphology_true") in want]
+    wrong = [r for r in hole if r.get("morphology_true")
+             and r["morphology_true"] not in want]
+    print(f"\n  if AUTO_KEEP were enabled on these {len(hole)}:")
+    print(f"    {len(right):>4}  morphology truth is {sorted(want)}  -> correct")
+    print(f"    {len(wrong):>4}  morphology truth is something else -> WRONG: "
+          f"{dict(Counter(r['morphology_true'] for r in wrong))}")
+    print(f"    {len(hm):>4}  no morphology truth at all -> no basis: "
+          f"{dict(Counter(r['subtype'] for r in hm))}")
+    dec = len(right) + len(wrong)
+    if dec:
+        print(f"    precision over the {dec} events that have a truth: "
+              f"{len(right) / dec:.3f}   counting the {len(hm)} untargeted as "
+              f"errors: {len(right) / len(hole):.3f}")
+        print(f"    An abstain head can only remove the last row. If the "
+              f"middle row alone keeps precision under target, the\n    "
+              f"binding constraint is morphology accuracy and no amount of "
+              f"abstention reaches it.")
+    print(f"\n  Those are the events an abstain head has to catch. Today they "
           f"are held back by the gold subtype and by gates that\n  block for "
           f"want of an input, and neither survives contact with new video.")
     if masked:
