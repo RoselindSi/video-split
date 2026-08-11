@@ -119,6 +119,18 @@ def main():
             return key[e]["transition_shape"]
         return (mig.get(e, {}).get("transition_shape") or "UNKNOWN")
 
+    def shape_observed(e):
+        """Was the shape SEEN by someone, or inherited from the old subtype?
+
+        This matters for the conditional rule. A same_action_new_instance
+        qualifies on shape in {gap, point}, and most of them carry `point` --
+        but that `point` came from `sharp_visible_transition` in the very
+        label being questioned, while the annotator's own prose describes an
+        idle gap. The decision is the same either way, since both qualify, and
+        reading the cell as an observation would still be wrong."""
+        src_ = (mig.get(e, {}) or {}).get("shape_source", "")
+        return bool(src_) and not src_.startswith("legacy:")
+
     def src(e):
         if "_batch3_gt_boundary_" in e:
             return "batch3 gt_boundary"
@@ -217,11 +229,26 @@ def main():
     print(f"\n{'=' * 88}\nRELATION x TRANSITION SHAPE, and x SOURCE"
           f"\n{'=' * 88}")
     shapes = sorted({shape(e) for e in calls})
+    print(f"  cells read `n (o)` where o is how many of them were OBSERVED by "
+          f"a pass rather than inherited from the old subtype")
     print(f"  {'relation':<26}" + "".join(f"{s[:14]:>16}" for s in shapes))
     for r in rels:
         g = [e for e in calls if calls[e]["relation"] == r]
         cc = Counter(shape(e) for e in g)
-        print(f"  {r:<26}" + "".join(f"{cc.get(s, 0):>16}" for s in shapes))
+        ob = Counter(shape(e) for e in g if shape_observed(e))
+        print(f"  {r:<26}"
+              + "".join(f"{f'{cc.get(s, 0)} ({ob.get(s, 0)})':>16}"
+                        for s in shapes))
+    n_leg = sum(1 for e in calls if shape(e) != "UNKNOWN"
+                and not shape_observed(e))
+    if n_leg:
+        print(f"\n  {n_leg} of the shapes above were INHERITED from the "
+              f"seven-way subtype, not observed. That includes most of the\n"
+              f"  same_action_new_instance rows, whose `point` came from "
+              f"`sharp_visible_transition` in the label under question while\n"
+              f"  the annotator's own prose describes an idle gap. Both values "
+              f"satisfy the conditional rule so no decision moves, but the\n"
+              f"  cell is not evidence that anyone saw a compact switch.")
     print()
     srcs = sorted({src(e) for e in calls})
     print(f"  {'relation':<26}" + "".join(f"{s[:20]:>24}" for s in srcs))
