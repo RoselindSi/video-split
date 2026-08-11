@@ -142,9 +142,10 @@ def main():
     t = defaultdict(Counter)
     for r in rows:
         t[r.get("label_completeness")][r.get("label_granularity")] += 1
-    print(f"  {'':<20}" + "".join(f"{str(g)[:14]:>16}" for g in gr))
+    print("  " + f"{'':<20}" + "".join(f"{str(g)[:14]:>16}" for g in gr))
     for k in sorted(t, key=str):
-        print(f"  {str(k):<20}" + "".join(f"{t[k].get(g, 0):>16}" for g in gr))
+        print("  " + f"{str(k):<20}"
+              + "".join(f"{t[k].get(g, 0):>16}" for g in gr))
 
     # ------------------------------------------------------ what is trainable
     print(f"\n{'=' * 84}\nWHAT CAN BE SUPERVISED\n{'=' * 84}")
