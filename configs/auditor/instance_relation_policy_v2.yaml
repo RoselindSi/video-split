@@ -1,0 +1,46 @@
+# FROZEN. Boundary existence is decided by instance_relation and by nothing
+# else. transition_shape no longer gates it.
+#
+# v1 made same_action_new_instance conditional on the shape being a gap or a
+# point. That condition is dropped, for a reason the relation audit exposed:
+# 12 of the 16 same_action_new_instance events carried shape `point`, and every
+# one of those was INHERITED from `sharp_visible_transition` in the very label
+# under question, while the annotator's own prose described hands leaving the
+# sink and going idle -- a gap. The condition was being satisfied by a value
+# nobody observed. A rule that reads a field which is mostly derived from the
+# thing it is auditing is not a rule.
+#
+# So the two axes separate completely:
+#
+#     instance_relation  ->  does a segment boundary exist here?
+#     transition_shape   ->  if something changes, how is it spread in time,
+#                            and can it be located?
+#
+# POINT / INTERVAL / NO_TRANSITION is retired as a training target. It mixed
+# the axes: same_action_new_instance + gap is a BOUNDARY and is not a POINT,
+# and new_action + gradual is a BOUNDARY and is not a compact point either.
+
+version: 2
+frozen: true
+supersedes: instance_relation_policy_v1.yaml
+
+instance_relation:
+  new_action:               {decision: BOUNDARY}
+  same_action_new_instance: {decision: BOUNDARY}
+  same_instance:            {decision: NO_BOUNDARY}
+  cannot_determine:         {decision: REVIEW}
+  initial_action_start:     {decision: REVIEW, reason: product behaviour undefined}
+  terminal_action_end:      {decision: REVIEW, reason: product behaviour undefined}
+  UNKNOWN:                  {decision: REVIEW, reason: not yet annotated}
+
+# The supervised target for the relation experiment, stated here so the
+# experiment reads it rather than restating it.
+training_target:
+  positive: [new_action, same_action_new_instance]
+  negative: [same_instance]
+  excluded: [cannot_determine, initial_action_start, terminal_action_end,
+             UNKNOWN]
+  note: >
+    The excluded classes are excluded because their product behaviour is
+    undefined or their evidence is missing, not because they are hard. A model
+    trained on them would be learning a decision nobody has made.

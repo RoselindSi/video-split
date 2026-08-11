@@ -89,6 +89,10 @@ def main():
     ap.add_argument("--topology_37")
     ap.add_argument("--ontology_37")
     ap.add_argument("--double_48")
+    ap.add_argument("--relation_audit",
+                    help="the 54-row sheet that asked ONLY the relation. "
+                         "Highest precedence: it is the only pass that put the "
+                         "question directly")
     ap.add_argument("--out")
     a = ap.parse_args()
 
@@ -96,6 +100,8 @@ def main():
     sch = yaml.safe_load(open(a.schema, encoding="utf-8"))
     legacy = sch["legacy"]
     valid_r = set(sch["instance_relation"]) | {UNKNOWN}
+    # the relation audit introduced initial_action_start, so a stale schema
+    # would reject the file rather than silently dropping the value
     valid_s = set(sch["transition_shape"]) | {UNKNOWN}
 
     # every claim is kept, not just the winner. A count that changes between
@@ -175,6 +181,20 @@ def main():
                 conflict_48.append((e, p_rel, c, rel, note))
             put(e, rel, shape, "double_48", note,
                 f"call={c} prose={p_rel} resolved_by={why}")
+
+    if a.relation_audit and os.path.exists(a.relation_audit):
+        for row in read_csv(a.relation_audit):
+            e = row.get("event_id")
+            rel = col(row, "your_call").strip()
+            if not e or not rel:
+                continue
+            n_src["relation_audit_54"] += 1
+            # relation only. This pass never looked at the shape, and writing
+            # one here would put an unobserved value beside a directly asked
+            # answer and make them indistinguishable later.
+            put(e, rel, UNKNOWN, "relation_audit_54",
+                col(row, "why_one_line"),
+                f"confidence={col(row, 'confidence')}")
 
     print(f"rows read per source: {dict(n_src)}")
     if prose_hits:
