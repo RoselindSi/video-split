@@ -427,6 +427,43 @@ def main():
         probe_table("A  new_action vs everything else", idx_all, ya, pa)
         probe_table("B  reset vs continuous, within one action",
                     np.array(sub), yb, pb)
+
+        # C isolates INTERFERENCE. A and B are different tasks on different
+        # event sets, so a dedicated head beating the frozen arms on each does
+        # not by itself show that the COMBINED head was hurt by training on
+        # both positives at once. This probe trains on exactly the task table
+        # B's first row scored -- new_action against same_instance, same 167
+        # events -- so the dedicated student and the combined student can be
+        # compared on one target, paired.
+        sub_c = [i for i, e in enumerate(ev)
+                 if e["_rel"] in ("new_action", "same_instance")]
+        yc = np.array([1.0 if ev[i]["_rel"] == "new_action" else 0.0
+                       for i in sub_c], float)
+        pc = train_oof(np.array(sub_c), yc, "C: new_action vs same_instance, "
+                                            "dedicated")
+        ggc = [ev[i]["recording_id"] for i in sub_c]
+        combined = np.array([oof[i] for i in sub_c], float)
+        print(f"\n  C  INTERFERENCE: the same task, dedicated head against "
+              f"the combined one")
+        print(f"     {len(sub_c)} events, {int(yc.sum())} positive, "
+              f"{len(set(ggc))} recordings")
+        for n_, p_ in (("dedicated student", pc),
+                       ("combined BOUNDARY student", combined)):
+            if np.isfinite(p_).all():
+                lo, hi = boot(yc, p_, ggc, a.n_boot, a.seed)
+                print(f"       {n_:<32} {_auroc(yc, p_):.3f}  "
+                      f"[{lo:.3f}, {hi:.3f}]")
+        if np.isfinite(pc).all() and np.isfinite(combined).all():
+            d, lo, hi = paired_delta(yc, pc, combined, ggc, a.n_boot, a.seed)
+            v = ("no detectable interference" if lo <= 0 <= hi
+                 else "training on both positives HURT this task" if lo > 0
+                 else "training on both positives helped this task")
+            print(f"       dedicated minus combined        {d:+.3f}  "
+                  f"[{lo:+.3f}, {hi:+.3f}]   {v}")
+            print(f"     This is the only clean test of interference here. A "
+                  f"and B beat the frozen arms on their own tasks, but\n     "
+                  f"those are different targets on different event sets and "
+                  f"cannot say whether the joint target cost anything.")
         print("\n    The hypothesis is that the frozen semantic arms carry A "
               "and the temporal student carries B. If the paired\n    deltas "
               "run opposite ways across the two probes, the division of labour "
