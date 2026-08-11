@@ -96,6 +96,34 @@ def proj(p, seq):
     return ((seq.reshape(-1, d) - mu) @ W).reshape(n, t, -1)
 
 
+def paired_delta(y, pa, pb, groups, n_boot, seed):
+    """CI on AUROC(a) - AUROC(b) on the SAME resample.
+
+    Two separate intervals on correlated estimates cannot be compared by
+    whether they overlap, and every comparison in this file is between two
+    scorers on one set of events."""
+    by = defaultdict(list)
+    for i, g in enumerate(groups):
+        by[g].append(i)
+    keys = list(by)
+    rng = np.random.default_rng(seed)
+    out = []
+    for _ in range(n_boot):
+        idx = [i for k in rng.integers(0, len(keys), len(keys))
+               for i in by[keys[k]]]
+        yy = np.asarray([y[i] for i in idx], float)
+        if len(set(yy.tolist())) < 2:
+            continue
+        va = _auroc(yy, np.asarray([pa[i] for i in idx], float))
+        vb = _auroc(yy, np.asarray([pb[i] for i in idx], float))
+        if np.isfinite(va) and np.isfinite(vb):
+            out.append(va - vb)
+    if len(out) < 50:
+        return float("nan"), float("nan"), float("nan")
+    return (float(np.mean(out)), float(np.percentile(out, 2.5)),
+            float(np.percentile(out, 97.5)))
+
+
 def boot(y, p, groups, n_boot, seed):
     by = defaultdict(list)
     for i, g in enumerate(groups):
@@ -137,6 +165,9 @@ def main():
     ap.add_argument("--lr", type=float, default=1e-3)
     ap.add_argument("--weight_decay", type=float, default=1e-2)
     ap.add_argument("--n_folds", type=int, default=5)
+    ap.add_argument("--probes", action="store_true",
+                    help="also train the two factor probes, each on its own "
+                         "target")
     ap.add_argument("--n_boot", type=int, default=2000)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out")
@@ -176,6 +207,58 @@ def main():
     G, L = stack(ev, "g"), stack(ev, "l")
     VG = torch.from_numpy(stack(ev, "valid_g"))
     VL = torch.from_numpy(stack(ev, "valid_l"))
+
+    def train_oof(sub_idx, yy, tag):
+        """A student trained for THIS task on THIS subset.
+
+        Each probe gets its own, because the question is which evidence each
+        task needs -- scoring an identity task with a head trained on
+        boundary-vs-continuation would measure the transfer, not the division
+        of labour."""
+        out = np.full(len(sub_idx), np.nan)
+        gg = [ev[i]["recording_id"] for i in sub_idx]
+        Gs, Ls = G[sub_idx], L[sub_idx]
+        VGs, VLs = VG[sub_idx], VL[sub_idx]
+        vg_np = stack([ev[i] for i in sub_idx], "valid_g")
+        vl_np = stack([ev[i] for i in sub_idx], "valid_l")
+        print(f"\n  training `{tag}`: {len(sub_idx)} events, "
+              f"{int(yy.sum())} positive, {len(set(gg))} recordings")
+        for fi, f in enumerate(stratified_grouped_folds(gg, yy, a.n_folds,
+                                                        seed=a.seed)):
+            te = np.array([g in f for g in gg])
+            tr = ~te
+            if te.sum() < 2 or tr.sum() < 20 or len(set(yy[tr].tolist())) < 2:
+                print(f"    fold {fi}: too small or single-class, skipped")
+                continue
+            pg = pca_fit(Gs[tr][vg_np[tr]], a.pca_dim)
+            pl = pca_fit(Ls[tr][vl_np[tr]], a.pca_dim)
+            Pg = torch.from_numpy(proj(pg, Gs)).float()
+            Pl = torch.from_numpy(proj(pl, Ls)).float()
+            for P in (Pg, Pl):
+                sd = P[torch.from_numpy(tr)].reshape(-1, P.shape[-1]).std(0)
+                P /= sd.clamp(min=1e-6)
+            X, M = build_input(Pg, Pl, VGs, VLs)
+            model = RelationHead(X.shape[-1], a.hidden, a.dropout)
+            opt = torch.optim.AdamW(model.parameters(), lr=a.lr,
+                                    weight_decay=a.weight_decay)
+            yt = torch.from_numpy(yy).long()
+            trt = torch.from_numpy(tr)
+            cnt = np.bincount(yy[tr].astype(int), minlength=2) + 1
+            w = torch.tensor((cnt.sum() / cnt) / (cnt.sum() / cnt).mean(),
+                             dtype=torch.float32)
+            model.train()
+            for _ in range(a.epochs):
+                opt.zero_grad()
+                loss = F.cross_entropy(model(X, M)[trt], yt[trt], weight=w)
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                opt.step()
+            model.eval()
+            with torch.no_grad():
+                out[te] = F.softmax(model(X, M)[torch.from_numpy(te)],
+                                    -1)[:, 1].numpy()
+        return out
+
     oof = np.full(len(ev), np.nan)
     for fi, f in enumerate(stratified_grouped_folds(groups, y, a.n_folds,
                                                     seed=a.seed)):
@@ -254,13 +337,21 @@ def main():
                 cols.append((c, [arms[e["event_id"]][c] for e in sel]))
         print(f"\n  {title}: {len(sel)} events, {int(yy.sum())} positive, "
               f"{len(set(gg))} recordings")
-        for name, p in cols:
-            p = np.array(p, float)
-            if not np.isfinite(p).all():
-                print(f"    {name:<30} incomplete, withheld")
-                continue
+        ok = [(n, np.array(p, float)) for n, p in cols
+              if np.isfinite(np.array(p, float)).all()]
+        for name, p in ok:
             lo, hi = boot(yy, p, gg, a.n_boot, a.seed)
             print(f"    {name:<30} {_auroc(yy, p):.3f}  [{lo:.3f}, {hi:.3f}]")
+        # paired, because overlapping intervals are not a comparison
+        if len(ok) > 1:
+            base = ok[0]
+            print(f"    {'-- paired delta vs ' + base[0]:<30}")
+            for name, p in ok[1:]:
+                d, lo, hi = paired_delta(yy, base[1], p, gg, a.n_boot, a.seed)
+                verdict = ("no detectable difference" if lo <= 0 <= hi
+                           else "student better" if lo > 0 else "student WORSE")
+                print(f"      minus {name:<24} {d:+.3f}  [{lo:+.3f}, "
+                      f"{hi:+.3f}]  {verdict}")
 
     print(f"\n{'=' * 84}\nA  BOUNDARY vs SAME_INSTANCE, every scorer, same "
           f"events\n{'=' * 84}")
@@ -291,6 +382,57 @@ def main():
           "the rest derived from legacy subtypes; the mixture is not any "
           "population, and a coverage or accuracy read off it\n    would "
           "describe a sample that was constructed rather than drawn.")
+
+    if a.probes:
+        print(f"\n{'=' * 84}\nD  THE TWO FACTORS, EACH WITH ITS OWN STUDENT"
+              f"\n{'=' * 84}")
+        print("  A boundary head trained on both positives at once cannot say "
+              "which evidence each needs. These two probes ask\n  the "
+              "questions separately: has the ACTION changed, and -- within one "
+              "action -- did the INSTANCE reset.")
+        idx_all = np.arange(len(ev))
+        ya = np.array([1.0 if e["_rel"] == "new_action" else 0.0
+                       for e in ev], float)
+        pa = train_oof(idx_all, ya, "A: different action?")
+        sub = [i for i, e in enumerate(ev)
+               if e["_rel"] in ("same_action_new_instance", "same_instance")]
+        yb = np.array([1.0 if ev[i]["_rel"] == "same_action_new_instance"
+                       else 0.0 for i in sub], float)
+        pb = train_oof(np.array(sub), yb, "B: instance reset?")
+
+        def probe_table(name, sel_idx, yy, student):
+            gg = [ev[i]["recording_id"] for i in sel_idx]
+            cols = [("probe student", student)]
+            if old and all(ev[i]["event_id"] in old for i in sel_idx):
+                cols.append(("old P(POINT)",
+                             np.array([old[ev[i]["event_id"]]
+                                       for i in sel_idx])))
+            for c in OLD_ARMS:
+                if all(c in arms.get(ev[i]["event_id"], {}) for i in sel_idx):
+                    cols.append((c, np.array([arms[ev[i]["event_id"]][c]
+                                              for i in sel_idx])))
+            print(f"\n  {name}: {len(sel_idx)} events, {int(yy.sum())} "
+                  f"positive, {len(set(gg))} recordings")
+            ok = [(n, p) for n, p in cols if np.isfinite(p).all()]
+            for n, p in ok:
+                lo, hi = boot(yy, p, gg, a.n_boot, a.seed)
+                print(f"    {n:<30} {_auroc(yy, p):.3f}  [{lo:.3f}, {hi:.3f}]")
+            if len(ok) > 1:
+                for n, p in ok[1:]:
+                    d, lo, hi = paired_delta(yy, ok[0][1], p, gg, a.n_boot,
+                                             a.seed)
+                    print(f"      minus {n:<24} {d:+.3f}  [{lo:+.3f}, "
+                          f"{hi:+.3f}]")
+
+        probe_table("A  new_action vs everything else", idx_all, ya, pa)
+        probe_table("B  reset vs continuous, within one action",
+                    np.array(sub), yb, pb)
+        print("\n    The hypothesis is that the frozen semantic arms carry A "
+              "and the temporal student carries B. If the paired\n    deltas "
+              "run opposite ways across the two probes, the division of labour "
+              "is real and the next model is factorised\n    rather than "
+              "bigger. If they run the same way, one representation is simply "
+              "better and there is nothing to factorise.")
 
     if a.out:
         os.makedirs(os.path.dirname(os.path.abspath(a.out)) or ".",
