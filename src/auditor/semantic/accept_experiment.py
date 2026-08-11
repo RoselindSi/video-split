@@ -56,16 +56,35 @@ from src.boundary.hal_vlm_fusion import fit_logreg, _sigmoid
 from src.boundary.state_adapter import _auroc
 
 
-def name_features(pred, gold):
-    """Comparisons between the naming model's video-grounded name and the
-    stored label, using the naming pipeline's own definitions so the two
-    stay in step."""
-    from src.eval.score_names import verb_match, obj_f1, is_generic, content
-    if not pred or not gold:
+def support_features(row):
+    """How much the video supports the STORED verb against its alternatives.
+
+    n7_scored.jsonl carries a log-score per candidate verb and marks which
+    letters are ground truth, so the margin between the stored verb and the
+    best alternative is a direct, video-grounded measure of support -- which
+    is what the original plan called P(primary verb supported), and much
+    closer to it than comparing two generated names would have been.
+
+    Returned as features, not as a verdict. A margin is not a probability and
+    the scores are not calibrated across segments."""
+    sc = row.get("scores") or row.get("contrastive_scores") or {}
+    gt = row.get("gt_letters") or []
+    if not sc or not gt:
         return None
-    return [float(verb_match(pred, gold)), float(obj_f1(pred, gold)),
-            float(is_generic(pred)), float(is_generic(gold)),
-            float(len(content(pred))), float(len(content(gold)))]
+    vals = {k: float(v) for k, v in sc.items()}
+    gt_vals = [vals[g] for g in gt if g in vals]
+    others = [v for k, v in vals.items() if k not in gt]
+    if not gt_vals or not others:
+        return None
+    best_gt, best_other = max(gt_vals), max(others)
+    import math
+    mx = max(vals.values())
+    z = [math.exp(v - mx) for v in vals.values()]
+    tot = sum(z) or 1.0
+    ent = -sum((q / tot) * math.log((q / tot) + 1e-12) for q in z)
+    rank = 1 + sum(1 for v in others if v > best_gt)
+    return [best_gt - best_other, best_gt, best_other, float(rank), ent,
+            float(len(vals))]
 
 
 def main():
@@ -102,7 +121,11 @@ def main():
     print(f"  status: {dict(Counter(e['status'] for e in lab).most_common())}")
 
     # ------------------------------------------------------- naming coverage
-    pred_name = {}
+    # The naming jsonls are keyed by (recording_id, segment_idx) and the audit
+    # by event, so the join is by TIME CONTAINMENT and only n7-style rows
+    # carry start/end. That is the whole join, and it is reported before use.
+    segs = defaultdict(list)
+    n_rows = 0
     for p in a.naming_jsonl:
         if not os.path.exists(p):
             print(f"  !! {p} not found")
@@ -112,19 +135,25 @@ def main():
                 if not line.strip():
                     continue
                 r = json.loads(line)
-                key = r.get("event_id") or r.get("segment_id") or r.get("id")
-                nm = (r.get("pred") or r.get("pred_name") or r.get("name")
-                      or r.get("prediction"))
-                if key and nm:
-                    pred_name[key] = nm
-    hit = [e for e in lab if e["event_id"] in pred_name]
-    print(f"  naming predictions for {len(pred_name)} keys; "
-          f"{len(hit)}/{len(lab)} of the audited events matched")
-    if a.naming_jsonl and len(hit) < 0.5 * len(lab):
-        print(f"  !! fewer than half the audited events have a naming "
-              f"prediction. The verification arm would be a different\n"
-              f"     experiment on a different population, so it is reported "
-              f"separately and never pooled with the rest.")
+                n_rows += 1
+                if r.get("start") is None or r.get("end") is None:
+                    continue
+                segs[r["recording_id"]].append(r)
+    n_timed = sum(len(v) for v in segs.values())
+    print(f"  naming rows {n_rows}; {n_timed} carry start/end and can be "
+          f"joined by time, over {len(segs)} recordings")
+    if n_rows and not n_timed:
+        print(f"  !! none of them carry segment bounds. Only n7-style rows do; "
+              f"the others are keyed by segment_idx alone and cannot be\n"
+              f"     matched to a candidate time without the segment table.")
+
+    def seg_for(eid, rid, t):
+        for r in segs.get(rid, []):
+            if float(r["start"]) <= t <= float(r["end"]):
+                return r
+        return None
+
+    pred_name = {}  # kept for the output schema; unused by the support arm
 
     # --------------------------------------------------------------- features
     torch.manual_seed(a.seed)
@@ -200,16 +229,21 @@ def main():
     # ------------------------------------------------- the naming arm, nested
     nf = {}
     for e in ev:
-        eid = e["event_id"]
-        g = by_id[eid]
-        stored = (g.get("containing_segment_label")
-                  or g.get("next_segment_label")
-                  or g.get("prev_segment_label"))
-        f_ = name_features(pred_name.get(eid), stored)
+        row = seg_for(e["event_id"], e["recording_id"],
+                      float(_t(e["event_id"]) or -1))
+        if row is None:
+            continue
+        f_ = support_features(row)
         if f_ is not None:
-            nf[eid] = f_
-    print(f"  naming comparison features computable on {len(nf)}/{len(ev)} "
-          f"events")
+            nf[e["event_id"]] = f_
+    print(f"  verb-support features computable on {len(nf)}/{len(ev)} events "
+          f"over {len({by_id[k]['recording_id'] for k in nf})} recordings")
+    if 0 < len(nf) < 40:
+        print(f"  !! {len(nf)} is below the floor this file will fit on. The "
+              f"naming pipeline covers 84 segments in total and the audit\n"
+              f"     covers 188 events over 48 recordings, so the overlap is "
+              f"small by construction -- the verification arm needs naming\n"
+              f"     run over the audited segments, not a bigger model.")
     p_name = np.full(len(ev), np.nan)
     if len(nf) >= 40:
         Z = np.array([nf.get(e["event_id"], [np.nan] * 6) for e in ev], float)
