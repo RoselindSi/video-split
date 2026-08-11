@@ -76,6 +76,7 @@ from src.auditor.boundary.model import build_input
 from src.auditor.boundary.relation_experiment import (
     RelationHead, pca_fit, proj, paired_delta, boot)
 from src.boundary.pairwise_verifier import stratified_grouped_folds
+from src.boundary.hal_vlm_fusion import fit_logreg, _sigmoid
 from src.boundary.state_adapter import _auroc
 
 NEW, SANI, SAME = "new_action", "same_action_new_instance", "same_instance"
@@ -177,16 +178,25 @@ def main():
             P /= sd.clamp(min=1e-6)
         return build_input(Pg, Pl, VG, VL)
 
-    def train_single(y, sub=None, tag="", seed=0):
-        """One binary head on one target; `sub` restricts the events."""
+    def train_single(y, sub=None, tag="", seed=0, predict_all=False,
+                     fold_list=None, avail=None):
+        """One binary head on one target.
+
+        `sub` restricts which events contribute LOSS. Prediction is a separate
+        question: head B is trained only on same-action events and still has
+        to emit a score on new_action ones, because the composition rule
+        multiplies by it there. Conflating the two masks left pB undefined on
+        exactly the events the OR needs it for."""
         torch.manual_seed(seed)
         np.random.seed(seed)
         keep = np.ones(len(ev), bool) if sub is None else sub
+        pool = np.ones(len(ev), bool) if avail is None else avail
         out = np.full(len(ev), np.nan)
-        for f in folds:
-            te = np.array([g in f for g in groups]) & keep
-            tr = (~np.array([g in f for g in groups])) & keep
-            if te.sum() < 2 or tr.sum() < 20 or len(set(y[tr].tolist())) < 2:
+        for f in (fold_list if fold_list is not None else folds):
+            in_f = np.array([g in f for g in groups])
+            te = (in_f & pool) if predict_all else (in_f & keep & pool)
+            tr = (~in_f) & keep & pool
+            if te.sum() < 2 or tr.sum() < 15 or len(set(y[tr].tolist())) < 2:
                 continue
             X, M = fold_inputs(tr)
             model = RelationHead(X.shape[-1], a.hidden, a.dropout)
@@ -208,19 +218,21 @@ def main():
                                     -1)[:, 1].numpy()
         return out
 
-    def train_factorized(seed=0):
+    def train_factorized(seed=0, fold_list=None, avail=None, quiet=False):
         torch.manual_seed(seed)
         np.random.seed(seed)
+        pool = np.ones(len(ev), bool) if avail is None else avail
         pa = np.full(len(ev), np.nan)
         pb = np.full(len(ev), np.nan)
-        for fi, f in enumerate(folds):
-            te = np.array([g in f for g in groups])
-            tr = ~te
-            if te.sum() < 2 or tr.sum() < 20:
+        for fi, f in enumerate(fold_list if fold_list is not None else folds):
+            in_f = np.array([g in f for g in groups])
+            te = in_f & pool
+            tr = (~in_f) & pool
+            if te.sum() < 2 or tr.sum() < 15:
                 continue
             X, M = fold_inputs(tr)
             model = Factorized(X.shape[-1], a.hidden, a.dropout)
-            if fi == 0:
+            if fi == 0 and not quiet:
                 print(f"\n  factorized: {n_params(model)} parameters against "
                       f"{int(tr.sum())} training events")
             opt = torch.optim.AdamW(model.parameters(), lr=a.lr,
@@ -295,6 +307,121 @@ def main():
     pC_ind = train_single(y_act, sub_c, "probe C", base)
     print(f"  independent probes trained at seed {base} only; they are the "
           f"sanity check, not the headline")
+
+    # ------------------------------------------------------ 2x2 FACTORIAL
+    # Two things are now known to lose signal and they are different things:
+    # sharing the encoder costs head A 0.031 [-0.066, -0.001], and the fixed
+    # OR costs the new_action branch about 0.053. This crosses them.
+    def logit(p):
+        p = np.clip(p, 1e-6, 1 - 1e-6)
+        return np.log(p / (1 - p))
+
+    def nested_combiner(get_pair, seed):
+        """OR replaced by a two-input logistic regression fitted INSIDE each
+        outer fold's training recordings.
+
+        The inner split is what makes it legitimate: a combiner fitted on the
+        same predictions it is applied to would be selecting on the test
+        events, which is the failure this project has made before under a
+        different name. `get_pair(fold_list, avail, seed)` retrains the
+        factor models on whatever subset it is handed."""
+        out = np.full(len(ev), np.nan)
+        for f in folds:
+            in_f = np.array([g in f for g in groups])
+            tr = ~in_f
+            tr_groups = sorted({g for g, m in zip(groups, tr) if m})
+            if len(tr_groups) < a.n_folds or tr.sum() < 30:
+                continue
+            inner = stratified_grouped_folds(
+                [g for g, m in zip(groups, tr) if m],
+                y_bnd[tr], min(a.n_folds - 1, 4), seed=a.fold_seed)
+            ipa, ipb = get_pair(inner, tr, seed)
+            m = tr & np.isfinite(ipa) & np.isfinite(ipb)
+            if m.sum() < 20 or len(set(y_bnd[m].tolist())) < 2:
+                continue
+            Z = np.stack([logit(ipa[m]), logit(ipb[m])], 1)
+            w, b = fit_logreg(Z, y_bnd[m], l2=1.0)
+            opa, opb = get_pair([f], np.ones(len(ev), bool), seed)
+            om = in_f & np.isfinite(opa) & np.isfinite(opb)
+            out[om] = _sigmoid(np.stack([logit(opa[om]), logit(opb[om])], 1)
+                               @ w + b)
+        return out
+
+    def pair_shared(fold_list, avail, seed):
+        return train_factorized(seed, fold_list, avail, quiet=True)
+
+    def pair_separate(fold_list, avail, seed):
+        pa_ = train_single(y_act, None, "", seed, True, fold_list, avail)
+        pb_ = train_single(y_res, same_action, "", seed, True, fold_list,
+                           avail)
+        return pa_, pb_
+
+    print(f"\n  2x2 factorial, {len(seeds)} seeds each. The nested combiner "
+          f"retrains the factors inside every outer fold, so this is the\n"
+          f"  slow part; it is what keeps the combiner off the events it is "
+          f"scored on.")
+    variants = {}
+    for sd in seeds:
+        pa_sh, pb_sh = train_factorized(sd, quiet=True)
+        pa_se = train_single(y_act, None, "", sd, True)
+        pb_se = train_single(y_res, same_action, "", sd, True)
+        variants.setdefault("shared + fixed OR", []).append(
+            pa_sh + (1 - pa_sh) * pb_sh)
+        variants.setdefault("separate + fixed OR", []).append(
+            pa_se + (1 - pa_se) * pb_se)
+        variants.setdefault("shared + nested logistic", []).append(
+            nested_combiner(pair_shared, sd))
+        variants.setdefault("separate + nested logistic", []).append(
+            nested_combiner(pair_separate, sd))
+        print(f"    seed {sd} done")
+    V = {k: np.nanmean(v, axis=0) for k, v in variants.items()}
+    V["combined binary"] = p_comb
+
+    print(f"\n{'=' * 82}\n2x2 FACTORIAL: encoder against composition"
+          f"\n{'=' * 82}")
+    tasks = [("overall BOUNDARY", y_bnd, np.ones(len(ev), bool)),
+             ("new_action vs same_instance", y_act, sub_c),
+             ("reset vs continuous", y_res, same_action)]
+    print(f"  {'variant':<30}" + "".join(f"{t[0][:22]:>26}" for t in tasks))
+    for name in ("shared + fixed OR", "separate + fixed OR",
+                 "shared + nested logistic", "separate + nested logistic",
+                 "combined binary"):
+        p_ = V[name]
+        cells = []
+        for _, yy, kp in tasks:
+            m = kp & np.isfinite(p_)
+            cells.append(f"{_auroc(yy[m], p_[m]):.3f}"
+                         if m.sum() >= 8 and len(set(yy[m].tolist())) > 1
+                         else "--")
+        print(f"  {name:<30}" + "".join(f"{c:>26}" for c in cells))
+
+    def delta(n1, n2, label):
+        p1, p2 = V[n1], V[n2]
+        m = np.isfinite(p1) & np.isfinite(p2)
+        gg4 = [groups[i] for i in np.where(m)[0]]
+        d, lo, hi = paired_delta(y_bnd[m], p1[m], p2[m], gg4, a.n_boot, a.seed)
+        v = ("no detectable difference" if lo <= 0 <= hi else
+             "first is better" if lo > 0 else "first is WORSE")
+        print(f"  {label:<44} {d:+.3f}  [{lo:+.3f}, {hi:+.3f}]   {v}")
+
+    print(f"\n  paired, recording-grouped, on overall BOUNDARY:")
+    delta("separate + fixed OR", "shared + fixed OR",
+          "separate minus shared, under fixed OR")
+    delta("shared + nested logistic", "shared + fixed OR",
+          "learned minus OR, under shared")
+    delta("separate + nested logistic", "separate + fixed OR",
+          "learned minus OR, under separate")
+    best = max(("shared + fixed OR", "separate + fixed OR",
+                "shared + nested logistic", "separate + nested logistic"),
+               key=lambda k: _auroc(y_bnd[np.isfinite(V[k])],
+                                    V[k][np.isfinite(V[k])]))
+    print(f"\n  best variant is `{best}`")
+    delta(best, "combined binary", "BEST minus combined binary")
+    print(f"  That last line decides whether the factorised relation "
+          f"architecture is carried forward. The three task columns decide\n"
+          f"  what it is carried forward FOR: a pooled number hid the "
+          f"structure once already and 18 new_action against 40 reset\n"
+          f"  means a large subtype gain can only move it a little.")
 
     def score(name, y, p, keep):
         m = keep & np.isfinite(p)
