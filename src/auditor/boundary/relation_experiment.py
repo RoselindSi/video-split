@@ -84,10 +84,31 @@ class RelationHead(torch.nn.Module):
         return self.head(self.enc(x, m))
 
 
-def pca_fit(X, dim):
-    mu = X.mean(0, keepdims=True)
-    _, _, Vt = np.linalg.svd(X - mu, full_matrices=False)
-    return mu.astype(np.float32), Vt[:dim].T.astype(np.float32)
+def pca_fit(X, dim, seed=0, oversample=20, power=3):
+    """Top-`dim` components by randomized range finding.
+
+    The exact call was np.linalg.svd(Xc, full_matrices=False) on a roughly
+    4250 x 3584 matrix, which materialises U and Vt at about 60 MB each plus
+    LAPACK workspace. The nested combiner refits PCA inside every inner fold
+    -- 5 outer x 4 inner x 2 variants x 5 seeds -- and 200 of those took the
+    machine down. This version never forms anything larger than
+    n x (dim + oversample).
+
+    Randomized SVD is an approximation, so the projections differ slightly
+    from the exact ones; the seed is passed in and fixed per call so a run is
+    still reproducible."""
+    mu = X.mean(0, keepdims=True).astype(np.float32)
+    Xc = (X - mu).astype(np.float32)
+    k = min(dim + oversample, min(Xc.shape))
+    rng = np.random.default_rng(seed)
+    Q = rng.standard_normal((Xc.shape[1], k)).astype(np.float32)
+    Y = Xc @ Q
+    for _ in range(power):
+        Y = Xc @ (Xc.T @ Y)
+    Q, _ = np.linalg.qr(Y)
+    B = Q.T @ Xc
+    _, _, Vt = np.linalg.svd(B, full_matrices=False)
+    return mu, Vt[:dim].T.astype(np.float32)
 
 
 def proj(p, seq):

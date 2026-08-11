@@ -64,7 +64,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
-from collections import Counter
+from collections import Counter, defaultdict
 
 import numpy as np
 import torch
@@ -132,6 +132,14 @@ def main():
                          "measured, so the headline is averaged over these")
     ap.add_argument("--n_boot", type=int, default=2000)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--variants", default="all",
+                    help="comma-separated subset of {or,nested}. `or` is the "
+                         "two cheap cells; `nested` refits the factors inside "
+                         "every inner fold and is what took the machine down")
+    ap.add_argument("--checkpoint",
+                    help="per-seed results are written here as they finish "
+                         "and reloaded on restart, so a crash costs one seed "
+                         "rather than the run")
     ap.add_argument("--out")
     a = ap.parse_args()
 
@@ -356,25 +364,56 @@ def main():
                            avail)
         return pa_, pb_
 
-    print(f"\n  2x2 factorial, {len(seeds)} seeds each. The nested combiner "
-          f"retrains the factors inside every outer fold, so this is the\n"
-          f"  slow part; it is what keeps the combiner off the events it is "
-          f"scored on.")
-    variants = {}
+    want = ({"or", "nested"} if a.variants == "all"
+            else {x.strip() for x in a.variants.split(",")})
+    print(f"\n  2x2 factorial, {len(seeds)} seeds each, variants {sorted(want)}."
+          f" The nested combiner refits the factors inside every inner fold\n"
+          f"  and is what took the machine down; `--variants or` runs the two "
+          f"cheap cells alone.")
+    variants = defaultdict(list)
+    done = set()
+    if a.checkpoint and os.path.exists(a.checkpoint):
+        ck = json.load(open(a.checkpoint, encoding="utf-8"))
+        for k, per in ck.get("variants", {}).items():
+            for sd_s, arr in per.items():
+                variants[k].append(np.array(arr, float))
+                done.add((k, int(sd_s)))
+        print(f"  resumed {len(done)} seed-variant cells from "
+              f"{os.path.basename(a.checkpoint)}")
+    store = defaultdict(dict)
+
+    def record(k, sd, arr):
+        variants[k].append(arr)
+        store[k][str(sd)] = [None if not np.isfinite(x) else float(x)
+                             for x in arr]
+        if a.checkpoint:
+            prev = {}
+            if os.path.exists(a.checkpoint):
+                prev = json.load(open(a.checkpoint,
+                                      encoding="utf-8")).get("variants", {})
+            for kk, vv in store.items():
+                prev.setdefault(kk, {}).update(vv)
+            json.dump({"variants": prev},
+                      open(a.checkpoint, "w", encoding="utf-8"))
+
     for sd in seeds:
-        pa_sh, pb_sh = train_factorized(sd, quiet=True)
-        pa_se = train_single(y_act, None, "", sd, True)
-        pb_se = train_single(y_res, same_action, "", sd, True)
-        variants.setdefault("shared + fixed OR", []).append(
-            pa_sh + (1 - pa_sh) * pb_sh)
-        variants.setdefault("separate + fixed OR", []).append(
-            pa_se + (1 - pa_se) * pb_se)
-        variants.setdefault("shared + nested logistic", []).append(
-            nested_combiner(pair_shared, sd))
-        variants.setdefault("separate + nested logistic", []).append(
-            nested_combiner(pair_separate, sd))
-        print(f"    seed {sd} done")
-    V = {k: np.nanmean(v, axis=0) for k, v in variants.items()}
+        if "or" in want:
+            if ("shared + fixed OR", sd) not in done:
+                pa_sh, pb_sh = train_factorized(sd, quiet=True)
+                record("shared + fixed OR", sd, pa_sh + (1 - pa_sh) * pb_sh)
+            if ("separate + fixed OR", sd) not in done:
+                pa_se = train_single(y_act, None, "", sd, True)
+                pb_se = train_single(y_res, same_action, "", sd, True)
+                record("separate + fixed OR", sd, pa_se + (1 - pa_se) * pb_se)
+        if "nested" in want:
+            if ("shared + nested logistic", sd) not in done:
+                record("shared + nested logistic", sd,
+                       nested_combiner(pair_shared, sd))
+            if ("separate + nested logistic", sd) not in done:
+                record("separate + nested logistic", sd,
+                       nested_combiner(pair_separate, sd))
+        print(f"    seed {sd} done", flush=True)
+    V = {k: np.nanmean(v, axis=0) for k, v in variants.items() if v}
     V["combined binary"] = p_comb
 
     print(f"\n{'=' * 82}\n2x2 FACTORIAL: encoder against composition"
@@ -386,6 +425,9 @@ def main():
     for name in ("shared + fixed OR", "separate + fixed OR",
                  "shared + nested logistic", "separate + nested logistic",
                  "combined binary"):
+        if name not in V:
+            print(f"  {name:<30}" + f"{'not run':>26}")
+            continue
         p_ = V[name]
         cells = []
         for _, yy, kp in tasks:
@@ -396,6 +438,9 @@ def main():
         print(f"  {name:<30}" + "".join(f"{c:>26}" for c in cells))
 
     def delta(n1, n2, label):
+        if n1 not in V or n2 not in V:
+            print(f"  {label:<44} not run")
+            return
         p1, p2 = V[n1], V[n2]
         m = np.isfinite(p1) & np.isfinite(p2)
         gg4 = [groups[i] for i in np.where(m)[0]]
@@ -411,10 +456,11 @@ def main():
           "learned minus OR, under shared")
     delta("separate + nested logistic", "separate + fixed OR",
           "learned minus OR, under separate")
-    best = max(("shared + fixed OR", "separate + fixed OR",
-                "shared + nested logistic", "separate + nested logistic"),
-               key=lambda k: _auroc(y_bnd[np.isfinite(V[k])],
-                                    V[k][np.isfinite(V[k])]))
+    have = [k for k in ("shared + fixed OR", "separate + fixed OR",
+                        "shared + nested logistic",
+                        "separate + nested logistic") if k in V]
+    best = max(have, key=lambda k: _auroc(y_bnd[np.isfinite(V[k])],
+                                          V[k][np.isfinite(V[k])]))
     print(f"\n  best variant is `{best}`")
     delta(best, "combined binary", "BEST minus combined binary")
     print(f"  That last line decides whether the factorised relation "
