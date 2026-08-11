@@ -98,19 +98,16 @@ def main():
     valid_r = set(sch["instance_relation"]) | {UNKNOWN}
     valid_s = set(sch["transition_shape"]) | {UNKNOWN}
 
-    rec = defaultdict(lambda: {"instance_relation": UNKNOWN,
-                               "transition_shape": UNKNOWN,
-                               "relation_source": "", "shape_source": "",
-                               "evidence": ""})
+    # every claim is kept, not just the winner. A count that changes between
+    # the parse and the output -- 26 prose matches becoming 24 -- has to be
+    # explainable event by event, and it cannot be if only the winner survives.
+    claims = defaultdict(list)
 
-    def put(eid, rel, shape, src, evidence=""):
-        r = rec[eid]
-        if rel and rel != UNKNOWN:
-            r["instance_relation"], r["relation_source"] = rel, src
-        if shape and shape != UNKNOWN:
-            r["transition_shape"], r["shape_source"] = shape, src
-        if evidence:
-            r["evidence"] = evidence[:160]
+    def put(eid, rel, shape, src, evidence="", detail=""):
+        claims[eid].append({"source": src, "instance_relation": rel or UNKNOWN,
+                            "transition_shape": shape or UNKNOWN,
+                            "evidence": (evidence or "")[:160],
+                            "detail": detail})
 
     n_src = Counter()
     for p in a.pair_labels:
@@ -144,6 +141,7 @@ def main():
                     row.get("ontology_reason", ""))
 
     prose_hits = Counter()
+    conflict_48 = []
     if a.double_48 and os.path.exists(a.double_48):
         for row in read_csv(a.double_48):
             e = row.get("event_id")
@@ -152,28 +150,88 @@ def main():
             if not e:
                 continue
             n_src["double_48"] += 1
-            rel = shape = UNKNOWN
+            p_rel = p_shape = UNKNOWN
             for r_, s_, words in PROSE_RULES:
                 if any(w in note for w in words):
-                    rel, shape = r_, s_
+                    p_rel, p_shape = r_, s_
                     prose_hits[r_] += 1
                     break
             else:
                 prose_hits["no rule matched"] += 1
-            # the call constrains the shape even when the prose does not
+            # the explicit call and my keyword parse of the prose are two
+            # different claims by the same annotator, and where they disagree
+            # that disagreement is the finding -- three of the six
+            # terminal_action_end notes carry an explicit `same`. The call
+            # wins because it is what the person answered, but the conflict is
+            # recorded rather than resolved away.
+            rel, shape, why = p_rel, p_shape, "prose"
             if c == "same":
-                rel, shape = "same_instance", "not_applicable"
-            elif c == "sharp" and shape == UNKNOWN:
-                shape = "point"
+                rel, shape, why = "same_instance", "not_applicable", "call"
             elif c == "cannot":
-                rel, shape = "cannot_determine", "not_observable"
-            put(e, rel, shape, "double_48", note)
+                rel, shape, why = "cannot_determine", "not_observable", "call"
+            elif c == "sharp" and shape == UNKNOWN:
+                shape, why = "point", "call"
+            if why == "call" and p_rel != UNKNOWN and p_rel != rel:
+                conflict_48.append((e, p_rel, c, rel, note))
+            put(e, rel, shape, "double_48", note,
+                f"call={c} prose={p_rel} resolved_by={why}")
 
     print(f"rows read per source: {dict(n_src)}")
     if prose_hits:
         print(f"  double_48 prose rules: {dict(prose_hits)}")
 
-    rows = [{"event_id": e, **v} for e, v in sorted(rec.items())]
+    # -------------------------------------------------------- resolution
+    # last source wins, which is the order the sources were added: legacy,
+    # then each human pass in the order it was run
+    rows = []
+    cross = []
+    for e, cl in sorted(claims.items()):
+        r = {"event_id": e, "instance_relation": UNKNOWN,
+             "transition_shape": UNKNOWN, "relation_source": "",
+             "shape_source": "", "evidence": "", "detail": ""}
+        for c_ in cl:
+            if c_["instance_relation"] != UNKNOWN:
+                r["instance_relation"] = c_["instance_relation"]
+                r["relation_source"] = c_["source"]
+            if c_["transition_shape"] != UNKNOWN:
+                r["transition_shape"] = c_["transition_shape"]
+                r["shape_source"] = c_["source"]
+            if c_["evidence"]:
+                r["evidence"] = c_["evidence"]
+            if c_["detail"]:
+                r["detail"] = c_["detail"]
+        seen = {c_["instance_relation"] for c_ in cl
+                if c_["instance_relation"] != UNKNOWN}
+        if len(seen) > 1:
+            cross.append((e, [(c_["source"], c_["instance_relation"])
+                              for c_ in cl
+                              if c_["instance_relation"] != UNKNOWN],
+                          r["instance_relation"], r["relation_source"]))
+        rows.append(r)
+
+    print(f"\n{'=' * 78}\nWHERE THE COUNTS MOVE\n{'=' * 78}")
+    print(f"  {len(claims)} events carry {sum(len(v) for v in claims.values())} "
+          f"claims from {len(n_src)} sources; last source wins")
+    if conflict_48:
+        print(f"\n  WITHIN double_48, the explicit call contradicted my parse "
+              f"of the annotator's own prose on {len(conflict_48)} rows.")
+        print(f"  The call wins -- it is what the person answered -- and this "
+              f"is where the prose-rule counts shrink:")
+        for e, p_rel, c_, rel, note in conflict_48:
+            print(f"    {e[-42:]:<43} prose {p_rel} vs call `{c_}` -> {rel}")
+            print(f"      \"{note[:96]}\"")
+        print(f"  Three of these are the terminal_action_end notes. One person, "
+              f"one day, writing that the action ends into idle and\n  then "
+              f"answering `same` -- which is what an undefined case looks like "
+              f"from the inside, not a careless row.")
+    if cross:
+        print(f"\n  ACROSS sources, {len(cross)} events carry more than one "
+              f"instance_relation:")
+        for e, hist, sel, src in cross[:10]:
+            print(f"    {e[-42:]:<43} {hist} -> {sel} ({src})")
+    else:
+        print(f"\n  No event received conflicting instance_relation values "
+              f"from different sources.")
     bad = [r for r in rows if r["instance_relation"] not in valid_r
            or r["transition_shape"] not in valid_s]
     if bad:
@@ -228,7 +286,7 @@ def main():
         with open(a.out, "w", newline="", encoding="utf-8") as f:
             w = csv.DictWriter(f, ["event_id", "instance_relation",
                                    "transition_shape", "relation_source",
-                                   "shape_source", "evidence"])
+                                   "shape_source", "evidence", "detail"])
             w.writeheader()
             w.writerows(rows)
         print(f"\nwrote {a.out} ({len(rows)} events). The canonical pair "

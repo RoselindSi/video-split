@@ -1,0 +1,70 @@
+# What an instance_relation MEANS for this dataset. Policy, not observation.
+#
+# The annotation records the relation; this file decides what to do with it.
+# Keeping them apart is the whole point of the schema split: an annotator
+# asked "is this a boundary" has to hold a policy in their head and will hold
+# a different one tomorrow, which is how one structural situation -- the GT's
+# own same-label splits -- came to carry five different subtypes.
+
+version: 1
+
+instance_relation:
+  new_action:
+    boundary_eligible: true
+    doc: the goal changed. The uncontested case.
+
+  same_action_new_instance:
+    boundary_eligible: conditional
+    requires:
+      transition_shape: [gap, point]
+      condition: >
+        the previous instance COMPLETES, then a meaningful disengagement --
+        release, idle, hands leaving the workspace, a reset -- and only then
+        the same semantic action starts again.
+    not_this:
+      - a direction reversal while the grip is held
+      - one more cycle of a continuous repetitive motion
+      - a pause inside an instance
+    doc: >
+      cup carried left, hands release and leave, hands return and carry it
+      right -> same_action_new_instance + gap -> boundary.
+      cup held throughout while the motion reverses -> same_instance +
+      not_applicable -> no boundary.
+      The condition is on the DISENGAGEMENT, not on the repetition, because
+      "the motion repeated" is true of both.
+
+  same_instance:
+    boundary_eligible: false
+    doc: one continuous instance; whatever changes is internal.
+
+  terminal_action_end:
+    boundary_eligible: policy_not_defined
+    route: REVIEW
+    doc: >
+      DELIBERATELY UNDECIDED. An action ends into idle with nothing after --
+      the recording stops, or the hands stay still. Whether the dataset emits
+      a boundary there is a convention question about the GT that has not
+      been checked, and the 6 events found so far were split 3 and 3 by ONE
+      annotator on ONE day, which is what an undefined case looks like from
+      the inside. Deciding it here to avoid an awkward gap would be inventing
+      the convention rather than reading it.
+    before_deciding: >
+      count how the GT itself treats a terminal idle: does a segment end at
+      the last motion, or run to the recording's end?
+
+  cannot_determine:
+    boundary_eligible: false
+    route: REVIEW
+    doc: not a negative. The evidence is missing, not the boundary.
+
+# transition_shape does NOT decide eligibility on its own. It qualifies the
+# relation -- a same_action_new_instance needs a gap or a point to show the
+# disengagement happened -- and it decides how a boundary is represented once
+# the relation has made it eligible.
+transition_shape:
+  point:      {representation: point}
+  gap:        {representation: point, place_at: gap_midpoint}
+  gradual:    {representation: interval, direct_point_admission: false}
+  overlap:    {representation: interval, direct_point_admission: false}
+  not_observable: {automatic_decision: false}
+  not_applicable: {}
