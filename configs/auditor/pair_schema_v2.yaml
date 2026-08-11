@@ -1,0 +1,81 @@
+# Two fields, because the old seven subtypes answered two questions at once
+# and could not answer either cleanly.
+#
+# `same_action_internal_motion` mixed "nothing happened" with "the same action
+# happened again", and `sharp_visible_transition` never said whether the new
+# thing was a new action or the next repetition of the old one. That is the
+# information the repeated-instance gap needs and the old schema never held:
+# 21 of 48 blind-audited batch3 events turn on it, and the 8 canonical events
+# whose GT neighbours carry the SAME label were assigned five different
+# subtypes between them.
+
+version: 2
+
+# WHAT the relationship between the two sides is. An ontology judgement.
+instance_relation:
+  new_action:
+    doc: the goal changed; a different task-level action begins
+  same_action_new_instance:
+    doc: the same action begins again -- cup moved left then right then left,
+         strainer rinsed and replaced then rinsed again
+    note: whether this is a dataset boundary is a POLICY decision and lives in
+          the ontology file, not here. The annotator records the relation; the
+          rule decides what to do with it.
+  same_instance:
+    doc: one continuous instance; whatever changes is internal to it
+  terminal_action_end:
+    doc: the action ends and nothing follows within the clip -- the recording
+         stops, or the hands go idle and stay idle
+  cannot_determine:
+    doc: the relation cannot be read from this clip
+
+# WHAT the change looks like in time. An observation.
+transition_shape:
+  point:
+    doc: a compact switch you could point at and would point at again
+  gap:
+    doc: the two sides are separated by an idle or a hand-off with no activity
+         in between
+  gradual:
+    doc: one state changes continuously into another; any cut is arbitrary
+  overlap:
+    doc: the old interaction has not ended when the new one begins, commonly
+         when the two hands are out of step
+  not_observable:
+    doc: the relevant hands or objects are off-frame or occluded
+  not_applicable:
+    doc: there is no transition to describe, because the relation is
+         same_instance
+
+# The pairs that cannot both be true. Checked on load rather than trusted.
+constraints:
+  - if: {instance_relation: same_instance}
+    then: {transition_shape: not_applicable}
+  - if: {instance_relation: cannot_determine}
+    then: {transition_shape: not_observable}
+
+# Not a mapping FROM the old schema, which is impossible in one direction.
+# transition_shape is largely recoverable; instance_relation is not, and that
+# asymmetry is the measurement of how much re-annotation is left.
+legacy:
+  sharp_visible_transition:
+    transition_shape: point
+    instance_relation: UNKNOWN     # new_action or same_action_new_instance
+  gradual_phase_transition:
+    transition_shape: gradual
+    instance_relation: UNKNOWN
+  same_action_internal_motion:
+    transition_shape: not_applicable
+    instance_relation: same_instance
+  visibility_or_offscreen:
+    transition_shape: not_observable
+    instance_relation: cannot_determine
+  camera_or_viewpoint_shift:
+    transition_shape: UNKNOWN
+    instance_relation: UNKNOWN
+  annotation_convention:
+    transition_shape: UNKNOWN
+    instance_relation: UNKNOWN
+  ambiguous:
+    transition_shape: UNKNOWN
+    instance_relation: UNKNOWN
