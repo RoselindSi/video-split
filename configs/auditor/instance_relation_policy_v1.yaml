@@ -37,6 +37,19 @@ instance_relation:
     boundary_eligible: false
     doc: one continuous instance; whatever changes is internal.
 
+  initial_action_start:
+    boundary_eligible: policy_not_defined
+    route: REVIEW
+    doc: >
+      The mirror of terminal_action_end: nothing precedes, and the first
+      instance starts at the candidate. Undecided for the same reason and it
+      needs the same check -- does a GT segment begin at the first motion, or
+      at the recording's start? Folding it into new_action would be
+      convenient and would assert a convention nobody has read off the data.
+    before_deciding: >
+      count how the GT treats the opening of a recording: does segment 1
+      start at t=0 or at the first hand motion?
+
   terminal_action_end:
     boundary_eligible: policy_not_defined
     route: REVIEW

@@ -23,11 +23,24 @@ instance_relation:
           rule decides what to do with it.
   same_instance:
     doc: one continuous instance; whatever changes is internal to it
+  initial_action_start:
+    doc: nothing precedes -- the clip opens on idle or no activity, and the
+         first action instance begins at the candidate
+    note: >
+      added after the first relation audit, where an annotator needed it and
+      wrote it in. It is the mirror of terminal_action_end, and it was missing
+      for the same reason terminal_action_end was nearly missed -- the schema
+      was built from PAIRS of actions and had no word for a boundary with an
+      action on only one side.
   terminal_action_end:
     doc: the action ends and nothing follows within the clip -- the recording
          stops, or the hands go idle and stay idle
   cannot_determine:
     doc: the relation cannot be read from this clip
+  # initial_action_start and terminal_action_end are the two one-sided cases.
+  # Whether the dataset emits a boundary at either is a convention question
+  # about the GT that has not been checked, so both stay undecided in the
+  # policy rather than being folded into new_action for tidiness.
 
 # WHAT the change looks like in time. An observation.
 transition_shape:
