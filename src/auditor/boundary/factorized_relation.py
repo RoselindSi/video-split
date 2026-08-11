@@ -121,6 +121,14 @@ def main():
                     help="weight on the reset loss. Fixed at 1.0 on purpose: "
                          "tuning it on 207 events would make this a search")
     ap.add_argument("--n_folds", type=int, default=5)
+    ap.add_argument("--fold_seed", type=int, default=0,
+                    help="fixes the fold manifest. Held constant across "
+                         "training seeds so only the initialisation varies")
+    ap.add_argument("--seeds", default="0",
+                    help="comma-separated training seeds. The independent "
+                         "probes between two earlier runs moved by 0.024 to "
+                         "0.035, which is larger than the effect being "
+                         "measured, so the headline is averaged over these")
     ap.add_argument("--n_boot", type=int, default=2000)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out")
@@ -155,7 +163,9 @@ def main():
     vg_np, vl_np = stack(ev, "valid_g"), stack(ev, "valid_l")
     # ONE fold assignment, shared by every model below, so no comparison rests
     # on the folds happening to line up
-    folds = stratified_grouped_folds(groups, y_bnd, a.n_folds, seed=a.seed)
+    folds = stratified_grouped_folds(groups, y_bnd, a.n_folds,
+                                     seed=a.fold_seed)
+    seeds = [int(x) for x in str(a.seeds).split(",") if x.strip() != ""]
 
     def fold_inputs(tr):
         pg = pca_fit(G[tr][vg_np[tr]], a.pca_dim)
@@ -167,8 +177,10 @@ def main():
             P /= sd.clamp(min=1e-6)
         return build_input(Pg, Pl, VG, VL)
 
-    def train_single(y, sub=None, tag=""):
+    def train_single(y, sub=None, tag="", seed=0):
         """One binary head on one target; `sub` restricts the events."""
+        torch.manual_seed(seed)
+        np.random.seed(seed)
         keep = np.ones(len(ev), bool) if sub is None else sub
         out = np.full(len(ev), np.nan)
         for f in folds:
@@ -196,7 +208,9 @@ def main():
                                     -1)[:, 1].numpy()
         return out
 
-    def train_factorized():
+    def train_factorized(seed=0):
+        torch.manual_seed(seed)
+        np.random.seed(seed)
         pa = np.full(len(ev), np.nan)
         pb = np.full(len(ev), np.nan)
         for fi, f in enumerate(folds):
@@ -238,21 +252,49 @@ def main():
                 pb[te] = F.softmax(lb[tt], -1)[:, 1].numpy()
         return pa, pb
 
-    print("\ntraining, all on the same folds:")
-    p_comb = train_single(y_bnd, None, "combined")
-    print("  combined binary student            done")
-    pA_ind = train_single(y_act, None, "probe A")
-    print("  independent probe A                done")
-    pB_ind = train_single(y_res, same_action, "probe B")
-    print("  independent probe B                done")
     sub_c = (r == NEW) | (r == SAME)
-    pC_ind = train_single(y_act, sub_c, "probe C")
-    print("  independent probe C                done")
-    pa, pb = train_factorized()
-    print("  shared factorized model            done")
-
-    # the composition is a rule, not a fit
+    print(f"\ntraining on one fold manifest (fold_seed {a.fold_seed}), "
+          f"seeds {seeds}:")
+    per_seed = []
+    for sd in seeds:
+        pc_ = train_single(y_bnd, None, "combined", sd)
+        pa_, pb_ = train_factorized(sd)
+        cm_ = pa_ + (1.0 - pa_) * pb_
+        m = np.isfinite(cm_) & np.isfinite(pc_)
+        per_seed.append({"seed": sd, "comb": pc_, "pa": pa_, "pb": pb_,
+                         "comp": cm_,
+                         "au_comb": _auroc(y_bnd[m], pc_[m]),
+                         "au_comp": _auroc(y_bnd[m], cm_[m])})
+        print(f"  seed {sd}: combined {per_seed[-1]['au_comb']:.3f}   "
+              f"composite {per_seed[-1]['au_comp']:.3f}")
+    ac = np.array([x["au_comb"] for x in per_seed])
+    af = np.array([x["au_comp"] for x in per_seed])
+    if len(seeds) > 1:
+        print(f"\n  across {len(seeds)} seeds: combined "
+              f"{ac.mean():.3f} +/- {ac.std(ddof=1):.3f}   composite "
+              f"{af.mean():.3f} +/- {af.std(ddof=1):.3f}")
+        print(f"  per-seed delta {(af - ac).mean():+.3f} +/- "
+              f"{(af - ac).std(ddof=1):.3f}; every seed positive: "
+              f"{bool((af > ac).all())}")
+        print(f"  Seed spread is the thing to read first. An effect smaller "
+              f"than it is not an effect, and the independent probes moved "
+              f"0.024\n  to 0.035 between two earlier runs with everything "
+              f"else held.")
+    # the seed-averaged probability per event, which is what the headline uses
+    p_comb = np.nanmean([x["comb"] for x in per_seed], axis=0)
+    pa = np.nanmean([x["pa"] for x in per_seed], axis=0)
+    pb = np.nanmean([x["pb"] for x in per_seed], axis=0)
+    # the composition is a rule, not a fit, and it is applied to the averaged
+    # factors rather than averaging the composites -- the rule is what is
+    # being tested
     comp = pa + (1.0 - pa) * pb
+
+    base = seeds[0]
+    pA_ind = train_single(y_act, None, "probe A", base)
+    pB_ind = train_single(y_res, same_action, "probe B", base)
+    pC_ind = train_single(y_act, sub_c, "probe C", base)
+    print(f"  independent probes trained at seed {base} only; they are the "
+          f"sanity check, not the headline")
 
     def score(name, y, p, keep):
         m = keep & np.isfinite(p)
@@ -301,6 +343,33 @@ def main():
           "the interference lives in the encoder's gradients\n  and not only "
           "in the merged label, and the answer to that is separate "
           "lightweight encoders rather than this model.")
+
+    print(f"\n{'=' * 82}\nWHERE THE COMPOSITION LOSES IT\n{'=' * 82}")
+    print("  Each subtype task scored by ITS OWN head and by the final "
+          "composite. The overall number is the two positives\n  weighted "
+          f"together -- {int(y_act.sum())} new_action against "
+          f"{int(y_res.sum())} reset -- so a large gain on the smaller one "
+          f"dilutes to little.")
+    print(f"\n  {'task':<34} {'own head':>12} {'composite':>12} "
+          f"{'delta':>18}")
+    for name, y_, own, keep_ in (
+            ("new_action vs same_instance", y_act, pa, sub_c),
+            ("reset vs continuous", y_res, pb, same_action)):
+        m = keep_ & np.isfinite(own) & np.isfinite(comp)
+        if m.sum() < 8 or len(set(y_[m].tolist())) < 2:
+            continue
+        gg3 = [groups[i] for i in np.where(m)[0]]
+        au_o, au_c = _auroc(y_[m], own[m]), _auroc(y_[m], comp[m])
+        d3, lo3, hi3 = paired_delta(y_[m], comp[m], own[m], gg3, a.n_boot,
+                                    a.seed)
+        print(f"  {name:<34} {au_o:>12.3f} {au_c:>12.3f}   "
+              f"{d3:+.3f} [{lo3:+.3f}, {hi3:+.3f}]")
+    print("\n  A composite well below the own head on a task means the "
+          "factorisation is right and the fixed OR is throwing the\n  branch "
+          "signal away -- a composition and calibration problem, not a "
+          "representation one. pB carries no supervision on\n  new_action "
+          "events at all, so nothing constrains what it emits there, and the "
+          "rule multiplies by it regardless.")
 
     if a.out:
         os.makedirs(os.path.dirname(os.path.abspath(a.out)) or ".",
