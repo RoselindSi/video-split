@@ -1,53 +1,58 @@
-"""Targeted audit to make candidate alignment trainable. Coverage, then sheets.
+"""The TIMING sheet, and nothing else. Sampled without looking at any peak.
 
-The count said NO-GO, and the reason matters more than the verdict. 58 ontology
-positives, 13 with timing gold, 12 ALIGNED against 1 MISALIGNED. The binding
-constraint is NOT that misaligned events are rare -- it is that 45 of the 58
-are absent from the timing gold entirely, so nothing is known about them
-either way. Those two diagnoses call for different audits, and the tolerance
-sweep settles which one this is: the misaligned count is 1 at every tolerance
-from 0.25s to 1.5s. A threshold cannot separate a population this small. The
-pool is empty, not badly cut.
+FROZEN SCOPE. This file used to emit a second sheet asking for
+instance_relation on events already resolving to EARLY / LATE / DUPLICATE, so
+that misaligned examples could be labelled. That pool came back at 8 events
+over 6 recordings and the ceiling above it is 13, so it is not worth
+annotation time and it is no longer generated. If the relation pool ever grows
+materially that is a new decision to be argued then, rather than a dormant
+code path still running on assumptions that have since been measured false.
 
-So the audit is not one sheet. Two things are missing on two disjoint
-populations, and asking for both everywhere would waste most of the work:
+WHAT THIS SHEET DECIDES. The detector's peaks land near stored segment
+boundaries LESS often than randomly shifted peaks do -- 0.54x against a
+circular-shift null, on a boundary set carrying no peak-based selection, so
+that number is clean. Against the 125 human-corrected boundaries the same
+peaks score 6.21x. Both cannot be read at face value: the audit corpus was
+itself built from peak-to-GT matching, so an event is in it partly BECAUSE a
+peak was nearby. The 6.21 is contaminated by that selection, and the
+conclusion it appears to support -- that the stored annotation times are
+systematically displaced -- is therefore supported but NOT established.
 
-    TIMING     events whose instance_relation is known and positive, with no
-               corrected boundary time. 45 of them. Existence is settled; the
-               question is only WHERE.
+What settles it is human-verified boundary times on events chosen without any
+reference to a peak. That is what these 45 events are.
 
-    RELATION   events with a corrected time that already resolves to EARLY /
-               LATE / DUPLICATE, but whose instance_relation is UNKNOWN. These
-               are where misaligned examples can come from at all -- the 13
-               events that have both are 12:1 aligned, so filling only the
-               timing sheet is very unlikely to reach 30 misaligned.
+SO THE SAMPLING MUST STAY PEAK-BLIND, and it is. The pool is defined by
+`instance_relation in POSITIVE` and `alignment == UNDECIDABLE`, both derived
+from the ontology and the timing gold; neither touches predictions.jsonl, and
+this file does not import the peak reader at all. No detector score, peak
+proximity or old timing class reaches the sheet, the sampler, or the ordering.
+Adding any of them later would silently reintroduce the exact bias the
+experiment exists to remove.
 
-SAMPLED FOR LEARNABILITY, NOT PREVALENCE. The relation sheet deliberately
-over-samples source categories enriched for mislocalisation. The resulting
-class balance therefore says nothing about how often the model mislocalises in
-the wild, and any model trained on it needs its operating point set on a
-population that was not sampled this way. That is stated here so it is not
-rediscovered from a suspiciously good number later.
+WHAT IS SHOWN: instance_relation, the candidate time, the recording, and the
+segment labels around it. Existence is settled for these events by an earlier
+careful pass, and re-asking it invites relitigating that pass, so it is shown
+rather than re-elicited -- with an explicit disagreement field, because an
+annotator who disagrees needs somewhere to say so that is NOT the timing
+column. A blank time has to mean "I could not localise it" and never "I
+dispute the relation", or the two become indistinguishable across 45 rows.
 
-WHAT EACH SHEET SHOWS AND HIDES. The timing sheet SHOWS instance_relation --
-existence is settled for those events and re-asking it would invite
-relitigation of a label that came from a different, careful pass. It still
-carries `t1_disagree_with_relation`, because an annotator who thinks the
-recorded relation is wrong needs somewhere to say so that is not the timing
-field. The relation sheet HIDES the alignment class and the corrected time,
-since those are derived from the judgement being collected.
-
-CLIPS: the sheets carry event_id and recording_id, so
-src.auditor.semantic.render_ontology_clips renders them as-is. Use a tighter
---max_span_s for these; a timing question wants a readable ruler, not a
-two-minute span.
+`cannot_localize` is a first-class answer. A transition with no single instant
+is a real observation about the video, and forcing a number would manufacture
+precisely the precision this experiment is trying to measure.
 
 Usage:
     python -m src.auditor.boundary.alignment_audit_sheet \
         --migrated data/gold/pair_schema_v2_migrated.csv \
         --gold data/gold/audit_188_gold_v2.jsonl \
         --context data/gold/audit_188_context.jsonl \
-        --report_only
+        --out data/gold/alignment_timing.csv
+
+and once it is filled, the test it exists for:
+
+    python -m src.auditor.boundary.alignment_from_peaks \
+        --predictions .../predictions.jsonl \
+        --timing_csv data/gold/alignment_timing.csv --null_shift 200
 """
 from __future__ import annotations
 
@@ -58,30 +63,21 @@ import random
 from collections import Counter, defaultdict
 
 from src.auditor.boundary.labels import (
-    TOL, MAX_RETIME_S, cand_time, recording_of, nearest_corrected, relation,
-    find_duplicates)
+    TOL, MAX_RETIME_S, cand_time, recording_of, relation, find_duplicates)
 
 POSITIVE = ("new_action", "same_action_new_instance")
-UNSET = ("UNKNOWN", "cannot_determine", "")
-MISALIGNED = ("EARLY", "LATE", "DUPLICATE")
-
-# Categories where the model produced a peak that the audit had to move or
-# reject. A candidate the pipeline got exactly right is not a source of
-# misaligned examples, so sampling uniformly would spend the budget on EXACT.
-ENRICHED = ("early", "late", "duplicate", "false_near_edge",
-            "false_mid_segment", "missed_signal_present_not_top",
-            "missed_weak_signal", "false_gap")
 
 TIMING_Q = [
     ("t1_disagree_with_relation",
      "The recorded instance_relation is shown. Leave blank if you agree. "
-     "Write what you would call it if you do not -- do NOT encode a "
+     "If you disagree, write what you would call it -- do NOT express a "
      "disagreement by leaving the time blank."),
     ("t2_boundary_time_s",
-     "The time of the boundary, in seconds. If it is a point, one number."),
+     "The time of the boundary, in seconds. One number if it is an instant. "
+     "Write `cannot_localize` if there is no single instant."),
     ("t3_interval_start_s",
-     "If the transition occupies an interval rather than an instant, its "
-     "start. Leave both interval fields blank for a point."),
+     "If the transition occupies an interval, its start. Leave both interval "
+     "fields blank for an instant."),
     ("t4_interval_end_s", "...and its end."),
     ("t5_candidate_verdict",
      "About the CANDIDATE time shown, not the boundary: keep / move / "
@@ -89,100 +85,26 @@ TIMING_Q = [
     ("t6_notes", "Anything else, including why a field was unanswerable."),
 ]
 
-RELATION_Q = [
-    ("r1_instance_relation",
-     "new_action / same_action_new_instance / same_instance / "
-     "initial_action_start / terminal_action_end / cannot_determine"),
-    ("r2_transition_shape",
-     "point / gap / gradual / overlap / not_observable / not_applicable"),
-    ("r3_why",
-     "One line: what changed, or what did not."),
-    ("r4_notes", "Anything else."),
-]
-
-
-def load(a):
-    with open(a.migrated, newline="", encoding="utf-8-sig") as f:
-        mig = {r["event_id"]: r["instance_relation"]
-               for r in csv.DictReader(f)}
-    gold = {}
-    for p in a.gold:
-        with open(p, encoding="utf-8") as f:
-            for line in f:
-                if line.strip():
-                    r = json.loads(line)
-                    gold[r["event_id"]] = r
-    ctx = {}
-    for p in a.context:
-        with open(p, encoding="utf-8") as f:
-            for line in f:
-                if line.strip():
-                    r = json.loads(line)
-                    ctx[r["event_id"]] = r
-    return mig, gold, ctx
-
 
 def build(mig, gold, tol, max_retime):
     dup = find_duplicates(gold, {}, tol)
     rows = {}
     for eid in set(mig) | set(gold):
         g = gold.get(eid)
-        rel = mig.get(eid, "")
-        cls, off, why = relation(eid, g, dup, tol, max_retime)
+        cls, _off, _why = relation(eid, g, dup, tol, max_retime)
         rows[eid] = {
-            "event_id": eid, "instance_relation": rel, "alignment": cls,
-            "offset_s": off, "recording_id": recording_of(eid, g),
+            "event_id": eid, "instance_relation": mig.get(eid, ""),
+            "alignment": cls, "recording_id": recording_of(eid, g),
             "candidate_time": cand_time(eid),
-            "corrected_time": nearest_corrected(eid, g) if g else None,
-            "source_category": (g or {}).get("source_category", ""),
             "split": (g or {}).get("split", ""), "in_gold": g is not None}
     return rows
 
 
-def coverage(rows):
-    """The 2x2 that says which audit is needed, and how much of each."""
-    def cell(has_rel, has_time):
-        return [r for r in rows.values()
-                if (r["instance_relation"] not in UNSET) == has_rel
-                and (r["alignment"] not in ("UNDECIDABLE",)) == has_time]
-    print(f"\n{'=' * 74}\nWHAT IS MISSING, AND ON WHICH EVENTS\n{'=' * 74}")
-    print(f"  {'':<34}{'timing usable':>16}{'timing missing':>17}")
-    for has_rel, lab in ((True, "instance_relation known"),
-                         (False, "instance_relation UNKNOWN")):
-        a_, b_ = cell(has_rel, True), cell(has_rel, False)
-        print(f"  {lab:<34}{len(a_):>16}{len(b_):>17}")
-    print("\n  the trainable cell is `relation known + timing usable`, and it "
-          "is only useful\n  where the relation is POSITIVE -- alignment is "
-          "not a question about a non-boundary.")
-
-    pos_no_time = [r for r in rows.values()
-                   if r["instance_relation"] in POSITIVE
-                   and r["alignment"] == "UNDECIDABLE"]
-    mis_no_rel = [r for r in rows.values()
-                  if r["alignment"] in MISALIGNED
-                  and r["instance_relation"] in UNSET]
-    ali_no_rel = [r for r in rows.values()
-                  if r["alignment"] == "EXACT"
-                  and r["instance_relation"] in UNSET]
-    print(f"\n  TIMING pool   positive relation, no usable time : "
-          f"{len(pos_no_time):>4} over "
-          f"{len({r['recording_id'] for r in pos_no_time})} recordings")
-    print(f"  RELATION pool misaligned already, relation UNKNOWN: "
-          f"{len(mis_no_rel):>4} over "
-          f"{len({r['recording_id'] for r in mis_no_rel})} recordings")
-    print(f"                aligned already,    relation UNKNOWN: "
-          f"{len(ali_no_rel):>4} over "
-          f"{len({r['recording_id'] for r in ali_no_rel})} recordings")
-    if mis_no_rel:
-        print("\n  misaligned-pool source categories:")
-        for k, v in Counter(r["source_category"]
-                            for r in mis_no_rel).most_common(8):
-            print(f"    {v:>4}  {k or '(none)'}")
-    return pos_no_time, mis_no_rel, ali_no_rel
-
-
 def sample(pool, n, seed, per_recording=2):
-    """Cap per recording so a grouped split still has groups to hold out."""
+    """Round-robin over recordings, capped, so a grouped split has groups.
+
+    Order inside a recording is a shuffle on `seed` and nothing else. No
+    score, no peak distance and no source category enters here."""
     rng = random.Random(seed)
     by = defaultdict(list)
     for r in pool:
@@ -198,28 +120,6 @@ def sample(pool, n, seed, per_recording=2):
     return out
 
 
-def write_sheet(path, rows, ctx, questions, shown_extra=()):
-    shown = (["event_id", "recording_id", "candidate_time_s"]
-             + list(shown_extra)
-             + ["previous_segment_label", "containing_segment_label",
-                "next_segment_label"])
-    with open(path, "w", newline="", encoding="utf-8-sig") as f:
-        w = csv.writer(f)
-        w.writerow(shown + [q for q, _ in questions])
-        w.writerow([""] * len(shown) + [h for _, h in questions])
-        for r in rows:
-            c = ctx.get(r["event_id"], {})
-            w.writerow(
-                [r["event_id"], r["recording_id"], r["candidate_time"]]
-                + [r.get(k, "") for k in shown_extra]
-                + [c.get("prev_segment_label")
-                   or c.get("nearest_previous_segment_label") or "",
-                   c.get("containing_segment_label") or "",
-                   c.get("next_segment_label")
-                   or c.get("nearest_next_segment_label") or ""]
-                + [""] * len(questions))
-
-
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__,
@@ -230,71 +130,86 @@ def main():
     ap.add_argument("--tol", type=float, default=TOL)
     ap.add_argument("--max_retime_s", type=float, default=MAX_RETIME_S)
     ap.add_argument("--n_timing", type=int, default=45)
-    ap.add_argument("--n_relation", type=int, default=60)
     ap.add_argument("--per_recording", type=int, default=2)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--report_only", action="store_true")
-    ap.add_argument("--timing_out", default="data/gold/alignment_timing.csv")
-    ap.add_argument("--relation_out",
-                    default="data/gold/alignment_relation.csv")
+    ap.add_argument("--out", default="data/gold/alignment_timing.csv")
     a = ap.parse_args()
-    # argparse APPENDS to an action="append" default rather than
-    # replacing it, so passing --gold once would silently load the
-    # default file as well. Defaults are applied here instead.
+    # argparse APPENDS to an action="append" default rather than replacing it
     a.gold = a.gold or ["data/gold/audit_188_gold_v2.jsonl"]
     a.context = a.context or ["data/gold/audit_188_context.jsonl"]
 
-    mig, gold, ctx = load(a)
+    with open(a.migrated, newline="", encoding="utf-8-sig") as f:
+        mig = {r["event_id"]: r["instance_relation"]
+               for r in csv.DictReader(f)}
+    gold, ctx = {}, {}
+    for p in a.gold:
+        for line in open(p, encoding="utf-8"):
+            if line.strip():
+                r = json.loads(line)
+                gold[r["event_id"]] = r
+    for p in a.context:
+        for line in open(p, encoding="utf-8"):
+            if line.strip():
+                r = json.loads(line)
+                ctx[r["event_id"]] = r
+
     rows = build(mig, gold, a.tol, a.max_retime_s)
     print(f"{len(mig)} migrated, {len(gold)} timing gold, "
           f"{len(rows)} events in the union")
-    pos_no_time, mis_no_rel, ali_no_rel = coverage(rows)
+
+    pool = [r for r in rows.values()
+            if r["instance_relation"] in POSITIVE
+            and r["alignment"] == "UNDECIDABLE"]
+    print(f"\nTIMING pool -- ontology positive, candidate timing UNDECIDABLE:")
+    print(f"  {len(pool)} events over "
+          f"{len({r['recording_id'] for r in pool})} recordings")
+    for k, v in Counter(r["instance_relation"] for r in pool).most_common():
+        print(f"    {k:<28} {v:>4}")
+    print(f"\n  the pool is defined by instance_relation and the timing gold. "
+          f"No peak, score or\n  source category enters the definition, the "
+          f"sampler or the row order -- that is the\n  experiment, not a "
+          f"convenience.")
 
     if a.report_only:
-        print("\n--report_only: no sheets written. Read the two pool sizes "
-              "above before\nchoosing --n_timing and --n_relation; a pool "
-              "smaller than the target is the\nanswer to a different "
-              "question than a pool that is large but unlabelled.")
+        print("\n--report_only: nothing written.")
         return
 
-    t_rows = sample(pos_no_time, a.n_timing, a.seed, a.per_recording)
-    # keep the misaligned pool first, then top up with aligned so the sheet is
-    # not obviously "these are the wrong ones" to the annotator
-    r_pool = mis_no_rel + [r for r in ali_no_rel
-                           if r["source_category"] in ENRICHED]
-    r_rows = sample(r_pool, a.n_relation, a.seed, a.per_recording)
-    random.Random(a.seed).shuffle(r_rows)
+    picked = sample(pool, a.n_timing, a.seed, a.per_recording)
+    random.Random(a.seed).shuffle(picked)
 
-    write_sheet(a.timing_out, t_rows, ctx, TIMING_Q,
-                shown_extra=("instance_relation",))
-    write_sheet(a.relation_out, r_rows, ctx, RELATION_Q)
+    shown = ["event_id", "recording_id", "candidate_time_s",
+             "instance_relation", "previous_segment_label",
+             "containing_segment_label", "next_segment_label"]
+    with open(a.out, "w", newline="", encoding="utf-8-sig") as f:
+        w = csv.writer(f)
+        w.writerow(shown + [q for q, _ in TIMING_Q])
+        w.writerow([""] * len(shown) + [h for _, h in TIMING_Q])
+        for r in picked:
+            c = ctx.get(r["event_id"], {})
+            w.writerow([
+                r["event_id"], r["recording_id"], r["candidate_time"],
+                r["instance_relation"],
+                c.get("prev_segment_label")
+                or c.get("nearest_previous_segment_label") or "",
+                c.get("containing_segment_label") or "",
+                c.get("next_segment_label")
+                or c.get("nearest_next_segment_label") or ""]
+                + [""] * len(TIMING_Q))
 
-    print(f"\nTIMING sheet   {len(t_rows):>3} rows over "
-          f"{len({r['recording_id'] for r in t_rows})} recordings "
-          f"-> {a.timing_out}")
-    print(f"  shows instance_relation; existence is settled for these and "
-          f"the question is only WHERE")
-    print(f"RELATION sheet {len(r_rows):>3} rows over "
-          f"{len({r['recording_id'] for r in r_rows})} recordings "
-          f"-> {a.relation_out}")
-    print(f"  hides the alignment class and the corrected time -- both are "
-          f"derived from what is\n  being collected. Of these, "
-          f"{sum(1 for r in r_rows if r['alignment'] in MISALIGNED)} are "
-          f"already misaligned and "
-          f"{sum(1 for r in r_rows if r['alignment'] == 'EXACT')} aligned.")
-
-    print(f"\n  CEILING IF EVERY ROW COMES BACK USABLE: the timing sheet can "
-          f"add at most\n  {len(t_rows)} events to the 13 that exist. Whether "
-          f"that reaches 30 misaligned depends\n  entirely on the rate, and "
-          f"the 13 observed so far are 12:1 aligned. If the timing\n  sheet "
-          f"returns the same ratio it yields about "
-          f"{len(t_rows) // 13} more misaligned, not 29 --\n  which is why "
-          f"the relation sheet exists and why it is sampled from categories\n"
-          f"  where the model already had to be corrected.")
-    print(f"\n  render clips with:\n    python -m "
-          f"src.auditor.semantic.render_ontology_clips --sheet "
-          f"{a.timing_out} \\\n      --data ... --out_dir ... "
-          f"--max_span_s 30")
+    print(f"\n{len(picked)} rows over "
+          f"{len({r['recording_id'] for r in picked})} recordings -> {a.out}")
+    print(f"  hidden: detector score, peak proximity, old timing class and "
+          f"every corrected_* field.\n  shown: instance_relation, because "
+          f"existence is settled and re-asking it would\n  relitigate an "
+          f"earlier pass.")
+    print(f"\n  render clips:\n    python -m "
+          f"src.auditor.semantic.render_ontology_clips --sheet {a.out} \\\n"
+          f"      --data ... --out_dir ... --max_span_s 30")
+    print(f"  then, filled:\n    python -m "
+          f"src.auditor.boundary.alignment_from_peaks \\\n"
+          f"      --predictions .../predictions.jsonl --timing_csv {a.out} "
+          f"--null_shift 200")
 
 
 if __name__ == "__main__":

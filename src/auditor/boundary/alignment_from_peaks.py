@@ -187,6 +187,11 @@ def main():
                     help="permutations of the CHANCE-ASSOCIATION null: peak "
                          "times circularly shifted within each recording. 0 "
                          "disables it")
+    ap.add_argument("--timing_csv",
+                    help="a FILLED alignment_timing.csv. Its boundary times "
+                         "become a third source, `audit_timing`, whose events "
+                         "were sampled without reference to any peak -- the "
+                         "only source in this file free of that selection")
     ap.add_argument("--boundary_mode", default="edges",
                     choices=["edges", "gap_midpoint"],
                     help="`edges` treats every segment start and end as a "
@@ -237,7 +242,36 @@ def main():
           f"{sorted(len(v) for v in peaks.values())[len(peaks)//2]}")
 
     bounds, prov = corrected_boundaries(gold, mig, a.positives_only)
-    source = {rid: "audited" for rid in bounds}
+    # (recording, time) -> source. A per-recording map cannot express a
+    # recording that contributes boundaries from two sources, and every
+    # recording here does.
+    bsource = {k: "audited" for k in prov}
+
+    if a.timing_csv:
+        n_t = n_skip = 0
+        with open(a.timing_csv, newline="", encoding="utf-8-sig") as f:
+            for r in csv.DictReader(f):
+                rid = (r.get("recording_id") or "").strip()
+                raw = (r.get("t2_boundary_time_s") or "").strip()
+                if not rid or not raw:
+                    continue
+                if raw.lower().startswith("cannot"):
+                    n_skip += 1   # a real answer, just not a time
+                    continue
+                try:
+                    t = round(float(raw), 1)
+                except ValueError:
+                    n_skip += 1
+                    continue
+                bounds[rid].add(t)
+                bsource[(rid, t)] = "audit_timing"
+                n_t += 1
+        print(f"\n+ {n_t} boundary times from {a.timing_csv} "
+              f"({n_skip} rows gave no usable time)")
+        print(f"  these events were sampled on instance_relation alone, with "
+              f"no peak involved,\n  so this is the one source whose null "
+              f"ratio is free of the selection that\n  contaminates "
+              f"`audited`.")
     n_b = sum(len(v) for v in bounds.values())
     print(f"{n_b} distinct corrected boundaries over {len(bounds)} recordings"
           + ("  (ontology positives only)" if a.positives_only else ""))
@@ -322,8 +356,7 @@ def main():
         for rid, ts in gtb.items():
             for t in ts:
                 if t not in bounds.get(rid, set()):
-                    bounds[rid].add(t)
-                    source.setdefault(rid, "gt_annotation")
+                    bounds[rid].add(t)   # bsource defaults to gt_annotation
         print(f"  combined pool: {sum(len(v) for v in bounds.values())} "
               f"boundaries over {len(bounds)} recordings. Rows carry "
               f"`boundary_source`;\n  the audited ones are the clean "
@@ -348,9 +381,8 @@ def main():
                                  "peak_time": t, "offset_s": round(bt - t, 3),
                                  "score": s, "label": cls,
                                  "rank_at_boundary": i,
-                                 "boundary_source": (
-                                     "audited" if (rid, bt) in prov
-                                     else "gt_annotation"),
+                                 "boundary_source": bsource.get(
+                                     (rid, bt), "gt_annotation"),
                                  "relation": sorted(
                                      {r for _, r in prov.get((rid, bt), [])
                                       if r})})
@@ -377,7 +409,7 @@ def main():
     print(f"\nby boundary_source -- these are not one population:")
     print(f"  {'source':<16}{'ALIGNED':>9}{'EARLY':>8}{'LATE':>7}"
           f"{'DUP':>7}{'<=0.5s of nearest':>20}")
-    for src in ("audited", "gt_annotation"):
+    for src in ("audit_timing", "audited", "gt_annotation"):
         sel = [r for r in rows if r["boundary_source"] == src]
         if not sel:
             continue
@@ -493,11 +525,11 @@ def main():
         # the LABELS. If they lose against both, it is in the detector or in
         # the peak extraction. Those have nothing in common as next steps, and
         # no further hypothesis from me discriminates them -- this does.
-        def peak_centric_sub(pk_by_rec, tol, keep):
+        def peak_centric_sub(pk_by_rec, tol, src):
             al = mis = 0
             for rid, pk in pk_by_rec.items():
                 bs = sorted(b for b in bounds.get(rid, ())
-                            if ((rid, b) in prov) == keep)
+                            if bsource.get((rid, b), "gt_annotation") == src)
                 for t, _ in pk:
                     if not bs:
                         continue
@@ -510,9 +542,18 @@ def main():
 
         print(f"\n  by boundary source, against the SAME shift null:")
         print(f"  {'':<30}{'observed':>10}{'null mean':>12}{'ratio':>9}")
-        for keep, lab in ((True, "audited (human-verified)"),
-                          (False, "gt_annotation (stored)")):
-            o = peak_centric_sub(peaks, a.tol, keep)
+        srcs = [("audited", "audited (peak-selected)"),
+                ("gt_annotation", "gt_annotation (stored)")]
+        if a.timing_csv:
+            srcs.insert(0, ("audit_timing", "audit_timing (PEAK-BLIND)"))
+        # gt_annotation is the DEFAULT and never appears in bsource, so
+        # testing bsource.values() silently dropped its row
+        present = {bsource.get((rid, b), "gt_annotation")
+                   for rid, ts in bounds.items() for b in ts}
+        for src, lab in srcs:
+            if src not in present:
+                continue
+            o = peak_centric_sub(peaks, a.tol, src)
             rng4 = _r.Random(0)
             acc = [0.0, 0.0]
             reps = max(1, a.null_shift // 5)
@@ -522,7 +563,7 @@ def main():
                     d = rng4.uniform(0, span[rid] or 1.0)
                     sh[rid] = [((t + d) % (span[rid] or 1.0), s_)
                                for t, s_ in pk]
-                r_ = peak_centric_sub(sh, a.tol, keep)
+                r_ = peak_centric_sub(sh, a.tol, src)
                 acc[0] += r_[0]; acc[1] += r_[1]
             mn = acc[0] / reps
             print(f"  {lab:<30}{o[0]:>10}{mn:>12.1f}"
