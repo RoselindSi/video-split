@@ -64,7 +64,27 @@ from src.auditor.semantic.render_ontology_clips import get_segments
 POSITIVE = ("new_action", "same_action_new_instance")
 
 
-def gt_boundaries(paths, keep_recordings=None):
+def segment_lists(paths, keep_recordings=None):
+    """recording -> sorted [[label, start, end]], for the gap analysis."""
+    out = {}
+    for p in paths:
+        if not os.path.exists(p):
+            continue
+        blob = json.load(open(p, encoding="utf-8"))
+        if isinstance(blob, dict):
+            blob = blob.get("recordings") or blob.get("data") or []
+        for r in blob:
+            rid = r.get("recording_id")
+            if not rid or (keep_recordings and rid not in keep_recordings):
+                continue
+            segs, _ = get_segments(r)
+            if segs:
+                out[rid] = sorted(([sg[0], float(sg[1]), float(sg[2])]
+                                   for sg in segs), key=lambda x: x[1])
+    return out
+
+
+def gt_boundaries(paths, keep_recordings=None, mode="edges"):
     """Segment starts and ends as boundaries -- the large, NOISY source.
 
     125 audited boundaries is the whole clean supply and it is not enough. The
@@ -90,9 +110,27 @@ def gt_boundaries(paths, keep_recordings=None):
             if not rid or (keep_recordings and rid not in keep_recordings):
                 continue
             segs, _ = get_segments(r)
-            for sg in segs:
-                out[rid].add(round(float(sg[1]), 1))
-                out[rid].add(round(float(sg[2]), 1))
+            segs = sorted(([sg[0], float(sg[1]), float(sg[2])]
+                           for sg in segs), key=lambda x: x[1])
+            if mode == "edges":
+                for _l, st, en in segs:
+                    out[rid].add(round(st, 1))
+                    out[rid].add(round(en, 1))
+            else:
+                # gap_midpoint: segments are NOT contiguous in this dataset.
+                # Between the end of one labelled action and the start of the
+                # next there is unlabelled time, and the transition is inside
+                # it. Emitting both edges puts two boundaries around the
+                # transition and none at it.
+                for i, (_l, st, en) in enumerate(segs):
+                    if i + 1 < len(segs):
+                        nxt = segs[i + 1][1]
+                        out[rid].add(round((en + nxt) / 2.0, 1)
+                                     if nxt > en else round(en, 1))
+                    else:
+                        out[rid].add(round(en, 1))
+                if segs:
+                    out[rid].add(round(segs[0][1], 1))
     return out
 
 
@@ -149,6 +187,11 @@ def main():
                     help="permutations of the CHANCE-ASSOCIATION null: peak "
                          "times circularly shifted within each recording. 0 "
                          "disables it")
+    ap.add_argument("--boundary_mode", default="edges",
+                    choices=["edges", "gap_midpoint"],
+                    help="`edges` treats every segment start and end as a "
+                         "boundary; `gap_midpoint` puts one boundary in the "
+                         "middle of the unlabelled time between two segments")
     ap.add_argument("--sweep", default="0.25,0.5,1.0")
     ap.add_argument("--out")
     a = ap.parse_args()
@@ -219,7 +262,33 @@ def main():
           f"{n_b - n_no_rec - n_no_peak:>4} boundaries")
 
     if a.recseg:
-        gtb = gt_boundaries(a.recseg, keep_recordings=set(peaks))
+        # THE GAPS. A hole at zero with symmetric enrichment at +/-1s is what
+        # you get when the thing being detected sits BETWEEN the two
+        # boundaries rather than at either -- segments here are not
+        # contiguous, so the end of one action and the start of the next
+        # bracket an unlabelled interval, and a peak in the middle of it is
+        # about a gap-width/2 from both edges. That is a property of how the
+        # boundary set was derived, not of the detector.
+        seglists = segment_lists(a.recseg, keep_recordings=set(peaks))
+        gaps = [(sg[i][2], sg[i + 1][1]) for sg in seglists.values()
+                for i in range(len(sg) - 1) if sg[i + 1][1] > sg[i][2]]
+        if seglists:
+            n_seg = sum(len(v) for v in seglists.values())
+            w = sorted(b - a_ for a_, b in gaps)
+            print(f"\n  segment structure: {n_seg} segments, {len(gaps)} "
+                  f"non-contiguous joins "
+                  f"({100 * len(gaps) / max(n_seg - len(seglists), 1):.0f}% "
+                  f"of joins)")
+            if w:
+                print(f"    gap width  median {w[len(w)//2]:.2f}s   "
+                      f"p25 {w[len(w)//4]:.2f}s   p75 {w[3*len(w)//4]:.2f}s")
+                print(f"    half-width median {w[len(w)//2]/2:.2f}s -- compare "
+                      f"this to where the signed-offset\n    mass sits. If "
+                      f"they match, `edges` is putting two boundaries around "
+                      f"the\n    transition and none at it; rerun with "
+                      f"--boundary_mode gap_midpoint.")
+        gtb = gt_boundaries(a.recseg, keep_recordings=set(peaks),
+                            mode=a.boundary_mode)
         n_g = sum(len(v) for v in gtb.values())
         # UNITS FIRST. "the detector avoids GT boundaries" and "the two time
         # bases disagree" produce the same below-chance alignment, and the
