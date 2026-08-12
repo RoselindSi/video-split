@@ -342,6 +342,36 @@ def main():
                          "mis_recordings": mr}
 
     # ------------------------------------------------- chance association
+    #
+    # TWO STATISTICS, AND THE FIRST ONE ANSWERS THE WRONG QUESTION.
+    #
+    # Counting BOUNDARIES with a peak nearby is recall -- "was this boundary
+    # detected". It is also density-inflated under the null: a shifted peak
+    # that lands in a cluster of boundaries scores every one of them at once,
+    # and random placement samples dense regions more evenly than a detector
+    # does, so the null can exceed the observation without the detector doing
+    # anything wrong. That is most of what a below-1.0 ALIGNED ratio means.
+    #
+    # Counting PEAKS with a boundary nearby is the alignment question, and it
+    # is the one the dataset rows are about: each row IS a peak. One peak
+    # contributes one count whatever the local boundary density.
+    def peak_centric(pk_by_rec, tol):
+        al = mis = un = 0
+        for rid, pk in pk_by_rec.items():
+            bs = sorted(bounds.get(rid, ()))
+            for t, _ in pk:
+                if not bs:
+                    un += 1
+                    continue
+                d = min(abs(b - t) for b in bs)
+                if d <= tol:
+                    al += 1
+                elif d <= a.max_assoc_s:
+                    mis += 1
+                else:
+                    un += 1
+        return al, mis, un
+
     if a.null_shift:
         import random as _r
         rng = _r.Random(0)
@@ -376,6 +406,30 @@ def main():
         obs_mis = sum(real.get(k, 0) for k in ("EARLY", "LATE", "DUPLICATE"))
         print(f"  {'MISALIGNED':<14}{obs_mis:>10}{m_mis:>12.1f}"
               f"{obs_mis / max(m_mis, 1e-9):>9.2f}")
+        # the peak-centric null, on the same shifts
+        rng2 = _r.Random(0)
+        p_obs = peak_centric(peaks, a.tol)
+        p_null = []
+        for _ in range(a.null_shift):
+            sh = {}
+            for rid, pk in peaks.items():
+                d = rng2.uniform(0, span[rid] or 1.0)
+                sh[rid] = [((t + d) % (span[rid] or 1.0), s_) for t, s_ in pk]
+            p_null.append(peak_centric(sh, a.tol))
+        m = [sum(x[i] for x in p_null) / len(p_null) for i in range(3)]
+        print(f"\n  PEAK-CENTRIC -- the statistic the dataset rows actually "
+              f"are:")
+        print(f"  {'':<28}{'observed':>10}{'null mean':>12}{'ratio':>9}")
+        for i, lab in enumerate(("peak within tol of a boundary",
+                                 "peak within assoc, not tol",
+                                 "peak near no boundary")):
+            print(f"  {lab:<28}{p_obs[i]:>10}{m[i]:>12.1f}"
+                  f"{p_obs[i] / max(m[i], 1e-9):>9.2f}")
+        print(f"\n  This is the arm to read. The boundary-centric table above "
+              f"is recall and is\n  inflated under the null by boundary "
+              f"density -- one shifted peak landing in a\n  cluster scores "
+              f"every boundary in it.")
+
         print(f"\n  A MISALIGNED ratio near 1.0 means the association is "
               f"chance: at this boundary\n  density a peak lands within "
               f"{a.max_assoc_s}s of SOME boundary whether or not it detected\n"
