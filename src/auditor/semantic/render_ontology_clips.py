@@ -211,6 +211,119 @@ def span_for(segs, t, max_span):
     return lo, hi, (prev, contain, nxt), cut
 
 
+def have_filters(ffmpeg_bin):
+    """Which of the filters this file wants does the local ffmpeg have?
+
+    drawtext needs libfreetype at build time and this server's ffmpeg was
+    built without it, so the label overlay -- the whole point of the clip --
+    silently became `Filter not found` on all 48 events. It is checked once
+    and the banner path is used instead."""
+    try:
+        out = subprocess.run([ffmpeg_bin, "-hide_banner", "-filters"],
+                             capture_output=True, text=True).stdout
+    except (OSError, FileNotFoundError):
+        return set()
+    return {n for n in ("drawtext", "drawbox", "overlay") if f" {n} " in out}
+
+
+def _font(size):
+    """A real TTF. PIL's default bitmap font is unreadable at video size, and
+    matplotlib ships DejaVu, which is already a dependency here."""
+    from PIL import ImageFont
+    try:
+        from matplotlib import font_manager
+        return ImageFont.truetype(
+            font_manager.findfont(font_manager.FontProperties(
+                family="DejaVu Sans")), size)
+    except Exception:
+        return ImageFont.load_default()
+
+
+def banner_png(text, width, out_path, size=30, pad=10):
+    """The segment label as an image, so ffmpeg only has to composite it."""
+    from PIL import Image, ImageDraw
+    f = _font(size)
+    tmp = ImageDraw.Draw(Image.new("RGB", (1, 1)))
+    words, lines, cur = str(text).split(), [], ""
+    for w in words:
+        trial = (cur + " " + w).strip()
+        if tmp.textlength(trial, font=f) > width - 2 * pad and cur:
+            lines.append(cur)
+            cur = w
+        else:
+            cur = trial
+    lines.append(cur)
+    h = pad * 2 + int(size * 1.25) * len(lines)
+    im = Image.new("RGBA", (width, h), (0, 0, 0, 165))
+    d = ImageDraw.Draw(im)
+    for i, ln in enumerate(lines):
+        d.text((pad, pad + i * int(size * 1.25)), ln, font=f,
+               fill=(255, 255, 255, 255))
+    im.save(out_path)
+    return h
+
+
+def video_width(video, ffmpeg_bin):
+    probe = (ffmpeg_bin.replace("ffmpeg", "ffprobe")
+             if "ffmpeg" in ffmpeg_bin else "ffprobe")
+    try:
+        r = subprocess.run(
+            [probe, "-v", "error", "-select_streams", "v:0", "-show_entries",
+             "stream=width", "-of", "csv=p=0", video],
+            capture_output=True, text=True)
+        return int(r.stdout.strip().split(",")[0])
+    except Exception:
+        return 1280
+
+
+def build_banner_cmd(video, segs, lo, hi, t, cut, out_path, tmp_dir,
+                     ffmpeg_bin, filters):
+    """The drawtext-free path: one PNG per segment, composited by `overlay`.
+
+    Keeps the property the artifact exists for -- the label CHANGES as the
+    clip crosses a boundary, so two neighbours carrying the same words read
+    as the same words on screen."""
+    from PIL import Image, ImageDraw
+    w = video_width(video, ffmpeg_bin)
+    dur = hi - lo
+    ins, chains, prev = [], [], "0:v"
+    for i, sg in enumerate(sorted(segs, key=lambda x: float(x[1]))):
+        a = max(float(sg[1]), lo) - lo
+        b = min(float(sg[2]), hi) - lo
+        if b <= 0 or a >= dur:
+            continue
+        txt = f"{sg[0]}    [{float(sg[1]):.1f}-{float(sg[2]):.1f}s]"
+        png = os.path.join(tmp_dir, f"_banner{i}.png")
+        banner_png(txt, w - 20, png)
+        ins += ["-loop", "1", "-i", png]
+        nxt = f"v{len(chains)}"
+        chains.append(f"[{prev}][{len(chains)+1}:v]overlay=10:10:"
+                      f"enable='between(t,{a:.2f},{b:.2f})'[{nxt}]")
+        prev = nxt
+    # candidate marker and the truncation note, both font-free
+    foot = Image.new("RGBA", (w - 20, 44), (0, 0, 0, 165))
+    ImageDraw.Draw(foot).text(
+        (10, 8), f"candidate t={t:.1f}s" + ("   SPAN TRUNCATED" if cut else ""),
+        font=_font(26), fill=(255, 210, 0, 255))
+    fp = os.path.join(tmp_dir, "_foot.png")
+    foot.save(fp)
+    ins += ["-loop", "1", "-i", fp]
+    nxt = f"v{len(chains)}"
+    chains.append(f"[{prev}][{len(chains)+1}:v]overlay=10:main_h-54[{nxt}]")
+    prev = nxt
+    if "drawbox" in filters:
+        chains.append(f"[{prev}]drawbox=x=0:y=0:w=iw:h=ih:color=red@0.8:t=12:"
+                      f"enable='between(t,{max(0.0, t - lo - 0.2):.2f},"
+                      f"{t - lo + 0.2:.2f})'[vout]")
+    else:
+        chains.append(f"[{prev}]null[vout]")
+    return ([ffmpeg_bin, "-y", "-loglevel", "error",
+             "-ss", f"{lo:.2f}", "-t", f"{dur:.2f}", "-i", video] + ins
+            + ["-filter_complex", ";".join(chains), "-map", "[vout]",
+               "-t", f"{dur:.2f}", "-an", "-c:v", "libx264",
+               "-preset", "veryfast", "-pix_fmt", "yuv420p", out_path])
+
+
 def build_filter(segs, lo, hi, t, cut, font_h=28):
     """drawtext per segment, enabled over that segment's slice of the clip."""
     f = []
@@ -300,6 +413,15 @@ def main():
     os.makedirs(a.out_dir, exist_ok=True)
     with open(a.sheet, newline="", encoding="utf-8-sig") as f:
         rows = [r for r in csv.DictReader(f) if r.get("recording_id")]
+    filters = have_filters(a.ffmpeg_bin)
+    print(f"ffmpeg filters available: {sorted(filters)}"
+          + ("" if filters else f"  -- is {a.ffmpeg_bin} on PATH?"))
+    if "drawtext" not in filters:
+        print("  drawtext missing (ffmpeg built without libfreetype); "
+              "labels will be composited as PNG banners instead")
+    if "overlay" not in filters and "drawtext" not in filters:
+        print("  !! neither drawtext nor overlay is available; the clip "
+              "cannot carry labels at all. The contact sheet still can.")
     recs = load_recordings(a.data)
     print(f"{len(rows)} sheet rows; {len(recs)} recordings loaded")
 
@@ -351,10 +473,15 @@ def main():
         keep = [s for s in segs
                 if float(s[2]) >= lo and float(s[1]) <= hi]
         mp4 = os.path.join(a.out_dir, f"{eid}_span.mp4")
-        cmd = [a.ffmpeg_bin, "-y", "-loglevel", "error",
-               "-ss", f"{lo:.2f}", "-i", video, "-t", f"{hi - lo:.2f}",
-               "-vf", build_filter(keep, lo, hi, t, cut),
-               "-an", "-c:v", "libx264", "-preset", "veryfast", mp4]
+        if "drawtext" in filters:
+            cmd = [a.ffmpeg_bin, "-y", "-loglevel", "error",
+                   "-ss", f"{lo:.2f}", "-i", video, "-t", f"{hi - lo:.2f}",
+                   "-vf", build_filter(keep, lo, hi, t, cut),
+                   "-an", "-c:v", "libx264", "-preset", "veryfast",
+                   "-pix_fmt", "yuv420p", mp4]
+        else:
+            cmd = build_banner_cmd(video, keep, lo, hi, t, cut, mp4,
+                                   a.out_dir, a.ffmpeg_bin, filters)
         rc = subprocess.run(cmd, capture_output=True, text=True)
         if rc.returncode != 0:
             miss["ffmpeg failed"] += 1
