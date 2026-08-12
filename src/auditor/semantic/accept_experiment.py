@@ -158,11 +158,13 @@ def main():
     # --------------------------------------------------------------- features
     torch.manual_seed(a.seed)
     np.random.seed(a.seed)
-    gc, lc = load_caches(a.feat_cache), load_caches(a.local_cache)
+    # not `gc`: that shadows the stdlib module, and this file calls
+    # gc.collect() between seeds
+    gcache, lcache = load_caches(a.feat_cache), load_caches(a.local_cache)
     src = [{"event_id": e["event_id"], "recording_id": e["recording_id"],
             "candidate_time": _t(e["event_id"])} for e in lab]
     src = [s for s in src if s["candidate_time"] is not None]
-    ev = build_events(src, gc, lc, a.half_s, a.n_frames)
+    ev = build_events(src, gcache, lcache, a.half_s, a.n_frames)
     for e in ev:
         e["_y"] = float(by_id[e["event_id"]]["auto_accept_target"])
     y = np.array([e["_y"] for e in ev], float)

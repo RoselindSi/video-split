@@ -212,8 +212,11 @@ def main():
 
     torch.manual_seed(a.seed)
     np.random.seed(a.seed)
-    gc, lc = load_caches(a.feat_cache), load_caches(a.local_cache)
-    ev = build_events([lab[e] for e in use], gc, lc, a.half_s, a.n_frames)
+    # not `gc`: that shadows the stdlib module, and this file calls
+    # gc.collect() between seeds
+    gcache, lcache = load_caches(a.feat_cache), load_caches(a.local_cache)
+    ev = build_events([lab[e] for e in use], gcache, lcache, a.half_s,
+                      a.n_frames)
     if not ev:
         raise SystemExit("no event has sequences; check the cache paths")
     for e in ev:

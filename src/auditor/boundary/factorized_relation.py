@@ -152,8 +152,11 @@ def main():
     use = [e for e in lab if rel.get(e) in (NEW, SANI, SAME)]
     torch.manual_seed(a.seed)
     np.random.seed(a.seed)
-    gc, lc = load_caches(a.feat_cache), load_caches(a.local_cache)
-    ev = build_events([lab[e] for e in use], gc, lc, a.half_s, a.n_frames)
+    # not `gc`: that shadows the stdlib module, and this file calls
+    # gc.collect() between seeds
+    gcache, lcache = load_caches(a.feat_cache), load_caches(a.local_cache)
+    ev = build_events([lab[e] for e in use], gcache, lcache, a.half_s,
+                      a.n_frames)
     for e in ev:
         e["_rel"] = rel[e["event_id"]]
     groups = [e["recording_id"] for e in ev]
