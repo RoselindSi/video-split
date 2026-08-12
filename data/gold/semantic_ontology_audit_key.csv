@@ -1,0 +1,49 @@
+﻿event_id,old_status,has_containing_label,neighbour_labels_near_duplicate,label_completeness,label_granularity,label_support,corrected_primary_verb,corrected_object,corrected_secondary_verbs
+recording_000343_false_mid_segment_t547.0,correct_but_oversegmented,True,False,complete,too_fine,supported,coat,pan,none
+recording_000406_false_mid_segment_t29.5,correct_but_oversegmented,True,False,complete,too_fine,supported,cover,plastic wrap,secure; seal
+recording_000213_false_gap_t242.5,correct_but_coarse,False,False,missing_secondary,too_coarse,supported,rinse,sink strainer,remove; reach faucet
+recording_000061_exact_t590.0,uncertain,False,False,unresolved,unresolved,uncertain,,,
+recording_000388_false_mid_segment_t67.5,correct_but_coarse,True,False,missing_secondary,too_coarse,supported,cover,plastic wrap,discard; remove
+recording_000327_false_near_edge_t386.5,uncertain,True,True,unresolved,unresolved,uncertain,coat,pan,none
+recording_000406_missed_weak_signal_t556.6,correct_but_oversegmented,False,False,complete,too_fine,supported,unroll,plastic wrap,retrieve
+recording_000102_missed_weak_signal_t95.0,incorrect,False,True,incorrect,not_applicable,contradicted,wipe,tissue / paper sheet,change from lateral strokes to small circles
+recording_000250_exact_t629.5,partially_correct,False,False,partially_correct,mixed,supported,seal,keychain,insert
+recording_000388_missed_signal_present_not_top_t601.8,incorrect,False,False,wrong_object,not_applicable,contradicted,discard,plastic wrap,crumple; secure; remove; manipulate
+recording_000343_false_near_edge_t222.5,correct,True,True,complete,appropriate,supported,coat,pan,none
+recording_000431_missed_signal_present_not_top_t178.2,correct,False,False,complete,appropriate,supported,secure,plastic wrap,remove
+recording_000037_early_t156.0,correct_but_coarse,False,False,missing_secondary,too_coarse,supported,rinse,mug,turn off faucet; continue rinsing
+recording_000236_missed_signal_present_not_top_t572.8,incorrect,False,False,incorrect,not_applicable,contradicted,discard,cardboard box,close
+recording_000134_false_near_edge_t562.5,incorrect,True,True,wrong_object,not_applicable,contradicted,unfold,second tissue sheet,reach; pick up
+recording_000230_missed_signal_present_not_top_t397.0,correct,False,False,complete,appropriate,supported,retrieve,cardboard box,store; disassemble
+recording_000181_late_t73.5,correct,False,False,complete,appropriate,supported,rinse,sink strainer,finish cleaning; reseat
+recording_000181_late_t233.0,correct_but_coarse,False,True,missing_secondary,too_coarse,supported,remove,sink strainer,reach faucet; begin rinsing
+recording_000272_false_mid_segment_t618.5,partially_correct,True,False,partially_correct,mixed,supported,store,cardboard box,unseal; retrieve; seal; remove
+recording_000230_false_mid_segment_t404.5,partially_correct,True,False,partially_correct,mixed,supported,retrieve,USB drive,store; disassemble; pack
+recording_000419_missed_weak_signal_t688.9,correct_but_oversegmented,False,False,complete,too_fine,supported,discard,unspecified object,crumple; pack
+recording_000134_false_near_edge_t130.0,incorrect,True,False,incorrect,not_applicable,contradicted,unfold,tissue / paper sheet,reach; grasp; open
+recording_000053_missed_weak_signal_t486.0,uncertain,False,False,unresolved,unresolved,uncertain,,,
+recording_000431_false_mid_segment_t427.5,correct_but_oversegmented,True,False,complete,too_fine,supported,unroll,plastic wrap,crumple; cover; position
+recording_000471_missed_weak_signal_t485.4,partially_correct,False,False,partially_correct,mixed,supported,wipe,kettle,none
+recording_000438_false_mid_segment_t224.0,correct,True,False,complete,appropriate,supported,secure,plastic wrap,unroll; crumple; remove
+recording_000282_exact_t544.5,correct,False,False,complete,appropriate,supported,insert,USB drive,open; rotate
+recording_000220_early_t137.8,correct_but_oversegmented,False,False,complete,too_fine,supported,flip,slippers,flip to opposite side; flip back
+recording_000438_missed_signal_present_not_top_t182.0,partially_correct,False,False,partially_correct,mixed,supported,retrieve,plastic wrap,manipulate
+recording_000102_false_mid_segment_t484.0,incorrect,True,False,incorrect,not_applicable,contradicted,wipe,tissue / paper sheet,press; move in small circles
+recording_000220_missed_weak_signal_t289.5,correct_but_oversegmented,False,True,complete,too_fine,supported,inspect,slippers,flip; display footbed; display upper side
+recording_000265_early_t88.0,correct_but_coarse,False,False,missing_secondary,too_coarse,supported,seal,USB drive,insert; pack; remove
+recording_000102_duplicate_t164.5,incorrect,True,True,incorrect,not_applicable,contradicted,wipe,tissue / paper sheet,change from large circles to small circles
+recording_000406_exact_t490.3,correct_but_oversegmented,False,False,complete,too_fine,supported,cover,plastic wrap,position; manipulate
+recording_000213_duplicate_t230.5,correct_but_coarse,True,False,missing_secondary,too_coarse,supported,rinse,sink strainer,remove; reach faucet
+recording_000422_false_mid_segment_t381.0,correct,True,False,complete,appropriate,supported,position,plastic wrap,unroll; secure; seal; manipulate
+recording_000465_false_gap_t247.0,partially_correct,False,False,partially_correct,mixed,supported,test,charging cable,store
+recording_000110_false_near_edge_t504.0,partially_correct,True,False,partially_correct,mixed,supported,turn off,faucet and squeegee,finish rinsing; pick up squeegee
+recording_000406_false_near_edge_t455.5,correct_but_coarse,True,False,missing_secondary,too_coarse,supported,cover,plastic wrap,discard
+recording_000431_false_near_edge_t440.5,correct_but_oversegmented,True,False,complete,too_fine,supported,unroll,plastic wrap,crumple; cover; position
+recording_000242_missed_weak_signal_t352.0,incorrect,False,False,incorrect,not_applicable,contradicted,unseal,cardboard box,seal; open
+recording_000265_missed_signal_present_not_top_t298.5,partially_correct,False,False,partially_correct,mixed,supported,seal,cardboard box,open
+recording_000176_false_mid_segment_t90.5,partially_correct,True,True,partially_correct,mixed,supported,remove,sink strainer,reach faucet; begin rinsing
+recording_000188_false_gap_t456.0,incorrect,False,True,wrong_object,not_applicable,contradicted,inspect,second portable charger,put down first charger; pick up second charger
+recording_000030_false_gap_t556.0,correct_but_coarse,False,True,missing_secondary,too_coarse,supported,release,water bottle,place; withdraw hands; regrasp
+recording_000022_missed_weak_signal_t466.8,correct,False,False,complete,appropriate,supported,place,mug,finish rinsing
+recording_000385_false_near_edge_t577.5,correct_but_coarse,True,False,missing_secondary,too_coarse,supported,cover,plastic wrap,discard; seal; fold; remove
+recording_000391_false_near_edge_t242.5,correct,True,False,complete,appropriate,supported,uncoil,USB cable,recoil; fold
