@@ -65,6 +65,37 @@ def esc(t):
             .replace("'", "").replace("%", ""))
 
 
+# The segment list is not always under `segments`, and a recording whose
+# segments are under another key looks exactly like a recording with no
+# segments. That cost a whole render pass, so the key is detected and the
+# detection is printed.
+SEG_KEYS = ("segments", "gt_segments", "segs", "labels", "annotations",
+            "boundaries")
+VIDEO_KEYS = ("video", "video_path", "path", "mp4")
+
+
+def get_segments(rec):
+    """First key holding a list of [label, start, end] triples."""
+    for k in SEG_KEYS:
+        v = rec.get(k)
+        if isinstance(v, list) and v and isinstance(v[0], (list, tuple)) \
+                and len(v[0]) >= 3:
+            return list(v), k
+        if isinstance(v, list) and v and isinstance(v[0], dict) \
+                and {"start", "end"} <= set(v[0]):
+            lab = next((c for c in ("label", "name", "text", "caption")
+                        if c in v[0]), None)
+            return ([[d.get(lab, ""), d["start"], d["end"]] for d in v], k)
+    return [], None
+
+
+def get_video(rec):
+    for k in VIDEO_KEYS:
+        if rec.get(k):
+            return rec[k]
+    return None
+
+
 def load_recordings(paths):
     """recseg json: records with recording_id, video, segments [[label,s,e]]."""
     recs = {}
@@ -72,10 +103,28 @@ def load_recordings(paths):
         if not os.path.exists(p):
             print(f"  !! {p} not found")
             continue
-        for r in json.load(open(p, encoding="utf-8")):
-            rid = r.get("recording_id")
-            if rid and rid not in recs:
+        blob = json.load(open(p, encoding="utf-8"))
+        if isinstance(blob, dict):  # {rid: rec} or {"recordings": [...]}
+            blob = (blob.get("recordings") or blob.get("data")
+                    or [dict(v, recording_id=v.get("recording_id", k))
+                        for k, v in blob.items() if isinstance(v, dict)])
+        n_seg = 0
+        keys = Counter()
+        for r in blob:
+            rid = r.get("recording_id") or r.get("id") or r.get("name")
+            if not rid:
+                continue
+            segs, k = get_segments(r)
+            keys[k] += 1
+            if segs:
+                n_seg += 1
+            if rid not in recs:
                 recs[rid] = r
+        print(f"  {os.path.basename(p)}: {len(blob)} records, {n_seg} with "
+              f"segments, key(s) {dict(keys)}")
+        if blob and not n_seg:
+            print(f"    !! no segment list found. Keys on the first record: "
+                  f"{sorted(blob[0])[:20]}")
     return recs
 
 
@@ -183,6 +232,9 @@ def main():
     ap.add_argument("--out_dir", required=True)
     ap.add_argument("--max_span_s", type=float, default=120.0)
     ap.add_argument("--no_sheet", action="store_true")
+    ap.add_argument("--inspect", action="store_true",
+                    help="dump the schema of --data and which sheet "
+                         "recordings it covers, then exit without rendering")
     ap.add_argument("--ffmpeg_bin", default="ffmpeg")
     a = ap.parse_args()
 
@@ -191,6 +243,21 @@ def main():
         rows = [r for r in csv.DictReader(f) if r.get("recording_id")]
     recs = load_recordings(a.data)
     print(f"{len(rows)} sheet rows; {len(recs)} recordings loaded")
+
+    want = {r["recording_id"] for r in rows}
+    have = want & set(recs)
+    print(f"  sheet recordings covered: {len(have)}/{len(want)}")
+    if len(have) < len(want):
+        print(f"    missing e.g. {sorted(want - set(recs))[:5]}")
+    if a.inspect:
+        for rid in sorted(have)[:2]:
+            rec = recs[rid]
+            segs, k = get_segments(rec)
+            print(f"\n  {rid}: keys {sorted(rec)[:14]}")
+            print(f"    video={get_video(rec)}")
+            print(f"    segments under {k!r}, n={len(segs)}; "
+                  f"first {segs[:2]}")
+        return
 
     miss = Counter()
     done = 0
@@ -201,13 +268,19 @@ def main():
         if rec is None:
             miss["no recording in --data"] += 1
             continue
-        video = rec.get("video")
-        if not video or not os.path.exists(video):
-            miss["video file missing"] += 1
+        video = get_video(rec)
+        if not video:
+            miss["no video field on the record"] += 1
             continue
-        segs = rec.get("segments") or []
-        if not segs or t is None:
-            miss["no segments / no time in event id"] += 1
+        if not os.path.exists(video):
+            miss["video path does not exist"] += 1
+            continue
+        segs, _ = get_segments(rec)
+        if not segs:
+            miss["record has no segment list"] += 1
+            continue
+        if t is None:
+            miss["no _t<time> in the event id"] += 1
             continue
         lo, hi, (p, c, n_), cut = span_for(segs, t, a.max_span_s)
         if lo is None:
