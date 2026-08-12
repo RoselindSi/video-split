@@ -425,6 +425,54 @@ def main():
                                  "peak near no boundary")):
             print(f"  {lab:<28}{p_obs[i]:>10}{m[i]:>12.1f}"
                   f"{p_obs[i] / max(m[i], 1e-9):>9.2f}")
+        # SIGNED offsets. |offset| cannot tell a systematic lag from noise,
+        # and the three peak-centric rows have the signature of one: the
+        # 0-0.5s band is DEPLETED (0.35) while 0.5-2.0s is ENRICHED (1.57) and
+        # "near nothing" is slightly depleted (0.89). Peaks are closer to
+        # boundaries than chance overall, with the mass in the wrong place.
+        # A constant lag does exactly that; noise does not.
+        def signed(pk_by_rec):
+            out = []
+            for rid, pk in pk_by_rec.items():
+                bs = sorted(bounds.get(rid, ()))
+                for t, _ in pk:
+                    if not bs:
+                        continue
+                    b = min(bs, key=lambda x: abs(x - t))
+                    if abs(b - t) <= a.max_assoc_s:
+                        out.append(b - t)   # >0 : the peak fired EARLY
+            return out
+        obs_s = signed(peaks)
+        rng3 = _r.Random(0)
+        nul_s = []
+        for _ in range(max(1, a.null_shift // 10)):
+            sh = {}
+            for rid, pk in peaks.items():
+                d = rng3.uniform(0, span[rid] or 1.0)
+                sh[rid] = [((t + d) % (span[rid] or 1.0), s_) for t, s_ in pk]
+            nul_s += signed(sh)
+        scale = len(nul_s) / max(len(obs_s), 1)
+        edges = [-2.0, -1.5, -1.0, -0.5, -0.25, 0.25, 0.5, 1.0, 1.5, 2.0]
+        print(f"\n  SIGNED offset (boundary - peak; POSITIVE = the peak "
+              f"fired EARLY), nearest boundary:")
+        print(f"  {'band':>16}{'observed':>10}{'null/scale':>12}{'ratio':>8}")
+        for lo, hi in zip(edges, edges[1:]):
+            o = sum(1 for x in obs_s if lo <= x < hi)
+            n = sum(1 for x in nul_s if lo <= x < hi) / max(scale, 1e-9)
+            print(f"  {lo:>6.2f}..{hi:<8.2f}{o:>10}{n:>12.1f}"
+                  f"{o / max(n, 1e-9):>8.2f}")
+        if obs_s:
+            med = sorted(obs_s)[len(obs_s) // 2]
+            pos = sum(1 for x in obs_s if x > 0) / len(obs_s)
+            print(f"\n  median signed offset {med:+.2f}s; "
+                  f"{100 * pos:.0f}% of peaks fire early.")
+            print(f"  A median far from zero with one side dominant is a "
+                  f"SYSTEMATIC LAG, not scatter --\n  a window-centring or "
+                  f"receptive-field offset upstream, and a bug to find rather "
+                  f"than\n  a property of the data. A median near zero with "
+                  f"the mass spread means the peaks\n  are simply not "
+                  f"locating these boundaries.")
+
         print(f"\n  This is the arm to read. The boundary-centric table above "
               f"is recall and is\n  inflated under the null by boundary "
               f"density -- one shifted peak landing in a\n  cluster scores "
