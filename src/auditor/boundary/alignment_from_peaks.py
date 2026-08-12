@@ -221,6 +221,33 @@ def main():
     if a.recseg:
         gtb = gt_boundaries(a.recseg, keep_recordings=set(peaks))
         n_g = sum(len(v) for v in gtb.values())
+        # UNITS FIRST. "the detector avoids GT boundaries" and "the two time
+        # bases disagree" produce the same below-chance alignment, and the
+        # second is far more likely. A 10fps frame index looks exactly like a
+        # timestamp until the ranges are compared.
+        bad = []
+        for rid, ts in gtb.items():
+            pmax = max(t for t, _ in peaks[rid])
+            gmax = max(ts)
+            if pmax > 0 and (gmax / pmax > 2.0 or gmax / pmax < 0.5):
+                bad.append((rid, gmax, pmax, gmax / pmax))
+        print(f"\n  time-base check, GT boundary range against peak range:")
+        rr = sorted((max(ts) / max(t for t, _ in peaks[rid]))
+                    for rid, ts in gtb.items()
+                    if max(t for t, _ in peaks[rid]) > 0)
+        print(f"    ratio max(GT)/max(peak) over {len(rr)} recordings: "
+              f"min {rr[0]:.2f}  median {rr[len(rr)//2]:.2f}  "
+              f"max {rr[-1]:.2f}")
+        if bad:
+            print(f"    !! {len(bad)} recordings out of the 0.5-2.0 band. If "
+                  f"the median is near 10 these are\n       frame indices at "
+                  f"10fps, not seconds, and every count below is meaningless.")
+            for rid, gm, pm, r_ in bad[:4]:
+                print(f"       {rid}: GT max {gm:.1f}, peak max {pm:.1f}, "
+                      f"ratio {r_:.2f}")
+        else:
+            print(f"    all recordings within 0.5-2.0x; the two are on the "
+                  f"same time base")
         print(f"\n+ {n_g} GT segment boundaries over {len(gtb)} recordings "
               f"that have peaks (NOISY source)")
         for rid, ts in gtb.items():
