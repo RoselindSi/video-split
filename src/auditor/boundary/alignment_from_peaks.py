@@ -55,11 +55,45 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 from collections import Counter, defaultdict
 
 from src.auditor.boundary.labels import TOL, cand_time, nearest_corrected
+from src.auditor.semantic.render_ontology_clips import get_segments
 
 POSITIVE = ("new_action", "same_action_new_instance")
+
+
+def gt_boundaries(paths, keep_recordings=None):
+    """Segment starts and ends as boundaries -- the large, NOISY source.
+
+    125 audited boundaries is the whole clean supply and it is not enough. The
+    recseg annotations carry thousands, and for the ALIGNMENT question a
+    boundary location is all that is needed. The cost is that these are the
+    stored labels, which this project has repeatedly measured as the dominant
+    error source -- an offset computed against a mislocated boundary is a
+    mislocated offset.
+
+    So they are tagged `gt_annotation` and never merged into the audited set
+    without the tag. The intended use is a large noisy TRAIN pool with the 125
+    audited boundaries held out as the clean evaluation, not one pooled set."""
+    out = defaultdict(set)
+    for p in paths:
+        if not os.path.exists(p):
+            print(f"  !! {p} not found")
+            continue
+        blob = json.load(open(p, encoding="utf-8"))
+        if isinstance(blob, dict):
+            blob = blob.get("recordings") or blob.get("data") or []
+        for r in blob:
+            rid = r.get("recording_id")
+            if not rid or (keep_recordings and rid not in keep_recordings):
+                continue
+            segs, _ = get_segments(r)
+            for sg in segs:
+                out[rid].add(round(float(sg[1]), 1))
+                out[rid].add(round(float(sg[2]), 1))
+    return out
 
 
 def corrected_boundaries(gold, mig, positives_only):
@@ -107,6 +141,10 @@ def main():
                     help="beyond this a peak is not this boundary's candidate")
     ap.add_argument("--positives_only", action="store_true",
                     help="restrict to new_action / same_action_new_instance")
+    ap.add_argument("--recseg", action="append", default=[],
+                    help="recseg json(s). Adds SEGMENT boundaries as a large "
+                         "but NOISY source, tagged separately -- intended as "
+                         "a train pool with the audited boundaries held out")
     ap.add_argument("--sweep", default="0.25,0.5,1.0")
     ap.add_argument("--out")
     a = ap.parse_args()
@@ -152,14 +190,44 @@ def main():
           f"{sorted(len(v) for v in peaks.values())[len(peaks)//2]}")
 
     bounds, prov = corrected_boundaries(gold, mig, a.positives_only)
+    source = {rid: "audited" for rid in bounds}
     n_b = sum(len(v) for v in bounds.values())
     print(f"{n_b} distinct corrected boundaries over {len(bounds)} recordings"
           + ("  (ontology positives only)" if a.positives_only else ""))
-    missing = [r for r in bounds if r not in peaks]
-    if missing:
-        print(f"  !! {len(missing)} of those recordings have no peaks in "
-              f"predictions; their boundaries cannot be scored: "
-              f"{missing[:4]}")
+
+    # THE FUNNEL, split. "no peak" was one number covering two causes with
+    # different fixes: a recording absent from the logits dump is recoverable
+    # by running inference, a boundary the detector genuinely did not fire
+    # near is not.
+    no_rec = {r: v for r, v in bounds.items() if r not in peaks}
+    n_no_rec = sum(len(v) for v in no_rec.values())
+    print(f"  lost, recording absent from predictions : {n_no_rec:>4} "
+          f"boundaries over {len(no_rec)} recordings  <- fix by running "
+          f"inference")
+    covered = {r: v for r, v in bounds.items() if r in peaks}
+    n_no_peak = sum(1 for r, ts in covered.items() for t in ts
+                    if not any(abs(pt - t) <= a.max_assoc_s
+                               for pt, _ in peaks[r]))
+    print(f"  lost, covered but no peak within {a.max_assoc_s}s : "
+          f"{n_no_peak:>4} boundaries  <- the detector genuinely missed "
+          f"these")
+    print(f"  scorable                                : "
+          f"{n_b - n_no_rec - n_no_peak:>4} boundaries")
+
+    if a.recseg:
+        gtb = gt_boundaries(a.recseg, keep_recordings=set(peaks))
+        n_g = sum(len(v) for v in gtb.values())
+        print(f"\n+ {n_g} GT segment boundaries over {len(gtb)} recordings "
+              f"that have peaks (NOISY source)")
+        for rid, ts in gtb.items():
+            for t in ts:
+                if t not in bounds.get(rid, set()):
+                    bounds[rid].add(t)
+                    source.setdefault(rid, "gt_annotation")
+        print(f"  combined pool: {sum(len(v) for v in bounds.values())} "
+              f"boundaries over {len(bounds)} recordings. Rows carry "
+              f"`boundary_source`;\n  the audited ones are the clean "
+              f"evaluation and must not be trained on.")
 
     def assign(tol):
         rows, miss = [], 0
@@ -180,6 +248,9 @@ def main():
                                  "peak_time": t, "offset_s": round(bt - t, 3),
                                  "score": s, "label": cls,
                                  "rank_at_boundary": i,
+                                 "boundary_source": (
+                                     "audited" if (rid, bt) in prov
+                                     else "gt_annotation"),
                                  "relation": sorted(
                                      {r for _, r in prov.get((rid, bt), [])
                                       if r})})
