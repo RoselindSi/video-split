@@ -62,6 +62,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import gc
 import json
 import os
 from collections import Counter, defaultdict
@@ -276,9 +277,36 @@ def main():
     print(f"\ntraining on one fold manifest (fold_seed {a.fold_seed}), "
           f"seeds {seeds}:")
     per_seed = []
+    # the per-seed loop is checkpointed too. It is cheap, but the machine died
+    # inside it at seed 3 twice, and losing two completed seeds to that is
+    # avoidable whatever the cause turns out to be.
+    ck0 = {}
+    if a.checkpoint and os.path.exists(a.checkpoint):
+        ck0 = json.load(open(a.checkpoint, encoding="utf-8")).get("base", {})
+
+    def save_base(sd, pc_, pa_, pb_):
+        if not a.checkpoint:
+            return
+        prev = {}
+        if os.path.exists(a.checkpoint):
+            prev = json.load(open(a.checkpoint, encoding="utf-8"))
+        prev.setdefault("base", {})[str(sd)] = {
+            "comb": [None if not np.isfinite(x) else float(x) for x in pc_],
+            "pa": [None if not np.isfinite(x) else float(x) for x in pa_],
+            "pb": [None if not np.isfinite(x) else float(x) for x in pb_]}
+        json.dump(prev, open(a.checkpoint, "w", encoding="utf-8"))
+
     for sd in seeds:
-        pc_ = train_single(y_bnd, None, "combined", sd)
-        pa_, pb_ = train_factorized(sd)
+        if str(sd) in ck0:
+            d_ = ck0[str(sd)]
+            f_ = lambda v: np.array([np.nan if x is None else x for x in v],
+                                    float)
+            pc_, pa_, pb_ = f_(d_["comb"]), f_(d_["pa"]), f_(d_["pb"])
+            print(f"  seed {sd}: resumed from checkpoint")
+        else:
+            pc_ = train_single(y_bnd, None, "combined", sd)
+            pa_, pb_ = train_factorized(sd)
+            save_base(sd, pc_, pa_, pb_)
         cm_ = pa_ + (1.0 - pa_) * pb_
         m = np.isfinite(cm_) & np.isfinite(pc_)
         per_seed.append({"seed": sd, "comb": pc_, "pa": pa_, "pb": pb_,
@@ -286,7 +314,8 @@ def main():
                          "au_comb": _auroc(y_bnd[m], pc_[m]),
                          "au_comp": _auroc(y_bnd[m], cm_[m])})
         print(f"  seed {sd}: combined {per_seed[-1]['au_comb']:.3f}   "
-              f"composite {per_seed[-1]['au_comp']:.3f}")
+              f"composite {per_seed[-1]['au_comp']:.3f}", flush=True)
+        gc.collect()
     ac = np.array([x["au_comb"] for x in per_seed])
     af = np.array([x["au_comp"] for x in per_seed])
     if len(seeds) > 1:
@@ -413,6 +442,7 @@ def main():
                 record("separate + nested logistic", sd,
                        nested_combiner(pair_separate, sd))
         print(f"    seed {sd} done", flush=True)
+        gc.collect()
     V = {k: np.nanmean(v, axis=0) for k, v in variants.items() if v}
     V["combined binary"] = p_comb
 
