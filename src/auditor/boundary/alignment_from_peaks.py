@@ -486,6 +486,48 @@ def main():
                 sh[rid] = [((t + d) % (span[rid] or 1.0), s_) for t, s_ in pk]
             p_null.append(peak_centric(sh, a.tol))
         m = [sum(x[i] for x in p_null) / len(p_null) for i in range(3)]
+        # PER SOURCE. The audited boundaries are human-verified times; the
+        # GT ones are the stored annotations this project has repeatedly
+        # measured as the dominant error source. If peaks beat chance against
+        # the audited set and lose against the annotations, the offset is in
+        # the LABELS. If they lose against both, it is in the detector or in
+        # the peak extraction. Those have nothing in common as next steps, and
+        # no further hypothesis from me discriminates them -- this does.
+        def peak_centric_sub(pk_by_rec, tol, keep):
+            al = mis = 0
+            for rid, pk in pk_by_rec.items():
+                bs = sorted(b for b in bounds.get(rid, ())
+                            if ((rid, b) in prov) == keep)
+                for t, _ in pk:
+                    if not bs:
+                        continue
+                    d = min(abs(b - t) for b in bs)
+                    if d <= tol:
+                        al += 1
+                    elif d <= a.max_assoc_s:
+                        mis += 1
+            return al, mis
+
+        print(f"\n  by boundary source, against the SAME shift null:")
+        print(f"  {'':<30}{'observed':>10}{'null mean':>12}{'ratio':>9}")
+        for keep, lab in ((True, "audited (human-verified)"),
+                          (False, "gt_annotation (stored)")):
+            o = peak_centric_sub(peaks, a.tol, keep)
+            rng4 = _r.Random(0)
+            acc = [0.0, 0.0]
+            reps = max(1, a.null_shift // 5)
+            for _ in range(reps):
+                sh = {}
+                for rid, pk in peaks.items():
+                    d = rng4.uniform(0, span[rid] or 1.0)
+                    sh[rid] = [((t + d) % (span[rid] or 1.0), s_)
+                               for t, s_ in pk]
+                r_ = peak_centric_sub(sh, a.tol, keep)
+                acc[0] += r_[0]; acc[1] += r_[1]
+            mn = acc[0] / reps
+            print(f"  {lab:<30}{o[0]:>10}{mn:>12.1f}"
+                  f"{o[0] / max(mn, 1e-9):>9.2f}   within tol")
+
         print(f"\n  PEAK-CENTRIC -- the statistic the dataset rows actually "
               f"are:")
         print(f"  {'':<28}{'observed':>10}{'null mean':>12}{'ratio':>9}")
