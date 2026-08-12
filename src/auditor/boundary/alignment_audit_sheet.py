@@ -225,10 +225,8 @@ def main():
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--migrated", required=True)
-    ap.add_argument("--gold", action="append",
-                    default=["data/gold/audit_188_gold_v2.jsonl"])
-    ap.add_argument("--context", action="append",
-                    default=["data/gold/audit_188_context.jsonl"])
+    ap.add_argument("--gold", action="append")
+    ap.add_argument("--context", action="append")
     ap.add_argument("--tol", type=float, default=TOL)
     ap.add_argument("--max_retime_s", type=float, default=MAX_RETIME_S)
     ap.add_argument("--n_timing", type=int, default=45)
@@ -240,6 +238,11 @@ def main():
     ap.add_argument("--relation_out",
                     default="data/gold/alignment_relation.csv")
     a = ap.parse_args()
+    # argparse APPENDS to an action="append" default rather than
+    # replacing it, so passing --gold once would silently load the
+    # default file as well. Defaults are applied here instead.
+    a.gold = a.gold or ["data/gold/audit_188_gold_v2.jsonl"]
+    a.context = a.context or ["data/gold/audit_188_context.jsonl"]
 
     mig, gold, ctx = load(a)
     rows = build(mig, gold, a.tol, a.max_retime_s)

@@ -110,8 +110,7 @@ def main():
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--migrated", required=True)
-    ap.add_argument("--gold", action="append",
-                    default=["data/gold/audit_188_gold_v2.jsonl"])
+    ap.add_argument("--gold", action="append")
     ap.add_argument("--tol", type=float, default=TOL)
     ap.add_argument("--max_retime_s", type=float, default=MAX_RETIME_S)
     ap.add_argument("--sweep", default="0.25,0.5,1.0,1.5",
@@ -120,6 +119,10 @@ def main():
     ap.add_argument("--min_misaligned", type=int, default=30)
     ap.add_argument("--out")
     a = ap.parse_args()
+    # argparse APPENDS to an action="append" default rather than
+    # replacing it, so passing --gold once would silently load the
+    # default file as well. Defaults are applied here instead.
+    a.gold = a.gold or ["data/gold/audit_188_gold_v2.jsonl"]
 
     with open(a.migrated, newline="", encoding="utf-8-sig") as f:
         mig = {r["event_id"]: r["instance_relation"] for r in csv.DictReader(f)}

@@ -97,8 +97,7 @@ def main():
     ap.add_argument("--predictions", required=True,
                     help="boundary_error_audit.py output; needs "
                          "predicted_peaks per recording")
-    ap.add_argument("--gold", action="append",
-                    default=["data/gold/audit_188_gold_v2.jsonl"])
+    ap.add_argument("--gold", action="append")
     ap.add_argument("--migrated",
                     help="pair_schema_v2_migrated.csv. Without it the "
                          "ontology filter cannot be applied and the set will "
@@ -111,6 +110,10 @@ def main():
     ap.add_argument("--sweep", default="0.25,0.5,1.0")
     ap.add_argument("--out")
     a = ap.parse_args()
+    # argparse APPENDS to an action="append" default rather than
+    # replacing it, so passing --gold once would silently load the
+    # default file as well. Defaults are applied here instead.
+    a.gold = a.gold or ["data/gold/audit_188_gold_v2.jsonl"]
 
     gold = {}
     for p in a.gold:
