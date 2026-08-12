@@ -248,12 +248,20 @@ def main():
     bsource = {k: "audited" for k in prov}
 
     if a.timing_csv:
-        n_t = n_skip = 0
+        if not os.path.exists(a.timing_csv):
+            raise SystemExit(
+                f"--timing_csv {a.timing_csv} does not exist. Generate it "
+                f"with\n  python -m src.auditor.boundary."
+                f"alignment_audit_sheet --migrated ... --out {a.timing_csv}")
+        n_t = n_skip = n_blank = 0
         with open(a.timing_csv, newline="", encoding="utf-8-sig") as f:
             for r in csv.DictReader(f):
                 rid = (r.get("recording_id") or "").strip()
+                if not rid:
+                    continue
                 raw = (r.get("t2_boundary_time_s") or "").strip()
-                if not rid or not raw:
+                if not raw:
+                    n_blank += 1
                     continue
                 if raw.lower().startswith("cannot"):
                     n_skip += 1   # a real answer, just not a time
@@ -267,11 +275,22 @@ def main():
                 bsource[(rid, t)] = "audit_timing"
                 n_t += 1
         print(f"\n+ {n_t} boundary times from {a.timing_csv} "
-              f"({n_skip} rows gave no usable time)")
-        print(f"  these events were sampled on instance_relation alone, with "
-              f"no peak involved,\n  so this is the one source whose null "
-              f"ratio is free of the selection that\n  contaminates "
-              f"`audited`.")
+              f"({n_blank} rows blank, {n_skip} unparseable or "
+              f"cannot_localize)")
+        if not n_t:
+            # silently dropping to two rows is exactly the failure mode this
+            # file keeps hitting: the decisive arm disappears and the two
+            # contaminated ones still print, looking like a complete result
+            print(f"  !! NOT ONE USABLE TIME. The `audit_timing` row -- the "
+                  f"only peak-blind arm and the\n     reason this flag "
+                  f"exists -- CANNOT BE COMPUTED, and the two rows below are "
+                  f"the\n     same contaminated pair as before. Fill "
+                  f"t2_boundary_time_s and rerun.")
+        else:
+            print(f"  these events were sampled on instance_relation alone, "
+                  f"with no peak involved,\n  so this is the one source "
+                  f"whose null ratio is free of the selection that\n  "
+                  f"contaminates `audited`.")
     n_b = sum(len(v) for v in bounds.values())
     print(f"{n_b} distinct corrected boundaries over {len(bounds)} recordings"
           + ("  (ontology positives only)" if a.positives_only else ""))
