@@ -145,6 +145,10 @@ def main():
                     help="recseg json(s). Adds SEGMENT boundaries as a large "
                          "but NOISY source, tagged separately -- intended as "
                          "a train pool with the audited boundaries held out")
+    ap.add_argument("--null_shift", type=int, default=200,
+                    help="permutations of the CHANCE-ASSOCIATION null: peak "
+                         "times circularly shifted within each recording. 0 "
+                         "disables it")
     ap.add_argument("--sweep", default="0.25,0.5,1.0")
     ap.add_argument("--out")
     a = ap.parse_args()
@@ -272,6 +276,23 @@ def main():
           f" recordings")
     print(f"  MISALIGNED {mis_n:>5} over {mis_r} recordings")
 
+    # BY SOURCE. Pooling them was the point of the tag and the summary was
+    # not honouring it.
+    print(f"\nby boundary_source -- these are not one population:")
+    print(f"  {'source':<16}{'ALIGNED':>9}{'EARLY':>8}{'LATE':>7}"
+          f"{'DUP':>7}{'<=0.5s of nearest':>20}")
+    for src in ("audited", "gt_annotation"):
+        sel = [r for r in rows if r["boundary_source"] == src]
+        if not sel:
+            continue
+        cc = Counter(r["label"] for r in sel)
+        nr = [r for r in sel if r["rank_at_boundary"] == 0]
+        close = sum(1 for r in nr if abs(r["offset_s"]) <= 0.5)
+        print(f"  {src:<16}{cc.get('ALIGNED', 0):>9}{cc.get('EARLY', 0):>8}"
+              f"{cc.get('LATE', 0):>7}{cc.get('DUPLICATE', 0):>7}"
+              f"{close:>10}/{len(nr):<9}"
+              f" ({100 * close / max(len(nr), 1):.0f}%)")
+
     print(f"\n|offset| distribution of the nearest peak per boundary:")
     nearest = [r for r in rows if r["rank_at_boundary"] == 0]
     for lo, hi in [(0, 0.25), (0.25, 0.5), (0.5, 1.0), (1.0, 1.5), (1.5, 2.0)]:
@@ -292,6 +313,48 @@ def main():
         print(f"  {t:>6.2f}{cc.get('ALIGNED', 0):>10}{m:>10}{mr:>10}")
         sweep[str(t)] = {"aligned": cc.get("ALIGNED", 0), "misaligned": m,
                          "mis_recordings": mr}
+
+    # ------------------------------------------------- chance association
+    if a.null_shift:
+        import random as _r
+        rng = _r.Random(0)
+        span = {rid: max([t for t, _ in pk] + list(bounds.get(rid, {0.0})))
+                for rid, pk in peaks.items()}
+        real = Counter(r["label"] for r in rows)
+        nulls = []
+        for _ in range(a.null_shift):
+            shifted = {}
+            for rid, pk in peaks.items():
+                d = rng.uniform(0, span[rid] or 1.0)
+                shifted[rid] = sorted(((t + d) % (span[rid] or 1.0), s_)
+                                      for t, s_ in pk)
+            n_al = n_mis = 0
+            for rid, times in bounds.items():
+                pk = shifted.get(rid, [])
+                for bt in sorted(times):
+                    near = sorted((abs(t - bt), t) for t, _ in pk
+                                  if abs(t - bt) <= a.max_assoc_s)
+                    if not near:
+                        continue
+                    n_al += 1 if near[0][0] <= a.tol else 0
+                    n_mis += (1 if near[0][0] > a.tol else 0) + len(near) - 1
+            nulls.append((n_al, n_mis))
+        m_al = sum(x for x, _ in nulls) / len(nulls)
+        m_mis = sum(y for _, y in nulls) / len(nulls)
+        print(f"\n{'=' * 74}\nCHANCE ASSOCIATION -- peaks circularly shifted "
+              f"within each recording, {a.null_shift}x\n{'=' * 74}")
+        print(f"  {'':<14}{'observed':>10}{'null mean':>12}{'ratio':>9}")
+        print(f"  {'ALIGNED':<14}{real.get('ALIGNED', 0):>10}{m_al:>12.1f}"
+              f"{real.get('ALIGNED', 0) / max(m_al, 1e-9):>9.2f}")
+        obs_mis = sum(real.get(k, 0) for k in ("EARLY", "LATE", "DUPLICATE"))
+        print(f"  {'MISALIGNED':<14}{obs_mis:>10}{m_mis:>12.1f}"
+              f"{obs_mis / max(m_mis, 1e-9):>9.2f}")
+        print(f"\n  A MISALIGNED ratio near 1.0 means the association is "
+              f"chance: at this boundary\n  density a peak lands within "
+              f"{a.max_assoc_s}s of SOME boundary whether or not it detected\n"
+              f"  one, and `EARLY by 1.5s` is then not a fact about the "
+              f"candidate. ALIGNED is the\n  arm that has to beat chance for "
+              f"the pool to carry any alignment signal at all.")
 
     print(f"\nWHAT THIS SET IS NOT: these are THIS detector's offsets. Retrain "
           f"it and the\ndataset changes, so a verifier fitted here is "
