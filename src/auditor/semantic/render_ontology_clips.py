@@ -69,24 +69,81 @@ def esc(t):
 # segments are under another key looks exactly like a recording with no
 # segments. That cost a whole render pass, so the key is detected and the
 # detection is printed.
-SEG_KEYS = ("segments", "gt_segments", "segs", "labels", "annotations",
-            "boundaries")
+SEG_KEYS = ("solution", "segments", "gt_segments", "segs", "labels",
+            "annotations", "boundaries")
 VIDEO_KEYS = ("video", "video_path", "path", "mp4")
+START_KEYS = ("start", "start_time", "begin", "from", "t_start", "s")
+END_KEYS = ("end", "end_time", "stop", "to", "t_end", "e")
+LABEL_KEYS = ("label", "name", "text", "caption", "action", "description",
+              "segment_label", "title")
+
+
+def _pick(d, keys):
+    for k in keys:
+        if k in d and d[k] is not None:
+            return d[k]
+    return None
+
+
+def _from_list(v):
+    """[[label,s,e], ...] or [{start,end,label}, ...] under any of the usual
+    spellings. Returns [] if the list is something else."""
+    if not isinstance(v, list) or not v:
+        return []
+    if isinstance(v[0], (list, tuple)) and len(v[0]) >= 3:
+        return [list(x) for x in v]
+    if isinstance(v[0], dict):
+        out = []
+        for d in v:
+            a, b = _pick(d, START_KEYS), _pick(d, END_KEYS)
+            if a is None or b is None:
+                return []
+            out.append([_pick(d, LABEL_KEYS) or "", float(a), float(b)])
+        return out
+    return []
 
 
 def get_segments(rec):
-    """First key holding a list of [label, start, end] triples."""
+    """The segment list, wherever and however it is stored.
+
+    `solution` in this dataset is a wrapper, not a list, so a detector that
+    only recognised top-level lists reported 220 recordings with no segments.
+    One level of unwrapping -- a JSON string, or a dict holding the list --
+    covers every shape seen so far, and anything else is reported with its
+    repr rather than counted as absent."""
     for k in SEG_KEYS:
         v = rec.get(k)
-        if isinstance(v, list) and v and isinstance(v[0], (list, tuple)) \
-                and len(v[0]) >= 3:
-            return list(v), k
-        if isinstance(v, list) and v and isinstance(v[0], dict) \
-                and {"start", "end"} <= set(v[0]):
-            lab = next((c for c in ("label", "name", "text", "caption")
-                        if c in v[0]), None)
-            return ([[d.get(lab, ""), d["start"], d["end"]] for d in v], k)
+        if v is None:
+            continue
+        if isinstance(v, str):
+            try:
+                v = json.loads(v)
+            except (ValueError, TypeError):
+                continue
+        got = _from_list(v)
+        if got:
+            return got, k
+        if isinstance(v, dict):
+            for kk, vv in v.items():
+                if isinstance(vv, str):
+                    try:
+                        vv = json.loads(vv)
+                    except (ValueError, TypeError):
+                        continue
+                got = _from_list(vv)
+                if got:
+                    return got, f"{k}.{kk}"
     return [], None
+
+
+def describe(rec):
+    """What the candidate keys actually hold, for when detection fails."""
+    out = []
+    for k in SEG_KEYS:
+        if k in rec:
+            v = rec[k]
+            out.append(f"{k}: {type(v).__name__} = {repr(v)[:400]}")
+    return out or [f"none of {SEG_KEYS} present; keys {sorted(rec)[:20]}"]
 
 
 def get_video(rec):
@@ -125,6 +182,8 @@ def load_recordings(paths):
         if blob and not n_seg:
             print(f"    !! no segment list found. Keys on the first record: "
                   f"{sorted(blob[0])[:20]}")
+            for line in describe(blob[0]):
+                print(f"       {line}")
     return recs
 
 
@@ -257,6 +316,9 @@ def main():
             print(f"    video={get_video(rec)}")
             print(f"    segments under {k!r}, n={len(segs)}; "
                   f"first {segs[:2]}")
+            if not segs:
+                for line in describe(rec):
+                    print(f"      {line}")
         return
 
     miss = Counter()
