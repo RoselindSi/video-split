@@ -41,6 +41,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import csv
 import glob
 import json
 import os
@@ -81,7 +82,11 @@ def main():
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--gold_json",
-                    default="data/gold/semantic_ontology_gold_48.json")
+                    default="data/gold/semantic_ontology_gold_48.json",
+                    help="the audited events. JSON with an `events` list, or "
+                         "a CSV carrying an `event_id` column -- the "
+                         "enrichment sheet is a CSV and this flag used to "
+                         "accept only JSON")
     ap.add_argument("--context", default="data/gold/audit_188_context.jsonl")
     ap.add_argument("--recseg", action="append", required=True,
                     help="recseg json path, DIRECTORY, or glob. Globs are "
@@ -91,7 +96,20 @@ def main():
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
 
-    evs = json.load(open(a.gold_json, encoding="utf-8"))["events"]
+    if a.gold_json.lower().endswith(".csv"):
+        with open(a.gold_json, newline="", encoding="utf-8-sig") as f:
+            evs = [r for r in csv.DictReader(f) if (r.get("event_id") or
+                                                    "").strip()]
+        if not evs:
+            raise SystemExit(
+                f"{a.gold_json} has no usable `event_id` column. A sheet "
+                f"whose keys are only
+  `audit_key` cannot be resolved to "
+                f"segments without the event ids.")
+        for e in evs:
+            e.setdefault("audit_key", e["event_id"])
+    else:
+        evs = json.load(open(a.gold_json, encoding="utf-8-sig"))["events"]
     ctx = {}
     for line in open(a.context, encoding="utf-8"):
         if line.strip():
