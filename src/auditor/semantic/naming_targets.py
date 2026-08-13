@@ -93,7 +93,11 @@ def main():
             r = json.loads(line)
             ctx[r["event_id"]] = r
 
-    recs = {}
+    # ONE RECORDING CAN APPEAR IN SEVERAL recseg FILES. First-wins is fine
+    # when the segmentations agree and silently picks one when they do not,
+    # which would make the recovered windows depend on flag order. So the
+    # conflicts are found and named.
+    recs, src_of, conflicts = {}, {}, []
     for p in a.recseg:
         if not os.path.exists(p):
             print(f"  !! {p} not found")
@@ -101,11 +105,34 @@ def main():
         blob = json.load(open(p, encoding="utf-8"))
         if isinstance(blob, dict):
             blob = blob.get("recordings") or blob.get("data") or []
+        n_new = 0
         for r in blob:
             rid = r.get("recording_id")
-            if rid and rid not in recs:
-                recs[rid] = r
+            if not rid:
+                continue
+            if rid in recs:
+                a_ = [(str(x[0]), round(float(x[1]), 2), round(float(x[2]), 2))
+                      for x in get_segments(recs[rid])[0]]
+                b_ = [(str(x[0]), round(float(x[1]), 2), round(float(x[2]), 2))
+                      for x in get_segments(r)[0]]
+                if a_ != b_:
+                    conflicts.append((rid, src_of[rid], os.path.basename(p),
+                                      len(a_), len(b_)))
+                continue
+            recs[rid] = r
+            src_of[rid] = os.path.basename(p)
+            n_new += 1
+        print(f"  {os.path.basename(p):<34} {len(blob):>4} records, "
+              f"{n_new:>4} new")
     print(f"{len(evs)} audited events; {len(recs)} recordings loaded")
+    if conflicts:
+        print(f"  !! {len(conflicts)} recordings appear in more than one file "
+              f"with DIFFERENT segments.\n     The first file wins, so the "
+              f"windows depend on --recseg order. Resolve before\n     "
+              f"trusting them:")
+        for rid, first, other, na, nb in conflicts[:6]:
+            print(f"     {rid}: {first} ({na} segs) kept over {other} "
+                  f"({nb} segs)")
 
     rows, per_event = [], {}
     seg_id = {}
