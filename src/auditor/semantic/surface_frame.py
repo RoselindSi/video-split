@@ -123,8 +123,11 @@ def main():
     ap.add_argument("--recseg", action="append", required=True,
                     help="file, directory or glob; quote globs")
     ap.add_argument("--exclude", action="append", default=[],
-                    help="gold json(s) whose recordings' segments are already "
-                         "in pool A and must not reappear in pool B")
+                    help="pool-A file(s) whose recordings must not reappear "
+                         "in pool B. JSON with an `events` list or a CSV; "
+                         "either may key on recording_id or event_id. The "
+                         "enrichment sheet is a CSV and only the JSON path "
+                         "existed at first")
     ap.add_argument("--plan", action="store_true")
     ap.add_argument("--deficit", type=int, default=0,
                     help="how many MORE clean negatives are needed. Sampling "
@@ -188,9 +191,13 @@ def main():
         if not os.path.exists(p):
             print(f"  !! --exclude {p} not found")
             continue
-        blob = json.load(open(p, encoding="utf-8-sig"))
-        items = (blob.get("events") if isinstance(blob, dict)
-                 else blob if isinstance(blob, list) else [])
+        if p.lower().endswith(".csv"):
+            with open(p, newline="", encoding="utf-8-sig") as f:
+                items = list(csv.DictReader(f))
+        else:
+            blob = json.load(open(p, encoding="utf-8-sig"))
+            items = (blob.get("events") if isinstance(blob, dict)
+                     else blob if isinstance(blob, list) else [])
         n0 = len(excl)
         for e in items:
             if not isinstance(e, dict):
