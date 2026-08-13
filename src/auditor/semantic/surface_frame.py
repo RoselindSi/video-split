@@ -178,12 +178,41 @@ def main():
         print(f"  {os.path.join(os.path.basename(os.path.dirname(p)), os.path.basename(p)):<44} "
               f"{n_new:>4} new recordings")
 
-    excl = set()
+    # The gold rows carry `event_id` and NOT `recording_id`, so reading only
+    # recording_id made this filter a no-op: it printed "0 dropped from 0"
+    # underneath a frame that still contained every pool-A recording. A
+    # silently empty exclusion is worse than none, because the leak it allows
+    # is invisible in the output.
+    excl, no_key = set(), 0
     for p in a.exclude:
-        blob = json.load(open(p, encoding="utf-8"))
-        for e in blob.get("events", blob if isinstance(blob, list) else []):
-            if isinstance(e, dict) and e.get("recording_id"):
-                excl.add(e["recording_id"])
+        if not os.path.exists(p):
+            print(f"  !! --exclude {p} not found")
+            continue
+        blob = json.load(open(p, encoding="utf-8-sig"))
+        items = (blob.get("events") if isinstance(blob, dict)
+                 else blob if isinstance(blob, list) else [])
+        n0 = len(excl)
+        for e in items:
+            if not isinstance(e, dict):
+                continue
+            rid = e.get("recording_id")
+            if not rid:
+                m = re.match(r"^(recording_\d+)", str(e.get("event_id") or ""))
+                rid = m.group(1) if m else None
+            if rid:
+                excl.add(rid)
+            else:
+                no_key += 1
+        print(f"  --exclude {os.path.basename(p)}: {len(items)} rows -> "
+              f"{len(excl) - n0} recordings")
+    if no_key:
+        print(f"  !! {no_key} excluded rows had neither recording_id nor a "
+              f"parseable event_id")
+    if a.exclude and not excl:
+        raise SystemExit(
+            "--exclude was given and matched no recordings. That would build "
+            "pool B on top of pool A and the leak would not show in any "
+            "number below. Fix the input rather than proceeding.")
     before = len(segs)
     segs = [s for s in segs if s["recording_id"] not in excl]
     print(f"\n{before} segments over {len(seen)} recordings; "

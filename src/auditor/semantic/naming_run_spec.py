@@ -91,7 +91,11 @@ def main():
     want = defaultdict(list)
     for t in targets:
         want[t["recording_id"]].append(t)
-    print(f"{len(targets)} target segments over {len(want)} recordings")
+    uniq = {t["segment_uid"] for t in targets}
+    print(f"{len(targets)} target rows, {len(uniq)} DISTINCT segments over "
+          f"{len(want)} recordings"
+          + (f"  ({len(targets) - len(uniq)} appear in more than one targets "
+             f"file)" if len(targets) != len(uniq) else ""))
 
     recs = {}
     for p in resolve(a.recseg):
@@ -128,7 +132,9 @@ def main():
             else:
                 unresolved.append((t["segment_uid"], len(hit)))
 
-    print(f"\nJOIN KEY: {len(join)}/{len(targets)} target segments located by "
+    # against DISTINCT segments, not rows: the two target files overlap, and
+    # counting rows made six duplicates look like six failures
+    print(f"\nJOIN KEY: {len(join)}/{len(uniq)} distinct segments located by "
           f"position")
     if unresolved:
         amb = sum(1 for _u, n in unresolved if n > 1)
