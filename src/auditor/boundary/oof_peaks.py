@@ -125,6 +125,20 @@ def main():
         got = {v.get("recording_id") for v in parts}
         out = os.path.join(a.out_dir, "oof_logits.pt")
         torch.save(parts, out)
+        # the merged file had no manifest, so boundary_error_audit reported it
+        # could not tell which config produced it -- on the one file in this
+        # chain whose provenance is the whole point
+        from src.eval.run_manifest import write_manifest
+        write_manifest(out,
+                       input_paths=[os.path.join(a.out_dir,
+                                                 f"fold{k}_logits.pt")
+                                    for k in range(a.n_folds)],
+                       extra={"note": "recording-held-out peaks: each "
+                                      "recording's logits come from a fold "
+                                      "whose head excluded it",
+                              "n_folds": a.n_folds, "fold_seed": a.seed,
+                              "fold_assignment": assign,
+                              "audit_recordings": len(audit)})
         print(f"merged {len(parts)} records over {len(got)} recordings "
               f"-> {out}")
         miss = [r for r in audit if r not in got]
@@ -140,7 +154,7 @@ def main():
               f"\\\n    --gold_json {a.gold_json} --migrated "
               f"data/gold/pair_schema_v2_migrated.csv \\\n    --predictions "
               f"{a.out_dir}/audit/predictions.jsonl --recseg ... "
-              f"--n_boot 2000 --n_perm 2000")
+              f"\\\n    --peaks held_out --n_boot 2000 --n_perm 2000")
         return
 
     if not a.features:

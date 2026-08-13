@@ -126,6 +126,12 @@ def main():
                          "edge to count as being that edge. Larger than the "
                          "0.1s annotation grid step would start matching "
                          "DIFFERENT boundaries")
+    ap.add_argument("--peaks", default="unknown",
+                    choices=["in_sample", "held_out", "unknown"],
+                    help="whether the head that produced --predictions was "
+                         "fitted on these recordings. The script cannot tell, "
+                         "and the caveat it prints is FALSE if it guesses "
+                         "wrong -- so it is stated rather than inferred")
     ap.add_argument("--tol", type=float, default=0.5)
     ap.add_argument("--n_boot", type=int, default=2000)
     ap.add_argument("--n_perm", type=int, default=2000)
@@ -359,15 +365,23 @@ def main():
           f"appears when the peaks are unrelated\n  to both timings. An "
           f"effect needs to clear the second and have the first exclude\n"
           f"  zero; either alone is not the result.")
-    print(f"\n  STILL NOT HELD OUT. These peaks come from a head fitted on "
-          f"these recordings'\n  stored annotations. It is tempting to argue "
-          f"that this must bias the comparison\n  AGAINST the human side and "
-          f"so makes a non-significant result a conservative lower\n  bound. "
-          f"That is an intuition, not a guarantee -- in-sample behaviour is "
-          f"not a simple\n  pull toward the training targets -- and no "
-          f"result here should be reinterpreted on\n  it. The clean version "
-          f"is recording-grouped out-of-fold peaks: "
-          f"src.auditor.boundary.oof_peaks.")
+    if a.peaks == "held_out":
+        print(f"\n  PEAKS ARE HELD OUT (--peaks held_out). Each recording's "
+              f"peaks come from a head\n  that never saw its annotations, so "
+              f"the in-sample objection does not apply to\n  these numbers.")
+    elif a.peaks == "in_sample":
+        print(f"\n  PEAKS ARE IN-SAMPLE (--peaks in_sample). The head was "
+              f"fitted on these recordings'\n  stored annotations. It is "
+              f"tempting to argue that this must bias the comparison\n  "
+              f"AGAINST the human side and so makes a non-significant result "
+              f"a conservative lower\n  bound -- that is an intuition, not a "
+              f"guarantee, and no result should be\n  reinterpreted on it. "
+              f"The clean version is src.auditor.boundary.oof_peaks.")
+    else:
+        print(f"\n  PROVENANCE NOT STATED (--peaks unknown). Whether the "
+              f"head was fitted on these\n  recordings changes what these "
+              f"numbers support, and this script cannot tell.\n  Pass "
+              f"--peaks in_sample or --peaks held_out.")
 
     if a.out:
         json.dump({"tol": a.tol, "n_matched": len(matched),
