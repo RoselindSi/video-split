@@ -288,12 +288,57 @@ def main():
               f"stored {med_s:.2f}s")
         print(f"  hit rate at tol {a.tol}s          human "
               f"{hh}/{n} = {hh/n:.3f}   stored {ss}/{n} = {ss/n:.3f}")
-        print(f"  delta hit rate  {delta:+.3f}")
+        print(f"  delta hit rate  {delta:+.3f}   <- THE PRE-REGISTERED "
+              f"STATISTIC")
         print(f"    recording-clustered bootstrap 95%  "
               f"[{blo:+.3f}, {bhi:+.3f}]"
               + ("   spans zero" if blo <= 0 <= bhi else ""))
         print(f"    shift-null mean {nm:+.3f}, null 95% [{nlo:+.3f}, "
               f"{nhi:+.3f}], permutation p = {pv:.4f}")
+        # ------------------------------------------------ EXPLORATORY
+        # The hit-rate statistic was chosen before the numbers existed and it
+        # is what the verdict rests on. It is also nearly degenerate here:
+        # 2/25 and 4/25 against 0/25 means it is reading four events, and a
+        # test that reads four events is uninformative rather than negative.
+        #
+        # The two statistics below use every event. They are EXPLORATORY --
+        # added after seeing that the pre-registered one failed, which is a
+        # form of multiple testing, and they cannot confirm anything. What
+        # they can do is say whether the pre-registered test was negative or
+        # merely blind, and that determines whether held-out peaks are worth
+        # producing.
+        def closer_count(o):
+            return sum(1 for dh, ds, _h, _s in o if dh < ds - 1e-9)
+
+        def median_gap(o):
+            v = sorted(ds - dh for dh, ds, _h, _s in o)
+            return v[len(v) // 2]
+
+        rng3 = random.Random(a.seed)
+        nc, ng = [], []
+        for _ in range(a.n_perm):
+            sh = {r: [(t + rng3.uniform(0, span[r])) % span[r]
+                      for t in peaks[r]] for r in rids}
+            o2 = stats(sh, mode, matched)
+            if o2:
+                nc.append(closer_count(o2))
+                ng.append(median_gap(o2))
+        for lab, obs_v, null_v, fmt in (
+                ("human-closer count", closer_count(obs), nc, "d"),
+                ("median(d_stored - d_human)", median_gap(obs), ng, ".2f")):
+            null_v = sorted(null_v)
+            m2 = sum(null_v) / len(null_v)
+            l2 = null_v[int(0.025 * len(null_v))]
+            h2 = null_v[min(int(0.975 * len(null_v)), len(null_v) - 1)]
+            p2 = (1 + sum(1 for x in null_v if x >= obs_v)) / (len(null_v) + 1)
+            print(f"  [exploratory] {lab:<28} observed "
+                  f"{format(obs_v, fmt):>7}   null mean "
+                  f"{format(m2, '.2f'):>7}   null 95% "
+                  f"[{format(l2, fmt)}, {format(h2, fmt)}]   p = {p2:.4f}")
+            results.setdefault(mode + "_exploratory", {})[lab] = {
+                "observed": obs_v, "null_mean": round(m2, 4),
+                "null_95": [l2, h2], "p_value": round(p2, 5)}
+
         results[mode] = {
             "n": n, "recordings": len(rids), "human_closer": closer_h,
             "stored_closer": closer_s, "tie": tie,
@@ -304,6 +349,11 @@ def main():
                                                    round(nhi, 4)],
             "p_value": round(pv, 5)}
 
+    print(f"\n  The delta-hit-rate line is the pre-registered test. The two "
+          f"[exploratory] lines\n  were added after it failed and cannot "
+          f"confirm anything; they exist only to tell a\n  negative result "
+          f"apart from a blind one, since at hit rates of 0.08 and 0.16 the\n"
+          f"  pre-registered statistic is reading a handful of events.")
     print(f"\n  The bootstrap says how far this would move on another sample "
           f"of recordings.\n  The permutation says how large a difference "
           f"appears when the peaks are unrelated\n  to both timings. An "
