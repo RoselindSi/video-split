@@ -57,6 +57,9 @@ import argparse
 import json
 import os
 import random
+import shutil
+import subprocess
+import sys
 
 import torch
 
@@ -84,6 +87,16 @@ def main():
                          "config. Required by --write_fold")
     ap.add_argument("--plan", action="store_true")
     ap.add_argument("--write_fold", type=int)
+    ap.add_argument("--run", action="store_true",
+                    help="execute the reconstructed command instead of "
+                         "printing it, and delete the fold's train copy on "
+                         "success. Opt-in: the default stays print-only "
+                         "because the command retrains a head")
+    ap.add_argument("--run_all", action="store_true",
+                    help="write, run and clean up every fold in turn, "
+                         "skipping folds whose logits already exist. 5 x 5.5 "
+                         "GB of writes and five training runs -- resumable "
+                         "because a job that long will be interrupted")
     ap.add_argument("--merge", action="store_true",
                     help="concatenate the per-fold logits into one file")
     a = ap.parse_args()
@@ -144,7 +157,10 @@ def main():
               f"event-matched test would\n     quietly run on the rest. "
               f"Point --features at a file covering them.")
 
-    if a.plan or a.write_fold is None:
+    # `not a.run_all` matters: run_all leaves --write_fold unset, so without
+    # it the loop fell through to the plan branch and returned having done
+    # nothing while printing something that looked like success
+    if a.plan or (a.write_fold is None and not a.run_all):
         n_bytes = os.path.getsize(a.features)
         print(f"\nPLAN -- {a.n_folds} folds over {len(audit)} audit "
               f"recordings, seed {a.seed}:")
@@ -162,15 +178,54 @@ def main():
               f"--out_dir {a.out_dir}")
         return
 
-    k = a.write_fold
-    if not (0 <= k < a.n_folds):
-        raise SystemExit(f"--write_fold must be in [0, {a.n_folds})")
     if not a.manifest or not os.path.exists(a.manifest):
         raise SystemExit(
             "--manifest is required: the head config must be the frozen one, "
             "and reading it\n  from the manifest is the only way to be sure "
             "it is.")
-    hold = {r for r in audit if assign[r] == k}
+
+    def build(k):
+        hold = {r for r in audit if assign[r] == k}
+        return hold, os.path.join(a.out_dir, f"fold{k}_train.pt"), \
+            os.path.join(a.out_dir, f"fold{k}_infer.pt"), \
+            os.path.join(a.out_dir, f"fold{k}_logits.pt")
+
+    if a.run_all:
+        need = os.path.getsize(a.features) * 1.1
+        for k in range(a.n_folds):
+            _h, tp_, _ip, lg = build(k)
+            if os.path.exists(lg):
+                print(f"fold {k}: logits already present, skipping")
+                continue
+            free = shutil.disk_usage(a.out_dir).free
+            if free < need:
+                raise SystemExit(
+                    f"fold {k}: {free / 1e9:.1f} GB free, this fold needs "
+                    f"about {need / 1e9:.1f} GB.\n  Stopping before the "
+                    f"write rather than half way through it.")
+            print(f"\n{'=' * 74}\nfold {k}\n{'=' * 74}", flush=True)
+            rc = subprocess.run([sys.executable, "-m",
+                                 "src.auditor.boundary.oof_peaks",
+                                 "--write_fold", str(k), "--run",
+                                 "--features", a.features,
+                                 "--gold_json", a.gold_json,
+                                 "--manifest", a.manifest,
+                                 "--n_folds", str(a.n_folds),
+                                 "--seed", str(a.seed),
+                                 "--out_dir", a.out_dir])
+            if rc.returncode != 0:
+                raise SystemExit(
+                    f"fold {k} failed (exit {rc.returncode}). Its files are "
+                    f"left in place;\n  rerun --run_all to resume from here.")
+        print(f"\nall {a.n_folds} folds done. Now:\n  python -m "
+              f"src.auditor.boundary.oof_peaks --merge --n_folds "
+              f"{a.n_folds} --out_dir {a.out_dir}")
+        return
+
+    k = a.write_fold
+    if not (0 <= k < a.n_folds):
+        raise SystemExit(f"--write_fold must be in [0, {a.n_folds})")
+    hold, _t, _i, _l = build(k)
     tr = [x for x in feats if x.get("recording_id") not in hold]
     inf = [x for x in feats if x.get("recording_id") in hold]
     tp = os.path.join(a.out_dir, f"fold{k}_train.pt")
@@ -219,6 +274,16 @@ def main():
         else:
             parts.append(cmd[j])
             j += 1
+    if a.run:
+        print("  " + " ".join(cmd[:3]) + " \\\n    "
+              + " \\\n    ".join(parts), flush=True)
+        rc = subprocess.run(cmd)
+        if rc.returncode != 0:
+            raise SystemExit(f"training failed (exit {rc.returncode}); "
+                             f"{tp} left in place")
+        os.remove(tp)
+        print(f"fold {k} done, removed {tp}")
+        return
     print("  " + " ".join(cmd[:3]) + " \\\n    " + " \\\n    ".join(parts))
     print(f"\nthen `rm {tp}` before writing the next fold, and when all "
           f"{a.n_folds} are done:\n  python -m src.auditor.boundary.oof_peaks "
