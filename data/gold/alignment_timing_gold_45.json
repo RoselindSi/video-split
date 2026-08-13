@@ -1,0 +1,1304 @@
+{
+  "source_csv": "data/gold/alignment_timing_gold_45.csv",
+  "tol": 0.5,
+  "events": [
+    {
+      "audit_key": "5/t513",
+      "recording_id": "recording_000005",
+      "candidate_time": 513.0,
+      "timing_type": "interval",
+      "gradual": false,
+      "human_points": [],
+      "human_intervals": [
+        [
+          512.0,
+          515.0
+        ]
+      ],
+      "canonical_times": [
+        513.5
+      ],
+      "timing_note": "右手把一双拖鞋放到画面中，视线移开，后面右手拿回拖鞋；切换区间为视线移开阶段。",
+      "interval_midpoints": [
+        513.5
+      ],
+      "points_midpoint_mode": [
+        513.5
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 513.5,
+      "dist_midpoint": 0.5,
+      "signed_midpoint": -0.5,
+      "dist_interval_aware": 0.0,
+      "signed_interval_aware": 0.0
+    },
+    {
+      "audit_key": "6/t468",
+      "recording_id": "recording_000006",
+      "candidate_time": 468.0,
+      "timing_type": "multiple_points",
+      "gradual": false,
+      "human_points": [
+        468.0,
+        470.0
+      ],
+      "human_intervals": [],
+      "canonical_times": [
+        468.0,
+        470.0
+      ],
+      "timing_note": "把垃圾扫进笤帚/簸箕后倒出，再继续扫入；468s倒出，470s重新开始扫入。",
+      "interval_midpoints": [],
+      "points_midpoint_mode": [
+        468.0,
+        470.0
+      ],
+      "n_boundaries": 2,
+      "nearest_midpoint_time": 468.0,
+      "dist_midpoint": 0.0,
+      "signed_midpoint": 0.0,
+      "dist_interval_aware": 0.0,
+      "signed_interval_aware": 0.0
+    },
+    {
+      "audit_key": "11/t352",
+      "recording_id": "recording_000011",
+      "candidate_time": 352.0,
+      "timing_type": "multiple_points",
+      "gradual": false,
+      "human_points": [
+        352.0,
+        359.0
+      ],
+      "human_intervals": [],
+      "canonical_times": [
+        352.0,
+        359.0
+      ],
+      "timing_note": "数据线操作中两次明确释放并idle；352s第一次离开，359s第二次离开后再开始缠线。",
+      "interval_midpoints": [],
+      "points_midpoint_mode": [
+        352.0,
+        359.0
+      ],
+      "n_boundaries": 2,
+      "nearest_midpoint_time": 352.0,
+      "dist_midpoint": 0.0,
+      "signed_midpoint": 0.0,
+      "dist_interval_aware": 0.0,
+      "signed_interval_aware": 0.0
+    },
+    {
+      "audit_key": "13/t516",
+      "recording_id": "recording_000013",
+      "candidate_time": 516.0,
+      "timing_type": "interval",
+      "gradual": false,
+      "human_points": [],
+      "human_intervals": [
+        [
+          516.0,
+          518.0
+        ]
+      ],
+      "canonical_times": [
+        517.0
+      ],
+      "timing_note": "双手把水瓶从右移到左，随后离开水瓶idle，再伸向水瓶。",
+      "interval_midpoints": [
+        517.0
+      ],
+      "points_midpoint_mode": [
+        517.0
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 517.0,
+      "dist_midpoint": 1.0,
+      "signed_midpoint": -1.0,
+      "dist_interval_aware": 0.0,
+      "signed_interval_aware": 0.0
+    },
+    {
+      "audit_key": "19/t9.5",
+      "recording_id": "recording_000019",
+      "candidate_time": 9.5,
+      "timing_type": "multiple_points",
+      "gradual": false,
+      "human_points": [
+        7.5,
+        9.5
+      ],
+      "human_intervals": [],
+      "canonical_times": [
+        7.5,
+        9.5
+      ],
+      "timing_note": "水瓶左右移动循环；两次手离开水瓶idle分别约7.5s和9.5s。",
+      "interval_midpoints": [],
+      "points_midpoint_mode": [
+        7.5,
+        9.5
+      ],
+      "n_boundaries": 2,
+      "nearest_midpoint_time": 9.5,
+      "dist_midpoint": 0.0,
+      "signed_midpoint": 0.0,
+      "dist_interval_aware": 0.0,
+      "signed_interval_aware": 0.0
+    },
+    {
+      "audit_key": "19/t112.5",
+      "recording_id": "recording_000019",
+      "candidate_time": 112.5,
+      "timing_type": "point",
+      "gradual": false,
+      "human_points": [
+        112.0
+      ],
+      "human_intervals": [],
+      "canonical_times": [
+        112.0
+      ],
+      "timing_note": "水瓶从右移到左后手离开idle，再从左移到右。",
+      "interval_midpoints": [],
+      "points_midpoint_mode": [
+        112.0
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 112.0,
+      "dist_midpoint": 0.5,
+      "signed_midpoint": 0.5,
+      "dist_interval_aware": 0.5,
+      "signed_interval_aware": 0.5
+    },
+    {
+      "audit_key": "20/t67",
+      "recording_id": "recording_000020",
+      "candidate_time": 67.0,
+      "timing_type": "point",
+      "gradual": false,
+      "human_points": [
+        66.0
+      ],
+      "human_intervals": [],
+      "canonical_times": [
+        66.0
+      ],
+      "timing_note": "杯子接水/rinse、倒水、放桌上后，继续下一轮接水；切换约66s。",
+      "interval_midpoints": [],
+      "points_midpoint_mode": [
+        66.0
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 66.0,
+      "dist_midpoint": 1.0,
+      "signed_midpoint": 1.0,
+      "dist_interval_aware": 1.0,
+      "signed_interval_aware": 1.0
+    },
+    {
+      "audit_key": "23/t333",
+      "recording_id": "recording_000023",
+      "candidate_time": 333.0,
+      "timing_type": "multiple_mixed",
+      "gradual": false,
+      "human_points": [
+        343.0
+      ],
+      "human_intervals": [
+        [
+          333.0,
+          335.0
+        ]
+      ],
+      "canonical_times": [
+        334.0,
+        343.0
+      ],
+      "timing_note": "充电线缠好后释放idle再打开；第一次切换333–335s，第二次343s。",
+      "interval_midpoints": [
+        334.0
+      ],
+      "points_midpoint_mode": [
+        334.0,
+        343.0
+      ],
+      "n_boundaries": 2,
+      "nearest_midpoint_time": 334.0,
+      "dist_midpoint": 1.0,
+      "signed_midpoint": -1.0,
+      "dist_interval_aware": 0.0,
+      "signed_interval_aware": 0.0
+    },
+    {
+      "audit_key": "24/t584",
+      "recording_id": "recording_000024",
+      "candidate_time": 584.0,
+      "timing_type": "interval",
+      "gradual": false,
+      "human_points": [],
+      "human_intervals": [
+        [
+          584.0,
+          586.0
+        ]
+      ],
+      "canonical_times": [
+        585.0
+      ],
+      "timing_note": "挤海绵并放桌面、手离开idle，随后拿碗到水龙头下接水。",
+      "interval_midpoints": [
+        585.0
+      ],
+      "points_midpoint_mode": [
+        585.0
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 585.0,
+      "dist_midpoint": 1.0,
+      "signed_midpoint": -1.0,
+      "dist_interval_aware": 0.0,
+      "signed_interval_aware": 0.0
+    },
+    {
+      "audit_key": "25/t413.5",
+      "recording_id": "recording_000025",
+      "candidate_time": 413.5,
+      "timing_type": "interval",
+      "gradual": false,
+      "human_points": [],
+      "human_intervals": [
+        [
+          413.5,
+          415.0
+        ]
+      ],
+      "canonical_times": [
+        414.25
+      ],
+      "timing_note": "水瓶左右移动循环，中间手离开水瓶idle。",
+      "interval_midpoints": [
+        414.25
+      ],
+      "points_midpoint_mode": [
+        414.25
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 414.25,
+      "dist_midpoint": 0.75,
+      "signed_midpoint": -0.75,
+      "dist_interval_aware": 0.0,
+      "signed_interval_aware": 0.0
+    },
+    {
+      "audit_key": "25/t516",
+      "recording_id": "recording_000025",
+      "candidate_time": 516.0,
+      "timing_type": "interval",
+      "gradual": false,
+      "human_points": [],
+      "human_intervals": [
+        [
+          516.0,
+          517.0
+        ]
+      ],
+      "canonical_times": [
+        516.5
+      ],
+      "timing_note": "水瓶从右移到左，手离开idle，再从左移到右。",
+      "interval_midpoints": [
+        516.5
+      ],
+      "points_midpoint_mode": [
+        516.5
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 516.5,
+      "dist_midpoint": 0.5,
+      "signed_midpoint": -0.5,
+      "dist_interval_aware": 0.0,
+      "signed_interval_aware": 0.0
+    },
+    {
+      "audit_key": "26/t206",
+      "recording_id": "recording_000026",
+      "candidate_time": 206.0,
+      "timing_type": "multiple_points",
+      "gradual": false,
+      "human_points": [
+        200.0,
+        206.0
+      ],
+      "human_intervals": [],
+      "canonical_times": [
+        200.0,
+        206.0
+      ],
+      "timing_note": "充电线缠好、释放idle、打开，再离开idle并重新开始缠线。",
+      "interval_midpoints": [],
+      "points_midpoint_mode": [
+        200.0,
+        206.0
+      ],
+      "n_boundaries": 2,
+      "nearest_midpoint_time": 206.0,
+      "dist_midpoint": 0.0,
+      "signed_midpoint": 0.0,
+      "dist_interval_aware": 0.0,
+      "signed_interval_aware": 0.0
+    },
+    {
+      "audit_key": "27/t541",
+      "recording_id": "recording_000027",
+      "candidate_time": 541.0,
+      "timing_type": "point",
+      "gradual": false,
+      "human_points": [
+        541.0
+      ],
+      "human_intervals": [],
+      "canonical_times": [
+        541.0
+      ],
+      "timing_note": "水瓶左右移动循环，中间手离开水瓶idle。",
+      "interval_midpoints": [],
+      "points_midpoint_mode": [
+        541.0
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 541.0,
+      "dist_midpoint": 0.0,
+      "signed_midpoint": 0.0,
+      "dist_interval_aware": 0.0,
+      "signed_interval_aware": 0.0
+    },
+    {
+      "audit_key": "29/t442",
+      "recording_id": "recording_000029",
+      "candidate_time": 442.0,
+      "timing_type": "multiple_points",
+      "gradual": false,
+      "human_points": [
+        443.0,
+        451.5
+      ],
+      "human_intervals": [],
+      "canonical_times": [
+        443.0,
+        451.5
+      ],
+      "timing_note": "伞缠好后双手离开并打开伞面；再次离开后重新开始缠伞。",
+      "interval_midpoints": [],
+      "points_midpoint_mode": [
+        443.0,
+        451.5
+      ],
+      "n_boundaries": 2,
+      "nearest_midpoint_time": 443.0,
+      "dist_midpoint": 1.0,
+      "signed_midpoint": -1.0,
+      "dist_interval_aware": 1.0,
+      "signed_interval_aware": -1.0
+    },
+    {
+      "audit_key": "33/t566",
+      "recording_id": "recording_000033",
+      "candidate_time": 566.0,
+      "timing_type": "multiple_mixed",
+      "gradual": false,
+      "human_points": [
+        559.0,
+        573.0
+      ],
+      "human_intervals": [
+        [
+          567.0,
+          570.0
+        ]
+      ],
+      "canonical_times": [
+        559.0,
+        568.5,
+        573.0
+      ],
+      "timing_note": "挤海绵→拿碗接水/rinse→idle→再次rinse→拿海绵擦碗；三处切换559s、567–570s、573s。",
+      "interval_midpoints": [
+        568.5
+      ],
+      "points_midpoint_mode": [
+        559.0,
+        568.5,
+        573.0
+      ],
+      "n_boundaries": 3,
+      "nearest_midpoint_time": 568.5,
+      "dist_midpoint": 2.5,
+      "signed_midpoint": -2.5,
+      "dist_interval_aware": 1.0,
+      "signed_interval_aware": -1.0
+    },
+    {
+      "audit_key": "35/t473",
+      "recording_id": "recording_000035",
+      "candidate_time": 473.0,
+      "timing_type": "interval",
+      "gradual": false,
+      "human_points": [],
+      "human_intervals": [
+        [
+          473.3,
+          475.0
+        ]
+      ],
+      "canonical_times": [
+        474.15
+      ],
+      "timing_note": "水瓶从右移到左、手离开idle、再从左移到右。",
+      "interval_midpoints": [
+        474.15
+      ],
+      "points_midpoint_mode": [
+        474.15
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 474.15,
+      "dist_midpoint": 1.15,
+      "signed_midpoint": -1.15,
+      "dist_interval_aware": 0.3,
+      "signed_interval_aware": -0.3
+    },
+    {
+      "audit_key": "35/t132",
+      "recording_id": "recording_000035",
+      "candidate_time": 132.0,
+      "timing_type": "interval",
+      "gradual": false,
+      "human_points": [],
+      "human_intervals": [
+        [
+          132.0,
+          134.3
+        ]
+      ],
+      "canonical_times": [
+        133.15
+      ],
+      "timing_note": "水瓶从右移到左、手离开idle、再从左移到右。",
+      "interval_midpoints": [
+        133.15
+      ],
+      "points_midpoint_mode": [
+        133.15
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 133.15,
+      "dist_midpoint": 1.15,
+      "signed_midpoint": -1.15,
+      "dist_interval_aware": 0.0,
+      "signed_interval_aware": 0.0
+    },
+    {
+      "audit_key": "35/t351",
+      "recording_id": "recording_000035",
+      "candidate_time": 351.0,
+      "timing_type": "multiple_mixed",
+      "gradual": false,
+      "human_points": [
+        346.5
+      ],
+      "human_intervals": [
+        [
+          349.5,
+          350.5
+        ],
+        [
+          353.8,
+          354.9
+        ]
+      ],
+      "canonical_times": [
+        346.5,
+        350.0,
+        354.35
+      ],
+      "timing_note": "水瓶左右移动循环；修正后第一次346.5s，第二次349.5–350.5s，第三次353.8–354.9s。",
+      "interval_midpoints": [
+        350.0,
+        354.35
+      ],
+      "points_midpoint_mode": [
+        346.5,
+        350.0,
+        354.35
+      ],
+      "n_boundaries": 3,
+      "nearest_midpoint_time": 350.0,
+      "dist_midpoint": 1.0,
+      "signed_midpoint": 1.0,
+      "dist_interval_aware": 0.5,
+      "signed_interval_aware": 0.5
+    },
+    {
+      "audit_key": "48/t96",
+      "recording_id": "recording_000048",
+      "candidate_time": 96.0,
+      "timing_type": "point",
+      "gradual": false,
+      "human_points": [
+        95.5
+      ],
+      "human_intervals": [],
+      "canonical_times": [
+        95.5
+      ],
+      "timing_note": "丢弃旧纸巾后抽新纸巾、折好并开始大幅擦桌；动作序列约91.9s开始，task切换约95.5s。",
+      "interval_midpoints": [],
+      "points_midpoint_mode": [
+        95.5
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 95.5,
+      "dist_midpoint": 0.5,
+      "signed_midpoint": 0.5,
+      "dist_interval_aware": 0.5,
+      "signed_interval_aware": 0.5
+    },
+    {
+      "audit_key": "49/t94.5",
+      "recording_id": "recording_000049",
+      "candidate_time": 94.5,
+      "timing_type": "point",
+      "gradual": false,
+      "human_points": [
+        94.5
+      ],
+      "human_intervals": [],
+      "canonical_times": [
+        94.5
+      ],
+      "timing_note": "擦桌→丢旧纸巾→抽取并折叠新纸巾→继续擦桌。",
+      "interval_midpoints": [],
+      "points_midpoint_mode": [
+        94.5
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 94.5,
+      "dist_midpoint": 0.0,
+      "signed_midpoint": 0.0,
+      "dist_interval_aware": 0.0,
+      "signed_interval_aware": 0.0
+    },
+    {
+      "audit_key": "49/t325",
+      "recording_id": "recording_000049",
+      "candidate_time": 325.0,
+      "timing_type": "interval",
+      "gradual": false,
+      "human_points": [],
+      "human_intervals": [
+        [
+          324.0,
+          325.0
+        ]
+      ],
+      "canonical_times": [
+        324.5
+      ],
+      "timing_note": "擦桌→丢旧纸巾→抽取并折叠新纸巾→继续擦桌。",
+      "interval_midpoints": [
+        324.5
+      ],
+      "points_midpoint_mode": [
+        324.5
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 324.5,
+      "dist_midpoint": 0.5,
+      "signed_midpoint": 0.5,
+      "dist_interval_aware": 0.0,
+      "signed_interval_aware": 0.0
+    },
+    {
+      "audit_key": "50/t291.5",
+      "recording_id": "recording_000050",
+      "candidate_time": 291.5,
+      "timing_type": "point",
+      "gradual": false,
+      "human_points": [
+        287.0
+      ],
+      "human_intervals": [],
+      "canonical_times": [
+        287.0
+      ],
+      "timing_note": "擦桌→团纸巾并丢弃→抽新纸巾并折叠；最终修正确认切换为287s。",
+      "interval_midpoints": [],
+      "points_midpoint_mode": [
+        287.0
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 287.0,
+      "dist_midpoint": 4.5,
+      "signed_midpoint": 4.5,
+      "dist_interval_aware": 4.5,
+      "signed_interval_aware": 4.5
+    },
+    {
+      "audit_key": "50/t104",
+      "recording_id": "recording_000050",
+      "candidate_time": 104.0,
+      "timing_type": "interval",
+      "gradual": false,
+      "human_points": [],
+      "human_intervals": [
+        [
+          106.0,
+          108.0
+        ]
+      ],
+      "canonical_times": [
+        107.0
+      ],
+      "timing_note": "擦桌→团纸巾并丢弃→抽新纸巾并折叠；采用最终确认的106–108s，忽略此前误粘贴的385–387s。",
+      "interval_midpoints": [
+        107.0
+      ],
+      "points_midpoint_mode": [
+        107.0
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 107.0,
+      "dist_midpoint": 3.0,
+      "signed_midpoint": -3.0,
+      "dist_interval_aware": 2.0,
+      "signed_interval_aware": -2.0
+    },
+    {
+      "audit_key": "58/t585",
+      "recording_id": "recording_000058",
+      "candidate_time": 585.0,
+      "timing_type": "interval",
+      "gradual": false,
+      "human_points": [],
+      "human_intervals": [
+        [
+          578.0,
+          580.0
+        ]
+      ],
+      "canonical_times": [
+        579.0
+      ],
+      "timing_note": "擦桌→团纸巾并丢弃→抽新纸巾并折叠→继续擦桌。",
+      "interval_midpoints": [
+        579.0
+      ],
+      "points_midpoint_mode": [
+        579.0
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 579.0,
+      "dist_midpoint": 6.0,
+      "signed_midpoint": 6.0,
+      "dist_interval_aware": 5.0,
+      "signed_interval_aware": 5.0
+    },
+    {
+      "audit_key": "67/t440.5",
+      "recording_id": "recording_000067",
+      "candidate_time": 440.5,
+      "timing_type": "interval",
+      "gradual": false,
+      "human_points": [],
+      "human_intervals": [
+        [
+          439.0,
+          441.0
+        ]
+      ],
+      "canonical_times": [
+        440.0
+      ],
+      "timing_note": "擦桌→团纸巾并丢弃→抽新纸巾并折叠→继续擦桌。",
+      "interval_midpoints": [
+        440.0
+      ],
+      "points_midpoint_mode": [
+        440.0
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 440.0,
+      "dist_midpoint": 0.5,
+      "signed_midpoint": 0.5,
+      "dist_interval_aware": 0.0,
+      "signed_interval_aware": 0.0
+    },
+    {
+      "audit_key": "104/t392",
+      "recording_id": "recording_000104",
+      "candidate_time": 392.0,
+      "timing_type": "point",
+      "gradual": false,
+      "human_points": [
+        392.0
+      ],
+      "human_intervals": [],
+      "canonical_times": [
+        392.0
+      ],
+      "timing_note": "连续小幅擦桌，中间手离开idle，再重新接触纸巾继续擦。",
+      "interval_midpoints": [],
+      "points_midpoint_mode": [
+        392.0
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 392.0,
+      "dist_midpoint": 0.0,
+      "signed_midpoint": 0.0,
+      "dist_interval_aware": 0.0,
+      "signed_interval_aware": 0.0
+    },
+    {
+      "audit_key": "135/t559",
+      "recording_id": "recording_000135",
+      "candidate_time": 559.0,
+      "timing_type": "point",
+      "gradual": false,
+      "human_points": [
+        560.6
+      ],
+      "human_intervals": [],
+      "canonical_times": [
+        560.6
+      ],
+      "timing_note": "打开/整理数据线后转为把插头插入墙上插座。",
+      "interval_midpoints": [],
+      "points_midpoint_mode": [
+        560.6
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 560.6,
+      "dist_midpoint": 1.6,
+      "signed_midpoint": -1.6,
+      "dist_interval_aware": 1.6,
+      "signed_interval_aware": -1.6
+    },
+    {
+      "audit_key": "137/t299",
+      "recording_id": "recording_000137",
+      "candidate_time": 299.0,
+      "timing_type": "interval",
+      "gradual": false,
+      "human_points": [],
+      "human_intervals": [
+        [
+          298.0,
+          299.0
+        ]
+      ],
+      "canonical_times": [
+        298.5
+      ],
+      "timing_note": "把数据线打开，手离开idle，之后开始把充电线缠好。",
+      "interval_midpoints": [
+        298.5
+      ],
+      "points_midpoint_mode": [
+        298.5
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 298.5,
+      "dist_midpoint": 0.5,
+      "signed_midpoint": 0.5,
+      "dist_interval_aware": 0.0,
+      "signed_interval_aware": 0.0
+    },
+    {
+      "audit_key": "140/t574",
+      "recording_id": "recording_000140",
+      "candidate_time": 574.0,
+      "timing_type": "point",
+      "gradual": false,
+      "human_points": [
+        572.0
+      ],
+      "human_intervals": [],
+      "canonical_times": [
+        572.0
+      ],
+      "timing_note": "数据线两端连接完成并idle，之后拔下两端开始缠线。",
+      "interval_midpoints": [],
+      "points_midpoint_mode": [
+        572.0
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 572.0,
+      "dist_midpoint": 2.0,
+      "signed_midpoint": 2.0,
+      "dist_interval_aware": 2.0,
+      "signed_interval_aware": 2.0
+    },
+    {
+      "audit_key": "145/t558",
+      "recording_id": "recording_000145",
+      "candidate_time": 558.0,
+      "timing_type": "interval",
+      "gradual": false,
+      "human_points": [],
+      "human_intervals": [
+        [
+          562.1,
+          567.5
+        ]
+      ],
+      "canonical_times": [
+        564.8
+      ],
+      "timing_note": "双手把充电线盘好放柜子里、idle，之后从柜子里重新取出。",
+      "interval_midpoints": [
+        564.8
+      ],
+      "points_midpoint_mode": [
+        564.8
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 564.8,
+      "dist_midpoint": 6.8,
+      "signed_midpoint": -6.8,
+      "dist_interval_aware": 4.1,
+      "signed_interval_aware": -4.1
+    },
+    {
+      "audit_key": "152/t9.5",
+      "recording_id": "recording_000152",
+      "candidate_time": 9.5,
+      "timing_type": "multiple_points",
+      "gradual": false,
+      "human_points": [
+        7.5,
+        12.0
+      ],
+      "human_intervals": [],
+      "canonical_times": [
+        7.5,
+        12.0
+      ],
+      "timing_note": "手离开，前后翻动遥控器，再次手离开；两次切换7.5s和12s。",
+      "interval_midpoints": [],
+      "points_midpoint_mode": [
+        7.5,
+        12.0
+      ],
+      "n_boundaries": 2,
+      "nearest_midpoint_time": 7.5,
+      "dist_midpoint": 2.0,
+      "signed_midpoint": 2.0,
+      "dist_interval_aware": 2.0,
+      "signed_interval_aware": 2.0
+    },
+    {
+      "audit_key": "156/t254",
+      "recording_id": "recording_000156",
+      "candidate_time": 254.0,
+      "timing_type": "gradual_interval",
+      "gradual": true,
+      "human_points": [],
+      "human_intervals": [
+        [
+          254.0,
+          258.0
+        ]
+      ],
+      "canonical_times": [
+        256.0
+      ],
+      "timing_note": "inspect数据线逐渐转为插入adapter；无唯一瞬时点。",
+      "interval_midpoints": [
+        256.0
+      ],
+      "points_midpoint_mode": [
+        256.0
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 256.0,
+      "dist_midpoint": 2.0,
+      "signed_midpoint": -2.0,
+      "dist_interval_aware": 0.0,
+      "signed_interval_aware": 0.0
+    },
+    {
+      "audit_key": "157/t632",
+      "recording_id": "recording_000157",
+      "candidate_time": 632.0,
+      "timing_type": "point",
+      "gradual": false,
+      "human_points": [
+        632.0
+      ],
+      "human_intervals": [],
+      "canonical_times": [
+        632.0
+      ],
+      "timing_note": "inspect手机并放桌上，之后转为看手表。",
+      "interval_midpoints": [],
+      "points_midpoint_mode": [
+        632.0
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 632.0,
+      "dist_midpoint": 0.0,
+      "signed_midpoint": 0.0,
+      "dist_interval_aware": 0.0,
+      "signed_interval_aware": 0.0
+    },
+    {
+      "audit_key": "169/t350",
+      "recording_id": "recording_000169",
+      "candidate_time": 350.0,
+      "timing_type": "interval",
+      "gradual": false,
+      "human_points": [],
+      "human_intervals": [
+        [
+          350.0,
+          353.0
+        ]
+      ],
+      "canonical_times": [
+        351.5
+      ],
+      "timing_note": "下水道塞子冲洗并放回，双手明显离开/idle，再重新拿出冲洗。",
+      "interval_midpoints": [
+        351.5
+      ],
+      "points_midpoint_mode": [
+        351.5
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 351.5,
+      "dist_midpoint": 1.5,
+      "signed_midpoint": -1.5,
+      "dist_interval_aware": 0.0,
+      "signed_interval_aware": 0.0
+    },
+    {
+      "audit_key": "170/t634",
+      "recording_id": "recording_000170",
+      "candidate_time": 634.0,
+      "timing_type": "multiple_mixed",
+      "gradual": false,
+      "human_points": [
+        639.0
+      ],
+      "human_intervals": [
+        [
+          632.8,
+          634.0
+        ]
+      ],
+      "canonical_times": [
+        633.4,
+        639.0
+      ],
+      "timing_note": "下水道塞子冲洗/放回/离开后再开始下一轮；第一次632.8–634s，第二次639s。",
+      "interval_midpoints": [
+        633.4
+      ],
+      "points_midpoint_mode": [
+        633.4,
+        639.0
+      ],
+      "n_boundaries": 2,
+      "nearest_midpoint_time": 633.4,
+      "dist_midpoint": 0.6,
+      "signed_midpoint": 0.6,
+      "dist_interval_aware": 0.0,
+      "signed_interval_aware": 0.0
+    },
+    {
+      "audit_key": "170/t659.4",
+      "recording_id": "recording_000170",
+      "candidate_time": 659.4,
+      "timing_type": "multiple_mixed",
+      "gradual": false,
+      "human_points": [
+        665.0
+      ],
+      "human_intervals": [
+        [
+          656.4,
+          659.0
+        ]
+      ],
+      "canonical_times": [
+        657.7,
+        665.0
+      ],
+      "timing_note": "下水道塞子冲洗/放回/离开后再开始下一轮；第一次656.4–659s，第二次665s。",
+      "interval_midpoints": [
+        657.7
+      ],
+      "points_midpoint_mode": [
+        657.7,
+        665.0
+      ],
+      "n_boundaries": 2,
+      "nearest_midpoint_time": 657.7,
+      "dist_midpoint": 1.7,
+      "signed_midpoint": 1.7,
+      "dist_interval_aware": 0.4,
+      "signed_interval_aware": 0.4
+    },
+    {
+      "audit_key": "179/t324",
+      "recording_id": "recording_000179",
+      "candidate_time": 324.0,
+      "timing_type": "point",
+      "gradual": false,
+      "human_points": [
+        324.0
+      ],
+      "human_intervals": [],
+      "canonical_times": [
+        324.0
+      ],
+      "timing_note": "下水道塞子冲洗并放回，之后手明显离开，再开始下一轮冲洗。",
+      "interval_midpoints": [],
+      "points_midpoint_mode": [
+        324.0
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 324.0,
+      "dist_midpoint": 0.0,
+      "signed_midpoint": 0.0,
+      "dist_interval_aware": 0.0,
+      "signed_interval_aware": 0.0
+    },
+    {
+      "audit_key": "180/t392.5",
+      "recording_id": "recording_000180",
+      "candidate_time": 392.5,
+      "timing_type": "point",
+      "gradual": false,
+      "human_points": [
+        391.0
+      ],
+      "human_intervals": [],
+      "canonical_times": [
+        391.0
+      ],
+      "timing_note": "下水道塞子冲洗并放回，手明显离开后，再开始下一轮冲洗。",
+      "interval_midpoints": [],
+      "points_midpoint_mode": [
+        391.0
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 391.0,
+      "dist_midpoint": 1.5,
+      "signed_midpoint": 1.5,
+      "dist_interval_aware": 1.5,
+      "signed_interval_aware": 1.5
+    },
+    {
+      "audit_key": "197/t32",
+      "recording_id": "recording_000197",
+      "candidate_time": 32.0,
+      "timing_type": "gradual_interval",
+      "gradual": true,
+      "human_points": [],
+      "human_intervals": [
+        [
+          31.0,
+          33.4
+        ]
+      ],
+      "canonical_times": [
+        32.2
+      ],
+      "timing_note": "inspect充电宝逐渐转为把充电宝放回盒子；无唯一瞬时点。",
+      "interval_midpoints": [
+        32.2
+      ],
+      "points_midpoint_mode": [
+        32.2
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 32.2,
+      "dist_midpoint": 0.2,
+      "signed_midpoint": -0.2,
+      "dist_interval_aware": 0.0,
+      "signed_interval_aware": 0.0
+    },
+    {
+      "audit_key": "201/t132.1",
+      "recording_id": "recording_000201",
+      "candidate_time": 132.1,
+      "timing_type": "interval",
+      "gradual": false,
+      "human_points": [],
+      "human_intervals": [
+        [
+          129.7,
+          131.7
+        ]
+      ],
+      "canonical_times": [
+        130.7
+      ],
+      "timing_note": "放回下水道塞子、明显离开，之后重新拿出到水龙头下冲洗。",
+      "interval_midpoints": [
+        130.7
+      ],
+      "points_midpoint_mode": [
+        130.7
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 130.7,
+      "dist_midpoint": 1.4,
+      "signed_midpoint": 1.4,
+      "dist_interval_aware": 0.4,
+      "signed_interval_aware": 0.4
+    },
+    {
+      "audit_key": "201/t498",
+      "recording_id": "recording_000201",
+      "candidate_time": 498.0,
+      "timing_type": "interval",
+      "gradual": false,
+      "human_points": [],
+      "human_intervals": [
+        [
+          498.0,
+          500.0
+        ]
+      ],
+      "canonical_times": [
+        499.0
+      ],
+      "timing_note": "下水道塞子冲洗并放回，明显离开，之后重新拿出。",
+      "interval_midpoints": [
+        499.0
+      ],
+      "points_midpoint_mode": [
+        499.0
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 499.0,
+      "dist_midpoint": 1.0,
+      "signed_midpoint": -1.0,
+      "dist_interval_aware": 0.0,
+      "signed_interval_aware": 0.0
+    },
+    {
+      "audit_key": "209/t257",
+      "recording_id": "recording_000209",
+      "candidate_time": 257.0,
+      "timing_type": "interval",
+      "gradual": false,
+      "human_points": [],
+      "human_intervals": [
+        [
+          255.0,
+          258.0
+        ]
+      ],
+      "canonical_times": [
+        256.5
+      ],
+      "timing_note": "下水道塞子冲洗并放回，明显离开，之后重新拿出并开始下一轮冲洗。",
+      "interval_midpoints": [
+        256.5
+      ],
+      "points_midpoint_mode": [
+        256.5
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 256.5,
+      "dist_midpoint": 0.5,
+      "signed_midpoint": 0.5,
+      "dist_interval_aware": 0.0,
+      "signed_interval_aware": 0.0
+    },
+    {
+      "audit_key": "212/t502.2",
+      "recording_id": "recording_000212",
+      "candidate_time": 502.2,
+      "timing_type": "gradual_interval",
+      "gradual": true,
+      "human_points": [],
+      "human_intervals": [
+        [
+          501.8,
+          504.0
+        ]
+      ],
+      "canonical_times": [
+        502.9
+      ],
+      "timing_note": "整理小包装→放入大袋并盖口→倒转袋子使包装掉出→再次整理；过渡为gradual。",
+      "interval_midpoints": [
+        502.9
+      ],
+      "points_midpoint_mode": [
+        502.9
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 502.9,
+      "dist_midpoint": 0.7,
+      "signed_midpoint": -0.7,
+      "dist_interval_aware": 0.0,
+      "signed_interval_aware": 0.0
+    },
+    {
+      "audit_key": "218/t123.1",
+      "recording_id": "recording_000218",
+      "candidate_time": 123.1,
+      "timing_type": "point",
+      "gradual": false,
+      "human_points": [
+        123.0
+      ],
+      "human_intervals": [],
+      "canonical_times": [
+        123.0
+      ],
+      "timing_note": "双手各拿一只拖鞋放入桌柜桶、再取回，之后重新放入。",
+      "interval_midpoints": [],
+      "points_midpoint_mode": [
+        123.0
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 123.0,
+      "dist_midpoint": 0.1,
+      "signed_midpoint": 0.1,
+      "dist_interval_aware": 0.1,
+      "signed_interval_aware": 0.1
+    },
+    {
+      "audit_key": "218/t366.6",
+      "recording_id": "recording_000218",
+      "candidate_time": 366.6,
+      "timing_type": "point",
+      "gradual": false,
+      "human_points": [
+        365.5
+      ],
+      "human_intervals": [],
+      "canonical_times": [
+        365.5
+      ],
+      "timing_note": "双手各拿一只拖鞋放入桌柜桶、再取回，之后重新放入。",
+      "interval_midpoints": [],
+      "points_midpoint_mode": [
+        365.5
+      ],
+      "n_boundaries": 1,
+      "nearest_midpoint_time": 365.5,
+      "dist_midpoint": 1.1,
+      "signed_midpoint": 1.1,
+      "dist_interval_aware": 1.1,
+      "signed_interval_aware": 1.1
+    }
+  ]
+}
