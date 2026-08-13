@@ -178,7 +178,15 @@ def main():
                              "duration": round(float(s[2]) - float(s[1]), 2),
                              "stored_label": str(s[0]),
                              "video": get_video(rec)})
-            idxs.append({"seg_index": i, "segment_uid": seg_id[key]})
+            # WAS THIS SEGMENT ON THE SHEET? `around` recovers by time and
+            # can return a neighbour the context file left null, so the
+            # targets are a SUPERSET of what the annotator judged. Attaching
+            # an event's claim_support to a segment nobody looked at would
+            # attach a judgement to something it was not about, and that would
+            # be invisible after the join.
+            idxs.append({"seg_index": i, "segment_uid": seg_id[key],
+                         "stored_label": str(s[0]),
+                         "shown_in_sheet": str(s[0]) in expected})
         per_event[e["audit_key"]] = {"event_id": eid, "recording_id": rid,
                                      "candidate_time": t, "segments": idxs}
 
@@ -194,6 +202,20 @@ def main():
           f"{sum(len(v['segments']) for v in per_event.values())})")
     n_seg = Counter(len(v["segments"]) for v in per_event.values())
     print(f"  segments per event: {dict(sorted(n_seg.items()))}")
+    shown = sum(1 for v in per_event.values() for x in v["segments"]
+                if x["shown_in_sheet"])
+    total = sum(len(v["segments"]) for v in per_event.values())
+    extra_ev = [k for k, v in per_event.items()
+                if any(not x["shown_in_sheet"] for x in v["segments"])]
+    print(f"\n  AUDITED vs RECOVERED: {shown}/{total} (event, segment) pairs "
+          f"carry a label the\n  annotator was shown. The other "
+          f"{total - shown} are neighbours the context file left\n  null and "
+          f"`around` found by time -- real segments, but nobody judged them.")
+    print(f"  {len(extra_ev)} events have at least one such segment: "
+          f"{extra_ev[:8]}")
+    print(f"  Run naming on all of them; JOIN claim_support only through "
+          f"`shown_in_sheet: true`,\n  or a judgement gets attached to a "
+          f"segment it was never about.")
 
     print(f"\nLABEL VERIFICATION -- recovered by time, checked by label:")
     if label_mismatch:
