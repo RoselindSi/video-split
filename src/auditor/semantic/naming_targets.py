@@ -123,6 +123,13 @@ def main():
         print(f"  !! matched nothing: {unresolved}")
     print(f"--recseg resolved to {len(paths)} file(s)")
 
+    # basename alone is ambiguous here: data_recseg/ and data_recseg_part2/
+    # both hold a recseg_val.json, and the run printed the same name twice
+    # against different record counts
+    def short(p):
+        return os.path.join(os.path.basename(os.path.dirname(p)),
+                            os.path.basename(p))
+
     recs, src_of, conflicts = {}, {}, []
     for p in paths:
         if not os.path.exists(p):
@@ -142,14 +149,13 @@ def main():
                 b_ = [(str(x[0]), round(float(x[1]), 2), round(float(x[2]), 2))
                       for x in get_segments(r)[0]]
                 if a_ != b_:
-                    conflicts.append((rid, src_of[rid], os.path.basename(p),
+                    conflicts.append((rid, src_of[rid], short(p),
                                       len(a_), len(b_)))
                 continue
             recs[rid] = r
-            src_of[rid] = os.path.basename(p)
+            src_of[rid] = short(p)
             n_new += 1
-        print(f"  {os.path.basename(p):<34} {len(blob):>4} records, "
-              f"{n_new:>4} new")
+        print(f"  {short(p):<44} {len(blob):>4} records, {n_new:>4} new")
     print(f"{len(evs)} audited events; {len(recs)} recordings loaded")
     if conflicts:
         print(f"  !! {len(conflicts)} recordings appear in more than one file "
