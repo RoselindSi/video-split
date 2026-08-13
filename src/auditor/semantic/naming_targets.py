@@ -103,8 +103,7 @@ def main():
         if not evs:
             raise SystemExit(
                 f"{a.gold_json} has no usable `event_id` column. A sheet "
-                f"whose keys are only
-  `audit_key` cannot be resolved to "
+                f"whose keys are only `audit_key` cannot be resolved to "
                 f"segments without the event ids.")
         for e in evs:
             e.setdefault("audit_key", e["event_id"])
