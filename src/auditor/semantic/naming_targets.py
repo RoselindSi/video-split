@@ -41,6 +41,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import glob
 import json
 import os
 import re
@@ -82,7 +83,11 @@ def main():
     ap.add_argument("--gold_json",
                     default="data/gold/semantic_ontology_gold_48.json")
     ap.add_argument("--context", default="data/gold/audit_188_context.jsonl")
-    ap.add_argument("--recseg", action="append", required=True)
+    ap.add_argument("--recseg", action="append", required=True,
+                    help="recseg json path, DIRECTORY, or glob. Globs are "
+                         "expanded here because hand-typed absolute paths to "
+                         "this dataset have been wrong four times in a row; "
+                         "quote them so the shell does not expand first")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
 
@@ -97,8 +102,29 @@ def main():
     # when the segmentations agree and silently picks one when they do not,
     # which would make the recovered windows depend on flag order. So the
     # conflicts are found and named.
+    # A path, a directory, or a glob. `recseg_part2_combined.json` does not
+    # live where the other recseg files do, and typing its absolute path from
+    # memory has produced a silent 19/48 more than once -- the run looked
+    # complete because the missing file only printed one line.
+    paths, unresolved = [], []
+    for pat in a.recseg:
+        if os.path.isdir(pat):
+            hits = sorted(glob.glob(os.path.join(pat, "*.json")))
+        elif os.path.exists(pat):
+            hits = [pat]
+        else:
+            hits = sorted(glob.glob(pat))
+        if not hits:
+            unresolved.append(pat)
+        for h in hits:
+            if h not in paths and not h.endswith(".manifest.json"):
+                paths.append(h)
+    if unresolved:
+        print(f"  !! matched nothing: {unresolved}")
+    print(f"--recseg resolved to {len(paths)} file(s)")
+
     recs, src_of, conflicts = {}, {}, []
-    for p in a.recseg:
+    for p in paths:
         if not os.path.exists(p):
             print(f"  !! {p} not found")
             continue
