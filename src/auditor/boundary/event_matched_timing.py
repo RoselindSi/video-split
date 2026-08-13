@@ -14,18 +14,25 @@ THIS FILE REMOVES THE POPULATION DIFFERENCE. For one event there is one human
 timing and one stored timing, and both are scored against the same peaks. What
 is left is only the correction.
 
-THE JOIN RULE IS FIXED BEFORE ANY PEAK IS READ, and it is narrow on purpose.
-An event's id encodes the category it was sampled under, and for the
-GT-CENTRED categories -- exact, early, late, missed_* -- the time in the id IS
-the stored annotation time. That is an identity, not a match: no search, no
-nearest-neighbour, nothing that could drift toward agreement.
+THE JOIN RULE IS VERIFIED, NOT TRUSTED. The first version of this file
+decided which events had a stored boundary by matching category NAMES --
+exact, early, late, missed_* -- and it matched none of them, because these 45
+events came from batch3 and carry `batch3_gt_boundary` and
+`batch3_raw_change_peak`. Reading the first of those as GT-centred because of
+its name would be the same mistake with a longer list.
 
-Prediction-centred events -- duplicate, false_* -- have the MODEL's time in
-their id and no stored boundary attached to them at all. Pairing those would
-mean picking the nearest stored join, a post-hoc mapping that could be pulled
-toward whichever answer the peaks favour. They are excluded and counted. A
-smaller unambiguous n is worth more than a larger one held together by a rule
-invented after seeing the data.
+So the rule is an identity CHECK against the annotations: an event is usable
+when its candidate time coincides, within --identity_eps, with an actual
+segment edge in that recording. If it does, that edge IS the stored timing for
+the event, exactly and by construction. If it does not, the event has no
+stored boundary attached and pairing it would need a nearest-stored rule
+invented after seeing the data -- one that could be pulled toward whichever
+answer the peaks favour.
+
+The check reads recseg and the event ids. It never reads a peak, so it cannot
+select toward the result. Categories are reported beside it because a usable
+set dominated by one category is a different population from a mixed one, and
+that has to be visible.
 
 INTERVALS KEEP THE INTERVAL-AWARE DEFINITION: a peak inside a human-marked
 transition is at distance 0, outside it the distance to the nearer edge. The
@@ -58,11 +65,6 @@ import re
 from collections import Counter, defaultdict
 
 EID = re.compile(r"^(recording_\d+)_(.+)_t(\d+(?:\.\d+)?)$")
-GT_CENTRED = {"exact", "early", "late"}
-
-
-def is_gt_centred(cat):
-    return cat in GT_CENTRED or cat.startswith("missed_")
 
 
 def parse_eid(eid):
@@ -114,6 +116,16 @@ def main():
                          "audit_key can be turned back into an event_id, and "
                          "the category lives in the event_id")
     ap.add_argument("--predictions", required=True)
+    ap.add_argument("--recseg", action="append", required=True,
+                    help="recseg json(s). An event is usable only if its "
+                         "candidate time coincides with a real segment edge, "
+                         "which is what makes the stored timing an identity "
+                         "rather than a nearest-neighbour guess")
+    ap.add_argument("--identity_eps", type=float, default=0.06,
+                    help="how close the candidate time must be to a segment "
+                         "edge to count as being that edge. Larger than the "
+                         "0.1s annotation grid step would start matching "
+                         "DIFFERENT boundaries")
     ap.add_argument("--tol", type=float, default=0.5)
     ap.add_argument("--n_boot", type=int, default=2000)
     ap.add_argument("--n_perm", type=int, default=2000)
@@ -130,43 +142,69 @@ def main():
         if rid:
             by_key[(rid, round(t, 1))] = (eid, cat)
 
+    from src.auditor.semantic.render_ontology_clips import get_segments
+    edges = defaultdict(set)
+    for p in a.recseg:
+        if not os.path.exists(p):
+            print(f"  !! {p} not found")
+            continue
+        blob = json.load(open(p, encoding="utf-8"))
+        if isinstance(blob, dict):
+            blob = blob.get("recordings") or blob.get("data") or []
+        for r in blob:
+            rid = r.get("recording_id")
+            if not rid:
+                continue
+            for sg in get_segments(r)[0]:
+                edges[rid].add(round(float(sg[1]), 2))
+                edges[rid].add(round(float(sg[2]), 2))
+
     peaks = load_peaks(a.predictions)
     print(f"{len(evs)} timing-gold events; {len(mig)} migrated event ids; "
           f"{sum(len(v) for v in peaks.values())} peaks over {len(peaks)} "
           f"recordings")
+    print(f"{sum(len(v) for v in edges.values())} segment edges over "
+          f"{len(edges)} recordings")
 
-    matched, unmatched, pred_centred, no_peaks = [], [], [], []
+    matched, unmatched, no_identity, no_peaks = [], [], [], []
+    cat_of = {}
     for e in evs:
         key = (e["recording_id"], round(e["candidate_time"], 1))
         hit = by_key.get(key)
+        cat = hit[1] if hit else None
+        cat_of[e["audit_key"]] = cat
         if not hit:
             unmatched.append(e["audit_key"])
             continue
-        eid, cat = hit
-        if not is_gt_centred(cat):
-            pred_centred.append((e["audit_key"], cat))
+        # THE IDENTITY CHECK -- annotations only, no peaks
+        near = [x for x in edges.get(e["recording_id"], ())
+                if abs(x - e["candidate_time"]) <= a.identity_eps]
+        if not near:
+            no_identity.append((e["audit_key"], cat))
             continue
         if not peaks.get(e["recording_id"]):
             no_peaks.append(e["audit_key"])
             continue
-        # the identity: for a GT-centred event the id's time IS the stored
-        # annotation time. No search is performed anywhere in this file.
-        matched.append(dict(e, event_id=eid, source_category=cat,
-                            stored_time=e["candidate_time"]))
+        matched.append(dict(e, event_id=hit[0], source_category=cat,
+                            stored_time=min(
+                                near, key=lambda x: abs(x - e["candidate_time"]))))
 
-    print(f"\nJOIN -- fixed before any peak is read:")
-    print(f"  usable (GT-centred, stored time = the id's time) "
-          f"{len(matched):>3} over "
-          f"{len({m['recording_id'] for m in matched})} recordings")
-    print(f"  excluded, prediction-centred (no stored boundary attached) "
-          f"{len(pred_centred):>3}")
-    if pred_centred:
-        print(f"    categories: "
-              f"{dict(Counter(c for _k, c in pred_centred).most_common())}")
-    print(f"  excluded, audit_key not found in --migrated       "
-          f"{len(unmatched):>3}")
-    print(f"  excluded, recording has no peaks                  "
-          f"{len(no_peaks):>3}")
+    print(f"\nJOIN -- identity checked against the annotations, no peak "
+          f"read:")
+    print(f"  usable (candidate time IS a segment edge)  {len(matched):>3} "
+          f"over {len({m['recording_id'] for m in matched})} recordings")
+    if matched:
+        print(f"    by category: "
+              f"{dict(Counter(m['source_category'] for m in matched).most_common())}")
+    print(f"  excluded, no segment edge within {a.identity_eps}s  "
+          f"{len(no_identity):>3}")
+    if no_identity:
+        print(f"    by category: "
+              f"{dict(Counter(c for _k, c in no_identity).most_common())}")
+    print(f"  excluded, audit_key not in --migrated      {len(unmatched):>3}")
+    print(f"  excluded, recording has no peaks           {len(no_peaks):>3}")
+    print(f"  all 45 categories seen: "
+          f"{dict(Counter(v for v in cat_of.values()).most_common())}")
     if not matched:
         raise SystemExit(
             "nothing to compare. If everything is prediction-centred, this "
@@ -278,7 +316,7 @@ def main():
 
     if a.out:
         json.dump({"tol": a.tol, "n_matched": len(matched),
-                   "excluded_prediction_centred": len(pred_centred),
+                   "excluded_no_identity": len(no_identity),
                    "excluded_unmatched": len(unmatched),
                    "results": results},
                   open(a.out, "w", encoding="utf-8"), indent=2)
