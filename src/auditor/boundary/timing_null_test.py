@@ -142,6 +142,11 @@ def main():
                          "having been fitted on a recording changes what a "
                          "peak on it means, and that has to be stated")
     ap.add_argument("--recseg_val", action="append", default=[])
+    ap.add_argument("--paired_recseg", action="append", default=[],
+                    help="recseg json(s) to build STORED boundaries for the "
+                         "same recordings, so human and stored times can be "
+                         "compared against each other on the same peaks. "
+                         "This is the test the hypothesis actually names")
     ap.add_argument("--n_perm", type=int, default=2000)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out")
@@ -275,6 +280,80 @@ def main():
             print(f"    ratio {r['ratio']}   permutation p = {r['p_value']}"
                   + ("   (floor: p cannot go below 1/(n_perm+1))"
                      if r["p_value"] <= 1.5 / (a.n_perm + 1) else ""))
+
+    # ------------------------------------------------------------- PAIRED
+    #
+    # THE HYPOTHESIS IS A COMPARISON AND I TESTED TWO ABSOLUTE LEVELS.
+    #
+    # "the stored annotation times are displaced" says human times are BETTER
+    # located than stored ones. Testing each against chance separately throws
+    # away the pairing and most of the power: 58 human boundaries can only
+    # detect a ratio above about 2, so the run below could reject the audited
+    # 6.21 and could say nothing at all about 1.3-1.5.
+    #
+    # The paired form uses the SAME peaks and the SAME shift for both, and the
+    # statistic is the difference in per-boundary hit RATE, which is what the
+    # claim is about. Rates rather than counts because there are roughly two
+    # human boundaries per recording against seventy stored ones.
+    if a.paired_recseg:
+        from src.auditor.boundary.alignment_from_peaks import gt_boundaries
+        rid_have = {e["recording_id"] for e in have}
+        stored = gt_boundaries(a.paired_recseg, keep_recordings=rid_have,
+                               mode="gap_midpoint")
+        stored_b = {r: [("point", t, t) for t in ts]
+                    for r, ts in stored.items()}
+        n_stored = sum(len(v) for v in stored_b.values())
+        print(f"\n{'=' * 74}\nPAIRED -- human timing against STORED "
+              f"annotation, same peaks, same null\n{'=' * 74}")
+        print(f"  {n_stored} stored boundaries (gap_midpoint) over "
+              f"{len(stored_b)} recordings, against\n  the human boundaries "
+              f"on those same recordings.")
+
+        def rate(pk, by_rec):
+            n = hit = 0
+            for rid, bs in by_rec.items():
+                p_ = pk.get(rid) or []
+                for b in bs:
+                    n += 1
+                    if p_ and any(dist(t, b) <= a.tol for t in p_):
+                        hit += 1
+            return hit / n if n else 0.0
+
+        for mode in ("midpoint", "interval_aware"):
+            by_rec = defaultdict(list)
+            for e in have:
+                by_rec[e["recording_id"]] += boundaries_for(e, mode)
+            obs = rate(peaks, by_rec) - rate(peaks, stored_b)
+            rng = random.Random(a.seed)
+            nulls = []
+            for _ in range(a.n_perm):
+                sh = {}
+                for rid in rid_have:
+                    pk = peaks.get(rid) or []
+                    d = rng.uniform(0, span[rid])
+                    sh[rid] = [(t + d) % span[rid] for t in pk]
+                nulls.append(rate(sh, by_rec) - rate(sh, stored_b))
+            nulls.sort()
+            m = sum(nulls) / len(nulls)
+            lo = nulls[int(0.025 * len(nulls))]
+            hi = nulls[min(int(0.975 * len(nulls)), len(nulls) - 1)]
+            pv = (1 + sum(1 for x in nulls if x >= obs)) / (len(nulls) + 1)
+            rh, rs = rate(peaks, by_rec), rate(peaks, stored_b)
+            print(f"\n  {mode}")
+            print(f"    human hit rate {rh:.3f}   stored hit rate {rs:.3f}   "
+                  f"difference {obs:+.3f}")
+            print(f"    null mean {m:+.3f}   null 95% [{lo:+.3f}, {hi:+.3f}]"
+                  f"   permutation p = {(pv):.4f}")
+            results[mode]["paired_vs_stored"] = {
+                "human_rate": round(rh, 4), "stored_rate": round(rs, 4),
+                "difference": round(obs, 4), "null_mean": round(m, 4),
+                "null_95": [round(lo, 4), round(hi, 4)],
+                "p_value": round(pv, 5)}
+        print(f"\n  A difference above the null band means human times are "
+              f"better located than the\n  stored ones ON THE SAME PEAKS -- "
+              f"the claim, tested directly. Inside the band\n  means the two "
+              f"annotations are equally (un)related to where the detector "
+              f"fires.")
 
     print(f"\n{'=' * 74}\nTHE THREE NUMBERS SIDE BY SIDE (peak-centric, "
           f"tol {a.tol}s)\n{'=' * 74}")
