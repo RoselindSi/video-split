@@ -80,11 +80,17 @@ def load_peaks(path):
             if not line.strip():
                 continue
             r = json.loads(line)
+            if not isinstance(r, dict):   # a json array, not jsonl
+                continue
             for p in r.get("predicted_peaks") or []:
                 if p.get("pred_time") is not None:
                     peaks[r["recording_id"]].append(float(p["pred_time"]))
     for v in peaks.values():
         v.sort()
+    if not peaks:
+        print(f"  !! no predicted_peaks found in {path}. It should be JSONL "
+              f"with one object per\n     recording carrying "
+              f"`recording_id` and `predicted_peaks`.")
     return peaks
 
 
@@ -131,6 +137,11 @@ def main():
                     default="data/gold/alignment_timing_gold_45.json")
     ap.add_argument("--predictions", required=True)
     ap.add_argument("--tol", type=float, default=0.5)
+    ap.add_argument("--recseg_train", action="append", default=[],
+                    help="recseg json(s) for the TRAINING split. The head "
+                         "having been fitted on a recording changes what a "
+                         "peak on it means, and that has to be stated")
+    ap.add_argument("--recseg_val", action="append", default=[])
     ap.add_argument("--n_perm", type=int, default=2000)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out")
@@ -156,8 +167,53 @@ def main():
         print(f"  every number below is on the usable subset. If that subset "
               f"is small the test is\n  underpowered and the honest output is "
               f"a wide interval, not a verdict.")
+    # WHICH SPLIT. A peak on a recording the head was fitted on is not the
+    # same measurement as a peak on a held-out one, and the bias does not run
+    # in one obvious direction: the head was trained to hit the STORED
+    # annotation times, which on this hypothesis are displaced, so training
+    # exposure pushes its peaks toward the stored times and AWAY from the
+    # human-corrected ones -- against the hypothesis. It also makes peaks
+    # sharper and more numerous there, which inflates alignment with anything
+    # nearby -- for it. Both are real and neither is quantified here. The
+    # split is reported so the number is never read without it.
+    def rids(paths):
+        out = set()
+        for p in paths:
+            if not os.path.exists(p):
+                print(f"  !! {p} not found")
+                continue
+            blob = json.load(open(p, encoding="utf-8"))
+            if isinstance(blob, dict):
+                blob = blob.get("recordings") or blob.get("data") or []
+            out |= {r.get("recording_id") for r in blob if r.get("recording_id")}
+        return out
+
+    if a.recseg_train or a.recseg_val:
+        tr, va = rids(a.recseg_train), rids(a.recseg_val)
+        gold_r = {e["recording_id"] for e in evs}
+        n_tr, n_va = len(gold_r & tr), len(gold_r & va)
+        print(f"\n  SPLIT of the 45 events' {len(gold_r)} recordings: "
+              f"{n_tr} in train, {n_va} in val, "
+              f"{len(gold_r - tr - va)} in neither")
+        if n_tr and not n_va:
+            print(f"  !! ALL of them are TRAINING recordings. The head was "
+                  f"fitted on their stored\n     annotations, so a peak here "
+                  f"is not evidence of generalisation. State this\n     "
+                  f"wherever the ratio is quoted, or infer with a checkpoint "
+                  f"that held them out.")
+
     if not have:
-        raise SystemExit("no overlap; run inference on these recordings first")
+        raise SystemExit(
+            "no overlap between the timing gold and the peaks.\n"
+            "  This is what peak-blind sampling does: selecting on "
+            "instance_relation alone\n  picked recordings the detector was "
+            "never dumped on. Nothing is wrong with the\n  gold -- the "
+            "detector output has to be extended to cover it:\n"
+            "    python -m src.boundary.train_head_multi ... "
+            "--infer_extra <feats covering these recordings> \\\n"
+            "        --infer_extra_out <logits.pt>\n"
+            "    python -m src.boundary.boundary_error_audit --logits "
+            "<logits.pt> --out_dir <dir>")
 
     span = {}
     for rid in {e["recording_id"] for e in have}:
