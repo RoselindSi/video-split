@@ -56,6 +56,25 @@ from collections import Counter, defaultdict
 EID = re.compile(r"^recording_0*(\d+)_.*_t(\d+(?:\.\d+)?)$")
 KEY = re.compile(r"^(\d+)/t(\d+(?:\.\d+)?)$")
 
+# WHAT EACH FIELD IS FOR. Recorded here rather than agreed in conversation,
+# because a field's role is the thing most easily lost between the audit and
+# the training script -- and a descriptive column read as a target is how the
+# old six-way status became four views of one label.
+ROLE = {
+    "claim_support": "training_target",
+    "granularity": "training_target",
+    "major_action_missing": "training_target_later",
+    "action_presence": "descriptive",
+    "segment_structure": "descriptive",
+    "upstream_timing_issue": "diagnostic",
+}
+# Known redundancy, kept as a relation rather than fixed by deleting a column:
+# the minority values below are the same observation in two places, and
+# `onset_only` / `terminal_only` / `mixed_action_and_no_action` still carry
+# description that segment_structure does not.
+REDUNDANT = [("action_presence", "no_valid_action",
+              "segment_structure", "spurious_no_action")]
+
 SCHEMA = {
     "claim_support": ["yes", "partial", "no", "uncertain"],
     "granularity": ["adequate", "too_coarse", "too_fine",
@@ -111,7 +130,7 @@ def main():
     for f, allowed in SCHEMA.items():
         c = Counter((r.get(f) or "").strip() for r in rows)
         bad = [k for k in c if k not in allowed]
-        print(f"  {f:24s} {dict(c.most_common())}")
+        print(f"  {f:24s} [{ROLE[f]:<21s}] {dict(c.most_common())}")
         if bad:
             print(f"    !! OFF-SCHEMA {bad}")
             off += 1
@@ -176,15 +195,24 @@ def main():
     if flat:
         print(f"\n  !! COLLINEAR PAIRS (under {a.collinear_bits} bits):")
         for fa, fb, b in flat:
-            print(f"     {fa} adds only {b:.2f} bits beyond {fb} -- one axis, "
-                  f"not two")
+            known = any(fa in r and fb in r for r in REDUNDANT)
+            print(f"     {fa} adds only {b:.2f} bits beyond {fb}"
+                  + ("  -- KNOWN, recorded in REDUNDANT; neither is a "
+                     "training target" if known
+                     else "  -- NEW. One axis, not two."))
+        for f1, v1, f2, v2 in REDUNDANT:
+            n = sum(1 for r in rows
+                    if r.get(f1) == v1 or r.get(f2) == v2)
+            print(f"     the relation: {f1}={v1} and {f2}={v2} are one "
+                  f"observation ({n} events)")
     else:
         print(f"\n  no pair falls under {a.collinear_bits} bits. The six "
               f"fields are not restatements of\n  each other on this sample, "
               f"which is what the old schema failed.")
 
     # ------------------------------------------------- what is trainable
-    print(f"\nTRAINABLE, before any model:")
+    print(f"\nTRAINABLE, before any model. Only fields marked "
+          f"training_target are candidates:")
     cs = Counter(r["claim_support"] for r in rows)
     print(f"  claim_support YES vs NO: {cs['yes']} vs {cs['no']}  "
           f"(excluding {cs['partial']} partial, {cs['uncertain']} uncertain)")
