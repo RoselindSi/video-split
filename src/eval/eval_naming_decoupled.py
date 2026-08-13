@@ -13,7 +13,7 @@ Usage (server):
     python eval_naming_decoupled.py --model_base /workspace/tr1/ckpts/<model> \
         --out /tmp/naming_<model>.jsonl
 """
-import argparse, json, os, re, statistics
+import argparse, json, os, re, statistics, time
 import torch
 from transformers import AutoModelForImageTextToText, AutoProcessor
 from qwen_vl_utils import process_vision_info
@@ -132,8 +132,16 @@ def main():
     rows = json.load(open(a.data))
     os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)
     fout = open(a.out, "w"); agg = []
-    for r in rows:
+    t0 = time.time()
+    for ri, r in enumerate(rows):
         gts = _as_segs(r["solution"])
+        # BEFORE the generate, not after. One call is minutes on a long video,
+        # so a line printed only on completion leaves the run looking hung.
+        el = time.time() - t0
+        eta = (el / ri * (len(rows) - ri)) if ri else 0.0
+        print(f"[{ri + 1}/{len(rows)}] {os.path.basename(r['video'])} "
+              f"{len(gts)} segments  elapsed {el / 60:.1f}m"
+              + (f"  eta {eta / 60:.0f}m" if ri else ""), flush=True)
         msgs = [{"role": "user", "content": [
             {"type": "video", "video": r["video"], "total_pixels": a.total_pixels},
             {"type": "text", "text": build_prompt(gts)}]}]
@@ -171,7 +179,7 @@ def main():
              "generic_rate": statistics.mean(gr) if gr else 0.0,
              "emb_sim": statistics.mean(es) if es else 0.0}
         agg.append(m)
-        print(os.path.basename(r["video"]), "gt", m["n_gt"], "pred", m["n_pred"],
+        print("   ", os.path.basename(r["video"]), "gt", m["n_gt"], "pred", m["n_pred"],
               "verb", round(m["verb_acc"], 2), "obj", round(m["obj_f1"], 2),
               "gen", round(m["generic_rate"], 2), "sim", round(m["emb_sim"], 2))
         fout.write(json.dumps({"video": r["video"], **m, "pred_names": pred_names,
