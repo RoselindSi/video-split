@@ -54,6 +54,13 @@ def main():
     ap.add_argument("--manifest", required=True)
     ap.add_argument("--infer_extra", required=True)
     ap.add_argument("--infer_extra_out", required=True)
+    ap.add_argument("--decode_manifest",
+                    help="predictions.jsonl.manifest.json from the run whose "
+                         "peaks the reference ratios were computed on. The "
+                         "decode threshold and min_gap define the peak set "
+                         "just as much as the head does, and I hard-coded "
+                         "defaults for them in the first version of this "
+                         "script -- exactly the guess it exists to prevent")
     a = ap.parse_args()
 
     if not os.path.exists(a.manifest):
@@ -129,10 +136,37 @@ def main():
             j += 1
     print("  " + head + " \\\n    " + " \\\n    ".join(parts))
     print(f"\nthen turn the logits into peaks:")
+    dec = []
+    if a.decode_manifest and os.path.exists(a.decode_manifest):
+        dm = json.load(open(a.decode_manifest, encoding="utf-8"))
+        dargv = list(dm.get("argv") or [])
+        j = 1
+        while j < len(dargv):
+            if dargv[j] in ("--thr", "--min_gap", "--tol", "--exact_tol"):
+                dec.append(dargv[j])
+                j += 1
+                while j < len(dargv) and not dargv[j].startswith("--"):
+                    dec.append(dargv[j])
+                    j += 1
+            else:
+                j += 1
+        print(f"  decode flags recovered from "
+              f"{os.path.basename(a.decode_manifest)}: "
+              f"{' '.join(dec) or 'none recorded -> defaults were used'}")
+    elif a.decode_manifest:
+        print(f"  !! {a.decode_manifest} not found")
+    else:
+        print(f"  !! no --decode_manifest given, so the line below uses "
+              f"DEFAULT thr / min_gap.\n     Those define the peak set as "
+              f"much as the head does. If the reference run used\n     "
+              f"anything else, the new ratio is not comparable to 6.21 or "
+              f"0.54. Pass the\n     predictions.jsonl.manifest.json to "
+              f"pin them.")
     print(f"  python -m src.boundary.boundary_error_audit \\\n"
           f"    --logits {a.infer_extra_out} \\\n"
           f"    --out_dir {os.path.dirname(a.infer_extra_out) or '.'}"
-          f"/timing36_audit")
+          f"/timing36_audit"
+          + (" \\\n    " + " ".join(dec) if dec else ""))
     print(f"\nthen the test, with the split stated:")
     print(f"  python -m src.auditor.boundary.timing_null_test \\\n"
           f"    --gold_json data/gold/alignment_timing_gold_45.json \\\n"
@@ -141,7 +175,17 @@ def main():
           f"    --recseg_train /workspace/tr1/data_recseg/recseg_train.json "
           f"\\\n    --recseg_val /workspace/tr1/data_recseg/recseg_val.json "
           f"--n_perm 2000")
-    print(f"\nThe head will have been fitted on every recording it is then "
+    print(f"\nCODE DRIFT, which the flags do not cover. The manifest "
+          f"records a DIRTY working\ntree, so the reference logits came from "
+          f"an uncommitted state that cannot be\nrestored. Since that "
+          f"commit, src/boundary/train_head_multi.py has changed once\n"
+          f"(7c662d4, which ADDED --infer_extra and leaves the training path "
+          f"alone) and\nboundary_error_audit.py six times. Matching flags "
+          f"makes the runs as comparable as\nthey can be made; it does not "
+          f"make them identical, and if the new number lands\nnear the "
+          f"decision boundary that gap is the first thing to suspect.\n")
+
+    print(f"The head will have been fitted on every recording it is then "
           f"inferred on. That\ncontamination can only raise the ratio, so a "
           f"ratio near 1 is already evidence\nagainst the hypothesis and a "
           f"high one settles nothing.")
