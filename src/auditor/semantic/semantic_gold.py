@@ -23,6 +23,12 @@ WHAT IS ALREADY VISIBLE WITHOUT ANY MODEL:
     finding: nearly every semantic problem in this sample sits on a segment
     whose boundaries are also wrong.
 
+    That points the same way as the alignment arm and IS NOT EVIDENCE FOR IT.
+    These 48 come from a boundary-enriched audit, not a representative sample,
+    so a high rate of upstream timing problems is partly how the corpus was
+    built. Convergent diagnostic signal; not confirmation. The two must not be
+    added together into a claim neither supports alone.
+
     action_presence is valid_action on 45 of 48. Two minority classes with 2
     and 1 events cannot be scored at all, and saying so here prevents an
     AUROC being computed on three events later.

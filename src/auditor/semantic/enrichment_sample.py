@@ -20,18 +20,19 @@ schema routes them to `granularity` and `segment_structure` while
 `claim_support` stays `yes`. Sampling them for negatives would spend
 annotation on events whose answer is already known.
 
-WHAT THAT IMPLIES FOR THE TARGET. 25 unaudited `incorrect` events remain. At
-0.44 they yield about 11 more negatives, taking the total from 6 to roughly
-17. Auditing every remaining event in the entire 188-event corpus -- all 140
-of them -- projects to about 19. THIRTY CLEAN NEGATIVES IS NOT IN THIS POOL,
-and the reason is the same structural one the alignment arm hit: the corpus
-was sampled on BOUNDARY error categories, so it is enriched for boundary
-problems and only incidentally contains semantic ones.
+WHAT THAT IMPLIES FOR THE TARGET, stated as a projection and not a proof. 25
+unaudited `incorrect` events remain; at 0.44 they project about 11 more
+negatives, and the whole remaining corpus projects about 19 against a target
+of 30. The boundary-enriched pool is UNLIKELY to supply the target under the
+measured yields. It is not impossible: 4/9 is compatible with anything from
+roughly 0.14 to 0.79, and 41 productive-status rows could in principle return
+more than 24 negatives. Only exhausting those 41 settles the residual deficit,
+and until then this is a planning estimate that must not be quoted as an
+established fact.
 
-The yields come from nine events per status and their intervals are wide --
-4/9 is compatible with anything from about 0.14 to 0.79 -- so the projection
-is a planning estimate, not a measurement. Even its optimistic end does not
-comfortably reach 30.
+The reason it is unlikely is structural, and that part is not an estimate: the
+corpus was sampled on BOUNDARY error categories, so it is enriched for
+boundary problems and contains semantic ones only incidentally.
 
 SO THIS SAMPLER DOES THE REACHABLE PART AND SAYS WHAT IT CANNOT DO. It orders
 the pool by measured NO-yield, takes the whole `incorrect` remainder first,
@@ -138,12 +139,15 @@ def main():
         print(f"  {s:<28}{len(pool[s]):>6}{y:>8.2f}{len(pool[s]) * y:>10.1f}")
     print(f"  {'':<28}{sum(len(v) for v in pool.values()):>6}{'':>8}"
           f"{proj_all:>10.1f}")
-    print(f"\n  auditing the ENTIRE remaining corpus projects "
-          f"{have['no'] + proj_all:.0f} negatives against a\n  target of "
-          f"{a.target_no}. The pool does not contain the target, and no "
-          f"sampling strategy\n  over it will. Reaching {a.target_no} needs a "
-          f"frame drawn for SEMANTIC error rather\n  than boundary error -- "
-          f"a separate decision, not a bigger batch.")
+    print(f"\n  PROJECTION, not a proof: auditing the entire remaining "
+          f"corpus projects\n  {have['no'] + proj_all:.0f} negatives against "
+          f"a target of {a.target_no}. The yields rest on nine events per\n"
+          f"  status -- 4/9 spans roughly 0.14 to 0.79 -- so the 41 "
+          f"productive rows COULD return\n  more than that. The "
+          f"boundary-enriched pool is unlikely to supply the target under\n"
+          f"  measured yields; exhausting those 41 is what determines the "
+          f"residual deficit.\n  Do not quote this number as an established "
+          f"count.")
 
     informative = sum(len(pool[s]) for s in order if YIELD.get(s, 0.0) > 0)
     n = a.n or informative
