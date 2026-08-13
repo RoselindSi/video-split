@@ -360,9 +360,14 @@ def main():
           f"effect needs to clear the second and have the first exclude\n"
           f"  zero; either alone is not the result.")
     print(f"\n  STILL NOT HELD OUT. These peaks come from a head fitted on "
-          f"these recordings'\n  stored annotations, which biases this "
-          f"particular comparison AGAINST the human\n  side. The clean "
-          f"version needs recording-grouped out-of-fold peaks.")
+          f"these recordings'\n  stored annotations. It is tempting to argue "
+          f"that this must bias the comparison\n  AGAINST the human side and "
+          f"so makes a non-significant result a conservative lower\n  bound. "
+          f"That is an intuition, not a guarantee -- in-sample behaviour is "
+          f"not a simple\n  pull toward the training targets -- and no "
+          f"result here should be reinterpreted on\n  it. The clean version "
+          f"is recording-grouped out-of-fold peaks: "
+          f"src.auditor.boundary.oof_peaks.")
 
     if a.out:
         json.dump({"tol": a.tol, "n_matched": len(matched),
