@@ -58,23 +58,23 @@ def sample_times(start, end, n):
     return [start + i * (end - start) / (n - 1) for i in range(n)]
 
 
-def embed(model, proc, frames, texts, device):
-    """The one unverified call. Returns (video_vecs, text_vecs), L2-normed.
+def embed(model, video_inputs, texts):
+    """The one place that touches the model. Returns (video, text), L2-normed.
 
-    Qwen3-VL-Embedding is a dual tower over a shared space, so a video and a
-    text go through separate forward passes and the score is a cosine. The
-    exact argument names come from the model card; if they are wrong this is
-    the only place to fix, which is why nothing else in the file touches the
-    model."""
-    import torch
-    with torch.no_grad():
-        v = model.get_video_embeddings(frames) if hasattr(
-            model, "get_video_embeddings") else model.encode_video(frames)
-        t = model.get_text_embeddings(texts) if hasattr(
-            model, "get_text_embeddings") else model.encode_text(texts)
-    v = torch.nn.functional.normalize(v, dim=-1).float().cpu().numpy()
-    t = torch.nn.functional.normalize(t, dim=-1).float().cpu().numpy()
-    return v, t
+    Qwen3-VL-Embedding ships as a SENTENCE-TRANSFORMERS model -- the checkpoint
+    carries modules.json, 1_Pooling/ and sentence_bert_config.json, and its
+    config names Qwen3VLForConditionalGeneration with no auto_map. So there is
+    no `encode_video` method to call; loading it with AutoModel gives the bare
+    Qwen3VLModel, which is what the first run hit.
+
+    The video input format is the remaining unknown and is passed through
+    untouched, so a shape error names the format rather than being swallowed
+    here."""
+    v = model.encode(video_inputs, normalize_embeddings=True,
+                     show_progress_bar=False)
+    t = model.encode(texts, normalize_embeddings=True,
+                     show_progress_bar=False)
+    return np.asarray(v), np.asarray(t)
 
 
 def main():
@@ -138,12 +138,15 @@ def main():
                 f"  (`huggingface-cli` was renamed to `hf` and no longer "
                 f"works.)\n  Or use --dry_run to verify the plumbing "
                 f"first.")
-        import torch
-        from transformers import AutoModel, AutoProcessor
-        proc = AutoProcessor.from_pretrained(a.model, trust_remote_code=True)
-        model = AutoModel.from_pretrained(
-            a.model, dtype=torch.bfloat16, device_map="cuda",
-            trust_remote_code=True).eval()
+        from sentence_transformers import SentenceTransformer
+        model = SentenceTransformer(a.model, device="cuda",
+                                    trust_remote_code=True)
+        mods = os.path.join(a.model, "modules.json")
+        if os.path.exists(mods):
+            print(f"  sentence-transformers modules: "
+                  f"{[m.get('type', '').split('.')[-1] for m in json.load(open(mods))]}")
+        print(f"  max_seq_length {getattr(model, 'max_seq_length', '?')}   "
+              f"dim {model.get_sentence_embedding_dimension()}")
 
     rng = random.Random(a.seed)
     score = {}
@@ -160,7 +163,7 @@ def main():
         idx = [max(0, min(len(vr) - 1, int(t * fps)))
                for t in sample_times(j["start"], j["end"], a.n_frames)]
         frames = vr.get_batch(idx).asnumpy()
-        vv, tt = embed(model, proc, [frames], [j["stored_label"]], "cuda")
+        vv, tt = embed(model, [{"video": frames}], [j["stored_label"]])
         score[uid] = float(vv[0] @ tt[0])
         if (i + 1) % 25 == 0:
             print(f"    {i + 1}/{len(need)} encoded", flush=True)
