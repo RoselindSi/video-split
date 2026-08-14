@@ -43,6 +43,7 @@ import json
 import os
 import random
 import re
+from collections import defaultdict
 
 import numpy as np
 
@@ -129,6 +130,80 @@ def write_frames(video, times, out_dir, uid):
     return paths
 
 
+def score_benchmark(a):
+    """Score the paired benchmark. Each SEGMENT is encoded once.
+
+    A segment appears in several pairs -- the original plus one counterfactual
+    per kind -- and its video embedding does not change between them. Encoding
+    it per pair would cost five times the GPU for identical vectors, and worse,
+    would make the same video contribute five slightly different embeddings if
+    anything in the pipeline were nondeterministic, which would show up as a
+    margin that is really noise."""
+    import os as _os
+    bench = [json.loads(l) for l in open(a.benchmark_in, encoding="utf-8")
+             if l.strip()]
+    segs, texts = {}, defaultdict(set)
+    for p in bench:
+        segs[p["segment_uid"]] = p
+        texts[p["segment_uid"]].add(p["original"])
+        texts[p["segment_uid"]].add(p["counterfactual"])
+    n_pairs = sum(len(v) for v in texts.values())
+    print(f"{len(bench)} pairs over {len(segs)} segments; "
+          f"{n_pairs} distinct (segment, text) entries to score")
+
+    if a.dry_run:
+        rng = random.Random(a.seed)
+        rows = [{"segment_uid": u, "text": t, "score": rng.random()}
+                for u, ts in texts.items() for t in ts]
+    else:
+        if not a.model or not _os.path.exists(a.model):
+            raise SystemExit("--model is required unless --dry_run")
+        from sentence_transformers import SentenceTransformer
+        model = SentenceTransformer(a.model, device="cuda",
+                                    trust_remote_code=True)
+        _os.makedirs(a.frame_dir, exist_ok=True)
+        video_of = {r["recording_id"]: r["video"]
+                    for r in json.load(open(a.data, encoding="utf-8"))}
+        rows = []
+        for i, (uid, p) in enumerate(sorted(segs.items())):
+            vid = video_of.get(p["recording_id"])
+            if not vid:
+                print(f"  !! no video for {p['recording_id']}; "
+                      f"{uid} skipped")
+                continue
+            paths = write_frames(vid, sample_times(p["start"], p["end"],
+                                                   a.n_frames),
+                                 a.frame_dir, uid.replace("/", "_"))
+            dur = max(float(p["end"]) - float(p["start"]), 1e-3)
+            n = len(paths)
+            meta = [{"fps": (n - 1) / dur if n > 1 else 1.0,
+                     "total_num_frames": n, "duration": dur,
+                     "frames_indices": np.arange(n)}]
+            tl = sorted(texts[uid])
+            vv, tt = embed(model, [{"video": paths}], tl, a.prompt,
+                           None if a.no_metadata else meta)
+            v = vv[0] / (np.linalg.norm(vv[0]) + 1e-12)
+            for t, e in zip(tl, tt):
+                rows.append({"segment_uid": uid, "text": t,
+                             "score": float(v @ (e / (np.linalg.norm(e)
+                                                      + 1e-12)))})
+            for q in paths:
+                _os.remove(q)
+            if (i + 1) % 25 == 0:
+                print(f"    {i + 1}/{len(segs)} segments encoded", flush=True)
+
+    out = a.scores_out or (a.benchmark_in.replace(".jsonl", "")
+                           + "_cosine_scores.jsonl")
+    with open(out, "w", encoding="utf-8") as f:
+        for r in rows:
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+    print(f"\nwrote {len(rows)} scores -> {out}"
+          + ("   (DRY RUN, random)" if a.dry_run else ""))
+    print(f"  then:\n    python -m src.auditor.semantic.paired_benchmark "
+          f"\\\n      --evaluate {out} --benchmark {a.benchmark_in} "
+          f"--gold {a.gold[0]}")
+
+
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__,
@@ -157,8 +232,18 @@ def main():
                          "the plumbing working, not a result")
     ap.add_argument("--n_boot", type=int, default=2000)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--benchmark_in",
+                    help="paired_semantic_benchmark.jsonl. Scores every "
+                         "(segment, text) it names and writes them for "
+                         "paired_benchmark --evaluate, instead of running the "
+                         "per-event arm")
+    ap.add_argument("--scores_out")
     ap.add_argument("--out")
     a = ap.parse_args()
+
+    if a.benchmark_in:
+        score_benchmark(a)
+        return
 
     rows = load_gold(a.gold)
     lab = {(r.get("audit_key") or r.get("event_id")): r["claim_support"]
