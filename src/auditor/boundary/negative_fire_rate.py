@@ -176,35 +176,65 @@ def main():
 
     if "positive" in obs and any(k in obs for k in ("no_action_change",
                                                    "phase_change_only")):
-        pr = obs["positive"][0] / obs["positive"][1]
-        print(f"\n  THE CONTRAST, which is what this pool can support:")
+        # SUBTRACTING RAW RATES IS WRONG HERE and the first version did it.
+        # The three arms do not share a chance baseline: their null means came
+        # out 0.217 / 0.304 / 0.401, because the negative events sit in
+        # recordings with denser peaks. A raw difference therefore charges the
+        # negative arms for peaks that would land there anyway, and understates
+        # the contrast. Excess over each arm's OWN null is the comparable
+        # quantity.
+        def exc(k):
+            h, n = obs[k]
+            nl = nulls[k]
+            m = sum(nl) / len(nl) if nl else 0.0
+            return h / n, m, h / n - m, (h / n) / m if m else float("nan")
+
+        print(f"\n  THE CONTRAST, on excess over each arm's OWN null:")
+        print(f"  {'arm':<22}{'rate':>8}{'null':>8}{'excess':>9}{'ratio':>8}")
+        for k in ("positive", "no_action_change", "phase_change_only"):
+            if k in obs:
+                r, m, e, ra = exc(k)
+                print(f"  {k:<22}{r:>8.3f}{m:>8.3f}{e:>+9.3f}{ra:>8.2f}")
+        pe = exc("positive")[2]
         for k in ("no_action_change", "phase_change_only"):
             if k in obs:
-                r = obs[k][0] / obs[k][1]
-                print(f"    positive {pr:.3f} vs {k} {r:.3f}   "
-                      f"difference {pr - r:+.3f}")
-        print(f"  Selection acts on both arms, so the difference restates the "
-              f"sampling far less\n  than either rate alone does. On "
+                print(f"    positive excess {pe:+.3f} vs {k} "
+                      f"{exc(k)[2]:+.3f}   difference "
+                      f"{pe - exc(k)[2]:+.3f}")
+        print(f"  Selection acts on both arms, so a within-pool difference "
+              f"restates the sampling far\n  less than either rate alone. On "
               f"{obs['positive'][1]} positives and "
               f"{sum(obs[k][1] for k in ('no_action_change', 'phase_change_only') if k in obs)}"
-              f" negatives it is\n  descriptive either way.")
+              f" negatives it is descriptive either way.")
 
-    print(f"\n  window sweep, because one width is a choice:")
+    print(f"\n  window sweep, with each arm's null beside it -- a wider "
+          f"window raises BOTH, so a\n  bare rate at 5s says nothing without "
+          f"the chance rate at 5s:")
     print(f"  {'window':>8}" + "".join(
-        f"{k[:16]:>18}" for k in ("positive", "no_action_change",
+        f"{k[:15]:>20}" for k in ("positive", "no_action_change",
                                   "phase_change_only")))
     sweep = {}
     for w in [float(x) for x in a.sweep.split(",") if x.strip()]:
         rr = rates(peaks, w)
+        rng_w = random.Random(a.seed)
+        nl_w = defaultdict(list)
+        for _ in range(max(200, a.n_perm // 5)):
+            sh = {}
+            for rid in span:
+                d = rng_w.uniform(0, span[rid])
+                sh[rid] = [(t + d) % span[rid] for t in peaks[rid]]
+            for k, (h, n) in rates(sh, w).items():
+                nl_w[k].append(h / n if n else 0.0)
         line = f"  {w:>8.1f}"
         row = {}
         for k in ("positive", "no_action_change", "phase_change_only"):
             if k in rr:
                 h, n = rr[k]
-                line += f"{f'{h}/{n} = {h/n:.2f}':>18}"
-                row[k] = round(h / n, 4)
+                m = sum(nl_w[k]) / len(nl_w[k]) if nl_w[k] else 0.0
+                line += f"{f'{h/n:.2f} (null {m:.2f})':>20}"
+                row[k] = {"rate": round(h / n, 4), "null": round(m, 4)}
             else:
-                line += f"{'-':>18}"
+                line += f"{'-':>20}"
         print(line)
         sweep[str(w)] = row
 
