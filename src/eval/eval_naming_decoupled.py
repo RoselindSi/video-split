@@ -120,7 +120,16 @@ def main():
     ap.add_argument("--data", default="/workspace/tr1/data_handtask/train_multiseg_val.json")
     ap.add_argument("--out", default="logs/eval_naming.jsonl")
     ap.add_argument("--total_pixels", type=int, default=3584 * 28 * 28)
-    ap.add_argument("--max_new_tokens", type=int, default=512)
+    ap.add_argument("--max_new_tokens", type=int, default=512,
+                    help="0 = size it per recording as 24*n_segments+256. The "
+                         "fixed 512 cannot hold 53 names, let alone 147")
+    ap.add_argument("--no_repeat_ngram_size", type=int, default=4,
+                    help="THE REQUIRED OUTPUT FORMAT REPEATS `<seg><name>` on "
+                         "every line, which is itself a short n-gram, so a "
+                         "non-zero value here can make the format "
+                         "unproducible. Left at 4 so old runs reproduce; pass "
+                         "0 when you need the format back")
+    ap.add_argument("--repetition_penalty", type=float, default=1.3)
     ap.add_argument("--device_map", default="cuda",
                     help="'cuda' for single-GPU; 'auto' to shard a big model across GPUs")
     a = ap.parse_args()
@@ -161,11 +170,19 @@ def main():
             # the same line verbatim until max_new_tokens is hit -- observed directly
             # on a 147-segment recording (36 identical predicted names). This does not
             # fix visual grounding, only stops the decode-time repetition failure mode.
-            gen = model.generate(**inp, max_new_tokens=a.max_new_tokens, do_sample=False,
-                                 repetition_penalty=1.3, no_repeat_ngram_size=4)
+            mnt = a.max_new_tokens or (24 * len(gts) + 256)
+            gen = model.generate(**inp, max_new_tokens=mnt, do_sample=False,
+                                 repetition_penalty=a.repetition_penalty,
+                                 no_repeat_ngram_size=a.no_repeat_ngram_size)
         out = proc.batch_decode(gen[:, inp["input_ids"].shape[1]:],
                                 skip_special_tokens=True)[0]
         pred_names = [m.strip() for m in NAME_RE.findall(out)]
+        # A parse failure and a model that said nothing are different problems
+        # and both printed as `pred 0`. The raw text is kept on every row so
+        # the next failure is diagnosable without a second hour-long run.
+        if not pred_names and out.strip():
+            print(f"    !! 0 names parsed from {len(out)} chars of output. "
+                  f"First 200: {out.strip()[:200]!r}", flush=True)
         gt_names = [g[0] for g in gts]
         k = min(len(pred_names), len(gt_names))
         vm = [verb_match(pred_names[i], gt_names[i]) for i in range(k)]
@@ -182,7 +199,9 @@ def main():
         print("   ", os.path.basename(r["video"]), "gt", m["n_gt"], "pred", m["n_pred"],
               "verb", round(m["verb_acc"], 2), "obj", round(m["obj_f1"], 2),
               "gen", round(m["generic_rate"], 2), "sim", round(m["emb_sim"], 2))
-        fout.write(json.dumps({"video": r["video"], **m, "pred_names": pred_names,
+        fout.write(json.dumps({"video": r["video"], **m,
+                               "max_new_tokens": mnt,
+                               "pred_names": pred_names,
                                "gt_names": gt_names, "raw": out}) + "\n")
         fout.flush()
     print("\n==== NAMING (decoupled, n=%d) ====" % len(agg))
