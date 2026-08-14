@@ -217,6 +217,10 @@ def main():
                     help="naming_run_join.json from naming_run_spec")
     ap.add_argument("--event_map", action="append", required=True,
                     help="naming_targets_*_event_map.json")
+    ap.add_argument("--key_eps", type=float, default=0.5,
+                    help="how far a gold audit_key may sit from an event-map "
+                         "key and still be the same event, when nothing else "
+                         "in that recording is nearby")
     ap.add_argument("--n_boot", type=int, default=2000)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--video_prior_reference", default="0.601 [0.495, 0.706]",
@@ -256,6 +260,35 @@ def main():
     for p in a.event_map:
         for k, v in json.load(open(p, encoding="utf-8")).items():
             emap[norm_key(k)] = v
+
+    # FUZZY FALLBACK, with a uniqueness requirement. `193/t264` in the gold is
+    # `193/t264.2` in the map -- the returned sheet rounded the candidate time,
+    # not just its string form, so a numeric key match still misses. Same rule
+    # as the semantic_gold join: nearest within --key_eps, and only when the
+    # next-nearest in that recording is far enough that there is no second
+    # candidate. Every fuzzy match is printed by name; a rounding that happens
+    # to land on a different event is the one failure this must not hide.
+    by_rec = defaultdict(list)
+    for k in emap:
+        if isinstance(k, tuple):
+            by_rec[k[0]].append(k[1])
+    fuzzy = []
+
+    def find(key):
+        k = norm_key(key)
+        if k in emap:
+            return emap[k]
+        if not isinstance(k, tuple):
+            return None
+        cands = sorted(by_rec.get(k[0], ()), key=lambda t: abs(t - k[1]))
+        if (cands and abs(cands[0] - k[1]) <= a.key_eps
+                and (len(cands) == 1
+                     or abs(cands[1] - k[1]) > 5 * max(abs(cands[0] - k[1]),
+                                                       1e-6))):
+            fuzzy.append((key, f"{k[0]}/t{cands[0]}",
+                          round(abs(cands[0] - k[1]), 2)))
+            return emap[(k[0], cands[0])]
+        return None
     print(f"{len(preds)} naming rows; {len(join)} joined segments; "
           f"{len(emap)} mapped events")
 
@@ -291,7 +324,7 @@ def main():
     rows, no_seg, no_pred, not_shown = [], [], [], 0
     mis, n_empty = set(), [0]
     for key, g in gold.items():
-        m = emap.get(norm_key(key))
+        m = find(key)
         if not m:
             no_seg.append(key)
             continue
@@ -338,6 +371,12 @@ def main():
                      "obj_mean": sum(f["obj"] for f in feats) / len(feats),
                      "generic_any": max(f["generic"] for f in feats),
                      "segments": feats})
+
+    if fuzzy:
+        print(f"\n  {len(fuzzy)} key(s) matched within {a.key_eps}s rather "
+              f"than exactly:")
+        for g, mkey, d in fuzzy:
+            print(f"    gold {g} -> map {mkey}  ({d}s apart)")
 
     print(f"\nCOVERAGE, before any discrimination:")
     print(f"  events with a usable naming feature  {len(rows)}/{len(gold)}")
