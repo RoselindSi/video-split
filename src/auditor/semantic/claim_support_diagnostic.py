@@ -158,6 +158,43 @@ def norm_key(k):
     return (int(m.group(1)), round(float(m.group(2)), 1)) if m else str(k)
 
 
+
+def within_between(y, groups):
+    """How much of an AUROC is a WITHIN-recording comparison.
+
+    AUROC is an average over all positive-negative pairs. If almost every pair
+    straddles two recordings, the number cannot distinguish "predicts the
+    label" from "predicts which recording this is" -- and a video-only head
+    identifies a recording from the scene trivially. This is structural: no
+    permutation is needed to see it, only a count, and it should be printed
+    before any AUROC on grouped data."""
+    from collections import defaultdict
+    by = defaultdict(lambda: [0, 0])
+    for yi, g in zip(y, groups):
+        by[g][0 if yi else 1] += 1
+    within = sum(v[0] * v[1] for v in by.values())
+    total = sum(v[0] for v in by.values()) * sum(v[1] for v in by.values())
+    mixed = [(k, v) for k, v in by.items() if v[0] and v[1]]
+    return within, total, mixed, dict(by)
+
+
+def print_within_between(y, groups, label="AUROC"):
+    within, total, mixed, by = within_between(y, groups)
+    print(f"\n  PAIR STRUCTURE, before reading any {label}:")
+    print(f"    {len(by)} recordings, {len(mixed)} carry BOTH classes")
+    print(f"    within-recording pairs {within} of {total} "
+          f"({100 * within / max(total, 1):.1f}%)")
+    if total and within / total < 0.10:
+        print(f"    !! over 90% of the comparison is BETWEEN recordings. On "
+              f"this structure an\n       {label} cannot separate "
+              f"'predicts the label' from 'predicts which recording\n       "
+              f"this is', and a video-only head reads recording identity off "
+              f"the scene for free.")
+        worst = sorted(((k, v[1]) for k, v in by.items() if v[1]),
+                       key=lambda x: -x[1])[:4]
+        print(f"    negatives concentrate in: {worst}")
+    return within, total, mixed
+
 def auroc(scores, labels):
     pos = [s for s, y in zip(scores, labels) if y]
     neg = [s for s, y in zip(scores, labels) if not y]
@@ -407,6 +444,9 @@ def main():
             "result: the pipeline\n  runs and the supervision does not exist "
             "yet.")
 
+    y = [1 if r["claim_support"] == "yes" else 0 for r in used]
+    grp = [r["recording_id"] for r in used]
+    print_within_between(y, grp, "AUROC")
     mdc = min_detectable(n_pos, n_neg, a.n_boot, a.seed)
     print(f"\n  A RANDOM scorer reaches AUROC {mdc:.3f} at the 97.5th "
           f"percentile with {n_pos} vs {n_neg}.\n  Anything below that is "
@@ -416,8 +456,6 @@ def main():
     print(f"\nDISCRIMINATION (single features, no model fitted):")
     print(f"  {'feature':<14}{'AUROC':>8}{'grouped 95%':>22}")
     res = {}
-    y = [1 if r["claim_support"] == "yes" else 0 for r in used]
-    grp = [r["recording_id"] for r in used]
     for f in FEATURES:
         s = [r[f] for r in used]
         au = auroc(s, y)
