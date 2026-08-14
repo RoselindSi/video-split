@@ -71,6 +71,12 @@ def embed(model, video_inputs, texts, prompt=None):
     normalize_embeddings would be redundant -- it is left off rather than
     applied twice.
 
+    THE FRAMES ARE ALREADY SAMPLED. `do_sample_frames=False` goes through
+    `processing_kwargs={"video": {...}}`; without it the video processor tries
+    to sample frames from a list of images and raises. Sampling the window
+    here rather than letting the processor sample the file is the whole reason
+    the segment can be encoded at all.
+
     THE PROMPT IS A CHOICE THAT MOVES THE NUMBER. Every input is wrapped in
     "Represent the user's input." by default, and the model card shows
     retrieval usage passing a different one to the query side. Symmetric
@@ -79,7 +85,14 @@ def embed(model, video_inputs, texts, prompt=None):
     kw = {"show_progress_bar": False}
     if prompt:
         kw["prompt"] = prompt
-    return (np.asarray(model.encode(video_inputs, **kw)),
+    # do_sample_frames=False because the frames are ALREADY the sample. The
+    # video processor otherwise tries to sample from a list of images and
+    # refuses. The route is `processing_kwargs`, read off
+    # Transformer.preprocess's signature and its
+    # `effective_processing_kwargs.get(modality_key)` override loop -- not
+    # guessed, after three guesses in this file already.
+    vkw = dict(kw, processing_kwargs={"video": {"do_sample_frames": False}})
+    return (np.asarray(model.encode(video_inputs, **vkw)),
             np.asarray(model.encode(texts, **kw)))
 
 
