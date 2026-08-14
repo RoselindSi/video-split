@@ -88,7 +88,10 @@ def main():
     ap.add_argument("--peaks", default="unknown",
                     choices=["in_sample", "held_out", "unknown"])
     ap.add_argument("--window", type=float, default=2.0)
-    ap.add_argument("--sweep", default="1.0,2.0,3.0,5.0")
+    ap.add_argument("--sweep", default="0.5,1.0,2.0,3.0,5.0",
+                    help="0.5 is included because it is the tolerance every "
+                         "other timing measurement in this project uses, and "
+                         "without it this pool cannot be compared to them")
     ap.add_argument("--n_perm", type=int, default=2000)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out")
@@ -209,7 +212,8 @@ def main():
 
     print(f"\n  window sweep, with each arm's null beside it -- a wider "
           f"window raises BOTH, so a\n  bare rate at 5s says nothing without "
-          f"the chance rate at 5s:")
+          f"the chance rate at 5s. Read the EXCESS,\n  and note which width "
+          f"the positive contrast is largest at:")
     print(f"  {'window':>8}" + "".join(
         f"{k[:15]:>20}" for k in ("positive", "no_action_change",
                                   "phase_change_only")))
