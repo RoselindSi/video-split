@@ -58,23 +58,50 @@ def sample_times(start, end, n):
     return [start + i * (end - start) / (n - 1) for i in range(n)]
 
 
-def embed(model, video_inputs, texts):
-    """The one place that touches the model. Returns (video, text), L2-normed.
+def embed(model, video_inputs, texts, prompt=None):
+    """The one place that touches the model. Returns (video, text) vectors.
 
-    Qwen3-VL-Embedding ships as a SENTENCE-TRANSFORMERS model -- the checkpoint
-    carries modules.json, 1_Pooling/ and sentence_bert_config.json, and its
-    config names Qwen3VLForConditionalGeneration with no auto_map. So there is
-    no `encode_video` method to call; loading it with AutoModel gives the bare
-    Qwen3VLModel, which is what the first run hit.
+    Read off the checkpoint rather than guessed a third time. It is a
+    SENTENCE-TRANSFORMERS model: modules.json lists Transformer / Pooling /
+    Normalize, 1_Pooling says lasttoken over 2048 dims, and
+    sentence_bert_config.json carries a modality_config with text, image,
+    video and message entries. So the call is `model.encode(list)` where each
+    item is a string or a dict like {"text": ...} / {"image": ...} /
+    {"video": ...}. Normalize is already the last module, so
+    normalize_embeddings would be redundant -- it is left off rather than
+    applied twice.
 
-    The video input format is the remaining unknown and is passed through
-    untouched, so a shape error names the format rather than being swallowed
-    here."""
-    v = model.encode(video_inputs, normalize_embeddings=True,
-                     show_progress_bar=False)
-    t = model.encode(texts, normalize_embeddings=True,
-                     show_progress_bar=False)
-    return np.asarray(v), np.asarray(t)
+    THE PROMPT IS A CHOICE THAT MOVES THE NUMBER. Every input is wrapped in
+    "Represent the user's input." by default, and the model card shows
+    retrieval usage passing a different one to the query side. Symmetric
+    similarity is what this baseline measures, so both sides get the same
+    prompt, and --prompt makes that visible instead of silent."""
+    kw = {"show_progress_bar": False}
+    if prompt:
+        kw["prompt"] = prompt
+    return (np.asarray(model.encode(video_inputs, **kw)),
+            np.asarray(model.encode(texts, **kw)))
+
+
+def write_frames(video, times, out_dir, uid):
+    """Segment frames as JPEGs, because the video input is a list of frames.
+
+    qwen-vl-utils accepts a video as a list of frame paths, which is what lets
+    an arbitrary [start, end] window be encoded at all -- handing it the whole
+    file would encode the recording, not the segment, and the segment is the
+    unit the audit judged."""
+    from decord import VideoReader
+    from PIL import Image
+    vr = VideoReader(video)
+    fps = vr.get_avg_fps()
+    idx = [max(0, min(len(vr) - 1, int(t * fps))) for t in times]
+    arr = vr.get_batch(idx).asnumpy()
+    paths = []
+    for i, fr in enumerate(arr):
+        p = os.path.join(out_dir, f"{uid}_{i:02d}.jpg")
+        Image.fromarray(fr).save(p, quality=90)
+        paths.append(p)
+    return paths
 
 
 def main():
@@ -88,6 +115,12 @@ def main():
     ap.add_argument("--event_map", action="append", required=True)
     ap.add_argument("--model", help="local path to Qwen3-VL-Embedding-2B")
     ap.add_argument("--n_frames", type=int, default=8)
+    ap.add_argument("--prompt", default=None,
+                    help="applied to BOTH sides. None uses the model default, "
+                         "\"Represent the user's input.\" A different prompt "
+                         "gives a different number, so it is a flag rather "
+                         "than a constant buried in the call")
+    ap.add_argument("--frame_dir", default="/tmp/cosine_frames")
     ap.add_argument("--dry_run", action="store_true",
                     help="random unit vectors instead of the model. Verifies "
                          "the plumbing; an AUROC near 0.5 from a dry run is "
@@ -148,6 +181,9 @@ def main():
         print(f"  max_seq_length {getattr(model, 'max_seq_length', '?')}   "
               f"dim {model.get_sentence_embedding_dimension()}")
 
+    tmp = a.frame_dir
+    if not a.dry_run:
+        os.makedirs(tmp, exist_ok=True)
     rng = random.Random(a.seed)
     score = {}
     for i, (uid, j) in enumerate(sorted(need.items())):
@@ -157,14 +193,15 @@ def main():
             score[uid] = float(v @ t / (np.linalg.norm(v)
                                         * np.linalg.norm(t)))
             continue
-        from decord import VideoReader
-        vr = VideoReader(video_of[j["recording_id"]])
-        fps = vr.get_avg_fps()
-        idx = [max(0, min(len(vr) - 1, int(t * fps)))
-               for t in sample_times(j["start"], j["end"], a.n_frames)]
-        frames = vr.get_batch(idx).asnumpy()
-        vv, tt = embed(model, [{"video": frames}], [j["stored_label"]])
-        score[uid] = float(vv[0] @ tt[0])
+        paths = write_frames(video_of[j["recording_id"]],
+                             sample_times(j["start"], j["end"], a.n_frames),
+                             tmp, uid.replace("/", "_"))
+        vv, tt = embed(model, [{"video": paths}], [j["stored_label"]],
+                       a.prompt)
+        score[uid] = float(vv[0] @ tt[0] / (np.linalg.norm(vv[0])
+                                            * np.linalg.norm(tt[0])))
+        for q in paths:
+            os.remove(q)
         if (i + 1) % 25 == 0:
             print(f"    {i + 1}/{len(need)} encoded", flush=True)
 
