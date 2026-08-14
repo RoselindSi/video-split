@@ -253,8 +253,13 @@ def main():
         s = [e[f] for e in ev]
         au = auroc(s, y)
         lo, hi = grouped_boot(s, y, grp, a.n_boot, a.seed)
+        # "> chance band" at a 0.001 margin reads as a result and is not
+        # one. The margin is printed, and the marker needs 0.02 of daylight
+        # before it appears at all.
         print(f"  {f:<12}{au:>8.3f}   [{lo:.3f}, {hi:.3f}]"
-              + ("   > chance band" if au > bar else ""))
+              f"   bar{au - bar:+.3f}"
+              + ("   > chance band" if au > bar + 0.02 else
+                 "   ON the bar" if au > bar else ""))
         res[f] = {"auroc": au, "grouped_95": [lo, hi]}
     print(f"\n  for the same table: naming verb_min 0.558  verb_mean 0.566  "
           f"obj_min 0.566\n  obj_mean 0.563  |  video prior 0.827 "
