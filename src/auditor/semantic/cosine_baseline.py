@@ -132,10 +132,12 @@ def main():
         if not a.model or not os.path.exists(a.model):
             raise SystemExit(
                 f"--model must point at a local Qwen3-VL-Embedding checkpoint."
-                f"\n  Download with:\n    huggingface-cli download "
+                f"\n  Download with:\n    hf download "
                 f"Qwen/Qwen3-VL-Embedding-2B --local-dir "
-                f"/workspace/tr1/ckpts/Qwen3-VL-Embedding-2B\n  Or use "
-                f"--dry_run to verify the plumbing first.")
+                f"/workspace/tr1/ckpts/Qwen3-VL-Embedding-2B\n"
+                f"  (`huggingface-cli` was renamed to `hf` and no longer "
+                f"works.)\n  Or use --dry_run to verify the plumbing "
+                f"first.")
         import torch
         from transformers import AutoModel, AutoProcessor
         proc = AutoProcessor.from_pretrained(a.model, trust_remote_code=True)
