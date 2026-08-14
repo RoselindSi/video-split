@@ -227,8 +227,20 @@ def main():
                              sample_times(j["start"], j["end"], a.n_frames),
                              tmp, uid.replace("/", "_"))
         dur = max(float(j["end"]) - float(j["start"]), 1e-3)
-        meta = [{"fps": len(paths) / dur, "total_num_frames": len(paths),
-                 "duration": dur}]
+        n = len(paths)
+        # frames_indices is REQUIRED here and nothing fills it. With
+        # do_sample_frames=True the processor sets it from its own sampling;
+        # with a pre-sampled list nobody does, and _calculate_timestamps then
+        # calls .tolist() on None. It also calls .tolist(), so this must be an
+        # ARRAY -- a Python list fails the same way one line later.
+        #
+        # Indices 0..n-1 with fps=(n-1)/duration put the frames at 0..duration,
+        # i.e. timestamps relative to the SEGMENT. Absolute times inside the
+        # recording were the other option and would tell the model this clip
+        # begins at 466.8s, which is not what a clip-trained model expects.
+        meta = [{"fps": (n - 1) / dur if n > 1 else 1.0,
+                 "total_num_frames": n, "duration": dur,
+                 "frames_indices": np.arange(n)}]
         vv, tt = embed(model, [{"video": paths}], [j["stored_label"]],
                        a.prompt, None if a.no_metadata else meta)
         score[uid] = float(vv[0] @ tt[0] / (np.linalg.norm(vv[0])
