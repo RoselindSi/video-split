@@ -4,9 +4,9 @@
 37/t156,recording_000037,156.0,point,[164.5],[],[],[164.5],164.5,exact_user,Next rinse instance begins after place-cup + idle.
 53/t486,recording_000053,486.0,terminal_end,[473.5],[],[],[473.5],473.5,exact_user,Tissue-taking action ends at ~473.5s; afterward no effective action.
 61/t590,recording_000061,590.0,no_task_boundary,[],[],[],[],,none,No effective action visible; no task-level boundary can be assigned.
-102/t164.5,recording_000102,164.5,point,[166.0],[],[],[166.0],166.0,exact_user,User-marked transition from large wiping strokes to small wiping strokes.
-102/t484,recording_000102,484.0,point,[497.0],[],[],[497.0],497.0,exact_user,User-marked transition from small wiping strokes to large wiping strokes.
-102/t95,recording_000102,95.0,point,[95.0],[],[],[95.0],95.0,exact_user,User-marked transition from large wiping strokes to small wiping strokes.
+102/t164.5,recording_000102,164.5,motion_phase_only,[],[],[166.0],[],,phase_only,"Large-stroke wiping -> small-stroke wiping is continuous same-action internal motion with no reset; preserve 166s only as a motion-phase point, not task boundary."
+102/t484,recording_000102,484.0,motion_phase_only,[],[],[497.0],[],,phase_only,Small-stroke wiping -> large-stroke wiping is continuous same-action internal motion; preserve 497s only as a motion-phase point.
+102/t95,recording_000102,95.0,motion_phase_only,[],[],[95.0],[],,phase_only,Large-stroke wiping -> small-stroke wiping is continuous same-action internal motion; preserve 95s only as a motion-phase point.
 110/t504,recording_000110,504.0,multiple_points,"[493.0, 506.0]",[],[],"[493.0, 506.0]",506.0,approximate_user,Approximate task transitions: squeegee -> hand-rinse/splash around 493s; back to squeegee around 506s.
 134/t130,recording_000134,130.0,point,[154.0],[],[],[154.0],154.0,exact_user,Boundary between repeated tissue fold/stack instances.
 134/t562.5,recording_000134,562.5,multiple_points,"[562.0, 574.0]",[],[],"[562.0, 574.0]",562.0,exact_user,Boundaries between three fold-and-stack tissue instances.

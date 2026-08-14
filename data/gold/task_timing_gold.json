@@ -1,9 +1,9 @@
 {
   "sources": [
     "data/gold/task_timing_gold_48.csv",
-    "data/gold/task_timing_gold_enrich17.csv"
+    "data/gold/task_timing_gold_enrich21.csv"
   ],
-  "n": 65,
+  "n": 69,
   "events": [
     {
       "audit_key": "22/t466.8",
@@ -30,7 +30,8 @@
           469.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "30/t556",
@@ -60,7 +61,8 @@
           557.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "37/t156",
@@ -87,7 +89,8 @@
           164.5
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "53/t486",
@@ -114,7 +117,8 @@
           473.5
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "61/t590",
@@ -131,88 +135,68 @@
       "no_task_boundary_flag": false,
       "timing_note": "No effective action visible; no task-level boundary can be assigned.",
       "boundaries": [],
-      "asserts_no_boundary": true
+      "asserts_no_boundary": true,
+      "negative_kind": "no_action_change"
     },
     {
       "audit_key": "102/t164.5",
       "source_sheet": "task_timing_gold_48.csv",
       "recording_id": "recording_000102",
       "candidate_time": 164.5,
-      "task_timing_status": "point",
-      "task_points": [
-        166.0
-      ],
+      "task_timing_status": "motion_phase_only",
+      "task_points": [],
       "task_intervals": [],
-      "motion_phase_points": [],
-      "canonical_task_times_sheet": [
+      "motion_phase_points": [
         166.0
       ],
-      "timing_precision": "exact_user",
+      "canonical_task_times_sheet": [],
+      "timing_precision": "phase_only",
       "onset_from_idle": false,
       "no_task_boundary_flag": false,
-      "timing_note": "User-marked transition from large wiping strokes to small wiping strokes.",
-      "boundaries": [
-        [
-          "point",
-          166.0,
-          166.0
-        ]
-      ],
-      "asserts_no_boundary": false
+      "timing_note": "Large-stroke wiping -> small-stroke wiping is continuous same-action internal motion with no reset; preserve 166s only as a motion-phase point, not task boundary.",
+      "boundaries": [],
+      "asserts_no_boundary": true,
+      "negative_kind": "phase_change_only"
     },
     {
       "audit_key": "102/t484",
       "source_sheet": "task_timing_gold_48.csv",
       "recording_id": "recording_000102",
       "candidate_time": 484.0,
-      "task_timing_status": "point",
-      "task_points": [
-        497.0
-      ],
+      "task_timing_status": "motion_phase_only",
+      "task_points": [],
       "task_intervals": [],
-      "motion_phase_points": [],
-      "canonical_task_times_sheet": [
+      "motion_phase_points": [
         497.0
       ],
-      "timing_precision": "exact_user",
+      "canonical_task_times_sheet": [],
+      "timing_precision": "phase_only",
       "onset_from_idle": false,
       "no_task_boundary_flag": false,
-      "timing_note": "User-marked transition from small wiping strokes to large wiping strokes.",
-      "boundaries": [
-        [
-          "point",
-          497.0,
-          497.0
-        ]
-      ],
-      "asserts_no_boundary": false
+      "timing_note": "Small-stroke wiping -> large-stroke wiping is continuous same-action internal motion; preserve 497s only as a motion-phase point.",
+      "boundaries": [],
+      "asserts_no_boundary": true,
+      "negative_kind": "phase_change_only"
     },
     {
       "audit_key": "102/t95",
       "source_sheet": "task_timing_gold_48.csv",
       "recording_id": "recording_000102",
       "candidate_time": 95.0,
-      "task_timing_status": "point",
-      "task_points": [
-        95.0
-      ],
+      "task_timing_status": "motion_phase_only",
+      "task_points": [],
       "task_intervals": [],
-      "motion_phase_points": [],
-      "canonical_task_times_sheet": [
+      "motion_phase_points": [
         95.0
       ],
-      "timing_precision": "exact_user",
+      "canonical_task_times_sheet": [],
+      "timing_precision": "phase_only",
       "onset_from_idle": false,
       "no_task_boundary_flag": false,
-      "timing_note": "User-marked transition from large wiping strokes to small wiping strokes.",
-      "boundaries": [
-        [
-          "point",
-          95.0,
-          95.0
-        ]
-      ],
-      "asserts_no_boundary": false
+      "timing_note": "Large-stroke wiping -> small-stroke wiping is continuous same-action internal motion; preserve 95s only as a motion-phase point.",
+      "boundaries": [],
+      "asserts_no_boundary": true,
+      "negative_kind": "phase_change_only"
     },
     {
       "audit_key": "110/t504",
@@ -246,7 +230,8 @@
           506.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "134/t130",
@@ -273,7 +258,8 @@
           154.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "134/t562.5",
@@ -307,7 +293,8 @@
           574.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "176/t90.5",
@@ -337,7 +324,8 @@
           91.4
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "181/t73.5",
@@ -371,7 +359,8 @@
           93.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "181/t233",
@@ -412,7 +401,8 @@
           240.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "188/t456",
@@ -446,7 +436,8 @@
           480.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "213/t230.5",
@@ -494,7 +485,8 @@
           263.5
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "213/t242.5",
@@ -535,7 +527,8 @@
           263.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "220/t137.8",
@@ -556,7 +549,8 @@
       "no_task_boundary_flag": false,
       "timing_note": "User-marked flip-cycle phase changes. Frozen task-level ontology treats the continuous held sequence as one same_instance, so these are NOT task-level boundaries.",
       "boundaries": [],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": true,
+      "negative_kind": "phase_change_only"
     },
     {
       "audit_key": "220/t289.5",
@@ -576,7 +570,8 @@
       "no_task_boundary_flag": false,
       "timing_note": "User-marked slipper flip/display phase changes; not task-level boundaries under frozen same-instance ontology.",
       "boundaries": [],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": true,
+      "negative_kind": "phase_change_only"
     },
     {
       "audit_key": "230/t404.5",
@@ -617,7 +612,8 @@
           418.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "230/t397",
@@ -658,7 +654,8 @@
           418.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "236/t572.8",
@@ -692,7 +689,8 @@
           580.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "242/t352",
@@ -719,7 +717,8 @@
           352.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "250/t629.5",
@@ -753,7 +752,8 @@
           630.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "265/t88",
@@ -794,7 +794,8 @@
           115.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "265/t298.5",
@@ -821,7 +822,8 @@
           297.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "272/t618",
@@ -851,7 +853,8 @@
           624.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "282/t544.5",
@@ -885,7 +888,8 @@
           544.5
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "327/t386.5",
@@ -926,7 +930,8 @@
           396.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "343/t547",
@@ -967,7 +972,8 @@
           563.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "343/t222.5",
@@ -1001,7 +1007,8 @@
           236.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "385/t577.5",
@@ -1035,7 +1042,8 @@
           637.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "388/t67.5",
@@ -1062,7 +1070,8 @@
           94.8
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "388/t601.8",
@@ -1089,7 +1098,8 @@
           573.5
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "391/t242.5",
@@ -1123,7 +1133,8 @@
           252.5
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "406/t490.3",
@@ -1150,7 +1161,8 @@
           473.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "406/t29.5",
@@ -1177,7 +1189,8 @@
           17.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "406/t455",
@@ -1218,7 +1231,8 @@
           515.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "406/t556.6",
@@ -1245,7 +1259,8 @@
           549.5
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "419/t688.9",
@@ -1272,7 +1287,8 @@
           690.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "422/t381",
@@ -1299,7 +1315,8 @@
           321.9
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "431/t427.5",
@@ -1326,7 +1343,8 @@
           418.5
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "431/t440.5",
@@ -1353,7 +1371,8 @@
           419.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "431/t178.2",
@@ -1387,7 +1406,8 @@
           221.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "438/t224",
@@ -1414,7 +1434,8 @@
           220.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "438/t182",
@@ -1441,7 +1462,8 @@
           183.5
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "465/t247",
@@ -1471,7 +1493,8 @@
           248.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "471/t485.4",
@@ -1488,11 +1511,12 @@
       "no_task_boundary_flag": false,
       "timing_note": "Continuous wiping of kettle; frozen ontology says no task-level action change.",
       "boundaries": [],
-      "asserts_no_boundary": true
+      "asserts_no_boundary": true,
+      "negative_kind": "no_action_change"
     },
     {
       "audit_key": "22/t240",
-      "source_sheet": "task_timing_gold_enrich17.csv",
+      "source_sheet": "task_timing_gold_enrich21.csv",
       "recording_id": "recording_000022",
       "candidate_time": 240.0,
       "task_timing_status": "onset_only",
@@ -1501,9 +1525,11 @@
       ],
       "task_intervals": [],
       "motion_phase_points": [],
-      "canonical_task_times_sheet": [],
-      "timing_precision": "",
-      "onset_from_idle": true,
+      "canonical_task_times_sheet": [
+        238.0
+      ],
+      "timing_precision": "exact_user",
+      "onset_from_idle": false,
       "no_task_boundary_flag": false,
       "timing_note": "idle -> grasp mug / fill / scrub interior / pour out; user says real boundary 238",
       "boundaries": [
@@ -1513,11 +1539,12 @@
           238.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "80/t113",
-      "source_sheet": "task_timing_gold_enrich17.csv",
+      "source_sheet": "task_timing_gold_enrich21.csv",
       "recording_id": "recording_000080",
       "candidate_time": 113.0,
       "task_timing_status": "point",
@@ -1526,8 +1553,10 @@
       ],
       "task_intervals": [],
       "motion_phase_points": [],
-      "canonical_task_times_sheet": [],
-      "timing_precision": "",
+      "canonical_task_times_sheet": [
+        111.7
+      ],
+      "timing_precision": "exact_user",
       "onset_from_idle": false,
       "no_task_boundary_flag": false,
       "timing_note": "boundary between repeated wipe-and-discard task instances",
@@ -1538,11 +1567,12 @@
           111.7
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "80/t478.5",
-      "source_sheet": "task_timing_gold_enrich17.csv",
+      "source_sheet": "task_timing_gold_enrich21.csv",
       "recording_id": "recording_000080",
       "candidate_time": 478.5,
       "task_timing_status": "point",
@@ -1551,8 +1581,10 @@
       ],
       "task_intervals": [],
       "motion_phase_points": [],
-      "canonical_task_times_sheet": [],
-      "timing_precision": "",
+      "canonical_task_times_sheet": [
+        479.0
+      ],
+      "timing_precision": "exact_user",
       "onset_from_idle": false,
       "no_task_boundary_flag": false,
       "timing_note": "boundary between repeated wipe-and-discard task instances",
@@ -1563,11 +1595,12 @@
           479.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "80/t559.5",
-      "source_sheet": "task_timing_gold_enrich17.csv",
+      "source_sheet": "task_timing_gold_enrich21.csv",
       "recording_id": "recording_000080",
       "candidate_time": 559.5,
       "task_timing_status": "point",
@@ -1576,8 +1609,10 @@
       ],
       "task_intervals": [],
       "motion_phase_points": [],
-      "canonical_task_times_sheet": [],
-      "timing_precision": "",
+      "canonical_task_times_sheet": [
+        559.0
+      ],
+      "timing_precision": "exact_user",
       "onset_from_idle": false,
       "no_task_boundary_flag": false,
       "timing_note": "boundary into next tissue/wipe instance",
@@ -1588,11 +1623,12 @@
           559.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "86/t530.5",
-      "source_sheet": "task_timing_gold_enrich17.csv",
+      "source_sheet": "task_timing_gold_enrich21.csv",
       "recording_id": "recording_000086",
       "candidate_time": 530.5,
       "task_timing_status": "onset_only",
@@ -1601,9 +1637,11 @@
       ],
       "task_intervals": [],
       "motion_phase_points": [],
-      "canonical_task_times_sheet": [],
-      "timing_precision": "",
-      "onset_from_idle": true,
+      "canonical_task_times_sheet": [
+        535.0
+      ],
+      "timing_precision": "exact_user",
+      "onset_from_idle": false,
       "no_task_boundary_flag": false,
       "timing_note": "mostly no valid action; new tissue retrieval starts at 535",
       "boundaries": [
@@ -1613,11 +1651,12 @@
           535.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "102/t471.5",
-      "source_sheet": "task_timing_gold_enrich17.csv",
+      "source_sheet": "task_timing_gold_enrich21.csv",
       "recording_id": "recording_000102",
       "candidate_time": 471.5,
       "task_timing_status": "no_task_boundary",
@@ -1625,66 +1664,57 @@
       "task_intervals": [],
       "motion_phase_points": [],
       "canonical_task_times_sheet": [],
-      "timing_precision": "",
+      "timing_precision": "none",
       "onset_from_idle": false,
-      "no_task_boundary_flag": true,
+      "no_task_boundary_flag": false,
       "timing_note": "continuous small wiping; no interruption or action change",
       "boundaries": [],
-      "asserts_no_boundary": true
+      "asserts_no_boundary": true,
+      "negative_kind": "no_action_change"
     },
     {
       "audit_key": "102/t164",
-      "source_sheet": "task_timing_gold_enrich17.csv",
+      "source_sheet": "task_timing_gold_enrich21.csv",
       "recording_id": "recording_000102",
       "candidate_time": 164.0,
-      "task_timing_status": "point",
-      "task_points": [
+      "task_timing_status": "motion_phase_only",
+      "task_points": [],
+      "task_intervals": [],
+      "motion_phase_points": [
         165.0
       ],
-      "task_intervals": [],
-      "motion_phase_points": [],
       "canonical_task_times_sheet": [],
-      "timing_precision": "",
+      "timing_precision": "phase_only",
       "onset_from_idle": false,
       "no_task_boundary_flag": false,
-      "timing_note": "user-marked transition from large wiping motion to small wiping motion",
-      "boundaries": [
-        [
-          "point",
-          165.0,
-          165.0
-        ]
-      ],
-      "asserts_no_boundary": false
+      "timing_note": "Large-stroke -> small-stroke wiping is one continuous wipe action; 165s is a motion-phase point only.",
+      "boundaries": [],
+      "asserts_no_boundary": true,
+      "negative_kind": "phase_change_only"
     },
     {
       "audit_key": "102/t439",
-      "source_sheet": "task_timing_gold_enrich17.csv",
+      "source_sheet": "task_timing_gold_enrich21.csv",
       "recording_id": "recording_000102",
       "candidate_time": 439.0,
-      "task_timing_status": "point",
-      "task_points": [
+      "task_timing_status": "motion_phase_only",
+      "task_points": [],
+      "task_intervals": [],
+      "motion_phase_points": [
         441.0
       ],
-      "task_intervals": [],
-      "motion_phase_points": [],
       "canonical_task_times_sheet": [],
-      "timing_precision": "",
+      "timing_precision": "phase_only",
       "onset_from_idle": false,
       "no_task_boundary_flag": false,
-      "timing_note": "user-marked transition from large wiping motion to small wiping motion",
-      "boundaries": [
-        [
-          "point",
-          441.0,
-          441.0
-        ]
-      ],
-      "asserts_no_boundary": false
+      "timing_note": "Large-stroke -> small-stroke wiping is one continuous wipe action; 441s is a motion-phase point only.",
+      "boundaries": [],
+      "asserts_no_boundary": true,
+      "negative_kind": "phase_change_only"
     },
     {
       "audit_key": "102/t23.5",
-      "source_sheet": "task_timing_gold_enrich17.csv",
+      "source_sheet": "task_timing_gold_enrich21.csv",
       "recording_id": "recording_000102",
       "candidate_time": 23.5,
       "task_timing_status": "no_task_boundary",
@@ -1692,151 +1722,105 @@
       "task_intervals": [],
       "motion_phase_points": [],
       "canonical_task_times_sheet": [],
-      "timing_precision": "",
+      "timing_precision": "none",
       "onset_from_idle": false,
-      "no_task_boundary_flag": true,
+      "no_task_boundary_flag": false,
       "timing_note": "continuous large wiping; no action change",
       "boundaries": [],
-      "asserts_no_boundary": true
+      "asserts_no_boundary": true,
+      "negative_kind": "no_action_change"
     },
     {
       "audit_key": "105/t501.5",
-      "source_sheet": "task_timing_gold_enrich17.csv",
+      "source_sheet": "task_timing_gold_enrich21.csv",
       "recording_id": "recording_000105",
       "candidate_time": 501.5,
-      "task_timing_status": "multiple_points",
+      "task_timing_status": "point",
       "task_points": [
+        539.0
+      ],
+      "task_intervals": [],
+      "motion_phase_points": [
         473.0,
         495.0,
         516.0,
         528.0,
-        539.0,
         550.0
       ],
-      "task_intervals": [],
-      "motion_phase_points": [],
-      "canonical_task_times_sheet": [],
-      "timing_precision": "",
+      "canonical_task_times_sheet": [
+        539.0
+      ],
+      "timing_precision": "exact_user",
       "onset_from_idle": false,
       "no_task_boundary_flag": false,
-      "timing_note": "multiple user-marked task transitions across the audited span",
+      "timing_note": "Alternating small/large wiping and fold-to-wipe are internal phases of the same wipe-with-tissue task. Only the completed/discarded old-tissue -> new-tissue instance reset at ~539s is retained as a task boundary.",
       "boundaries": [
-        [
-          "point",
-          473.0,
-          473.0
-        ],
-        [
-          "point",
-          495.0,
-          495.0
-        ],
-        [
-          "point",
-          516.0,
-          516.0
-        ],
-        [
-          "point",
-          528.0,
-          528.0
-        ],
         [
           "point",
           539.0,
           539.0
-        ],
-        [
-          "point",
-          550.0,
-          550.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "105/t505.5",
-      "source_sheet": "task_timing_gold_enrich17.csv",
+      "source_sheet": "task_timing_gold_enrich21.csv",
       "recording_id": "recording_000105",
       "candidate_time": 505.5,
-      "task_timing_status": "multiple_points",
+      "task_timing_status": "point",
       "task_points": [
+        539.0
+      ],
+      "task_intervals": [],
+      "motion_phase_points": [
         473.0,
         495.0,
         516.0,
         528.0,
-        539.0,
         550.0
       ],
-      "task_intervals": [],
-      "motion_phase_points": [],
-      "canonical_task_times_sheet": [],
-      "timing_precision": "",
+      "canonical_task_times_sheet": [
+        539.0
+      ],
+      "timing_precision": "exact_user",
       "onset_from_idle": false,
       "no_task_boundary_flag": false,
-      "timing_note": "same overlapping audited span as 105/t501.5; preserve event-level provenance",
+      "timing_note": "Same overlapping span as 105/t501.5: retain only the ~539s new-tissue instance boundary; all amplitude/fold-to-wipe changes are motion phases.",
       "boundaries": [
-        [
-          "point",
-          473.0,
-          473.0
-        ],
-        [
-          "point",
-          495.0,
-          495.0
-        ],
-        [
-          "point",
-          516.0,
-          516.0
-        ],
-        [
-          "point",
-          528.0,
-          528.0
-        ],
         [
           "point",
           539.0,
           539.0
-        ],
-        [
-          "point",
-          550.0,
-          550.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "105/t582",
-      "source_sheet": "task_timing_gold_enrich17.csv",
+      "source_sheet": "task_timing_gold_enrich21.csv",
       "recording_id": "recording_000105",
       "candidate_time": 582.0,
-      "task_timing_status": "point",
-      "task_points": [
+      "task_timing_status": "motion_phase_only",
+      "task_points": [],
+      "task_intervals": [],
+      "motion_phase_points": [
         582.0
       ],
-      "task_intervals": [],
-      "motion_phase_points": [],
       "canonical_task_times_sheet": [],
-      "timing_precision": "",
+      "timing_precision": "phase_only",
       "onset_from_idle": false,
       "no_task_boundary_flag": false,
-      "timing_note": "user-marked real boundary at 582",
-      "boundaries": [
-        [
-          "point",
-          582.0,
-          582.0
-        ]
-      ],
-      "asserts_no_boundary": false
+      "timing_note": "The described action is continuous small-stroke wiping with no interruption or action change; preserve 582s only as the user-marked phase/cut time, not a task boundary.",
+      "boundaries": [],
+      "asserts_no_boundary": true,
+      "negative_kind": "phase_change_only"
     },
     {
       "audit_key": "105/t72",
-      "source_sheet": "task_timing_gold_enrich17.csv",
+      "source_sheet": "task_timing_gold_enrich21.csv",
       "recording_id": "recording_000105",
       "candidate_time": 72.0,
       "task_timing_status": "no_task_boundary",
@@ -1844,16 +1828,17 @@
       "task_intervals": [],
       "motion_phase_points": [],
       "canonical_task_times_sheet": [],
-      "timing_precision": "",
+      "timing_precision": "none",
       "onset_from_idle": false,
-      "no_task_boundary_flag": true,
+      "no_task_boundary_flag": false,
       "timing_note": "continuous small wiping; no interruption or action change",
       "boundaries": [],
-      "asserts_no_boundary": true
+      "asserts_no_boundary": true,
+      "negative_kind": "no_action_change"
     },
     {
       "audit_key": "150/t234.5",
-      "source_sheet": "task_timing_gold_enrich17.csv",
+      "source_sheet": "task_timing_gold_enrich21.csv",
       "recording_id": "recording_000150",
       "candidate_time": 234.5,
       "task_timing_status": "no_task_boundary",
@@ -1861,16 +1846,17 @@
       "task_intervals": [],
       "motion_phase_points": [],
       "canonical_task_times_sheet": [],
-      "timing_precision": "",
+      "timing_precision": "none",
       "onset_from_idle": false,
-      "no_task_boundary_flag": true,
+      "no_task_boundary_flag": false,
       "timing_note": "continuous remote flip back-and-forth; no task-level change",
       "boundaries": [],
-      "asserts_no_boundary": true
+      "asserts_no_boundary": true,
+      "negative_kind": "no_action_change"
     },
     {
       "audit_key": "150/t34",
-      "source_sheet": "task_timing_gold_enrich17.csv",
+      "source_sheet": "task_timing_gold_enrich21.csv",
       "recording_id": "recording_000150",
       "candidate_time": 34.0,
       "task_timing_status": "no_task_boundary",
@@ -1878,16 +1864,17 @@
       "task_intervals": [],
       "motion_phase_points": [],
       "canonical_task_times_sheet": [],
-      "timing_precision": "",
+      "timing_precision": "none",
       "onset_from_idle": false,
-      "no_task_boundary_flag": true,
+      "no_task_boundary_flag": false,
       "timing_note": "continuous remote flip back-and-forth; current audit says no task-level boundary",
       "boundaries": [],
-      "asserts_no_boundary": true
+      "asserts_no_boundary": true,
+      "negative_kind": "no_action_change"
     },
     {
       "audit_key": "181/t564",
-      "source_sheet": "task_timing_gold_enrich17.csv",
+      "source_sheet": "task_timing_gold_enrich21.csv",
       "recording_id": "recording_000181",
       "candidate_time": 564.0,
       "task_timing_status": "multiple_mixed",
@@ -1907,8 +1894,12 @@
         ]
       ],
       "motion_phase_points": [],
-      "canonical_task_times_sheet": [],
-      "timing_precision": "",
+      "canonical_task_times_sheet": [
+        548.0,
+        564.5,
+        577.0
+      ],
+      "timing_precision": "exact_user",
       "onset_from_idle": false,
       "no_task_boundary_flag": false,
       "timing_note": "three release/reset transition intervals between repeated rinse-and-seat instances",
@@ -1929,11 +1920,12 @@
           579.0
         ]
       ],
-      "asserts_no_boundary": false
+      "asserts_no_boundary": false,
+      "negative_kind": null
     },
     {
       "audit_key": "193/t264",
-      "source_sheet": "task_timing_gold_enrich17.csv",
+      "source_sheet": "task_timing_gold_enrich21.csv",
       "recording_id": "recording_000193",
       "candidate_time": 264.0,
       "task_timing_status": "no_task_boundary",
@@ -1941,12 +1933,85 @@
       "task_intervals": [],
       "motion_phase_points": [],
       "canonical_task_times_sheet": [],
-      "timing_precision": "",
+      "timing_precision": "none",
       "onset_from_idle": false,
-      "no_task_boundary_flag": true,
+      "no_task_boundary_flag": false,
       "timing_note": "continuous antenna extend-retract cycle; no interruption or action change",
       "boundaries": [],
-      "asserts_no_boundary": true
+      "asserts_no_boundary": true,
+      "negative_kind": "no_action_change"
+    },
+    {
+      "audit_key": "220/t143.8",
+      "source_sheet": "task_timing_gold_enrich21.csv",
+      "recording_id": "recording_000220",
+      "candidate_time": 143.8,
+      "task_timing_status": "no_task_boundary",
+      "task_points": [],
+      "task_intervals": [],
+      "motion_phase_points": [],
+      "canonical_task_times_sheet": [],
+      "timing_precision": "none",
+      "onset_from_idle": false,
+      "no_task_boundary_flag": false,
+      "timing_note": "Continuous slipper flip cycle with no disengagement/reset or task change; stored cuts are over-segmentation.",
+      "boundaries": [],
+      "asserts_no_boundary": true,
+      "negative_kind": "no_action_change"
+    },
+    {
+      "audit_key": "220/t153",
+      "source_sheet": "task_timing_gold_enrich21.csv",
+      "recording_id": "recording_000220",
+      "candidate_time": 153.0,
+      "task_timing_status": "no_task_boundary",
+      "task_points": [],
+      "task_intervals": [],
+      "motion_phase_points": [],
+      "canonical_task_times_sheet": [],
+      "timing_precision": "none",
+      "onset_from_idle": false,
+      "no_task_boundary_flag": false,
+      "timing_note": "Continuous slipper flip cycle with no disengagement/reset or task change; stored cuts are over-segmentation.",
+      "boundaries": [],
+      "asserts_no_boundary": true,
+      "negative_kind": "no_action_change"
+    },
+    {
+      "audit_key": "220/t586.4",
+      "source_sheet": "task_timing_gold_enrich21.csv",
+      "recording_id": "recording_000220",
+      "candidate_time": 586.4,
+      "task_timing_status": "no_task_boundary",
+      "task_points": [],
+      "task_intervals": [],
+      "motion_phase_points": [],
+      "canonical_task_times_sheet": [],
+      "timing_precision": "none",
+      "onset_from_idle": false,
+      "no_task_boundary_flag": false,
+      "timing_note": "Continuous slipper flip/display motion with no task-level change; stored side-display cuts are internal phases.",
+      "boundaries": [],
+      "asserts_no_boundary": true,
+      "negative_kind": "no_action_change"
+    },
+    {
+      "audit_key": "236/t102",
+      "source_sheet": "task_timing_gold_enrich21.csv",
+      "recording_id": "recording_000236",
+      "candidate_time": 102.0,
+      "task_timing_status": "no_task_boundary",
+      "task_points": [],
+      "task_intervals": [],
+      "motion_phase_points": [],
+      "canonical_task_times_sheet": [],
+      "timing_precision": "none",
+      "onset_from_idle": false,
+      "no_task_boundary_flag": false,
+      "timing_note": "Seal/flip/seal/tape is treated as one continuous task-level box-sealing action under the frozen standard; no real task boundary.",
+      "boundaries": [],
+      "asserts_no_boundary": true,
+      "negative_kind": "no_action_change"
     }
   ]
 }

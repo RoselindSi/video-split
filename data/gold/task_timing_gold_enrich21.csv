@@ -1,0 +1,22 @@
+﻿audit_key,recording_id,candidate_time,task_timing_status,human_boundary_points_json,human_boundary_intervals_json,motion_phase_points_json,canonical_task_times_json,nearest_canonical_task_time,timing_precision,timing_note
+22/t240,recording_000022,240.0,onset_only,[238.0],[],[],[238.0],238.0,exact_user,idle -> grasp mug / fill / scrub interior / pour out; user says real boundary 238
+80/t113,recording_000080,113.0,point,[111.7],[],[],[111.7],111.7,exact_user,boundary between repeated wipe-and-discard task instances
+80/t478.5,recording_000080,478.5,point,[479.0],[],[],[479.0],479.0,exact_user,boundary between repeated wipe-and-discard task instances
+80/t559.5,recording_000080,559.5,point,[559.0],[],[],[559.0],559.0,exact_user,boundary into next tissue/wipe instance
+86/t530.5,recording_000086,530.5,onset_only,[535.0],[],[],[535.0],535.0,exact_user,mostly no valid action; new tissue retrieval starts at 535
+102/t471.5,recording_000102,471.5,no_task_boundary,[],[],[],[],,none,continuous small wiping; no interruption or action change
+102/t164,recording_000102,164.0,motion_phase_only,[],[],[165.0],[],,phase_only,Large-stroke -> small-stroke wiping is one continuous wipe action; 165s is a motion-phase point only.
+102/t439,recording_000102,439.0,motion_phase_only,[],[],[441.0],[],,phase_only,Large-stroke -> small-stroke wiping is one continuous wipe action; 441s is a motion-phase point only.
+102/t23.5,recording_000102,23.5,no_task_boundary,[],[],[],[],,none,continuous large wiping; no action change
+105/t501.5,recording_000105,501.5,point,[539.0],[],"[473.0, 495.0, 516.0, 528.0, 550.0]",[539.0],539.0,exact_user,Alternating small/large wiping and fold-to-wipe are internal phases of the same wipe-with-tissue task. Only the completed/discarded old-tissue -> new-tissue instance reset at ~539s is retained as a task boundary.
+105/t505.5,recording_000105,505.5,point,[539.0],[],"[473.0, 495.0, 516.0, 528.0, 550.0]",[539.0],539.0,exact_user,Same overlapping span as 105/t501.5: retain only the ~539s new-tissue instance boundary; all amplitude/fold-to-wipe changes are motion phases.
+105/t582,recording_000105,582.0,motion_phase_only,[],[],[582.0],[],,phase_only,"The described action is continuous small-stroke wiping with no interruption or action change; preserve 582s only as the user-marked phase/cut time, not a task boundary."
+105/t72,recording_000105,72.0,no_task_boundary,[],[],[],[],,none,continuous small wiping; no interruption or action change
+150/t234.5,recording_000150,234.5,no_task_boundary,[],[],[],[],,none,continuous remote flip back-and-forth; no task-level change
+150/t34,recording_000150,34.0,no_task_boundary,[],[],[],[],,none,continuous remote flip back-and-forth; current audit says no task-level boundary
+181/t564,recording_000181,564.0,multiple_mixed,[],"[[544.0, 552.0], [563.0, 566.0], [575.0, 579.0]]",[],"[548.0, 564.5, 577.0]",564.5,exact_user,three release/reset transition intervals between repeated rinse-and-seat instances
+193/t264,recording_000193,264.0,no_task_boundary,[],[],[],[],,none,continuous antenna extend-retract cycle; no interruption or action change
+220/t143.8,recording_000220,143.8,no_task_boundary,[],[],[],[],,none,Continuous slipper flip cycle with no disengagement/reset or task change; stored cuts are over-segmentation.
+220/t153,recording_000220,153.0,no_task_boundary,[],[],[],[],,none,Continuous slipper flip cycle with no disengagement/reset or task change; stored cuts are over-segmentation.
+220/t586.4,recording_000220,586.4,no_task_boundary,[],[],[],[],,none,Continuous slipper flip/display motion with no task-level change; stored side-display cuts are internal phases.
+236/t102,recording_000236,102.0,no_task_boundary,[],[],[],[],,none,Seal/flip/seal/tape is treated as one continuous task-level box-sealing action under the frozen standard; no real task boundary.

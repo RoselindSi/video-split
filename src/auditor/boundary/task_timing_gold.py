@@ -1,23 +1,31 @@
 """Task-level timing gold from the semantic pool: freeze, merge, and say what it is not.
 
-TWO SCHEMAS, ONE POOL. The 48 frozen semantic events and 17 of the 41
-enrichment events now carry human TASK-LEVEL boundary times. The two sheets do
-not have the same columns -- the 48 add `motion_phase_points_json`,
-`canonical_task_times_json` and `timing_precision`, the 17 add
-`onset_from_idle` and `no_task_boundary` -- so they are read separately and
-merged with the differences kept rather than flattened.
+ONE POOL, 69 EVENTS: the 48 frozen semantic events plus 21 enrichment ones,
+both under the same schema after the standard was agreed and both sheets
+re-checked against it. The re-check moved eight events, all in the same
+direction: five amplitude or fold-to-wipe changes that had been recorded as
+`point` became `motion_phase_only`, two multi-boundary spans collapsed to a
+single instance reset, and four new rows came in as `no_task_boundary`. The
+standard tightened and nothing loosened.
 
-MOTION PHASE IS NOT A BOUNDARY. Two events carry `motion_phase_only` with
-their times in `motion_phase_points_json` and an EMPTY canonical list, and the
-notes say why: the frozen ontology treats a continuous held sequence as one
-same_instance, so a flip-cycle phase change is not a task boundary. Those
-times are carried through and are never emitted as boundaries. Merging them in
-would put three fake boundaries into any test that consumes this file.
+MOTION PHASE IS NOT A BOUNDARY. Ten events carry times in
+`motion_phase_points_json` with an EMPTY canonical list, and the notes say
+why: the frozen ontology treats a continuous held sequence as one instance, so
+an amplitude change inside a wipe is not a task boundary. Those 21 times are
+carried through and are never emitted as boundaries. Merging them in would put
+21 fake boundaries into anything that consumes this file, and they are exactly
+the kind of time that looks usable.
 
-`no_task_boundary` IS A LABEL, NOT A GAP. Eight events across the two sheets
-say there is no task-level boundary at all. They have no times and they are
-not missing data -- they are negatives, and the only file in this project that
-has ever carried them.
+TWO KINDS OF EXISTENCE NEGATIVE, 20 in total, and they are not the same
+mistake to make:
+
+    no_action_change    12   nothing changed here
+    phase_change_only    8   something visibly changed and it is not a task
+                             boundary. A detector firing here is a harder
+                             error to fault than one firing in continuous idle
+
+Both are negatives and this is the only file in the project that has ever
+carried either.
 
 WHAT THIS POOL IS NOT, and it matters before anything is run on it:
 
@@ -31,8 +39,8 @@ WHAT THIS POOL IS NOT, and it matters before anything is run on it:
 
     NOT THE SAME QUESTION as the 45. Those recorded where the boundary is for
     events whose instance_relation was already known positive. These record
-    task-level timing for events selected for a SEMANTIC audit, and eight of
-    them say no boundary exists.
+    task-level timing for events selected for a SEMANTIC audit, and 20 of them
+    say no boundary exists at all.
 
 So this file freezes and describes. It does not feed the event-matched timing
 test, because doing that silently would put a peak-selected pool through a
@@ -41,7 +49,7 @@ procedure whose whole value was that its pool was not.
 Usage:
     python -m src.auditor.boundary.task_timing_gold \
         --csv data/gold/task_timing_gold_48.csv \
-        --csv data/gold/task_timing_gold_enrich17.csv \
+        --csv data/gold/task_timing_gold_enrich21.csv \
         --out data/gold/task_timing_gold.json
 """
 from __future__ import annotations
@@ -116,8 +124,19 @@ def main():
             e["boundaries"] = ([("point", x, x) for x in pts]
                                + [("interval", min(lo, hi), max(lo, hi))
                                   for lo, hi in ivs])
-            e["asserts_no_boundary"] = (st == "no_task_boundary"
+            # TWO KINDS OF EXISTENCE NEGATIVE, and they are not the same
+            # error to make. `no_task_boundary` says nothing changed here.
+            # `motion_phase_only` says something visibly changed and it is not
+            # a task boundary under the frozen ontology -- a detector firing
+            # there is a harder mistake to fault than one firing in continuous
+            # idle. Both are negatives; collapsing them would lose the
+            # distinction that makes them worth having.
+            e["asserts_no_boundary"] = (st in ("no_task_boundary",
+                                               "motion_phase_only")
                                         or e["no_task_boundary_flag"])
+            e["negative_kind"] = (
+                "phase_change_only" if st == "motion_phase_only" else
+                "no_action_change" if e["asserts_no_boundary"] else None)
             if k in events:
                 dupes.append((k, events[k]["source_sheet"], src))
             events[k] = e
@@ -134,6 +153,11 @@ def main():
     nb = [e for e in events.values() if e["asserts_no_boundary"]]
     print(f"  events asserting NO task boundary: {len(nb)} "
           f"-- negatives, and the only file here that has ever carried them")
+    print(f"    {sum(1 for e in nb if e['negative_kind'] == 'no_action_change')}"
+          f" no_action_change (nothing changed) + "
+          f"{sum(1 for e in nb if e['negative_kind'] == 'phase_change_only')}"
+          f" phase_change_only\n    (something visibly changed and it is not "
+          f"a task boundary -- a harder negative)")
     ph = [e for e in events.values() if e["motion_phase_points"]]
     print(f"  events with motion-phase points: {len(ph)}, holding "
           f"{sum(len(e['motion_phase_points']) for e in ph)} times. NOT "
