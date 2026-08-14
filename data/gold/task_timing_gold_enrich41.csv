@@ -1,0 +1,42 @@
+﻿audit_key,recording_id,candidate_time,task_timing_status,human_boundary_points_json,human_boundary_intervals_json,motion_phase_points_json,canonical_task_times_json,nearest_canonical_task_time,timing_precision,timing_note
+22/t240,recording_000022,240.0,onset_only,[238.0],[],[],[238.0],238.0,exact_user,idle -> grasp mug / fill / scrub interior / pour out; user says real boundary 238
+80/t113,recording_000080,113.0,point,[111.7],[],[],[111.7],111.7,exact_user,boundary between repeated wipe-and-discard task instances
+80/t478.5,recording_000080,478.5,point,[479.0],[],[],[479.0],479.0,exact_user,boundary between repeated wipe-and-discard task instances
+80/t559.5,recording_000080,559.5,point,[559.0],[],[],[559.0],559.0,exact_user,boundary into next tissue/wipe instance
+86/t530.5,recording_000086,530.5,onset_only,[535.0],[],[],[535.0],535.0,exact_user,mostly no valid action; new tissue retrieval starts at 535
+102/t23.5,recording_000102,23.5,no_task_boundary,[],[],[],[],,none,continuous large wiping; no action change
+102/t164,recording_000102,164.0,motion_phase_only,[],[],[165.0],[],,phase_only,Large-stroke -> small-stroke wiping is one continuous wipe action; 165s is a motion-phase point only.
+102/t439,recording_000102,439.0,motion_phase_only,[],[],[441.0],[],,phase_only,Large-stroke -> small-stroke wiping is one continuous wipe action; 441s is a motion-phase point only.
+102/t471.5,recording_000102,471.5,no_task_boundary,[],[],[],[],,none,continuous small wiping; no interruption or action change
+105/t72,recording_000105,72.0,no_task_boundary,[],[],[],[],,none,continuous small wiping; no interruption or action change
+105/t501.5,recording_000105,501.5,point,[539.0],[],"[473.0, 495.0, 516.0, 528.0, 550.0]",[539.0],539.0,exact_user,Alternating small/large wiping and fold-to-wipe are internal phases of the same wipe-with-tissue task. Only the completed/discarded old-tissue -> new-tissue instance reset at ~539s is retained as a task boundary.
+105/t505.5,recording_000105,505.5,point,[539.0],[],"[473.0, 495.0, 516.0, 528.0, 550.0]",[539.0],539.0,exact_user,Same overlapping span as 105/t501.5: retain only the ~539s new-tissue instance boundary; all amplitude/fold-to-wipe changes are motion phases.
+105/t582,recording_000105,582.0,motion_phase_only,[],[],[582.0],[],,phase_only,"The described action is continuous small-stroke wiping with no interruption or action change; preserve 582s only as the user-marked phase/cut time, not a task boundary."
+150/t34,recording_000150,34.0,no_task_boundary,[],[],[],[],,none,continuous remote flip back-and-forth; current audit says no task-level boundary
+150/t234.5,recording_000150,234.5,no_task_boundary,[],[],[],[],,none,continuous remote flip back-and-forth; no task-level change
+181/t564,recording_000181,564.0,multiple_mixed,[],"[[544.0, 552.0], [563.0, 566.0], [575.0, 579.0]]",[],"[548.0, 564.5, 577.0]",564.5,exact_user,three release/reset transition intervals between repeated rinse-and-seat instances
+193/t264,recording_000193,264.0,no_task_boundary,[],[],[],[],,none,continuous antenna extend-retract cycle; no interruption or action change
+220/t143.8,recording_000220,143.8,no_task_boundary,[],[],[],[],,none,Continuous slipper flip cycle with no disengagement/reset or task change; stored cuts are over-segmentation.
+220/t153,recording_000220,153.0,no_task_boundary,[],[],[],[],,none,Continuous slipper flip cycle with no disengagement/reset or task change; stored cuts are over-segmentation.
+220/t586.4,recording_000220,586.4,no_task_boundary,[],[],[],[],,none,Continuous slipper flip/display motion with no task-level change; stored side-display cuts are internal phases.
+236/t102,recording_000236,102.0,no_task_boundary,[],[],[],[],,none,Seal/flip/seal/tape is treated as one continuous task-level box-sealing action under the frozen standard; no real task boundary.
+242/t29.5,recording_000242,29.5,multiple_points,"[29.7, 42.0]",[],[],"[29.7, 42.0]",29.7,exact_user,box bag/idle -> retrieve+assemble+seal -> flip/place item; user-marked task boundaries
+242/t164.5,recording_000242,164.5,onset_only,[164.0],[],[],[164.0],164.0,exact_user,action onset at 164s
+272/t265.9,recording_000272,265.9,no_task_boundary,[],[],[],[],,none,retrieve/reshape/seal/tape is one continuous task-level box-assembly/sealing action; no real boundary
+272/t320,recording_000272,320.0,multiple_points,"[315.5, 332.0]",[],[],"[315.5, 332.0]",315.5,exact_user,remove item -> disassemble/store -> idle -> retrieve/reshape; user-marked task boundaries
+343/t274.5,recording_000343,274.5,multiple_points,"[270.0, 280.0, 292.7]",[],[],"[270.0, 280.0, 292.7]",270.0,exact_user,repeated coating instances separated by clear release/reset
+343/t400.5,recording_000343,400.5,multiple_points,"[397.5, 410.0, 419.0]",[],[],"[397.5, 410.0, 419.0]",397.5,exact_user,repeated coating instances separated by clear release/reset
+385/t209,recording_000385,209.0,multiple_points,"[228.0, 257.0]",[],[],"[228.0, 257.0]",228.0,exact_user,cover bowl -> remove/crumple/discard; second point preserved as user-marked downstream task/end transition
+385/t266.5,recording_000385,266.5,point,[263.0],[],[],[263.0],263.0,exact_user,crumple/discard old wrap -> start new bowl-covering task
+385/t348,recording_000385,348.0,multiple_points,"[322.0, 351.5]",[],[],"[322.0, 351.5]",351.5,exact_user,cover bowl -> remove/crumple/discard wrap -> cover bowl again
+385/t412.5,recording_000385,412.5,multiple_points,"[361.6, 462.0]",[],[],"[361.6, 462.0]",462.0,exact_user,discard old wrap -> cover bowl -> later remove/discard; user-marked task boundaries retained
+388/t124.5,recording_000388,124.5,multiple_points,"[110.0, 160.0]",[],[],"[110.0, 160.0]",110.0,exact_user,remove/discard wrap -> cover bowl -> begin next removal
+388/t618,recording_000388,618.0,no_task_boundary,[],[],[],[],,none,continuous bowl-covering task; no reset or task change
+406/t571,recording_000406,571.0,multiple_points,"[595.0, 622.0]",[],[],"[595.0, 622.0]",595.0,exact_user,cover bowl -> remove/discard; 622 preserved as user-marked downstream task/end transition
+406/t595.5,recording_000406,595.5,multiple_points,"[595.0, 622.0]",[],[],"[595.0, 622.0]",595.0,exact_user,same overlapping span as 406/t571; preserve event provenance
+419/t605.5,recording_000419,605.5,multiple_points,"[577.0, 671.8]",[],[],"[577.0, 671.8]",577.0,exact_user,repeated wrap/discard/cover sequence; user-marked task boundaries around audited event
+419/t618,recording_000419,618.0,multiple_points,"[577.0, 671.8]",[],[],"[577.0, 671.8]",577.0,exact_user,same overlapping span as 419/t605.5; preserve event provenance
+422/t620.8,recording_000422,620.8,no_task_boundary,[],[],[],[],,none,pick up / position wrap are internal phases of one continuous bowl-covering task
+423/t590,recording_000423,590.0,multiple_points,"[556.0, 567.0, 625.0]",[],[],"[556.0, 567.0, 625.0]",567.0,exact_user,cover -> remove/discard -> cover -> remove/crumple sequence
+438/t476,recording_000438,476.0,multiple_points,"[426.0, 470.0, 503.0]",[],[],"[426.0, 470.0, 503.0]",470.0,exact_user,cover/adjust -> remove/discard -> cover -> remove/crumple sequence
+465/t166.5,recording_000465,166.5,multiple_points,"[156.0, 172.9]",[],[],"[156.0, 172.9]",172.9,exact_user,phone test -> coil/store cable -> idle -> retrieve cable

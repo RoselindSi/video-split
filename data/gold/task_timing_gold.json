@@ -1,9 +1,9 @@
 {
   "sources": [
     "data/gold/task_timing_gold_48.csv",
-    "data/gold/task_timing_gold_enrich21.csv"
+    "data/gold/task_timing_gold_enrich41.csv"
   ],
-  "n": 69,
+  "n": 89,
   "events": [
     {
       "audit_key": "22/t466.8",
@@ -1516,7 +1516,7 @@
     },
     {
       "audit_key": "22/t240",
-      "source_sheet": "task_timing_gold_enrich21.csv",
+      "source_sheet": "task_timing_gold_enrich41.csv",
       "recording_id": "recording_000022",
       "candidate_time": 240.0,
       "task_timing_status": "onset_only",
@@ -1544,7 +1544,7 @@
     },
     {
       "audit_key": "80/t113",
-      "source_sheet": "task_timing_gold_enrich21.csv",
+      "source_sheet": "task_timing_gold_enrich41.csv",
       "recording_id": "recording_000080",
       "candidate_time": 113.0,
       "task_timing_status": "point",
@@ -1572,7 +1572,7 @@
     },
     {
       "audit_key": "80/t478.5",
-      "source_sheet": "task_timing_gold_enrich21.csv",
+      "source_sheet": "task_timing_gold_enrich41.csv",
       "recording_id": "recording_000080",
       "candidate_time": 478.5,
       "task_timing_status": "point",
@@ -1600,7 +1600,7 @@
     },
     {
       "audit_key": "80/t559.5",
-      "source_sheet": "task_timing_gold_enrich21.csv",
+      "source_sheet": "task_timing_gold_enrich41.csv",
       "recording_id": "recording_000080",
       "candidate_time": 559.5,
       "task_timing_status": "point",
@@ -1628,7 +1628,7 @@
     },
     {
       "audit_key": "86/t530.5",
-      "source_sheet": "task_timing_gold_enrich21.csv",
+      "source_sheet": "task_timing_gold_enrich41.csv",
       "recording_id": "recording_000086",
       "candidate_time": 530.5,
       "task_timing_status": "onset_only",
@@ -1655,10 +1655,10 @@
       "negative_kind": null
     },
     {
-      "audit_key": "102/t471.5",
-      "source_sheet": "task_timing_gold_enrich21.csv",
+      "audit_key": "102/t23.5",
+      "source_sheet": "task_timing_gold_enrich41.csv",
       "recording_id": "recording_000102",
-      "candidate_time": 471.5,
+      "candidate_time": 23.5,
       "task_timing_status": "no_task_boundary",
       "task_points": [],
       "task_intervals": [],
@@ -1667,14 +1667,14 @@
       "timing_precision": "none",
       "onset_from_idle": false,
       "no_task_boundary_flag": false,
-      "timing_note": "continuous small wiping; no interruption or action change",
+      "timing_note": "continuous large wiping; no action change",
       "boundaries": [],
       "asserts_no_boundary": true,
       "negative_kind": "no_action_change"
     },
     {
       "audit_key": "102/t164",
-      "source_sheet": "task_timing_gold_enrich21.csv",
+      "source_sheet": "task_timing_gold_enrich41.csv",
       "recording_id": "recording_000102",
       "candidate_time": 164.0,
       "task_timing_status": "motion_phase_only",
@@ -1694,7 +1694,7 @@
     },
     {
       "audit_key": "102/t439",
-      "source_sheet": "task_timing_gold_enrich21.csv",
+      "source_sheet": "task_timing_gold_enrich41.csv",
       "recording_id": "recording_000102",
       "candidate_time": 439.0,
       "task_timing_status": "motion_phase_only",
@@ -1713,10 +1713,10 @@
       "negative_kind": "phase_change_only"
     },
     {
-      "audit_key": "102/t23.5",
-      "source_sheet": "task_timing_gold_enrich21.csv",
+      "audit_key": "102/t471.5",
+      "source_sheet": "task_timing_gold_enrich41.csv",
       "recording_id": "recording_000102",
-      "candidate_time": 23.5,
+      "candidate_time": 471.5,
       "task_timing_status": "no_task_boundary",
       "task_points": [],
       "task_intervals": [],
@@ -1725,14 +1725,32 @@
       "timing_precision": "none",
       "onset_from_idle": false,
       "no_task_boundary_flag": false,
-      "timing_note": "continuous large wiping; no action change",
+      "timing_note": "continuous small wiping; no interruption or action change",
+      "boundaries": [],
+      "asserts_no_boundary": true,
+      "negative_kind": "no_action_change"
+    },
+    {
+      "audit_key": "105/t72",
+      "source_sheet": "task_timing_gold_enrich41.csv",
+      "recording_id": "recording_000105",
+      "candidate_time": 72.0,
+      "task_timing_status": "no_task_boundary",
+      "task_points": [],
+      "task_intervals": [],
+      "motion_phase_points": [],
+      "canonical_task_times_sheet": [],
+      "timing_precision": "none",
+      "onset_from_idle": false,
+      "no_task_boundary_flag": false,
+      "timing_note": "continuous small wiping; no interruption or action change",
       "boundaries": [],
       "asserts_no_boundary": true,
       "negative_kind": "no_action_change"
     },
     {
       "audit_key": "105/t501.5",
-      "source_sheet": "task_timing_gold_enrich21.csv",
+      "source_sheet": "task_timing_gold_enrich41.csv",
       "recording_id": "recording_000105",
       "candidate_time": 501.5,
       "task_timing_status": "point",
@@ -1766,7 +1784,7 @@
     },
     {
       "audit_key": "105/t505.5",
-      "source_sheet": "task_timing_gold_enrich21.csv",
+      "source_sheet": "task_timing_gold_enrich41.csv",
       "recording_id": "recording_000105",
       "candidate_time": 505.5,
       "task_timing_status": "point",
@@ -1800,7 +1818,7 @@
     },
     {
       "audit_key": "105/t582",
-      "source_sheet": "task_timing_gold_enrich21.csv",
+      "source_sheet": "task_timing_gold_enrich41.csv",
       "recording_id": "recording_000105",
       "candidate_time": 582.0,
       "task_timing_status": "motion_phase_only",
@@ -1819,44 +1837,8 @@
       "negative_kind": "phase_change_only"
     },
     {
-      "audit_key": "105/t72",
-      "source_sheet": "task_timing_gold_enrich21.csv",
-      "recording_id": "recording_000105",
-      "candidate_time": 72.0,
-      "task_timing_status": "no_task_boundary",
-      "task_points": [],
-      "task_intervals": [],
-      "motion_phase_points": [],
-      "canonical_task_times_sheet": [],
-      "timing_precision": "none",
-      "onset_from_idle": false,
-      "no_task_boundary_flag": false,
-      "timing_note": "continuous small wiping; no interruption or action change",
-      "boundaries": [],
-      "asserts_no_boundary": true,
-      "negative_kind": "no_action_change"
-    },
-    {
-      "audit_key": "150/t234.5",
-      "source_sheet": "task_timing_gold_enrich21.csv",
-      "recording_id": "recording_000150",
-      "candidate_time": 234.5,
-      "task_timing_status": "no_task_boundary",
-      "task_points": [],
-      "task_intervals": [],
-      "motion_phase_points": [],
-      "canonical_task_times_sheet": [],
-      "timing_precision": "none",
-      "onset_from_idle": false,
-      "no_task_boundary_flag": false,
-      "timing_note": "continuous remote flip back-and-forth; no task-level change",
-      "boundaries": [],
-      "asserts_no_boundary": true,
-      "negative_kind": "no_action_change"
-    },
-    {
       "audit_key": "150/t34",
-      "source_sheet": "task_timing_gold_enrich21.csv",
+      "source_sheet": "task_timing_gold_enrich41.csv",
       "recording_id": "recording_000150",
       "candidate_time": 34.0,
       "task_timing_status": "no_task_boundary",
@@ -1873,8 +1855,26 @@
       "negative_kind": "no_action_change"
     },
     {
+      "audit_key": "150/t234.5",
+      "source_sheet": "task_timing_gold_enrich41.csv",
+      "recording_id": "recording_000150",
+      "candidate_time": 234.5,
+      "task_timing_status": "no_task_boundary",
+      "task_points": [],
+      "task_intervals": [],
+      "motion_phase_points": [],
+      "canonical_task_times_sheet": [],
+      "timing_precision": "none",
+      "onset_from_idle": false,
+      "no_task_boundary_flag": false,
+      "timing_note": "continuous remote flip back-and-forth; no task-level change",
+      "boundaries": [],
+      "asserts_no_boundary": true,
+      "negative_kind": "no_action_change"
+    },
+    {
       "audit_key": "181/t564",
-      "source_sheet": "task_timing_gold_enrich21.csv",
+      "source_sheet": "task_timing_gold_enrich41.csv",
       "recording_id": "recording_000181",
       "candidate_time": 564.0,
       "task_timing_status": "multiple_mixed",
@@ -1925,7 +1925,7 @@
     },
     {
       "audit_key": "193/t264",
-      "source_sheet": "task_timing_gold_enrich21.csv",
+      "source_sheet": "task_timing_gold_enrich41.csv",
       "recording_id": "recording_000193",
       "candidate_time": 264.0,
       "task_timing_status": "no_task_boundary",
@@ -1943,7 +1943,7 @@
     },
     {
       "audit_key": "220/t143.8",
-      "source_sheet": "task_timing_gold_enrich21.csv",
+      "source_sheet": "task_timing_gold_enrich41.csv",
       "recording_id": "recording_000220",
       "candidate_time": 143.8,
       "task_timing_status": "no_task_boundary",
@@ -1961,7 +1961,7 @@
     },
     {
       "audit_key": "220/t153",
-      "source_sheet": "task_timing_gold_enrich21.csv",
+      "source_sheet": "task_timing_gold_enrich41.csv",
       "recording_id": "recording_000220",
       "candidate_time": 153.0,
       "task_timing_status": "no_task_boundary",
@@ -1979,7 +1979,7 @@
     },
     {
       "audit_key": "220/t586.4",
-      "source_sheet": "task_timing_gold_enrich21.csv",
+      "source_sheet": "task_timing_gold_enrich41.csv",
       "recording_id": "recording_000220",
       "candidate_time": 586.4,
       "task_timing_status": "no_task_boundary",
@@ -1997,7 +1997,7 @@
     },
     {
       "audit_key": "236/t102",
-      "source_sheet": "task_timing_gold_enrich21.csv",
+      "source_sheet": "task_timing_gold_enrich41.csv",
       "recording_id": "recording_000236",
       "candidate_time": 102.0,
       "task_timing_status": "no_task_boundary",
@@ -2012,6 +2012,669 @@
       "boundaries": [],
       "asserts_no_boundary": true,
       "negative_kind": "no_action_change"
+    },
+    {
+      "audit_key": "242/t29.5",
+      "source_sheet": "task_timing_gold_enrich41.csv",
+      "recording_id": "recording_000242",
+      "candidate_time": 29.5,
+      "task_timing_status": "multiple_points",
+      "task_points": [
+        29.7,
+        42.0
+      ],
+      "task_intervals": [],
+      "motion_phase_points": [],
+      "canonical_task_times_sheet": [
+        29.7,
+        42.0
+      ],
+      "timing_precision": "exact_user",
+      "onset_from_idle": false,
+      "no_task_boundary_flag": false,
+      "timing_note": "box bag/idle -> retrieve+assemble+seal -> flip/place item; user-marked task boundaries",
+      "boundaries": [
+        [
+          "point",
+          29.7,
+          29.7
+        ],
+        [
+          "point",
+          42.0,
+          42.0
+        ]
+      ],
+      "asserts_no_boundary": false,
+      "negative_kind": null
+    },
+    {
+      "audit_key": "242/t164.5",
+      "source_sheet": "task_timing_gold_enrich41.csv",
+      "recording_id": "recording_000242",
+      "candidate_time": 164.5,
+      "task_timing_status": "onset_only",
+      "task_points": [
+        164.0
+      ],
+      "task_intervals": [],
+      "motion_phase_points": [],
+      "canonical_task_times_sheet": [
+        164.0
+      ],
+      "timing_precision": "exact_user",
+      "onset_from_idle": false,
+      "no_task_boundary_flag": false,
+      "timing_note": "action onset at 164s",
+      "boundaries": [
+        [
+          "point",
+          164.0,
+          164.0
+        ]
+      ],
+      "asserts_no_boundary": false,
+      "negative_kind": null
+    },
+    {
+      "audit_key": "272/t265.9",
+      "source_sheet": "task_timing_gold_enrich41.csv",
+      "recording_id": "recording_000272",
+      "candidate_time": 265.9,
+      "task_timing_status": "no_task_boundary",
+      "task_points": [],
+      "task_intervals": [],
+      "motion_phase_points": [],
+      "canonical_task_times_sheet": [],
+      "timing_precision": "none",
+      "onset_from_idle": false,
+      "no_task_boundary_flag": false,
+      "timing_note": "retrieve/reshape/seal/tape is one continuous task-level box-assembly/sealing action; no real boundary",
+      "boundaries": [],
+      "asserts_no_boundary": true,
+      "negative_kind": "no_action_change"
+    },
+    {
+      "audit_key": "272/t320",
+      "source_sheet": "task_timing_gold_enrich41.csv",
+      "recording_id": "recording_000272",
+      "candidate_time": 320.0,
+      "task_timing_status": "multiple_points",
+      "task_points": [
+        315.5,
+        332.0
+      ],
+      "task_intervals": [],
+      "motion_phase_points": [],
+      "canonical_task_times_sheet": [
+        315.5,
+        332.0
+      ],
+      "timing_precision": "exact_user",
+      "onset_from_idle": false,
+      "no_task_boundary_flag": false,
+      "timing_note": "remove item -> disassemble/store -> idle -> retrieve/reshape; user-marked task boundaries",
+      "boundaries": [
+        [
+          "point",
+          315.5,
+          315.5
+        ],
+        [
+          "point",
+          332.0,
+          332.0
+        ]
+      ],
+      "asserts_no_boundary": false,
+      "negative_kind": null
+    },
+    {
+      "audit_key": "343/t274.5",
+      "source_sheet": "task_timing_gold_enrich41.csv",
+      "recording_id": "recording_000343",
+      "candidate_time": 274.5,
+      "task_timing_status": "multiple_points",
+      "task_points": [
+        270.0,
+        280.0,
+        292.7
+      ],
+      "task_intervals": [],
+      "motion_phase_points": [],
+      "canonical_task_times_sheet": [
+        270.0,
+        280.0,
+        292.7
+      ],
+      "timing_precision": "exact_user",
+      "onset_from_idle": false,
+      "no_task_boundary_flag": false,
+      "timing_note": "repeated coating instances separated by clear release/reset",
+      "boundaries": [
+        [
+          "point",
+          270.0,
+          270.0
+        ],
+        [
+          "point",
+          280.0,
+          280.0
+        ],
+        [
+          "point",
+          292.7,
+          292.7
+        ]
+      ],
+      "asserts_no_boundary": false,
+      "negative_kind": null
+    },
+    {
+      "audit_key": "343/t400.5",
+      "source_sheet": "task_timing_gold_enrich41.csv",
+      "recording_id": "recording_000343",
+      "candidate_time": 400.5,
+      "task_timing_status": "multiple_points",
+      "task_points": [
+        397.5,
+        410.0,
+        419.0
+      ],
+      "task_intervals": [],
+      "motion_phase_points": [],
+      "canonical_task_times_sheet": [
+        397.5,
+        410.0,
+        419.0
+      ],
+      "timing_precision": "exact_user",
+      "onset_from_idle": false,
+      "no_task_boundary_flag": false,
+      "timing_note": "repeated coating instances separated by clear release/reset",
+      "boundaries": [
+        [
+          "point",
+          397.5,
+          397.5
+        ],
+        [
+          "point",
+          410.0,
+          410.0
+        ],
+        [
+          "point",
+          419.0,
+          419.0
+        ]
+      ],
+      "asserts_no_boundary": false,
+      "negative_kind": null
+    },
+    {
+      "audit_key": "385/t209",
+      "source_sheet": "task_timing_gold_enrich41.csv",
+      "recording_id": "recording_000385",
+      "candidate_time": 209.0,
+      "task_timing_status": "multiple_points",
+      "task_points": [
+        228.0,
+        257.0
+      ],
+      "task_intervals": [],
+      "motion_phase_points": [],
+      "canonical_task_times_sheet": [
+        228.0,
+        257.0
+      ],
+      "timing_precision": "exact_user",
+      "onset_from_idle": false,
+      "no_task_boundary_flag": false,
+      "timing_note": "cover bowl -> remove/crumple/discard; second point preserved as user-marked downstream task/end transition",
+      "boundaries": [
+        [
+          "point",
+          228.0,
+          228.0
+        ],
+        [
+          "point",
+          257.0,
+          257.0
+        ]
+      ],
+      "asserts_no_boundary": false,
+      "negative_kind": null
+    },
+    {
+      "audit_key": "385/t266.5",
+      "source_sheet": "task_timing_gold_enrich41.csv",
+      "recording_id": "recording_000385",
+      "candidate_time": 266.5,
+      "task_timing_status": "point",
+      "task_points": [
+        263.0
+      ],
+      "task_intervals": [],
+      "motion_phase_points": [],
+      "canonical_task_times_sheet": [
+        263.0
+      ],
+      "timing_precision": "exact_user",
+      "onset_from_idle": false,
+      "no_task_boundary_flag": false,
+      "timing_note": "crumple/discard old wrap -> start new bowl-covering task",
+      "boundaries": [
+        [
+          "point",
+          263.0,
+          263.0
+        ]
+      ],
+      "asserts_no_boundary": false,
+      "negative_kind": null
+    },
+    {
+      "audit_key": "385/t348",
+      "source_sheet": "task_timing_gold_enrich41.csv",
+      "recording_id": "recording_000385",
+      "candidate_time": 348.0,
+      "task_timing_status": "multiple_points",
+      "task_points": [
+        322.0,
+        351.5
+      ],
+      "task_intervals": [],
+      "motion_phase_points": [],
+      "canonical_task_times_sheet": [
+        322.0,
+        351.5
+      ],
+      "timing_precision": "exact_user",
+      "onset_from_idle": false,
+      "no_task_boundary_flag": false,
+      "timing_note": "cover bowl -> remove/crumple/discard wrap -> cover bowl again",
+      "boundaries": [
+        [
+          "point",
+          322.0,
+          322.0
+        ],
+        [
+          "point",
+          351.5,
+          351.5
+        ]
+      ],
+      "asserts_no_boundary": false,
+      "negative_kind": null
+    },
+    {
+      "audit_key": "385/t412.5",
+      "source_sheet": "task_timing_gold_enrich41.csv",
+      "recording_id": "recording_000385",
+      "candidate_time": 412.5,
+      "task_timing_status": "multiple_points",
+      "task_points": [
+        361.6,
+        462.0
+      ],
+      "task_intervals": [],
+      "motion_phase_points": [],
+      "canonical_task_times_sheet": [
+        361.6,
+        462.0
+      ],
+      "timing_precision": "exact_user",
+      "onset_from_idle": false,
+      "no_task_boundary_flag": false,
+      "timing_note": "discard old wrap -> cover bowl -> later remove/discard; user-marked task boundaries retained",
+      "boundaries": [
+        [
+          "point",
+          361.6,
+          361.6
+        ],
+        [
+          "point",
+          462.0,
+          462.0
+        ]
+      ],
+      "asserts_no_boundary": false,
+      "negative_kind": null
+    },
+    {
+      "audit_key": "388/t124.5",
+      "source_sheet": "task_timing_gold_enrich41.csv",
+      "recording_id": "recording_000388",
+      "candidate_time": 124.5,
+      "task_timing_status": "multiple_points",
+      "task_points": [
+        110.0,
+        160.0
+      ],
+      "task_intervals": [],
+      "motion_phase_points": [],
+      "canonical_task_times_sheet": [
+        110.0,
+        160.0
+      ],
+      "timing_precision": "exact_user",
+      "onset_from_idle": false,
+      "no_task_boundary_flag": false,
+      "timing_note": "remove/discard wrap -> cover bowl -> begin next removal",
+      "boundaries": [
+        [
+          "point",
+          110.0,
+          110.0
+        ],
+        [
+          "point",
+          160.0,
+          160.0
+        ]
+      ],
+      "asserts_no_boundary": false,
+      "negative_kind": null
+    },
+    {
+      "audit_key": "388/t618",
+      "source_sheet": "task_timing_gold_enrich41.csv",
+      "recording_id": "recording_000388",
+      "candidate_time": 618.0,
+      "task_timing_status": "no_task_boundary",
+      "task_points": [],
+      "task_intervals": [],
+      "motion_phase_points": [],
+      "canonical_task_times_sheet": [],
+      "timing_precision": "none",
+      "onset_from_idle": false,
+      "no_task_boundary_flag": false,
+      "timing_note": "continuous bowl-covering task; no reset or task change",
+      "boundaries": [],
+      "asserts_no_boundary": true,
+      "negative_kind": "no_action_change"
+    },
+    {
+      "audit_key": "406/t571",
+      "source_sheet": "task_timing_gold_enrich41.csv",
+      "recording_id": "recording_000406",
+      "candidate_time": 571.0,
+      "task_timing_status": "multiple_points",
+      "task_points": [
+        595.0,
+        622.0
+      ],
+      "task_intervals": [],
+      "motion_phase_points": [],
+      "canonical_task_times_sheet": [
+        595.0,
+        622.0
+      ],
+      "timing_precision": "exact_user",
+      "onset_from_idle": false,
+      "no_task_boundary_flag": false,
+      "timing_note": "cover bowl -> remove/discard; 622 preserved as user-marked downstream task/end transition",
+      "boundaries": [
+        [
+          "point",
+          595.0,
+          595.0
+        ],
+        [
+          "point",
+          622.0,
+          622.0
+        ]
+      ],
+      "asserts_no_boundary": false,
+      "negative_kind": null
+    },
+    {
+      "audit_key": "406/t595.5",
+      "source_sheet": "task_timing_gold_enrich41.csv",
+      "recording_id": "recording_000406",
+      "candidate_time": 595.5,
+      "task_timing_status": "multiple_points",
+      "task_points": [
+        595.0,
+        622.0
+      ],
+      "task_intervals": [],
+      "motion_phase_points": [],
+      "canonical_task_times_sheet": [
+        595.0,
+        622.0
+      ],
+      "timing_precision": "exact_user",
+      "onset_from_idle": false,
+      "no_task_boundary_flag": false,
+      "timing_note": "same overlapping span as 406/t571; preserve event provenance",
+      "boundaries": [
+        [
+          "point",
+          595.0,
+          595.0
+        ],
+        [
+          "point",
+          622.0,
+          622.0
+        ]
+      ],
+      "asserts_no_boundary": false,
+      "negative_kind": null
+    },
+    {
+      "audit_key": "419/t605.5",
+      "source_sheet": "task_timing_gold_enrich41.csv",
+      "recording_id": "recording_000419",
+      "candidate_time": 605.5,
+      "task_timing_status": "multiple_points",
+      "task_points": [
+        577.0,
+        671.8
+      ],
+      "task_intervals": [],
+      "motion_phase_points": [],
+      "canonical_task_times_sheet": [
+        577.0,
+        671.8
+      ],
+      "timing_precision": "exact_user",
+      "onset_from_idle": false,
+      "no_task_boundary_flag": false,
+      "timing_note": "repeated wrap/discard/cover sequence; user-marked task boundaries around audited event",
+      "boundaries": [
+        [
+          "point",
+          577.0,
+          577.0
+        ],
+        [
+          "point",
+          671.8,
+          671.8
+        ]
+      ],
+      "asserts_no_boundary": false,
+      "negative_kind": null
+    },
+    {
+      "audit_key": "419/t618",
+      "source_sheet": "task_timing_gold_enrich41.csv",
+      "recording_id": "recording_000419",
+      "candidate_time": 618.0,
+      "task_timing_status": "multiple_points",
+      "task_points": [
+        577.0,
+        671.8
+      ],
+      "task_intervals": [],
+      "motion_phase_points": [],
+      "canonical_task_times_sheet": [
+        577.0,
+        671.8
+      ],
+      "timing_precision": "exact_user",
+      "onset_from_idle": false,
+      "no_task_boundary_flag": false,
+      "timing_note": "same overlapping span as 419/t605.5; preserve event provenance",
+      "boundaries": [
+        [
+          "point",
+          577.0,
+          577.0
+        ],
+        [
+          "point",
+          671.8,
+          671.8
+        ]
+      ],
+      "asserts_no_boundary": false,
+      "negative_kind": null
+    },
+    {
+      "audit_key": "422/t620.8",
+      "source_sheet": "task_timing_gold_enrich41.csv",
+      "recording_id": "recording_000422",
+      "candidate_time": 620.8,
+      "task_timing_status": "no_task_boundary",
+      "task_points": [],
+      "task_intervals": [],
+      "motion_phase_points": [],
+      "canonical_task_times_sheet": [],
+      "timing_precision": "none",
+      "onset_from_idle": false,
+      "no_task_boundary_flag": false,
+      "timing_note": "pick up / position wrap are internal phases of one continuous bowl-covering task",
+      "boundaries": [],
+      "asserts_no_boundary": true,
+      "negative_kind": "no_action_change"
+    },
+    {
+      "audit_key": "423/t590",
+      "source_sheet": "task_timing_gold_enrich41.csv",
+      "recording_id": "recording_000423",
+      "candidate_time": 590.0,
+      "task_timing_status": "multiple_points",
+      "task_points": [
+        556.0,
+        567.0,
+        625.0
+      ],
+      "task_intervals": [],
+      "motion_phase_points": [],
+      "canonical_task_times_sheet": [
+        556.0,
+        567.0,
+        625.0
+      ],
+      "timing_precision": "exact_user",
+      "onset_from_idle": false,
+      "no_task_boundary_flag": false,
+      "timing_note": "cover -> remove/discard -> cover -> remove/crumple sequence",
+      "boundaries": [
+        [
+          "point",
+          556.0,
+          556.0
+        ],
+        [
+          "point",
+          567.0,
+          567.0
+        ],
+        [
+          "point",
+          625.0,
+          625.0
+        ]
+      ],
+      "asserts_no_boundary": false,
+      "negative_kind": null
+    },
+    {
+      "audit_key": "438/t476",
+      "source_sheet": "task_timing_gold_enrich41.csv",
+      "recording_id": "recording_000438",
+      "candidate_time": 476.0,
+      "task_timing_status": "multiple_points",
+      "task_points": [
+        426.0,
+        470.0,
+        503.0
+      ],
+      "task_intervals": [],
+      "motion_phase_points": [],
+      "canonical_task_times_sheet": [
+        426.0,
+        470.0,
+        503.0
+      ],
+      "timing_precision": "exact_user",
+      "onset_from_idle": false,
+      "no_task_boundary_flag": false,
+      "timing_note": "cover/adjust -> remove/discard -> cover -> remove/crumple sequence",
+      "boundaries": [
+        [
+          "point",
+          426.0,
+          426.0
+        ],
+        [
+          "point",
+          470.0,
+          470.0
+        ],
+        [
+          "point",
+          503.0,
+          503.0
+        ]
+      ],
+      "asserts_no_boundary": false,
+      "negative_kind": null
+    },
+    {
+      "audit_key": "465/t166.5",
+      "source_sheet": "task_timing_gold_enrich41.csv",
+      "recording_id": "recording_000465",
+      "candidate_time": 166.5,
+      "task_timing_status": "multiple_points",
+      "task_points": [
+        156.0,
+        172.9
+      ],
+      "task_intervals": [],
+      "motion_phase_points": [],
+      "canonical_task_times_sheet": [
+        156.0,
+        172.9
+      ],
+      "timing_precision": "exact_user",
+      "onset_from_idle": false,
+      "no_task_boundary_flag": false,
+      "timing_note": "phone test -> coil/store cable -> idle -> retrieve cable",
+      "boundaries": [
+        [
+          "point",
+          156.0,
+          156.0
+        ],
+        [
+          "point",
+          172.9,
+          172.9
+        ]
+      ],
+      "asserts_no_boundary": false,
+      "negative_kind": null
     }
   ]
 }
