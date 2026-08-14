@@ -1,0 +1,342 @@
+﻿stored_label,occurrences,draft_actions,draft_entities,draft_temporal,parser_flags,corrected_actions,corrected_entities,corrected_temporal,note
+Slipper pair flip cycle,5,slipper(e1),e1=pair flip cycle,,"verb_position_uncertain,unknown_verbs:slipper",flip(e1)[{'pattern':'cycle'}],slipper pair,,Noun 'slipper' was parsed as the verb; the claimed action is a flip cycle.
+Paper fold-unfold cycle,2,paper(e1),e1=fold unfold cycle,,"verb_position_uncertain,unknown_verbs:paper","fold(e1)
+unfold(e1)",paper,"before(a1,a2)",Noun 'paper' was parsed as the verb; the label claims fold then unfold.
+8th tissue fold and press,1,th(e1) ; press(e1),e1=tissue fold,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,verb_position_uncertain,unknown_verbs:th","fold(e1)[{'instance':'eighth'}]
+press(e1)",tissue,"before(a1,a2)",Ordinal suffix was parsed as the first verb; the actions are fold then press.
+9th tissue fold and press,1,th(e1) ; press(e1),e1=tissue fold,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,verb_position_uncertain,unknown_verbs:th","fold(e1)[{'instance':'ninth'}]
+press(e1)",tissue,"before(a1,a2)",Ordinal suffix was parsed as the first verb; the actions are fold then press.
+Adjusting bowl and plastic wrap position,1,adjusting(e1) ; plastic(e2),e1=bowl ; e2=wrap position,"before(a1,a2):inferred","order_inferred_from_and,verb_position_uncertain,unknown_verbs:adjusting/plastic","adjust(e1)
+adjust(e2)","bowl
+plastic wrap",none,'plastic' was incorrectly parsed as a verb; the label adjusts two entities and does not assert a strict order.
+Briefly open and close box flaps,1,briefly(e1) ; close(e2),e1=open ; e2=box flaps,"before(a1,a2):inferred","order_inferred_from_and,verb_position_uncertain,unknown_verbs:briefly","open(e1)[{'duration':'brief'}]
+close(e1)[{'duration':'brief'}]",box flaps,"before(a1,a2)",Adverb 'briefly' was parsed as a verb; the actions are open then close.
+Flatten empty box,1,flatten(e1),e1=empty box,,"verb_position_uncertain,unknown_verbs:flatten",,,,
+Flatten empty box and stow in plastic bag,1,flatten(e1) ; stow(e2),e1=empty box ; e2=plastic bag,"before(a1,a2):inferred","order_inferred_from_and,verb_position_uncertain,unknown_verbs:flatten/stow","flatten(e1)
+stow(e1)[{'destination':'plastic bag'}]",empty box,,The draft made the bag the object of stow; both actions apply to the box.
+Fold and tuck plastic wrap around bowl sides to seal,1,fold(e1) ; tuck(e1),e1=plastic wrap around bowl sides seal,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,verb_position_uncertain,unknown_verbs:tuck","fold(e1)[{'target':'bowl','region':'sides'}]
+tuck(e1)[{'target':'bowl','region':'sides','goal':'seal'}]",plastic wrap,,"Bowl/sides/seal are target/region/goal qualifiers, not part of the entity."
+Initiate additional mug rinse,1,initiate(e1),e1=additional mug rinse,,"verb_position_uncertain,unknown_verbs:initiate","rinse(e1)[{'phase':'initiation','instance':'additional'}]",mug,,'Initiate' scopes the rinse event; the semantic action is rinsing the mug.
+Move water bottle from left to center position,1,move(e1)[{'region': 'left'}],e1=water bottle center position,,"verb_position_uncertain,unknown_verbs:move","move(e1)[{'source_position':'left','destination_position':'center'}]",water bottle,,The draft encoded only 'left' as a region and merged the destination into the entity.
+Post-scrub mug rinse,1,post(e1),e1=scrub mug rinse,,"verb_position_uncertain,unknown_verbs:post","scrub(e1)
+rinse(e1)",mug,"before(a1,a2)",'Post-scrub' expresses a prior scrub; 'post' is not an action verb.
+Retrieving sheet from pack,1,retrieving(e1),e1=sheet pack,,"verb_position_uncertain,unknown_verbs:retrieving",retrieve(e1)[{'source':'pack'}],sheet,,Inflected/noun-like form was kept as the verb; normalized to the underlying action and cleaned the object phrase.
+fold and unfold tissue,8,fold(e1) ; unfold(e1),e1=tissue,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:unfold",,,,
+Apply liquid to pan and spread with brush,7,apply(e1) ; spread(e1)[{'instrument': 'brush'}],e1=liquid pan,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:apply","apply(e1)[{'material':'liquid'}]
+spread(e1)[{'material':'liquid','instrument':'brush'}]",pan,,The draft merged material ('liquid') with the target object ('pan').
+Fold and crease sheet edge,5,fold(e1) ; crease(e1)[{'region': 'edge'}],e1=sheet,"before(a1,a2):inferred","object_inherited,order_inferred_from_and",,,,
+Fold one tissue sheet and stack it,4,fold(e1) ; stack(e1),e1=one tissue sheet,"before(a1,a2):inferred","object_inherited,order_inferred_from_and",,tissue sheet,,"'one' is an instance/count descriptor, not part of the entity name."
+Remove and discard plastic wrap from bowl,4,remove(e1) ; discard(e1),e1=plastic wrap bowl,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:discard","remove(e1)[{'source':'bowl'}]
+discard(e1)",plastic wrap,,"The bowl is the source of removal, not part of the plastic-wrap entity name."
+Rinse and re-seat sink strainer,4,rinse(e1) ; seat(e1),e1=sink strainer,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:seat",,,,
+Clean and reinstall sink strainer,3,clean(e1) ; reinstall(e1),e1=sink strainer,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:reinstall",,,,
+Position bowl and cover with wrap,3,position(e1) ; cover(e1)[{'instrument': 'wrap'}],e1=bowl,"before(a1,a2):inferred","object_inherited,order_inferred_from_and",,,,
+Rinse and reseat sink drain strainer,3,rinse(e1) ; reseat(e1),e1=sink drain strainer,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:reseat",,,,
+Rinse and seat sink strainer,3,rinse(e1) ; seat(e1),e1=sink strainer,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:seat",,,,
+Unroll and tear plastic wrap sheet,3,unroll(e1) ; tear(e1),e1=plastic wrap sheet,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:unroll",,,,
+Clean and replace sink drain strainer,2,clean(e1) ; replace(e1),e1=sink drain strainer,"before(a1,a2):inferred","object_inherited,order_inferred_from_and",,,,
+Clean sink drain strainer and wipe sink basin,2,clean(e1) ; wipe(e2),e1=sink drain strainer ; e2=sink basin,"before(a1,a2):inferred",order_inferred_from_and,,,none,The conjunction lists two actions on different objects; the label does not itself assert a strict temporal order.
+Crumple and discard a tissue,2,crumple(e1) ; discard(e1),e1=tissue,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:crumple/discard",,,,
+Crumple and discard used plastic wrap,2,crumple(e1) ; discard(e1),e1=used plastic wrap,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:crumple/discard",,,,
+Disassemble and store cardboard box,2,disassemble(e1) ; store(e1),e1=cardboard box,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:disassemble",,,,
+Fold and press plastic wrap to seal,2,fold(e1) ; press(e1),e1=plastic wrap seal,"before(a1,a2):inferred","object_inherited,order_inferred_from_and",,,,
+Fold and unfold a paper sheet,2,fold(e1) ; unfold(e1),e1=paper sheet,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:unfold",,,,
+Place plastic wrap over bowl and smooth,2,place(e1) ; smooth(e1),e1=plastic wrap bowl,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:smooth","place(e1)[{'target':'bowl'}]
+smooth(e1)[{'target':'bowl'}]",plastic wrap,,"The bowl is a target/location, not part of the plastic-wrap entity."
+Pour liquid and spread in pan with brush,2,pour(e1) ; spread(e2)[{'instrument': 'brush'}],e1=liquid ; e2=pan,"before(a1,a2):inferred",order_inferred_from_and,"pour(e1)[{'destination':'e2'}]
+spread(e1)[{'location':'e2','instrument':'brush'}]","liquid
+pan",,"The second action spreads the liquid in the pan; the pan is a location/target, not the thing being spread."
+Remove excess plastic wrap and finalize wrapping,2,remove(e1) ; finalize(e2),e1=excess plastic wrap ; e2=wrapping,"before(a1,a2):inferred","order_inferred_from_and,unknown_verbs:finalize",,,,
+"Remove, rinse and reseat sink strainer",2,remove(e1) ; rinse(e1) ; reseat(e1),e1=sink strainer,"before(a1,a2):inferred ; before(a2,a3):inferred","object_inherited,order_inferred_from_and,unknown_verbs:reseat",,,,
+Wipe table and discard used tissue,2,wipe(e1) ; discard(e2),e1=table ; e2=used tissue,"before(a1,a2):inferred","order_inferred_from_and,unknown_verbs:discard",,,,
+Adjust bowl and prepare plastic wrap roll,1,adjust(e1) ; prepare(e2),e1=bowl ; e2=plastic wrap roll,"before(a1,a2):inferred","order_inferred_from_and,unknown_verbs:prepare",,,none,The conjunction enumerates two actions but does not itself guarantee a strict order.
+Apply liquid to pan with brush and bottle,1,apply(e1)[{'instrument': 'brush'}] ; bottle(e1),e1=liquid pan,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:apply/bottle","apply(e1)[{'material':'liquid','instrument':'brush','source':'bottle'}]",pan,none,'bottle' was incorrectly parsed as a second verb; it is the liquid source/tool context.
+Assemble and seal cardboard box,1,assemble(e1) ; seal(e1),e1=cardboard box,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:assemble",,,,
+Clean and re-seat sink strainer,1,clean(e1) ; seat(e1),e1=sink strainer,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:seat",,,,
+Clean and replace sink strainer,1,clean(e1) ; replace(e1),e1=sink strainer,"before(a1,a2):inferred","object_inherited,order_inferred_from_and",,,,
+Close and reseal box top with tape,1,"close(e1) ; reseal(e1)[{'region': 'top', 'instrument': 'tape'}]",e1=box,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:reseal",,,,
+Collapse and store empty cardboard box,1,collapse(e1) ; store(e1),e1=empty cardboard box,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:collapse",,,,
+Crumble plastic wrap and discard into basin,1,crumble(e1) ; discard(e2),e1=plastic wrap ; e2=basin,"before(a1,a2):inferred","order_inferred_from_and,unknown_verbs:crumble/discard","crumble(e1)
+discard(e1)[{'destination':'basin'}]",plastic wrap,,"The basin is the discard destination, not the discarded object."
+Crumpling and wetting a small plastic wrap piece,1,crumpling(e1) ; wetting(e1),e1=small plastic wrap piece,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:crumpling/wetting","crumple(e1)
+wet(e1)",small plastic wrap piece,none,Gerunds were not normalized; 'and' lists two actions without a required order.
+Disassemble box and store in plastic bag,1,disassemble(e1) ; store(e2),e1=box ; e2=plastic bag,"before(a1,a2):inferred","order_inferred_from_and,unknown_verbs:disassemble","disassemble(e1)
+store(e1)[{'destination':'plastic bag'}]",box,,The draft made the plastic bag the object of store; both actions apply to the box.
+Flatten cardboard box and store in plastic bag,1,flatten(e1) ; store(e2),e1=cardboard box ; e2=plastic bag,"before(a1,a2):inferred","order_inferred_from_and,unknown_verbs:flatten","flatten(e1)
+store(e1)[{'destination':'plastic bag'}]",cardboard box,,The draft made the bag the object of store; the box is flattened and then stored in the bag.
+Flip box and open top flaps,1,flip(e1) ; open(e2)[{'region': 'top'}],e1=box ; e2=flaps,"before(a1,a2):inferred",order_inferred_from_and,,,,
+Fold and crease paper edge,1,fold(e1) ; crease(e1)[{'region': 'edge'}],e1=paper,"before(a1,a2):inferred","object_inherited,order_inferred_from_and",,,,
+Fold and discard a paper tissue,1,fold(e1) ; discard(e1),e1=paper tissue,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:discard",,,,
+Fold and seal plastic wrap around the bowl rim,1,fold(e1) ; seal(e1)[{'region': 'rim'}],e1=plastic wrap around bowl,"before(a1,a2):inferred","object_inherited,order_inferred_from_and","fold(e1)[{'target':'bowl'}]
+seal(e1)[{'target':'bowl','region':'rim'}]",plastic wrap,,The bowl is a target and rim is a region; they should not be merged into the plastic-wrap entity.
+Fold side edges and adjust straps and power cord,1,fold(e1)[{'region': 'side'}] ; adjust(e2) ; power(e3),e1=edges ; e2=straps ; e3=cord,"before(a1,a2):inferred ; before(a2,a3):inferred","order_inferred_from_and,unknown_verbs:power","fold(e1)[{'region':'side'}]
+adjust(e2)
+adjust(e3)","edges
+straps
+power cord",none,"'power' was parsed as a verb; straps and power cord are both objects of adjust, and 'and' does not require a strict order."
+Fold USB cable and place on table,1,fold(e1) ; place(e2),e1=usb cable ; e2=table,"before(a1,a2):inferred",order_inferred_from_and,"fold(e1)
+place(e1)[{'destination':'table'}]",USB cable,,The draft made the table the object of place; the cable is folded and then placed on the table.
+Insert USB drive into box and seal,1,insert(e1) ; seal(e1),e1=usb drive box,"before(a1,a2):inferred","object_inherited,order_inferred_from_and","insert(e1)[{'destination':'e2'}]
+seal(e2)","USB drive
+box",,The box is the destination of insertion and the object of sealing; object inheritance was wrong.
+Inserting item into cardboard box and closing flaps,1,inserting(e1) ; closing(e2),e1=item cardboard box ; e2=flaps,"before(a1,a2):inferred","order_inferred_from_and,unknown_verbs:closing/inserting","insert(e1)[{'destination':'e2'}]
+close(e2)[{'region':'flaps'}]","item
+cardboard box","before(a1,a2)",Gerunds were not normalized; the inserted item and the box are different semantic arguments.
+Inspect and adjust covered bowl,1,inspect(e1) ; adjust(e1),e1=covered bowl,"before(a1,a2):inferred","object_inherited,order_inferred_from_and",,,,
+Manipulate and discard ice cube into basin,1,manipulate(e1) ; discard(e1),e1=ice cube basin,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:discard/manipulate","manipulate(e1)
+discard(e1)[{'destination':'basin'}]",ice cube,,"The basin is the discard destination, not part of the ice-cube entity."
+Open box and retrieve USB drive,1,open(e1) ; retrieve(e2),e1=box ; e2=usb drive,"before(a1,a2):inferred",order_inferred_from_and,,,,
+Open box top and inspect interior,1,open(e1)[{'region': 'top'}] ; inspect(e1)[{'region': 'interior'}],e1=box,"before(a1,a2):inferred","object_inherited,order_inferred_from_and",,,,
+"Open, inspect, and re-seal cardboard box",1,open(e1) ; inspect(e1) ; seal(e1),e1=cardboard box,"before(a1,a2):inferred ; before(a2,a3):inferred","object_inherited,order_inferred_from_and",,,,
+Pack USB drive into box and seal with tape,1,pack(e1) ; seal(e1)[{'instrument': 'tape'}],e1=usb drive box,"before(a1,a2):inferred","object_inherited,order_inferred_from_and","pack(e1)[{'destination':'e2'}]
+seal(e2)[{'instrument':'tape'}]","USB drive
+box",,"The USB drive is packed into the box, then the box is sealed; object inheritance was wrong."
+Pack USB drive into outer box and seal the other end,1,pack(e1)[{'region': 'outer'}] ; seal(e2),e1=usb drive box ; e2=other end,"before(a1,a2):inferred",order_inferred_from_and,"pack(e1)[{'destination':'e2'}]
+seal(e2)[{'region':'other end'}]","USB drive
+outer box",,"The USB drive is packed into the box, then the box end is sealed; the draft treated 'other end' as an entity."
+Pick up plastic wrap roll and locate edge,1,pick(e1) ; locate(e1)[{'region': 'edge'}],e1=plastic wrap roll,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:locate",,,,
+Place and smooth plastic wrap over the bowl,1,place(e1) ; smooth(e1),e1=plastic wrap bowl,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:smooth","place(e1)[{'target':'bowl'}]
+smooth(e1)[{'target':'bowl'}]",plastic wrap,,"The bowl is a target/location, not part of the plastic-wrap entity."
+Place item in box and close flaps,1,place(e1) ; close(e2),e1=item box ; e2=flaps,"before(a1,a2):inferred",order_inferred_from_and,"place(e1)[{'destination':'e2'}]
+close(e2)[{'region':'flaps'}]","item
+box",,The first action places the item into the box; the second closes the box flaps.
+Press and seal plastic wrap on the bowl,1,press(e1) ; seal(e1),e1=plastic wrap bowl,"before(a1,a2):inferred","object_inherited,order_inferred_from_and","press(e1)[{'target':'bowl'}]
+seal(e1)[{'target':'bowl'}]",plastic wrap,none,'on the bowl' was merged into the entity; 'press and seal' is a compound claim and does not require a strict before relation.
+Recheck box contents and reseal the top end,1,recheck(e1) ; reseal(e2)[{'region': 'top'}],e1=box contents ; e2=end,"before(a1,a2):inferred","order_inferred_from_and,unknown_verbs:recheck/reseal","recheck(e1)[{'region':'contents'}]
+reseal(e1)[{'region':'top end'}]",box,,"Contents/top end are regions of the same box, not separate entities."
+Reinstall and adjust sink drain strainer,1,reinstall(e1) ; adjust(e1),e1=sink drain strainer,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:reinstall",,,,
+Remove and crumple plastic wrap,1,remove(e1) ; crumple(e1),e1=plastic wrap,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:crumple",,,,
+Remove and position strainer,1,remove(e1) ; position(e1),e1=strainer,"before(a1,a2):inferred","object_inherited,order_inferred_from_and",,,,
+Removing and discarding plastic wrap,1,removing(e1) ; discarding(e1),e1=plastic wrap,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:discarding/removing","remove(e1)
+discard(e1)",plastic wrap,"before(a1,a2)",Gerunds were not normalized; both actions apply to the same plastic wrap.
+Reopen and inspect cardboard box,1,reopen(e1) ; inspect(e1),e1=cardboard box,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:reopen",,,,
+Repack first portable charger and close product box,1,repack(e1) ; close(e2),e1=portable charger ; e2=product box,"before(a1,a2):inferred",order_inferred_from_and,,,,
+Repackage portable charger and close box,1,repackage(e1) ; close(e2),e1=portable charger ; e2=box,"before(a1,a2):inferred","order_inferred_from_and,unknown_verbs:repackage",,,,
+Retrieve and reassemble cardboard box,1,retrieve(e1) ; reassemble(e1),e1=cardboard box,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:reassemble",,,,
+Retrieve and reshape cardboard box,1,retrieve(e1) ; reshape(e1),e1=cardboard box,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:reshape",,,,
+Rinse entire mug and set down,1,rinse(e1) ; set(e1),e1=entire mug,"before(a1,a2):inferred","object_inherited,order_inferred_from_and","rinse(e1)[{'region':'entire'}]
+set_down(e1)",mug,,"'entire' is scope, and 'set down' is a phrasal action; both actions apply to the mug."
+Rotate box and remove tape from second end,1,rotate(e1) ; remove(e2),e1=box ; e2=tape end,"before(a1,a2):inferred",order_inferred_from_and,,,,
+Seal plastic wrap around right/front/back sides of the bowl,1,seal(e1)[{'region': 'right'}] ; front(e1) ; back(e2),e1=plastic wrap around ; e2=sides bowl,"before(a1,a2):inferred ; before(a2,a3):inferred","object_inherited,order_inferred_from_and,unknown_verbs:back/front","seal(e1)[{'target':'bowl','region':'right/front/back sides'}]",plastic wrap,none,'front'/'back' were incorrectly parsed as verbs; they are regions of one sealing action.
+Sealing and smoothing plastic wrap around the bowl,1,sealing(e1) ; smoothing(e1),e1=plastic wrap around bowl,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:sealing/smoothing","seal(e1)[{'target':'bowl'}]
+smooth(e1)[{'target':'bowl'}]",plastic wrap,none,"Gerunds were not normalized, 'around bowl' was merged into the entity, and 'and' does not require a strict order here."
+Second fold and press tissue,1,fold(e1) ; press(e1),e1=tissue,"before(a1,a2):inferred","object_inherited,order_inferred_from_and",,,,
+Third fold and press tissue,1,fold(e1) ; press(e1),e1=tissue,"before(a1,a2):inferred","object_inherited,order_inferred_from_and",,,,
+Tighten wrap and tear from roll,1,tighten(e1) ; tear(e2),e1=wrap ; e2=roll,"before(a1,a2):inferred",order_inferred_from_and,"tighten(e1)
+tear(e1)[{'source':'roll'}]",wrap,,The second action tears the wrap from the roll; the roll is not the object being torn.
+Tuck and seal wrap around bowl,1,tuck(e1) ; seal(e1),e1=wrap around bowl,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:tuck",,,,
+Unbox and inspect first packaged portable charger,1,unbox(e1) ; inspect(e1),e1=packaged portable charger,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:unbox",,,,
+"Unbox, inspect, and repackage portable charger (second unit)",1,unbox(e1) ; inspect(e1) ; repackage(e1),e1=portable charger unit,"before(a1,a2):inferred ; before(a2,a3):inferred","object_inherited,order_inferred_from_and,unknown_verbs:repackage/unbox",,,,
+Unpack and unfold flattened box,1,unpack(e1) ; unfold(e1),e1=flattened box,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:unfold/unpack",,,,
+Unpack USB and flatten box,1,unpack(e1) ; flatten(e2),e1=usb ; e2=box,"before(a1,a2):inferred","order_inferred_from_and,unknown_verbs:flatten/unpack","unpack(e1)[{'source':'e2'}]
+flatten(e2)","USB drive
+box",,"The USB is unpacked from the box, then the box is flattened; the source relation was missing."
+Unroll and cut plastic wrap,1,unroll(e1) ; cut(e1),e1=plastic wrap,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:cut/unroll",,,,
+Unroll and prepare new plastic wrap from the roll,1,unroll(e1) ; prepare(e1),e1=new plastic wrap roll,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:prepare/unroll",,,,
+Unroll and tear plastic wrap to cover the bowl,1,unroll(e1) ; tear(e1),e1=plastic wrap cover bowl,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:unroll","unroll(e1)
+tear(e1)[{'goal':'cover bowl'}]",plastic wrap,,"'cover bowl' is the goal of the tear/unroll sequence, not part of the entity name."
+Unroll plastic wrap from roll and position over bowl,1,unroll(e1) ; position(e2),e1=plastic wrap roll ; e2=bowl,"before(a1,a2):inferred","order_inferred_from_and,unknown_verbs:unroll","unroll(e1)[{'source':'roll'}]
+position(e1)[{'target':'bowl'}]",plastic wrap,,The draft incorrectly made the bowl the object of position; both actions apply to the plastic wrap.
+Unrolling and laying a plastic wrap sheet on the table,1,unrolling(e1) ; laying(e1),e1=plastic wrap sheet table,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:laying/unrolling","unroll(e1)
+lay(e1)[{'destination':'table'}]",plastic wrap sheet,"before(a1,a2)",Gerunds were not normalized and 'table' was merged into the object phrase.
+Unseal and open cardboard box,1,unseal(e1) ; open(e1),e1=cardboard box,"before(a1,a2):inferred","object_inherited,order_inferred_from_and",,,,
+Verify box contents and seal the top end with tape,1,"verify(e1) ; seal(e2)[{'region': 'top', 'instrument': 'tape'}]",e1=box contents ; e2=end,"before(a1,a2):inferred","order_inferred_from_and,unknown_verbs:verify","verify(e1)[{'region':'contents'}]
+seal(e1)[{'region':'top end','instrument':'tape'}]",box,,"Contents/top end are regions of the same box, not separate entities."
+Wet counter and wall with water,1,wet(e1) ; wall(e1)[{'instrument': 'water'}],e1=counter,"before(a1,a2):inferred","object_inherited,order_inferred_from_and,unknown_verbs:wall/wet","wet(e1)[{'instrument':'water'}]
+wet(e2)[{'instrument':'water'}]","counter
+wall",none,"'wall' was parsed as a verb; the same wetting action applies to counter and wall, with no strict order."
+Wipe kettle lid and top cap,1,wipe(e1)[{'region': 'lid'}] ; top(e2),e1=kettle ; e2=cap,"before(a1,a2):inferred","order_inferred_from_and,unknown_verbs:top",wipe(e1)[{'region':'lid and top cap'}],kettle,none,'top' was parsed as a verb; this is one wiping claim over two kettle regions.
+Wipe table and dispose of used tissue,1,wipe(e1) ; dispose(e2),e1=table ; e2=used tissue,"before(a1,a2):inferred","order_inferred_from_and,unknown_verbs:dispose",,,,
+Wipe table with paper towel and discard used towel,1,wipe(e1)[{'instrument': 'paper towel'}] ; discard(e2),e1=table ; e2=used towel,"before(a1,a2):inferred","order_inferred_from_and,unknown_verbs:discard",,,,
+Close box flaps after second inspection,1,close(e1) ; inspection(e1),e1=box flaps,"before(a1,a2):stated","object_inherited,unknown_verbs:inspection","inspect(e1)[{'instance':'second'}]
+close(e1)[{'region':'flaps'}]",box,"before(a1,a2)",'inspection' was parsed as a verb noun and the stated 'after' relation was misrepresented.
+Rinse mug after scrubbing,1,rinse(e1) ; scrubbing(e1),e1=mug,"before(a1,a2):stated","object_inherited,unknown_verbs:scrubbing","scrub(e1)
+rinse(e1)",,"before(a1,a2)",'after scrubbing' means scrub precedes rinse; the draft reversed the stated order and kept a gerund as a verb.
+Apply liquid to pan with brush,6,apply(e1)[{'instrument': 'brush'}],e1=liquid pan,,unknown_verbs:apply,"apply(e1)[{'material':'liquid','instrument':'brush'}]",pan,,The draft merged material ('liquid') with the target object ('pan').
+Apply liquid layer to pan interior,4,apply(e1)[{'region': 'interior'}],e1=liquid layer pan,,unknown_verbs:apply,"apply(e1)[{'material':'liquid layer','region':'interior'}]",pan,,"The liquid layer is material/content, not part of the pan entity name."
+Clean sink drain strainer,4,clean(e1),e1=sink drain strainer,,,,,,
+Crumple removed plastic wrap,4,crumple(e1),e1=removed plastic wrap,,unknown_verbs:crumple,,,,
+Add liquid from bottle to pan,3,add(e1),e1=liquid bottle pan,,unknown_verbs:add,"add(e1)[{'source':'bottle','destination':'pan'}]",liquid,,"The draft merged the moved liquid, source bottle, and destination pan into one entity."
+Apply liquid coating to pan with brush,3,apply(e1)[{'instrument': 'brush'}],e1=liquid coating pan,,unknown_verbs:apply,"apply(e1)[{'material':'liquid coating','instrument':'brush'}]",pan,,The draft merged coating material with the target pan.
+Coat pan with liquid using spatula,3,coat(e1)[{'instrument': 'liquid using spatula'}],e1=pan,,unknown_verbs:coat,"coat(e1)[{'material':'liquid','instrument':'spatula'}]",pan,,The draft incorrectly treated 'liquid using spatula' as one instrument string.
+Flip black rectangular object to opposite side,3,flip(e1)[{'region': 'side'}],e1=black rectangular object opposite,,,flip(e1)[{'result_side':'opposite'}],black rectangular object,,"'opposite' is a resulting side/orientation, not part of the entity name."
+Flip remote control to opposite side,3,flip(e1)[{'region': 'side'}],e1=remote control opposite,,,flip(e1)[{'result_side':'opposite'}],remote control,,"'opposite' is a resulting side/orientation, not part of the entity name."
+Fold a disposable mask,3,fold(e1),e1=disposable mask,,,,,,
+Inspect both sides of remote control,3,inspect(e1),e1=both sides remote control,,,inspect(e1)[{'region':'both sides'}],remote control,,"'both sides' is the inspected region, not part of the entity name."
+Retrieve cable from drawer,3,retrieve(e1),e1=cable drawer,,,retrieve(e1)[{'source':'drawer'}],cable,,"The drawer is the source/container, not part of the cable entity."
+Rinse sink strainer,3,rinse(e1),e1=sink strainer,,,,,,
+Scrub mug interior,3,scrub(e1)[{'region': 'interior'}],e1=mug,,,,,,
+Secure plastic wrap around bowl,3,secure(e1),e1=plastic wrap around bowl,,,secure(e1)[{'target':'bowl'}],plastic wrap,,The bowl/location phrase was merged into the plastic-wrap entity instead of being represented as a target/region.
+Wrap bowl with plastic wrap,3,wrap(e1)[{'instrument': 'plastic wrap'}],e1=bowl,,unknown_verbs:wrap,,,,
+Apply new plastic wrap to bowl,2,apply(e1),e1=new plastic wrap bowl,,unknown_verbs:apply,"apply(e1)[{'state':'new','target':'bowl'}]",plastic wrap,,'new' is state and bowl is the target; both were merged into the entity.
+Assemble cardboard box,2,assemble(e1),e1=cardboard box,,unknown_verbs:assemble,,,,
+Cleaning countertop with squeegee,2,cleaning(e1)[{'instrument': 'squeegee'}],e1=countertop,,unknown_verbs:cleaning,clean(e1)[{'instrument':'squeegee'}],countertop,,Inflected/noun-like form was kept as the verb; normalized to the underlying action and cleaned the object phrase.
+Close cardboard box top flaps,2,close(e1)[{'region': 'top'}],e1=cardboard box flaps,,,,,,
+Cover bowl with new plastic wrap,2,cover(e1)[{'instrument': 'new plastic wrap'}],e1=bowl,,,,,,
+Cover bowl with plastic wrap,2,cover(e1)[{'instrument': 'plastic wrap'}],e1=bowl,,,,,,
+Covering a bowl with plastic wrap,2,covering(e1)[{'instrument': 'plastic wrap'}],e1=bowl,,unknown_verbs:covering,cover(e1)[{'instrument':'plastic wrap'}],bowl,,Inflected/noun-like form was kept as the verb; normalized to the underlying action and cleaned the object phrase.
+Crumple plastic wrap into ball,2,crumple(e1),e1=plastic wrap ball,,unknown_verbs:crumple,crumple(e1)[{'result_shape':'ball'}],plastic wrap,,"'ball' is the result shape, not part of the entity name."
+Crumple used plastic wrap,2,crumple(e1),e1=used plastic wrap,,unknown_verbs:crumple,,,,
+Discard folded tissue,2,discard(e1),e1=folded tissue,,unknown_verbs:discard,,,,
+Display upper side of slippers,2,display(e1)[{'region': 'upper side'}],e1=slippers,,unknown_verbs:display,,,,
+Insert U-disk into the box,2,insert(e1),e1=u disk box,,,insert(e1)[{'destination':'box'}],U-disk,,"The box is the destination/container, not part of the U-disk entity."
+Inspect first portable charger,2,inspect(e1),e1=portable charger,,,,,,
+Manipulate small transparent object,2,manipulate(e1),e1=small transparent object,,unknown_verbs:manipulate,,,,
+Pan liquid application cycle,2,pan(e1),e1=liquid application cycle,,unknown_verbs:pan,"apply(e1)[{'material':'liquid','pattern':'cycle'}]",pan,,Noun 'pan' was parsed as the verb; the action is applying liquid to the pan.
+Recoil USB cable,2,recoil(e1),e1=usb cable,,unknown_verbs:recoil,,,,
+Remove box from plastic bag,2,remove(e1),e1=box plastic bag,,,remove(e1)[{'source':'plastic bag'}],box,,"The plastic bag is the source/container, not part of the box entity."
+Remove cardboard box from black plastic bag,2,remove(e1),e1=cardboard box black plastic bag,,,remove(e1)[{'source':'black plastic bag'}],cardboard box,,"The black plastic bag is the source/container, not part of the box entity."
+Removing plastic wrap from a bowl,2,removing(e1),e1=plastic wrap bowl,,unknown_verbs:removing,remove(e1)[{'source':'bowl'}],plastic wrap,,Inflected/noun-like form was kept as the verb; normalized to the underlying action and cleaned the object phrase.
+Reposition water bottle on table,2,reposition(e1),e1=water bottle table,,,reposition(e1)[{'location':'table'}],water bottle,,"The table is a location, not part of the bottle entity."
+Rinse mug under running water,2,rinse(e1),e1=mug under running water,,,rinse(e1)[{'condition':'running water'}],mug,,"'under running water' is the rinsing condition, not part of the mug entity."
+Seal box bottom with tape,2,"seal(e1)[{'region': 'bottom', 'instrument': 'tape'}]",e1=box,,,,,,
+Seal box top with tape,2,"seal(e1)[{'region': 'top', 'instrument': 'tape'}]",e1=box,,,,,,
+Seal cardboard box with tape,2,seal(e1)[{'instrument': 'tape'}],e1=cardboard box,,,,,,
+Seal plastic wrap around bowl rim,2,seal(e1)[{'region': 'rim'}],e1=plastic wrap around bowl,,,"seal(e1)[{'target':'bowl','region':'rim'}]",plastic wrap,,The bowl/location phrase was merged into the plastic-wrap entity instead of being represented as a target/region.
+Sink strainer cleaning cycle,2,sink(e1),e1=strainer cleaning cycle,,unknown_verbs:sink,clean(e1)[{'pattern':'cycle'}],sink strainer,,Noun 'sink' was parsed as the verb; the action is cleaning the sink strainer.
+Smooth plastic wrap on bowl,2,smooth(e1),e1=plastic wrap bowl,,unknown_verbs:smooth,smooth(e1)[{'target':'bowl'}],plastic wrap,,The bowl/location phrase was merged into the plastic-wrap entity instead of being represented as a target/region.
+Store charging cable in drawer,2,store(e1),e1=charging cable drawer,,,store(e1)[{'destination':'drawer'}],charging cable,,"The drawer is the destination/container, not part of the cable entity."
+Wrap bowl with plastic wrap roll,2,wrap(e1)[{'instrument': 'plastic wrap roll'}],e1=bowl,,unknown_verbs:wrap,,,,
+Wrapping bowl with plastic wrap,2,wrapping(e1)[{'instrument': 'plastic wrap'}],e1=bowl,,unknown_verbs:wrapping,wrap(e1)[{'instrument':'plastic wrap'}],bowl,,Inflected/noun-like form was kept as the verb; normalized to the underlying action and cleaned the object phrase.
+1st liquid coating application,1,st(e1),e1=liquid coating application,,unknown_verbs:st,"apply(e1)[{'material':'liquid coating','instance':'first'}]",pan,,Ordinal '1st' was parsed as a verb; this is the first liquid-coating application to the pan.
+2nd liquid coating application,1,nd(e1),e1=liquid coating application,,unknown_verbs:nd,"apply(e1)[{'material':'liquid coating','instance':'second'}]",pan,,Ordinal '2nd' was parsed as a verb; this is the second liquid-coating application to the pan.
+Add liquid from fourth bottle to pan,1,add(e1),e1=liquid bottle pan,,unknown_verbs:add,"add(e1)[{'source':'fourth bottle','destination':'pan'}]",liquid,,"The draft merged the moved liquid, source bottle, and destination pan into one entity."
+Add liquid from second bottle to pan,1,add(e1),e1=liquid bottle pan,,unknown_verbs:add,"add(e1)[{'source':'second bottle','destination':'pan'}]",liquid,,"The draft merged the moved liquid, source bottle, and destination pan into one entity."
+Add liquid from third bottle to pan,1,add(e1),e1=liquid bottle pan,,unknown_verbs:add,"add(e1)[{'source':'third bottle','destination':'pan'}]",liquid,,"The draft merged the moved liquid, source bottle, and destination pan into one entity."
+Adhere plastic wrap around bowl to table,1,adhere(e1),e1=plastic wrap around bowl table,,unknown_verbs:adhere,"adhere(e1)[{'relation':'around bowl','target':'table'}]",plastic wrap,,Bowl/table relations were merged into the plastic-wrap entity.
+apply liquid coat to pan,1,apply(e1),e1=liquid coat pan,,unknown_verbs:apply,apply(e1)[{'material':'liquid coat'}],pan,,The draft merged material with the target pan.
+Apply liquid to pan with brush from bottle,1,apply(e1)[{'instrument': 'brush bottle'}],e1=liquid pan,,unknown_verbs:apply,"apply(e1)[{'material':'liquid','instrument':'brush','source':'bottle'}]",pan,,The draft merged brush and bottle into one instrument and merged liquid with pan.
+Apply plastic wrap to bowl,1,apply(e1),e1=plastic wrap bowl,,unknown_verbs:apply,apply(e1)[{'target':'bowl'}],plastic wrap,,"The bowl is the target, not part of the plastic-wrap entity."
+Applying plastic wrap to bowl,1,applying(e1),e1=plastic wrap bowl,,unknown_verbs:applying,apply(e1)[{'target':'bowl'}],plastic wrap,,Inflected/noun-like form was kept as the verb; normalized to the underlying action and cleaned the object phrase.
+Assemble erect cardboard box,1,assemble(e1),e1=erect cardboard box,,unknown_verbs:assemble,assemble(e1)[{'result_state':'erect'}],cardboard box,,"'erect' is the resulting state of the box, not part of the entity name."
+Begin sealing cardboard box,1,begin(e1),e1=sealing cardboard box,,unknown_verbs:begin,seal(e1)[{'phase':'begin'}],cardboard box,,'Begin' scopes the sealing event; the semantic action is sealing the box.
+Bottle manipulation over bowl,1,bottle(e1),e1=manipulation bowl,,unknown_verbs:bottle,manipulate(e1)[{'location':'over bowl'}],bottle,,Noun 'bottle' was parsed as the verb; 'over bowl' is a location qualifier.
+Close cardboard box top flaps again,1,close(e1)[{'region': 'top'}],e1=cardboard box flaps,,,,,,
+Coat pan with liquid using brush,1,coat(e1)[{'instrument': 'liquid using brush'}],e1=pan,,unknown_verbs:coat,"coat(e1)[{'material':'liquid','instrument':'brush'}]",pan,,The draft incorrectly treated material and tool as one instrument phrase.
+Complete sink strainer cleaning cycle,1,complete(e1),e1=sink strainer cleaning cycle,,unknown_verbs:complete,"clean(e1)[{'phase':'completion','pattern':'cycle'}]",sink strainer,,'Complete' scopes the cleaning event; it is not the task verb.
+Cover bowl with new cling film from roll,1,cover(e1)[{'instrument': 'new cling film roll'}],e1=bowl,,,,,,
+Cover bowl with plastic cling wrap,1,cover(e1)[{'instrument': 'plastic cling wrap'}],e1=bowl,,,,,,
+Cover bowl with wrap,1,cover(e1)[{'instrument': 'wrap'}],e1=bowl,,,,,,
+Crumble the removed plastic wrap,1,crumble(e1),e1=removed plastic wrap,,unknown_verbs:crumble,,,,
+Crumple plastic wrap,1,crumple(e1),e1=plastic wrap,,unknown_verbs:crumple,,,,
+Crumpling discarded plastic packaging,1,crumpling(e1),e1=discarded plastic packaging,,unknown_verbs:crumpling,crumple(e1),discarded plastic packaging,,Inflected/noun-like form was kept as the verb; normalized to the underlying action and cleaned the object phrase.
+Crumpling plastic wrap,1,crumpling(e1),e1=plastic wrap,,unknown_verbs:crumpling,crumple(e1),plastic wrap,,Inflected/noun-like form was kept as the verb; normalized to the underlying action and cleaned the object phrase.
+Discarding crumpled plastic in trash bin,1,discarding(e1),e1=crumpled plastic trash bin,,unknown_verbs:discarding,discard(e1)[{'destination':'trash bin'}],crumpled plastic,,Inflected/noun-like form was kept as the verb; normalized to the underlying action and cleaned the object phrase.
+Display footbed side of slippers,1,display(e1)[{'region': 'side'}],e1=footbed slippers,,unknown_verbs:display,display(e1)[{'region':'footbed side'}],slippers,,"'footbed' is a side/region qualifier, not part of the slipper entity."
+Display insole side of slippers,1,display(e1)[{'region': 'side'}],e1=insole slippers,,unknown_verbs:display,display(e1)[{'region':'insole side'}],slippers,,"'insole' is a side/region qualifier, not part of the slipper entity."
+Drape plastic wrap over the bowl,1,drape(e1),e1=plastic wrap bowl,,unknown_verbs:drape,drape(e1)[{'target':'bowl'}],plastic wrap,,"The bowl is a target/location, not part of the plastic-wrap entity."
+Extract tissue from pack,1,extract(e1),e1=tissue pack,,,extract(e1)[{'source':'pack'}],tissue,,"The pack is the source/container, not part of the tissue entity."
+Fill dark bottles from table into bowl,1,fill(e1),e1=dark bottles table bowl,,unknown_verbs:fill,"fill(e1)[{'source':'table','destination':'bowl'}]",dark bottles,,The draft merged the moved objects with source and destination.
+Fold a tissue paper into a compact rectangle (starts here),1,fold(e1),e1=tissue paper compact rectangle starts here,,,"fold(e1)[{'result_shape':'compact rectangle','phase':'start'}]",tissue paper,,"'compact rectangle' is the result shape and 'starts here' is a phase marker, not part of the entity."
+Fold fourth paper sheet,1,fold(e1),e1=paper sheet,,,,,,
+Fold second tissue sheet into compact rectangle,1,fold(e1),e1=tissue sheet compact rectangle,,,"fold(e1)[{'instance':'second','result_shape':'compact rectangle'}]",tissue sheet,,Ordinal/result shape were merged into the entity rather than kept as qualifiers.
+Fold the top portion of the heat cap downward,1,fold(e1)[{'region': 'top'}],e1=portion heat cap downward,,,"fold(e1)[{'region':'top portion','direction':'downward'}]",heat cap,,"Top portion/downward are region/direction qualifiers, not part of the entity."
+Fold third tissue sheet into compact rectangle,1,fold(e1),e1=tissue sheet compact rectangle,,,"fold(e1)[{'instance':'third','result_shape':'compact rectangle'}]",tissue sheet,,Ordinal/result shape were merged into the entity rather than kept as qualifiers.
+Fold wrap to seal bowl,1,fold(e1),e1=wrap seal bowl,,,fold(e1)[{'goal':'seal bowl'}],wrap,,"'seal bowl' is the goal of folding, not part of the wrap entity."
+Folding sheet,1,folding(e1),e1=sheet,,unknown_verbs:folding,fold(e1),sheet,,Inflected/noun-like form was kept as the verb; normalized to the underlying action and cleaned the object phrase.
+Grasp mug for repositioning,1,grasp(e1),e1=mug repositioning,,,grasp(e1)[{'purpose':'repositioning'}],mug,,"'for repositioning' is purpose, not part of the mug entity."
+Hand rinsing under faucet,1,hand(e1),e1=rinsing under faucet,,unknown_verbs:hand,rinse(e1)[{'location':'under faucet'}],hands,,Noun 'hand' was parsed as the verb; the action is rinsing hands.
+Handling plastic wrap roll,1,handling(e1),e1=plastic wrap roll,,unknown_verbs:handling,handle(e1),plastic wrap roll,,Inflected/noun-like form was kept as the verb; normalized to the underlying action and cleaned the object phrase.
+Inspect box interior third time,1,inspect(e1)[{'region': 'interior'}],e1=box time,,,"inspect(e1)[{'region':'interior','instance':'third'}]",box,,"'third time' is an instance qualifier, not part of the box entity."
+Inspect cardboard box interior,1,inspect(e1)[{'region': 'interior'}],e1=cardboard box,,,,,,
+Inspect portable charger,1,inspect(e1),e1=portable charger,,,,,,
+Inspecting the covered bowl,1,inspecting(e1),e1=covered bowl,,unknown_verbs:inspecting,inspect(e1),covered bowl,,Inflected/noun-like form was kept as the verb; normalized to the underlying action and cleaned the object phrase.
+Install sink strainer,1,install(e1),e1=sink strainer,,unknown_verbs:install,,,,
+Install sink strainer into drain,1,install(e1),e1=sink strainer drain,,unknown_verbs:install,install(e1)[{'destination':'drain'}],sink strainer,,"The drain is the installation destination, not part of the strainer entity."
+Lay the electric heat cap flat on the table,1,lay(e1),e1=electric heat cap flat table,,unknown_verbs:lay,"lay(e1)[{'result_state':'flat','destination':'table'}]",electric heat cap,,"Flat/table are state/location qualifiers, not part of the heat-cap entity."
+Move water bottle from table center to left,1,move(e1)[{'region': 'left'}],e1=water bottle table center,,unknown_verbs:move,"move(e1)[{'source_position':'table center','destination_position':'left'}]",water bottle,,The draft merged the source position into the entity and encoded only the destination as a region.
+Open box flaps for third inspection,1,open(e1),e1=box flaps inspection,,,"open(e1)[{'region':'flaps','purpose':'third inspection'}]",box,,"'inspection' is the purpose/context of opening, not part of the box-flaps entity."
+Open reassembled cardboard box,1,open(e1),e1=reassembled cardboard box,,,,,,
+Open sealed box top,1,open(e1)[{'region': 'top'}],e1=sealed box,,,,,,
+Open untaped cardboard box,1,open(e1),e1=untaped cardboard box,,,,,,
+Picking up plastic wrap roll,1,picking(e1),e1=plastic wrap roll,,unknown_verbs:picking,pick_up(e1),plastic wrap roll,,Inflected/noun-like form was kept as the verb; normalized to the underlying action and cleaned the object phrase.
+Place cardboard box into plastic bag,1,place(e1),e1=cardboard box plastic bag,,,place(e1)[{'destination':'plastic bag'}],cardboard box,,"The plastic bag is the destination/container, not part of the box entity."
+Place flat box into bag,1,place(e1),e1=flat box bag,,,"place(e1)[{'state':'flat','destination':'bag'}]",box,,"'flat' is state and bag is destination, not part of the box entity."
+Place item into cardboard box,1,place(e1),e1=item cardboard box,,,place(e1)[{'destination':'cardboard box'}],item,,"The cardboard box is the destination/container, not part of the item entity."
+Place keychain into box,1,place(e1),e1=keychain box,,,place(e1)[{'destination':'box'}],keychain,,"The box is the destination/container, not part of the keychain entity."
+Place the box into black plastic bag,1,place(e1),e1=box black plastic bag,,,place(e1)[{'destination':'black plastic bag'}],box,,"The black plastic bag is a destination/container, not part of the box entity."
+Place the sealed box upright on the table,1,place(e1),e1=sealed box upright table,,,"place(e1)[{'state':'sealed','orientation':'upright','destination':'table'}]",box,,State/orientation/location were merged into the entity name.
+Place washed mug on counter,1,place(e1),e1=washed mug counter,,,"place(e1)[{'state':'washed','destination':'counter'}]",mug,,"'washed' is state and counter is destination, not part of the mug entity."
+Position wrap over bowl opening,1,position(e1)[{'region': 'opening'}],e1=wrap bowl,,,"position(e1)[{'target':'bowl','region':'opening'}]",wrap,,"The bowl/opening are target/region qualifiers, not part of the wrap entity."
+Positioning plastic wrap over the bowl,1,positioning(e1),e1=plastic wrap bowl,,unknown_verbs:positioning,position(e1)[{'target':'bowl'}],plastic wrap,,Inflected/noun-like form was kept as the verb; normalized to the underlying action and cleaned the object phrase.
+Positioning unrolled plastic film over a bowl on a table,1,positioning(e1),e1=unrolled plastic film bowl table,,unknown_verbs:positioning,"position(e1)[{'state':'unrolled','target':'bowl','context':'table'}]",plastic film,,Inflected/noun-like form was kept as the verb; normalized to the underlying action and cleaned the object phrase.
+Pour liquid from bottle into pan,1,pour(e1),e1=liquid bottle pan,,,"pour(e1)[{'source':'bottle','destination':'pan'}]",liquid,,"The draft merged liquid, source bottle, and destination pan into one entity."
+Prepare plastic wrap roll,1,prepare(e1),e1=plastic wrap roll,,unknown_verbs:prepare,,,,
+Re-seal box top with packing tape,1,"seal(e1)[{'region': 'top', 'instrument': 'packing tape'}]",e1=box,,,,,,
+Recoil charging cable,1,recoil(e1),e1=charging cable,,unknown_verbs:recoil,,,,
+Relocate black plastic bag,1,relocate(e1),e1=black plastic bag,,unknown_verbs:relocate,,,,
+Remove adhesive tape from box side panel,1,remove(e1)[{'region': 'side'}],e1=adhesive tape box panel,,,"remove(e1)[{'source':'box','source_region':'side panel'}]",adhesive tape,,"The box side panel is the source/location, not part of the tape entity."
+Remove keychain from box,1,remove(e1),e1=keychain box,,,,,,
+Remove packing tape from first box end,1,remove(e1),e1=packing tape box end,,,remove(e1)[{'source':'first box end'}],packing tape,,"The box end is the source/location of removal, not part of the tape entity."
+Remove plastic wrap from bowl,1,remove(e1),e1=plastic wrap bowl,,,remove(e1)[{'source':'bowl'}],plastic wrap,,"The bowl is the source/container, not part of the plastic-wrap entity."
+Remove sealing tape from box,1,remove(e1),e1=sealing tape box,,,remove(e1)[{'source':'box'}],sealing tape,,"The box is the source/location, not part of the tape entity."
+Remove sink drain strainer,1,remove(e1),e1=sink drain strainer,,,,,,
+Remove sink strainer,1,remove(e1),e1=sink strainer,,,,,,
+Remove top packing tape from cardboard box,1,remove(e1)[{'region': 'top'}],e1=packing tape cardboard box,,,"remove(e1)[{'source':'cardboard box','region':'top'}]",packing tape,,"The cardboard box/top are source/location qualifiers, not part of the tape entity."
+Remove USB drive from cardboard box,1,remove(e1),e1=usb drive cardboard box,,,remove(e1)[{'source':'cardboard box'}],USB drive,,"The cardboard box is the source/container, not part of the USB-drive entity."
+Remove wrapped device from first product box,1,remove(e1),e1=wrapped device product box,,,remove(e1)[{'source':'first product box'}],wrapped device,,"The product box is the source/container, not part of the wrapped-device entity."
+Repack USB drive into cardboard box,1,repack(e1),e1=usb drive cardboard box,,,repack(e1)[{'destination':'cardboard box'}],USB drive,,"The cardboard box is the destination/container, not part of the USB-drive entity."
+Replace used tissue with new one,1,replace(e1)[{'instrument': 'new one'}],e1=used tissue,,,"replace(e1)[{'state':'used','replacement':'new tissue'}]",tissue,,"'new one' is the replacement object/state, not an instrument."
+Retrieve cardboard box from plastic bag,1,retrieve(e1),e1=cardboard box plastic bag,,,retrieve(e1)[{'source':'plastic bag'}],cardboard box,,"The plastic bag is the source/container, not part of the box entity."
+Retrieve charging cable from drawer,1,retrieve(e1),e1=charging cable drawer,,,,,,
+Retrieve plastic wrap roll,1,retrieve(e1),e1=plastic wrap roll,,,,,,
+Retrieve USB drive from the box,1,retrieve(e1),e1=usb drive box,,,retrieve(e1)[{'source':'box'}],USB drive,,"The box is the source/container, not part of the USB-drive entity."
+Return cable to drawer,1,return(e1),e1=cable drawer,,,return(e1)[{'destination':'drawer'}],cable,,"The drawer is the destination/container, not part of the cable entity."
+Rinse mug interior,1,rinse(e1)[{'region': 'interior'}],e1=mug,,,,,,
+Scrape water from counter corner,1,scrape(e1),e1=water counter corner,,unknown_verbs:scrape,scrape(e1)[{'source':'counter corner'}],water,,"The counter corner is the source/location of the water, not part of the entity."
+Scrub interior of the mug,1,scrub(e1)[{'region': 'interior'}],e1=mug,,,,,,
+Scrub mug interior with fingers,1,"scrub(e1)[{'region': 'interior', 'instrument': 'fingers'}]",e1=mug,,,,,,
+Seal bowl with plastic wrap,1,seal(e1)[{'instrument': 'plastic wrap'}],e1=bowl,,,,,,
+Seal box bottom with adhesive tape,1,"seal(e1)[{'region': 'bottom', 'instrument': 'adhesive tape'}]",e1=box,,,,,,
+Seal box end with tape,1,seal(e1)[{'instrument': 'tape'}],e1=box end,,,"seal(e1)[{'region':'end','instrument':'tape'}]",box,,"'end' is a box region, not part of the entity name."
+Seal cardboard box with adhesive tape,1,seal(e1)[{'instrument': 'adhesive tape'}],e1=cardboard box,,,,,,
+Seal cardboard box with tape (first),1,seal(e1)[{'instrument': 'tape first'}],e1=cardboard box,,,"seal(e1)[{'instrument':'tape','instance':'first'}]",cardboard box,,"'first' is an instance qualifier, not part of the tape instrument."
+Seal cardboard box with tape second time,1,seal(e1)[{'instrument': 'tape second time'}],e1=cardboard box,,,"seal(e1)[{'instrument':'tape','instance':'second'}]",cardboard box,,"'second time' is an instance qualifier, not part of the tape instrument."
+Seal empty cardboard box with tape,1,seal(e1)[{'instrument': 'tape'}],e1=empty cardboard box,,,,,,
+Seal empty cardboard box with transparent tape,1,seal(e1)[{'instrument': 'transparent tape'}],e1=empty cardboard box,,,,,,
+Seal one end of outer box with tape,1,"seal(e1)[{'region': 'outer', 'instrument': 'tape'}]",e1=one end box,,,"seal(e1)[{'region':'one end','instrument':'tape'}]",outer box,,'one end' and 'outer' describe the box/region; they are not the entity itself.
+Seal plastic wrap around the bowl,1,seal(e1),e1=plastic wrap around bowl,,,seal(e1)[{'target':'bowl'}],plastic wrap,,The bowl/location phrase was merged into the plastic-wrap entity instead of being represented as a target/region.
+Seal plastic wrap to bowl rim,1,seal(e1)[{'region': 'rim'}],e1=plastic wrap bowl,,,"seal(e1)[{'target':'bowl','region':'rim'}]",plastic wrap,,The bowl/location phrase was merged into the plastic-wrap entity instead of being represented as a target/region.
+Seal second box with tape,1,seal(e1)[{'instrument': 'tape'}],e1=box,,,,,,
+Second rinse of mug under running water,1,rinse(e1),e1=mug under running water,,,"rinse(e1)[{'condition':'running water','instance':'second'}]",mug,,"'running water' and 'second' are condition/instance qualifiers, not part of the mug entity."
+Second squeegee cleaning session,1,squeegee(e1),e1=cleaning session,,unknown_verbs:squeegee,"clean(e1)[{'instrument':'squeegee','instance':'second'}]",countertop,,Noun 'squeegee' was parsed as the verb; this is the second countertop-cleaning session.
+Secure plastic wrap around bowl edges,1,secure(e1),e1=plastic wrap around bowl edges,,,"secure(e1)[{'target':'bowl','region':'edges'}]",plastic wrap,,The bowl/location phrase was merged into the plastic-wrap entity instead of being represented as a target/region.
+Secure wrap around bowl rim,1,secure(e1)[{'region': 'rim'}],e1=wrap around bowl,,,"secure(e1)[{'target':'bowl','region':'rim'}]",plastic wrap,,The bowl/location phrase was merged into the plastic-wrap entity instead of being represented as a target/region.
+Shake water off hands,1,shake(e1),e1=water hands,,unknown_verbs:shake,shake(e1)[{'effect':'remove water'}],hands,,The draft merged the removed water with the hands entity.
+Slide bottle back to center from front (upright),1,slide(e1)[{'region': 'back front'}],e1=bottle center upright,,,"slide(e1)[{'source_position':'front','destination_position':'center','orientation':'upright'}]",bottle,,The draft merged source/destination/orientation into the entity and misused a region qualifier.
+Slipper inspection cycle,1,slipper(e1),e1=inspection cycle,,unknown_verbs:slipper,inspect(e1)[{'pattern':'cycle'}],slippers,,Noun 'slipper' was parsed as the verb; the action is inspection.
+Smooth plastic wrap on bowl top,1,smooth(e1)[{'region': 'top'}],e1=plastic wrap bowl,,unknown_verbs:smooth,"smooth(e1)[{'target':'bowl','region':'top'}]",plastic wrap,,The bowl/location phrase was merged into the plastic-wrap entity instead of being represented as a target/region.
+Smooth plastic wrap on the bowl's top surface,1,smooth(e1)[{'region': 'top surface'}],e1=plastic wrap bowl s,,unknown_verbs:smooth,"smooth(e1)[{'target':'bowl','region':'top surface'}]",plastic wrap,,The draft entity is malformed; bowl/top surface are target/region qualifiers.
+Start new plastic wrap application,1,start(e1),e1=new plastic wrap application,,unknown_verbs:start,"apply(e1)[{'state':'new','phase':'start'}]",plastic wrap,,'Start' scopes the application event; it is not the semantic task verb.
+Store box in black plastic bag,1,store(e1),e1=box black plastic bag,,,store(e1)[{'destination':'black plastic bag'}],box,,"The black plastic bag is a destination/container, not part of the box entity."
+Store box in plastic bag,1,store(e1),e1=box plastic bag,,,store(e1)[{'destination':'plastic bag'}],box,,"The plastic bag is the destination/container, not part of the box entity."
+Store cardboard box in plastic bag,1,store(e1),e1=cardboard box plastic bag,,,store(e1)[{'destination':'plastic bag'}],cardboard box,,"The plastic bag is a destination/container, not part of the box entity."
+Store recoil charging cable in drawer,1,store(e1),e1=recoil charging cable drawer,,,"store(e1)[{'state':'recoiled','destination':'drawer'}]",charging cable,,'recoil' is state/history and drawer is destination; neither belongs in the entity name.
+Telescopic rod extend-retract cycle,1,telescopic(e1),e1=rod extend retract cycle,,unknown_verbs:telescopic,"extend(e1)
+retract(e1)",telescopic rod,"before(a1,a2)",Adjective 'telescopic' was parsed as the verb; the label claims an extend-retract cycle.
+Test cable compatibility with phone,1,test(e1)[{'instrument': 'phone'}],e1=cable compatibility,,unknown_verbs:test,,,,
+Test charging cable with mobile phone,1,test(e1)[{'instrument': 'mobile phone'}],e1=charging cable,,unknown_verbs:test,,,,
+Test charging cable with phone,1,test(e1)[{'instrument': 'phone'}],e1=charging cable,,unknown_verbs:test,,,,
+Uncoil USB cable,1,uncoil(e1),e1=usb cable,,unknown_verbs:uncoil,,,,
+Unpack box from plastic bag,1,unpack(e1),e1=box plastic bag,,unknown_verbs:unpack,unpack(e1)[{'source':'plastic bag'}],box,,"The plastic bag is the source/container, not part of the box entity."
+Unpack cardboard box from plastic bag,1,unpack(e1),e1=cardboard box plastic bag,,unknown_verbs:unpack,unpack(e1)[{'source':'plastic bag'}],cardboard box,,"The plastic bag is the source/container, not part of the box entity."
+Unpack USB drive from cardboard box,1,unpack(e1),e1=usb drive cardboard box,,unknown_verbs:unpack,unpack(e1)[{'source':'cardboard box'}],USB drive,,"The cardboard box is the source/container, not part of the USB-drive entity."
+Unroll a sheet of plastic wrap,1,unroll(e1),e1=sheet plastic wrap,,unknown_verbs:unroll,,,,
+Unroll plastic wrap from roll,1,unroll(e1),e1=plastic wrap roll,,unknown_verbs:unroll,,,,
+Unroll plastic wrap over bowl,1,unroll(e1),e1=plastic wrap bowl,,unknown_verbs:unroll,unroll(e1)[{'target':'bowl'}],plastic wrap,,"The bowl is a target/location, not part of the plastic-wrap entity."
+Unroll plastic wrap to required length,1,unroll(e1),e1=plastic wrap required length,,unknown_verbs:unroll,unroll(e1)[{'result':'required length'}],plastic wrap,,"'required length' is a result/extent qualifier, not part of the entity."
+Unseal box top,1,unseal(e1)[{'region': 'top'}],e1=box,,,,,,
+Unwrap first portable charger from protective packaging,1,unwrap(e1),e1=portable charger protective packaging,,,"unwrap(e1)[{'source':'protective packaging','instance':'first'}]",portable charger,,The protective packaging is the source/wrapper and 'first' is an instance qualifier.
+Unwrap plastic wrap from a bowl,1,unwrap(e1),e1=plastic wrap bowl,,,unwrap(e1)[{'source':'bowl'}],plastic wrap,,"The bowl is the source/container relation, not part of the plastic-wrap entity."
+Unwrap plastic wrap from bowl,1,unwrap(e1),e1=plastic wrap bowl,,,unwrap(e1)[{'source':'bowl'}],plastic wrap,,"The bowl is the source/container, not part of the plastic-wrap entity."
+Wash hands under running water,1,wash(e1),e1=hands under running water,,,wash(e1)[{'condition':'running water'}],hands,,"'under running water' is a condition, not part of the hands entity."
+Wet countertop surface with water,1,"wet(e1)[{'region': 'surface', 'instrument': 'water'}]",e1=countertop,,unknown_verbs:wet,,,,
+Wipe back counter behind sink,1,wipe(e1)[{'region': 'back'}],e1=counter behind sink,,,"wipe(e1)[{'region':'back','location':'behind sink'}]",counter,,"'behind sink' is a location qualifier, not part of the counter entity."
+Wipe countertop with squeegee,1,wipe(e1)[{'instrument': 'squeegee'}],e1=countertop,,,,,,
+Wipe sink right rim,1,wipe(e1)[{'region': 'right rim'}],e1=sink,,,,,,
+Wipe table surface with tissue,1,"wipe(e1)[{'region': 'surface', 'instrument': 'tissue'}]",e1=table,,,,,,
+Wipe table with second tissue,1,wipe(e1)[{'instrument': 'second tissue'}],e1=table,,,,,,
+Wipe upper kettle body,1,wipe(e1)[{'region': 'upper body'}],e1=kettle,,,,,,
+Wipe wet surfaces with squeegee,1,wipe(e1)[{'instrument': 'squeegee'}],e1=wet surfaces,,,,,,
+Wrap a bowl with new plastic wrap,1,wrap(e1)[{'instrument': 'new plastic wrap'}],e1=bowl,,unknown_verbs:wrap,,,,
+Wrapping bowl with plastic wrap from roll,1,wrapping(e1)[{'instrument': 'plastic wrap roll'}],e1=bowl,,unknown_verbs:wrapping,wrap(e1)[{'instrument':'plastic wrap roll'}],bowl,,Inflected/noun-like form was kept as the verb; normalized to the underlying action and cleaned the object phrase.
