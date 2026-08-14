@@ -25,6 +25,14 @@ original really is right, so segments come from events the audit marked
 beats counterfactual" is not the expected answer and scoring it would add
 noise with a sign nobody can predict.
 
+THREE KINDS ARE ONE-WORD SWAPS AND TWO ARE CLAUSE SURGERY, and only the first
+three were ever clean. The first run had `reorder` at 28/28 and `drop_claim`
+at 0.850 -- not because a dual encoder reads clause order, but because
+rejoining clauses with " and " broke the capitalisation and, on labels whose
+verbs share one object, left `Fold` or the empty string. Both kinds now
+require the decomposition to hold more than one action, re-case the result,
+and emit nothing unless it is a claim rather than a fragment.
+
 FIVE KINDS, scored separately, because a single number hides which failure
 the model cannot see:
 
@@ -80,6 +88,37 @@ def swap_word(label, old, new):
     return pat.sub(rep, label, count=1)
 
 
+def recase(original, text):
+    """Match the original's sentence casing.
+
+    Reordering `Fold and tuck ... to seal` produced `tuck ... and Fold`: a
+    lowercase start and a capitalised word mid-string. The model then had a
+    well-formedness cue instead of an order cue, and `reorder` came back at
+    28/28 -- which is not a dual encoder detecting clause order, it is one
+    detecting a mangled string."""
+    if not text:
+        return text
+    t = text[0].lower() + text[1:] if not original[:1].isupper() \
+        else text[0].upper() + text[1:]
+    # a word that was sentence-initial and is now mid-string loses its capital
+    return re.sub(r"(?<=[a-z] )([A-Z])(?=[a-z])",
+                  lambda m: m.group(1).lower(), t)
+
+
+def well_formed(text, verbs):
+    """A claim, not a fragment.
+
+    `Remove and discard plastic wrap from bowl` lost a clause and became the
+    EMPTY STRING; `Fold and crease sheet edge` became `Fold`. Scoring a bare
+    verb or an empty string against a video and reading the result as
+    "detects a missing claim" measures nothing. A counterfactual needs a verb
+    and something for the verb to act on."""
+    toks = re.findall(r"[a-z0-9]+", (text or "").lower())
+    if len(toks) < 2:
+        return False
+    return any(t in verbs for t in toks) and any(t not in verbs for t in toks)
+
+
 def build(label, dec, vocab, rng):
     """Counterfactuals for one label. Each differs by one word or one swap."""
     out = []
@@ -115,18 +154,29 @@ def build(label, dec, vocab, rng):
                 out.append(("wrong_qualifier", t, "no",
                             f"{k} {head} replaced"))
 
+    # Clause surgery only where the clauses are real. `Fold and crease sheet
+    # edge` is ONE action whose verbs share an object, not two claims, and the
+    # frozen decomposition says so: dropping half of it leaves `Fold`. Both
+    # kinds now require at least two actions in the decomposition AND a
+    # well-formed result, and emit nothing when they cannot produce one.
+    vset = set(vocab["verbs"])
     parts = [p for p in SPLIT_CLAUSE.split(label) if p and p.strip()
              and not SPLIT_CLAUSE.fullmatch(p)]
-    if len(parts) > 1:
-        keep = [p for i, p in enumerate(parts) if i != rng.randrange(len(parts))]
-        out.append(("drop_claim", " and ".join(keep), "partial",
-                    "one clause removed"))
-        if len(dec["temporal_constraints"]) and len(parts) > 1:
+    if len(parts) > 1 and len(dec["actions"]) > 1:
+        for i in rng.sample(range(len(parts)), len(parts)):
+            keep = [p for k, p in enumerate(parts) if k != i]
+            cand = recase(label, " and ".join(keep))
+            if well_formed(cand, vset):
+                out.append(("drop_claim", cand, "partial",
+                            f"clause {i + 1} of {len(parts)} removed"))
+                break
+        if dec["temporal_constraints"]:
             i = rng.randrange(len(parts) - 1)
             sw = list(parts)
             sw[i], sw[i + 1] = sw[i + 1], sw[i]
-            out.append(("reorder", " and ".join(sw), "no",
-                        "two clauses swapped"))
+            cand = recase(label, " and ".join(sw))
+            if well_formed(cand, vset) and cand.lower() != label.lower():
+                out.append(("reorder", cand, "no", "two clauses swapped"))
     return out
 
 
@@ -210,6 +260,14 @@ def main():
           f"segments, {len({r['recording_id'] for r in out})} recordings")
     for k, n in kinds.most_common():
         print(f"  {k:<18}{n:>5}")
+    clean = sum(n for k, n in kinds.items()
+                if k in ("wrong_verb", "wrong_object", "wrong_qualifier"))
+    print(f"\n  {clean} of {len(out)} pairs are single-token swaps "
+          f"(wrong_verb/object/qualifier).\n  Those are the clean ones: the "
+          f"counterfactual differs from the original by one word\n  and "
+          f"nothing else. drop_claim and reorder rewrite the clause "
+          f"structure, so read\n  them apart from the others and never "
+          f"through the ALL row.")
     print(f"\n  every pair holds the video fixed and changes one word or the "
           f"order of two\n  clauses, so recording identity is constant across "
           f"the pair and cancels. The\n  0.827 a video-only head scored on the "
