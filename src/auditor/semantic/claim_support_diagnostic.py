@@ -258,7 +258,7 @@ def main():
 
     # --------------------------------------------------------- per event
     rows, no_seg, no_pred, not_shown = [], [], [], 0
-    mis = set()
+    mis, n_empty = set(), [0]
     for key, g in gold.items():
         m = emap.get(key)
         if not m:
@@ -284,6 +284,13 @@ def main():
             if j["position"] >= len(names):
                 continue
             p, stored = names[j["position"]], j["stored_label"]
+            # CHUNKED RUNS PAD SHORT BLOCKS WITH "". That keeps every later
+            # segment on its own name instead of shifting them, and it also
+            # makes n_pred == n_gt by construction -- so the count guard above
+            # can no longer see a hole. An empty name is a hole.
+            if not p.strip():
+                n_empty[0] += 1
+                continue
             feats.append({"verb": verb_match(p, stored),
                           "obj": obj_f1(p, stored),
                           "generic": is_generic(p),
@@ -308,6 +315,8 @@ def main():
     print(f"  segments skipped as not shown        {not_shown}")
     n_mis = sum(1 for r in preds.values()
                 if r.get("n_pred") != r.get("n_gt"))
+    print(f"  segments with an EMPTY predicted name {n_empty[0]}  "
+          f"(chunk padding: naming returned fewer names than asked)")
     print(f"  recordings dropped, n_pred != n_gt    {len(mis)} "
           f"(of {n_mis}/{len(preds)} misaligned in the naming output)")
     if n_mis > len(preds) * 0.5:

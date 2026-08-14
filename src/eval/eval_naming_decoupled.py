@@ -130,6 +130,13 @@ def main():
                          "unproducible. Left at 4 so old runs reproduce; pass "
                          "0 when you need the format back")
     ap.add_argument("--repetition_penalty", type=float, default=1.3)
+    ap.add_argument("--chunk", type=int, default=0,
+                    help="ask for N consecutive segments per call instead of "
+                         "the whole recording in one. 0 keeps the original "
+                         "single-call behaviour. The failure this addresses "
+                         "is a function of LIST LENGTH: with the guards on "
+                         "the tags mangle, with them off the names cycle, and "
+                         "both start within the first handful of a long list")
     ap.add_argument("--device_map", default="cuda",
                     help="'cuda' for single-GPU; 'auto' to shard a big model across GPUs")
     a = ap.parse_args()
@@ -141,6 +148,30 @@ def main():
     rows = json.load(open(a.data))
     os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)
     fout = open(a.out, "w"); agg = []
+    def name_block(block, mnt):
+        """One generate for one contiguous run of segments."""
+        msgs = [{"role": "user", "content": [
+            {"type": "video", "video": r["video"],
+             "total_pixels": a.total_pixels},
+            {"type": "text", "text": build_prompt(block)}]}]
+        text = proc.apply_chat_template(msgs, tokenize=False,
+                                        add_generation_prompt=True)
+        imgs, vids, vkw = process_vision_info(msgs, return_video_kwargs=True)
+        if isinstance(vkw.get("fps"), list):
+            vkw["fps"] = vkw["fps"][0]
+        fps_val = vkw.get("fps", 2.0)
+        nf = vids[0].shape[0] if hasattr(vids[0], "shape") else len(vids[0])
+        vmeta = [{"fps": float(fps_val), "total_num_frames": int(nf),
+                  "duration": float(nf) / float(fps_val)}]
+        inp = proc(text=[text], images=imgs, videos=vids,
+                   video_metadata=vmeta, return_tensors="pt").to("cuda")
+        with torch.no_grad():
+            gen = model.generate(**inp, max_new_tokens=mnt, do_sample=False,
+                                 repetition_penalty=a.repetition_penalty,
+                                 no_repeat_ngram_size=a.no_repeat_ngram_size)
+        return proc.batch_decode(gen[:, inp["input_ids"].shape[1]:],
+                                 skip_special_tokens=True)[0]
+
     t0 = time.time()
     for ri, r in enumerate(rows):
         gts = _as_segs(r["solution"])
@@ -151,31 +182,29 @@ def main():
         print(f"[{ri + 1}/{len(rows)}] {os.path.basename(r['video'])} "
               f"{len(gts)} segments  elapsed {el / 60:.1f}m"
               + (f"  eta {eta / 60:.0f}m" if ri else ""), flush=True)
-        msgs = [{"role": "user", "content": [
-            {"type": "video", "video": r["video"], "total_pixels": a.total_pixels},
-            {"type": "text", "text": build_prompt(gts)}]}]
-        text = proc.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
-        imgs, vids, vkw = process_vision_info(msgs, return_video_kwargs=True)
-        if isinstance(vkw.get("fps"), list):
-            vkw["fps"] = vkw["fps"][0]
-        fps_val = vkw.get("fps", 2.0)
-        nf = vids[0].shape[0] if hasattr(vids[0], "shape") else len(vids[0])
-        vmeta = [{"fps": float(fps_val), "total_num_frames": int(nf),
-                  "duration": float(nf) / float(fps_val)}]
-        inp = proc(text=[text], images=imgs, videos=vids, video_metadata=vmeta,
-                   return_tensors="pt").to("cuda")
-        with torch.no_grad():
-            # repetition_penalty/no_repeat_ngram_size: greedy decoding (do_sample=False)
-            # on long structured lists (many segments) can degenerate into repeating
-            # the same line verbatim until max_new_tokens is hit -- observed directly
-            # on a 147-segment recording (36 identical predicted names). This does not
-            # fix visual grounding, only stops the decode-time repetition failure mode.
-            mnt = a.max_new_tokens or (24 * len(gts) + 256)
-            gen = model.generate(**inp, max_new_tokens=mnt, do_sample=False,
-                                 repetition_penalty=a.repetition_penalty,
-                                 no_repeat_ngram_size=a.no_repeat_ngram_size)
-        out = proc.batch_decode(gen[:, inp["input_ids"].shape[1]:],
-                                skip_special_tokens=True)[0]
+        step = a.chunk or len(gts)
+        pred_names, chunks, out_parts = [], [], []
+        for c0 in range(0, len(gts), step):
+            block = gts[c0:c0 + step]
+            mnt = a.max_new_tokens or (24 * len(block) + 256)
+            o = name_block(block, mnt)
+            got = [m.strip() for m in NAME_RE.findall(o)]
+            # TRUNCATE OR PAD TO THE BLOCK. A block that ran long has looped
+            # past its request and the extra names are not segments; a block
+            # that ran short leaves holes, and a hole must stay a hole rather
+            # than shifting every later segment onto the wrong name.
+            chunks.append({"start_index": c0, "asked": len(block),
+                           "returned": len(got)})
+            got = got[:len(block)] + [""] * max(0, len(block) - len(got))
+            pred_names += got
+            out_parts.append(o)
+        out = "\n<<<CHUNK>>>\n".join(out_parts)
+        n_over = sum(1 for c in chunks if c["returned"] > c["asked"])
+        n_under = sum(1 for c in chunks if c["returned"] < c["asked"])
+        if n_over or n_under:
+            print(f"    {len(chunks)} chunk(s): {n_over} over-produced "
+                  f"(looped, truncated), {n_under} under-produced (padded)",
+                  flush=True)
         pred_names = [m.strip() for m in NAME_RE.findall(out)]
         # A parse failure and a model that said nothing are different problems
         # and both printed as `pred 0`. The raw text is kept on every row so
@@ -200,7 +229,7 @@ def main():
               "verb", round(m["verb_acc"], 2), "obj", round(m["obj_f1"], 2),
               "gen", round(m["generic_rate"], 2), "sim", round(m["emb_sim"], 2))
         fout.write(json.dumps({"video": r["video"], **m,
-                               "max_new_tokens": mnt,
+                               "chunks": chunks,
                                "pred_names": pred_names,
                                "gt_names": gt_names, "raw": out}) + "\n")
         fout.flush()
