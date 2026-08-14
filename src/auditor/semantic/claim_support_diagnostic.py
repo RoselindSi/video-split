@@ -341,8 +341,10 @@ def main():
 
     print(f"\nCOVERAGE, before any discrimination:")
     print(f"  events with a usable naming feature  {len(rows)}/{len(gold)}")
-    print(f"  no entry in the event map            {len(no_seg)}")
-    print(f"  no prediction at any shown segment   {len(no_pred)}")
+    print(f"  no entry in the event map            {len(no_seg)}"
+          + (f"  {no_seg[:6]}" if no_seg else ""))
+    print(f"  no prediction at any shown segment   {len(no_pred)}"
+          + (f"  {no_pred[:6]}" if no_pred else ""))
     print(f"  segments skipped as not shown        {not_shown}")
     n_mis = sum(1 for r in preds.values()
                 if r.get("n_pred") != r.get("n_gt"))
