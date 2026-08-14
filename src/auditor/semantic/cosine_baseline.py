@@ -58,7 +58,7 @@ def sample_times(start, end, n):
     return [start + i * (end - start) / (n - 1) for i in range(n)]
 
 
-def embed(model, video_inputs, texts, prompt=None):
+def embed(model, video_inputs, texts, prompt=None, meta=None):
     """The one place that touches the model. Returns (video, text) vectors.
 
     Read off the checkpoint rather than guessed a third time. It is a
@@ -91,7 +91,19 @@ def embed(model, video_inputs, texts, prompt=None):
     # Transformer.preprocess's signature and its
     # `effective_processing_kwargs.get(modality_key)` override loop -- not
     # guessed, after three guesses in this file already.
-    vkw = dict(kw, processing_kwargs={"video": {"do_sample_frames": False}})
+    vid = {"do_sample_frames": False}
+    if meta:
+        # Qwen3VL writes frame TIMESTAMPS into the prompt and derives them
+        # from fps. With pre-sampled frames it cannot infer one and defaults
+        # to 24, which makes every 8-frame clip look like a third of a second
+        # -- across segments whose real durations run from 3s to 88s, and the
+        # distortion scales with duration. This is metadata the model asks for
+        # and would have in normal use, not a knob. `video_metadata` is part
+        # of VideosKwargs, so it takes the same processing_kwargs route as
+        # do_sample_frames, in the three-field shape this repo already uses in
+        # eval_naming_decoupled.
+        vid["video_metadata"] = meta
+    vkw = dict(kw, processing_kwargs={"video": vid})
     return (np.asarray(model.encode(video_inputs, **vkw)),
             np.asarray(model.encode(texts, **kw)))
 
@@ -134,6 +146,11 @@ def main():
                          "gives a different number, so it is a flag rather "
                          "than a constant buried in the call")
     ap.add_argument("--frame_dir", default="/tmp/cosine_frames")
+    ap.add_argument("--no_metadata", action="store_true",
+                    help="reproduce the first run, which let the processor "
+                         "assume fps=24 for every segment. Kept so the two "
+                         "can be compared rather than one silently replacing "
+                         "the other")
     ap.add_argument("--dry_run", action="store_true",
                     help="random unit vectors instead of the model. Verifies "
                          "the plumbing; an AUROC near 0.5 from a dry run is "
@@ -209,8 +226,11 @@ def main():
         paths = write_frames(video_of[j["recording_id"]],
                              sample_times(j["start"], j["end"], a.n_frames),
                              tmp, uid.replace("/", "_"))
+        dur = max(float(j["end"]) - float(j["start"]), 1e-3)
+        meta = [{"fps": len(paths) / dur, "total_num_frames": len(paths),
+                 "duration": dur}]
         vv, tt = embed(model, [{"video": paths}], [j["stored_label"]],
-                       a.prompt)
+                       a.prompt, None if a.no_metadata else meta)
         score[uid] = float(vv[0] @ tt[0] / (np.linalg.norm(vv[0])
                                             * np.linalg.norm(tt[0])))
         for q in paths:
