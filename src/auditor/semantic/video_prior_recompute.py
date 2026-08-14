@@ -1,9 +1,9 @@
-"""The video-only prior, on the SAME 45 YES / 17 NO the naming features got.
+"""The video-only prior, on the SAME YES/NO events the naming features got.
 
 WHY IT HAD TO BE RECOMPUTED. The 0.601 [0.495, 0.706] quoted next to the
 naming features all session came from 186 events with the target `correct`
-against everything else. These are 62 events with `yes` against `no`.
-Different population, different label, different n -- so putting a naming
+against everything else. These are the `yes` against `no` events of the
+89-event gold. Different population, different label, different n -- so putting a naming
 feature "above the video prior" was never a valid comparison, and the
 diagnostic now says so rather than inviting it. Making it valid means running
 the prior here, on this contrast, with the same folds and the same bar.
@@ -114,20 +114,24 @@ def main():
     np.random.seed(a.seed)
     gcache, lcache = load_caches(a.feat_cache), load_caches(a.local_cache)
     ev = build_events(src, gcache, lcache, a.half_s, a.n_frames)
-    by_eid = {e["event_id"]: e for e in ev}
-    use = [s for s in src if s["event_id"] in by_eid]
-    y = np.array([s["y"] for s in use])
-    groups = [s["recording_id"] for s in use]
-    print(f"  {len(use)} kept after feature loading: "
+    ylab = {s["event_id"]: s["y"] for s in src}
+    y = np.array([ylab[e["event_id"]] for e in ev])
+    print(f"  {len(ev)} kept after feature loading: "
           f"{int(y.sum())} YES vs {int((1 - y).sum())} NO over "
-          f"{len(set(groups))} recordings")
+          f"{len({e['recording_id'] for e in ev})} recordings")
     if int(y.sum()) < 2 or int((1 - y).sum()) < 2:
         raise SystemExit("not enough of one class after feature loading")
 
-    G, L, MG, ML = stack([by_eid[s["event_id"]] for s in use])
-    folds = stratified_grouped_folds(list(range(len(use))), y.tolist(),
-                                     groups, a.n_folds, a.fold_seed)
-    dev = "cuda" if torch.cuda.is_available() else "cpu"
+    # Mirrors relation_experiment.train_oof rather than reimplementing it:
+    # stack takes a key, pca_fit returns a tuple that proj consumes,
+    # build_input returns (X, M), and stratified_grouped_folds yields GROUPS
+    # per fold, not index pairs. I got all four wrong writing this from
+    # memory, and the first server run found them one at a time.
+    G, L = stack(ev, "g"), stack(ev, "l")
+    VG = torch.from_numpy(stack(ev, "valid_g"))
+    VL = torch.from_numpy(stack(ev, "valid_l"))
+    vg_np, vl_np = stack(ev, "valid_g"), stack(ev, "valid_l")
+    groups = [e["recording_id"] for e in ev]
 
     bar = min_detectable(int(y.sum()), int((1 - y).sum()), a.n_boot, a.seed)
     print(f"\n  A RANDOM scorer reaches AUROC {bar:.3f} at the 97.5th "
@@ -135,45 +139,58 @@ def main():
           f"SAME bar the naming features were read against.")
 
     seeds = [int(x) for x in a.seeds.split(",") if x.strip()]
-    per_seed, oof_all = [], np.zeros(len(use))
+    per_seed, oof_all = [], np.zeros(len(ev))
     for sd in seeds:
         torch.manual_seed(sd)
-        oof = np.full(len(use), np.nan)
-        for tr, te in folds:
-            mu_g, Pg = pca_fit(G[tr].reshape(-1, G.shape[-1]), a.pca_dim, sd)
-            mu_l, Pl = pca_fit(L[tr].reshape(-1, L.shape[-1]), a.pca_dim, sd)
-            X = build_input(proj(G, mu_g, Pg), proj(L, mu_l, Pl), MG, ML)
-            X = torch.tensor(X, dtype=torch.float32, device=dev)
-            M = torch.tensor(((MG + ML) > 0).astype(np.float32), device=dev)
-            yt = torch.tensor(y, dtype=torch.long, device=dev)
-            model = RelationHead(X.shape[-1], a.hidden, a.dropout).to(dev)
+        oof = np.full(len(ev), np.nan)
+        for fi, f in enumerate(stratified_grouped_folds(groups, y, a.n_folds,
+                                                        seed=a.fold_seed)):
+            te = np.array([g in f for g in groups])
+            tr = ~te
+            if te.sum() < 2 or tr.sum() < 20 \
+                    or len(set(y[tr].tolist())) < 2:
+                print(f"    seed {sd} fold {fi}: too small or single-class, "
+                      f"skipped")
+                continue
+            pg = pca_fit(G[tr][vg_np[tr]], a.pca_dim, sd)
+            pl = pca_fit(L[tr][vl_np[tr]], a.pca_dim, sd)
+            Pg = torch.from_numpy(proj(pg, G)).float()
+            Pl = torch.from_numpy(proj(pl, L)).float()
+            for P in (Pg, Pl):
+                s_ = P[torch.from_numpy(tr)].reshape(-1,
+                                                     P.shape[-1]).std(0)
+                P /= s_.clamp(min=1e-6)
+            X, M = build_input(Pg, Pl, VG, VL)
+            model = RelationHead(X.shape[-1], a.hidden, a.dropout)
             opt = torch.optim.AdamW(model.parameters(), lr=a.lr,
                                     weight_decay=a.weight_decay)
-            c = np.bincount(y[tr], minlength=2) + 1
-            w = torch.tensor((c.sum() / c) / ((c.sum() / c).mean()),
-                             dtype=torch.float32, device=dev)
-            tr_t = torch.tensor(tr, dtype=torch.long, device=dev)
+            yt = torch.from_numpy(y).long()
+            trt = torch.from_numpy(tr)
+            cnt = np.bincount(y[tr].astype(int), minlength=2) + 1
+            w = torch.tensor((cnt.sum() / cnt) / (cnt.sum() / cnt).mean(),
+                             dtype=torch.float32)
             model.train()
             for _ in range(a.epochs):
                 opt.zero_grad()
-                loss = F.cross_entropy(model(X[tr_t], M[tr_t]), yt[tr_t],
-                                       weight=w)
+                loss = F.cross_entropy(model(X, M)[trt], yt[trt], weight=w)
                 loss.backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
                 opt.step()
             model.eval()
             with torch.no_grad():
-                te_t = torch.tensor(te, dtype=torch.long, device=dev)
-                p = torch.softmax(model(X[te_t], M[te_t]), -1)[:, 1]
-            oof[te] = p.cpu().numpy()
-        au = auroc(oof.tolist(), y.tolist())
+                oof[te] = F.softmax(model(X, M)[torch.from_numpy(te)],
+                                    -1)[:, 1].numpy()
+        ok = ~np.isnan(oof)
+        au = auroc(oof[ok].tolist(), y[ok].tolist())
         per_seed.append(au)
-        oof_all += oof
-        print(f"  seed {sd}: OOF AUROC {au:.3f}", flush=True)
+        oof_all += np.nan_to_num(oof)
+        print(f"  seed {sd}: OOF AUROC {au:.3f} on {int(ok.sum())} scored "
+              f"events", flush=True)
 
     oof_all /= len(seeds)
     au = auroc(oof_all.tolist(), y.tolist())
     lo, hi = grouped_boot(oof_all.tolist(), y.tolist(), groups, a.n_boot,
-                          a.seed)
+                          a.seed)  # groups = recording per event
     m = sum(per_seed) / len(per_seed)
     sd_ = (sum((x - m) ** 2 for x in per_seed) / max(len(per_seed) - 1, 1)) ** .5
     print(f"\n{'=' * 74}\nVIDEO PRIOR on this contrast\n{'=' * 74}")
@@ -183,9 +200,14 @@ def main():
           f"{hi:.3f}]")
     print(f"  random-scorer bar       {bar:.3f}"
           + ("   <- CLEARS IT" if au > bar else "   <- inside the noise"))
-    print(f"\n  naming features on the same events, for the table:")
-    print(f"    verb_min 0.559   verb_mean 0.570   obj_min 0.574   "
-          f"obj_mean 0.572")
+    print(f"\n  naming features on the same gold, for the table "
+          f"(46 YES / 17 NO, bar 0.666):")
+    print(f"    verb_min 0.558   verb_mean 0.566   obj_min 0.566   "
+          f"obj_mean 0.563   generic_any 0.500")
+    print(f"  Quoted from the round-2 run. If the counts printed above differ "
+          f"from 46/17, this\n  head is scoring a different subset than the "
+          f"naming table did and the two rows are\n  not in the same table "
+          f"after all.")
     print(f"\n  This head never reads a label, so it cannot verify one. If it "
           f"lands where the\n  naming features land, nothing in this feature "
           f"family separates the contrast. If\n  it lands clearly higher, the "
