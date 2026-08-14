@@ -150,3 +150,57 @@ No semantic verifier is trained on these features. More negatives will not fix
 a feature family this flat; a better naming model or a different signal might.
 Pool B stays unsampled — the gate it was waiting on (NO >= 15) opened, and the
 round it opened for came back negative.
+
+
+---
+
+# Video prior on the same contrast — clears the bar, and cannot be read
+
+Recomputed where it belongs: same YES/NO events, same grouped folds, same
+bootstrap, bar recomputed at this n. 62 events, 46 YES / 16 NO over 32
+recordings (feature loading drops one negative).
+
+    per-seed   0.807 0.777 0.811 0.886 0.800    mean 0.816 +/- 0.041
+    OOF AUROC  0.827      grouped 95% [0.379, 0.955]
+    bar        0.660      clears it
+
+And it cannot be read as claim_support. The pair structure says why, and it
+needs no permutation:
+
+    32 recordings, 1 carries both classes
+    within-recording YES/NO pairs: 6 of 736  (0.8%)
+    negatives concentrate: recording_000102 has 7 of 16, recording_000105 has 4
+
+AUROC averages over positive-negative pairs. With 99.2% of them straddling two
+recordings and 31 of 32 recordings single-class, the number cannot separate
+"predicts claim_support" from "predicts which recording this is" — and a
+video-only head reads recording identity off the scene for free. Two recordings
+hold 11 of the 16 negatives.
+
+The tiny seed variance against the enormous grouped interval says the same
+thing from the other side: the effect is carried by which recordings are in
+the sample, not by the model.
+
+It also means the 0.660 bar was the wrong null for this arm. `min_detectable`
+permutes labels assuming exchangeable events; these are clustered, and the
+clustering is precisely what a video-only head exploits. The naming features
+were read against the same too-low bar — they sit at 0.56, so nothing there
+changes, but the bar was not theirs to clear either.
+
+## Sem round 2, closed
+
+    naming agreement   0.558 - 0.566   inside the noise
+    video prior        0.827           uninterpretable on this gold structure
+
+Neither arm produces a usable signal, and the second fails in a way that more
+data of the same shape will not fix. A readable video-only number needs gold
+with BOTH classes inside the same recording; there is one such recording in 32.
+That is a hard constraint on any pool C, and it is not the same as
+representative sampling — a representative sample would also give one or two
+events per recording and would be equally unreadable.
+
+The generation-then-overlap approach is tested and failed: producing a name and
+comparing verbs and objects to the stored label does not verify claim support.
+The next thing worth trying is label-CONDITIONED representation — the video and
+the candidate label in the model together — which is a different mechanism, not
+a bigger version of this one.
