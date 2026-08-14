@@ -258,6 +258,7 @@ def main():
 
     # --------------------------------------------------------- per event
     rows, no_seg, no_pred, not_shown = [], [], [], 0
+    mis = set()
     for key, g in gold.items():
         m = emap.get(key)
         if not m:
@@ -271,6 +272,13 @@ def main():
             j = join.get(s["segment_uid"])
             pr = rec_pred.get(j["recording_id"]) if j else None
             if not j or not pr:
+                continue
+            # POSITIONAL JOIN NEEDS AN ALIGNED LIST. When naming returns 97
+            # names for 46 segments, pred_names[i] is not segment i and the
+            # join would attach a confidently wrong name. Only recordings
+            # where the counts match can be read positionally at all.
+            if pr.get("n_pred") != pr.get("n_gt"):
+                mis.add(j["recording_id"])
                 continue
             names = pr.get("pred_names") or []
             if j["position"] >= len(names):
@@ -298,6 +306,15 @@ def main():
     print(f"  no entry in the event map            {len(no_seg)}")
     print(f"  no prediction at any shown segment   {len(no_pred)}")
     print(f"  segments skipped as not shown        {not_shown}")
+    n_mis = sum(1 for r in preds.values()
+                if r.get("n_pred") != r.get("n_gt"))
+    print(f"  recordings dropped, n_pred != n_gt    {len(mis)} "
+          f"(of {n_mis}/{len(preds)} misaligned in the naming output)")
+    if n_mis > len(preds) * 0.5:
+        print(f"  !! more than half the naming output is misaligned. A "
+              f"positional join cannot be\n     trusted there, and the "
+              f"numbers below are from the aligned minority -- which is\n"
+              f"     a different, easier population (short recordings).")
     used = [r for r in rows if r["claim_support"] in ("yes", "no")]
     n_pos = sum(1 for r in used if r["claim_support"] == "yes")
     n_neg = len(used) - n_pos
