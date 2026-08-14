@@ -10,10 +10,13 @@ as "inside the noise" rather than as encouragement.
 
 WHAT THE ARMS ARE.
 
-    video prior       already measured elsewhere at 0.601 [0.495, 0.706] and
-                      quoted, not recomputed. It reads no label and therefore
-                      cannot verify one; it bounds how much of the status is
-                      predictable from the scene alone.
+    video prior       measured elsewhere at 0.601 [0.495, 0.706] and quoted
+                      for context ONLY. It reads no label and therefore cannot
+                      verify one -- but it was also computed on 186 events
+                      with a different target (`correct` against the rest), so
+                      it is not a threshold the naming features can be
+                      compared against. Making it one means recomputing it on
+                      these events and this label.
     naming support    the naming model's own name for the segment against the
                       STORED label. Both are text, but the prediction is
                       video-grounded, so the comparison IS a video-to-text
@@ -193,7 +196,11 @@ def main():
                     help="naming_targets_*_event_map.json")
     ap.add_argument("--n_boot", type=int, default=2000)
     ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--video_prior_reference", default="0.601 [0.495, 0.706]")
+    ap.add_argument("--video_prior_reference", default="0.601 [0.495, 0.706]",
+                    help="quoted for context only. It was measured on a "
+                         "different population and a different target, so it "
+                         "is NOT a threshold these numbers can be read "
+                         "against")
     ap.add_argument("--out")
     a = ap.parse_args()
 
@@ -353,11 +360,15 @@ def main():
         flag = "" if au is None or au <= mdc else "   > chance band"
         print(f"  {f:<14}{au:>8.3f}   [{lo:.3f}, {hi:.3f}]{flag}")
         res[f] = {"auroc": au, "grouped_95": [lo, hi]}
-    print(f"\n  video prior (quoted, not recomputed): "
-          f"{a.video_prior_reference}")
-    print(f"  It reads no label and cannot verify one. Any naming feature "
-          f"above it bought\n  something by reading the label; below it, "
-          f"nothing.")
+    print(f"\n  video prior, quoted: {a.video_prior_reference}")
+    print(f"  NOT COMPARABLE TO THE ROWS ABOVE, and I originally printed it "
+          f"as if it were.\n  That number was measured on 186 events with "
+          f"the target `correct` against everything\n  else; these are "
+          f"{n_pos + n_neg} events with `yes` against `no`. Different "
+          f"population, different\n  label, different n. A naming feature "
+          f"sitting above it has not been shown to buy\n  anything -- "
+          f"establishing that needs the prior recomputed on THESE events "
+          f"against\n  THIS label.")
 
     if a.out:
         json.dump({"coverage": {"with_features": len(rows),
