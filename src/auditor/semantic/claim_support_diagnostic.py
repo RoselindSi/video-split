@@ -143,6 +143,21 @@ def is_generic(name):
 FEATURES = ("verb_min", "verb_mean", "obj_min", "obj_mean", "generic_any")
 
 
+AKEY = re.compile(r"^(\d+)/t(\d+(?:\.\d+)?)$")
+
+
+def norm_key(k):
+    """`193/t264` and `193/t264.0` are the same event.
+
+    The generated sheet writes the candidate time with its trailing zero and
+    the returned gold drops it, so 18 of 41 enrichment events failed an exact
+    string lookup into the event map and were reported as "no entry" -- a
+    coverage gap that looked like missing annotation and was a format
+    difference. Matched on the parsed number instead."""
+    m = AKEY.match(str(k))
+    return (int(m.group(1)), round(float(m.group(2)), 1)) if m else str(k)
+
+
 def auroc(scores, labels):
     pos = [s for s, y in zip(scores, labels) if y]
     neg = [s for s, y in zip(scores, labels) if not y]
@@ -239,7 +254,8 @@ def main():
     join = json.load(open(a.join, encoding="utf-8"))
     emap = {}
     for p in a.event_map:
-        emap.update(json.load(open(p, encoding="utf-8")))
+        for k, v in json.load(open(p, encoding="utf-8")).items():
+            emap[norm_key(k)] = v
     print(f"{len(preds)} naming rows; {len(join)} joined segments; "
           f"{len(emap)} mapped events")
 
@@ -275,7 +291,7 @@ def main():
     rows, no_seg, no_pred, not_shown = [], [], [], 0
     mis, n_empty = set(), [0]
     for key, g in gold.items():
-        m = emap.get(key)
+        m = emap.get(norm_key(key))
         if not m:
             no_seg.append(key)
             continue
