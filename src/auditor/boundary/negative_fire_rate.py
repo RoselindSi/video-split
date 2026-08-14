@@ -114,7 +114,19 @@ def main():
     for k, v in sorted(arms.items()):
         print(f"  {k:<32}{v:>4}")
     if not have:
-        raise SystemExit("no overlap between the pool and the peaks")
+        pk_rec = sorted(peaks)
+        raise SystemExit(
+            f"no overlap between the pool and the peaks.\n"
+            f"  the pool wants:  {sorted({e['recording_id'] for e in evs})[:6]} ...\n"
+            f"  the peaks cover: {pk_rec[:6]} ... ({len(pk_rec)} recordings)\n"
+            f"  These pools are split-disjoint, not mis-keyed. This 69-event "
+            f"gold comes from\n  audit_188 (dev_original72 + test_batch2 -> "
+            f"the VAL and part2 splits), while the\n  timing36 and OOF peak "
+            f"dumps were both inferred on TRAIN recordings. The peaks\n  that "
+            f"cover this pool are the original error_audit dump -- and since "
+            f"the head was\n  trained on --train and those logits are the "
+            f"--save_logits val dump, they are\n  HELD OUT for it: pass "
+            f"--peaks held_out.")
 
     span = {}
     for rid in {e["recording_id"] for e in have}:
