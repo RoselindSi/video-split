@@ -1,0 +1,49 @@
+﻿audit_key,recording_id,candidate_time,task_timing_status,human_boundary_points_json,human_boundary_intervals_json,motion_phase_points_json,canonical_task_times_json,nearest_canonical_task_time,timing_precision,timing_note
+22/t466.8,recording_000022,466.8,point,[469.0],[],[],[469.0],469.0,exact_user,Task-level boundary at ~469s.
+30/t556,recording_000030,556.0,interval,[],"[[555.8, 557.0]]",[],[556.4],556.4,exact_user,Repeated reposition instance boundary / release gap.
+37/t156,recording_000037,156.0,point,[164.5],[],[],[164.5],164.5,exact_user,Next rinse instance begins after place-cup + idle.
+53/t486,recording_000053,486.0,terminal_end,[473.5],[],[],[473.5],473.5,exact_user,Tissue-taking action ends at ~473.5s; afterward no effective action.
+61/t590,recording_000061,590.0,no_task_boundary,[],[],[],[],,none,No effective action visible; no task-level boundary can be assigned.
+102/t164.5,recording_000102,164.5,point,[166.0],[],[],[166.0],166.0,exact_user,User-marked transition from large wiping strokes to small wiping strokes.
+102/t484,recording_000102,484.0,point,[497.0],[],[],[497.0],497.0,exact_user,User-marked transition from small wiping strokes to large wiping strokes.
+102/t95,recording_000102,95.0,point,[95.0],[],[],[95.0],95.0,exact_user,User-marked transition from large wiping strokes to small wiping strokes.
+110/t504,recording_000110,504.0,multiple_points,"[493.0, 506.0]",[],[],"[493.0, 506.0]",506.0,approximate_user,Approximate task transitions: squeegee -> hand-rinse/splash around 493s; back to squeegee around 506s.
+134/t130,recording_000134,130.0,point,[154.0],[],[],[154.0],154.0,exact_user,Boundary between repeated tissue fold/stack instances.
+134/t562.5,recording_000134,562.5,multiple_points,"[562.0, 574.0]",[],[],"[562.0, 574.0]",562.0,exact_user,Boundaries between three fold-and-stack tissue instances.
+176/t90.5,recording_000176,90.5,interval,[],"[[89.4, 91.4]]",[],[90.4],90.4,exact_user,Release/reset interval between repeated strainer instances.
+181/t73.5,recording_000181,73.5,multiple_points,"[72.0, 93.0]",[],[],"[72.0, 93.0]",72.0,exact_user,Repeated strainer-instance boundaries.
+181/t233,recording_000181,233.0,multiple_points,"[223.0, 231.0, 240.0]",[],[],"[223.0, 231.0, 240.0]",231.0,exact_user,Repeated strainer-instance boundaries.
+188/t456,recording_000188,456.0,multiple_points,"[455.0, 480.0]",[],[],"[455.0, 480.0]",455.0,approximate_user,Second boundary around 480s was given approximately.
+213/t230.5,recording_000213,230.5,multiple_points,"[230.0, 238.0, 250.8, 263.5]",[],[],"[230.0, 238.0, 250.8, 263.5]",230.0,exact_user,Repeated rinse-and-seat instance boundaries.
+213/t242.5,recording_000213,242.5,multiple_points,"[239.0, 251.0, 263.0]",[],[],"[239.0, 251.0, 263.0]",239.0,exact_user,Repeated rinse-and-seat instance boundaries.
+220/t137.8,recording_000220,137.8,motion_phase_only,[],[],"[136.3, 138.2, 141.8]",[],,phase_only,"User-marked flip-cycle phase changes. Frozen task-level ontology treats the continuous held sequence as one same_instance, so these are NOT task-level boundaries."
+220/t289.5,recording_000220,289.5,motion_phase_only,[],[],"[287.1, 293.0]",[],,phase_only,User-marked slipper flip/display phase changes; not task-level boundaries under frozen same-instance ontology.
+230/t404.5,recording_000230,404.5,multiple_points,"[379.0, 396.0, 418.0]",[],[],"[379.0, 396.0, 418.0]",396.0,exact_user,Unbox -> disassemble/store -> retrieve/reassemble -> repack task boundaries.
+230/t397,recording_000230,397.0,multiple_points,"[379.0, 396.0, 418.0]",[],[],"[379.0, 396.0, 418.0]",396.0,exact_user,Same manually identified task boundaries as the overlapping audit span.
+236/t572.8,recording_000236,572.8,multiple_points,"[571.0, 580.0]",[],[],"[571.0, 580.0]",571.0,exact_user,Task transitions in box disassembly/storage sequence.
+242/t352,recording_000242,352.0,point,[352.0],[],[],[352.0],352.0,exact_user,Boundary from sealing to subsequent box/item manipulation.
+250/t629.5,recording_000250,629.5,multiple_points,"[625.0, 630.0]",[],[],"[625.0, 630.0]",630.0,exact_user,Seal bottom -> place item -> seal top.
+265/t88,recording_000265,88.0,multiple_points,"[89.5, 103.0, 115.0]",[],[],"[89.5, 103.0, 115.0]",89.5,exact_user,Retrieve/assemble -> pack item -> seal/finish sequence boundaries.
+265/t298.5,recording_000265,298.5,point,[297.0],[],[],[297.0],297.0,exact_user,Real task boundary at ~297s; stored seg1->seg2 cut is unnecessary.
+272/t618,recording_000272,618.0,interval,[],"[[621.5, 624.0]]",[],[622.75],622.75,exact_user,Store box -> idle -> retrieve box transition interval.
+282/t544.5,recording_000282,544.5,multiple_points,"[543.0, 544.5]",[],[],"[543.0, 544.5]",544.5,exact_user,Seal/reassemble -> flip/open -> place item.
+327/t386.5,recording_000327,386.5,multiple_points,"[376.0, 387.0, 396.0]",[],[],"[376.0, 387.0, 396.0]",387.0,exact_user,Repeated pour/apply cycles separated by release.
+343/t547,recording_000343,547.0,multiple_points,"[541.0, 553.7, 563.0]",[],[],"[541.0, 553.7, 563.0]",541.0,exact_user,Repeated liquid-application cycle boundaries.
+343/t222.5,recording_000343,222.5,multiple_points,"[230.0, 236.0]",[],[],"[230.0, 236.0]",230.0,exact_user,Repeated liquid-application cycle boundaries.
+385/t577.5,recording_000385,577.5,multiple_points,"[572.0, 637.0]",[],[],"[572.0, 637.0]",572.0,exact_user,Remove/discard wrap -> cover bowl -> remove wrap again.
+388/t67.5,recording_000388,67.5,point,[94.8],[],[],[94.8],94.8,exact_user,Cover bowl -> remove/discard wrap.
+388/t601.8,recording_000388,601.8,point,[573.5],[],[],[573.5],573.5,exact_user,Task-level boundary at 573.5s; stored cuts around it are oversegmented/misaligned.
+391/t242.5,recording_000391,242.5,multiple_points,"[241.7, 252.5]",[],[],"[241.7, 252.5]",241.7,exact_user,Coil -> uncoil -> recoil instance boundaries.
+406/t490.3,recording_000406,490.3,onset_only,[473.0],[],[],[473.0],473.0,exact_user,Action onset around 473s; no later task-level boundary in the audited span.
+406/t29.5,recording_000406,29.5,onset_only,[17.0],[],[],[17.0],17.0,exact_user,Action onset around 17s; no later task-level boundary in the audited span.
+406/t455,recording_000406,455.0,multiple_points,"[438.0, 465.0, 515.0]",[],[],"[438.0, 465.0, 515.0]",465.0,exact_user,Cover -> remove/discard -> cover again -> remove again.
+406/t556.6,recording_000406,556.6,onset_only,[549.5],[],[],[549.5],549.5,exact_user,Cover-wrap action onset around 549.5s; later stored cuts are internal phases.
+419/t688.9,recording_000419,688.9,point,[690.0],[],[],[690.0],690.0,exact_user,User-marked task boundary/completion around discard at 690s.
+422/t381,recording_000422,381.0,onset_only,[321.9],[],[],[321.9],321.9,exact_user,Cover-wrap action onset at 321.9s; no later task-level boundary in the audited span.
+431/t427.5,recording_000431,427.5,point,[418.5],[],[],[418.5],418.5,exact_user,Discard old wrap -> start new wrapping task.
+431/t440.5,recording_000431,440.5,point,[419.0],[],[],[419.0],419.0,exact_user,Discard old wrap -> start new wrapping task.
+431/t178.2,recording_000431,178.2,multiple_points,"[178.0, 221.0]",[],[],"[178.0, 221.0]",178.0,exact_user,Discard old wrap -> cover bowl -> begin removing wrap.
+438/t224,recording_000438,224.0,point,[220.0],[],[],[220.0],220.0,exact_user,Cover bowl -> begin remove/crumple/discard task.
+438/t182,recording_000438,182.0,onset_only,[183.5],[],[],[183.5],183.5,exact_user,Action onset: retrieve/engage plastic-wrap roll.
+465/t247,recording_000465,247.0,interval,[],"[[247.0, 248.0]]",[],[247.5],247.5,exact_user,Store cable/idle -> retrieve cable and connect to phone.
+471/t485.4,recording_000471,485.4,no_task_boundary,[],[],[],[],,none,Continuous wiping of kettle; frozen ontology says no task-level action change.
