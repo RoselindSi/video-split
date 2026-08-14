@@ -49,7 +49,7 @@ from src.auditor.common.feature_loader import load_caches, build_events, stack
 from src.auditor.boundary.model import build_input
 from src.auditor.boundary.relation_experiment import RelationHead, pca_fit, proj
 from src.auditor.semantic.claim_support_diagnostic import (
-    auroc, grouped_boot, min_detectable)
+    auroc, grouped_boot, load_gold, min_detectable)
 from src.boundary.pairwise_verifier import stratified_grouped_folds
 
 TIME = re.compile(r"_t(\d+(?:\.\d+)?)$")
@@ -91,17 +91,6 @@ def print_within_between(y, groups, label="AUROC"):
                        key=lambda x: -x[1])[:4]
         print(f"    negatives concentrate in: {worst}")
     return within, total, mixed
-
-def load_gold(paths):
-    rows = []
-    for p in paths:
-        if p.lower().endswith(".csv"):
-            with open(p, newline="", encoding="utf-8-sig") as f:
-                rows += [r for r in csv.DictReader(f)
-                         if (r.get("claim_support") or "").strip()]
-        else:
-            rows += json.load(open(p, encoding="utf-8-sig"))["events"]
-    return rows
 
 
 def main():

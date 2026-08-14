@@ -195,6 +195,24 @@ def print_within_between(y, groups, label="AUROC"):
         print(f"    negatives concentrate in: {worst}")
     return within, total, mixed
 
+def load_gold(paths):
+    """The audited events from any mix of gold json and filled CSV.
+
+    Lives here rather than in video_prior_recompute because that module
+    imports torch, and a torch-free baseline pulling in torch for a CSV reader
+    is a dependency nobody would choose on purpose -- which is exactly what
+    happened the first time cosine_baseline imported it."""
+    rows = []
+    for p in paths:
+        if p.lower().endswith(".csv"):
+            with open(p, newline="", encoding="utf-8-sig") as f:
+                rows += [r for r in csv.DictReader(f)
+                         if (r.get("claim_support") or "").strip()]
+        else:
+            rows += json.load(open(p, encoding="utf-8-sig"))["events"]
+    return rows
+
+
 def auroc(scores, labels):
     pos = [s for s, y in zip(scores, labels) if y]
     neg = [s for s, y in zip(scores, labels) if not y]
