@@ -135,6 +135,14 @@ def is_generic(name):
 # ------------------------------------------------------------------------
 
 
+# FROZEN for the replication. Round 1 is recorded in
+# docs/semantic_claim_support_round1.md and round 2 must rerun this list
+# unchanged. obj_mean coming out strongest is NOT a reason to add
+# object-specific features: doing that turns the replication into a search on
+# the sample it exists to test.
+FEATURES = ("verb_min", "verb_mean", "obj_min", "obj_mean", "generic_any")
+
+
 def auroc(scores, labels):
     pos = [s for s, y in zip(scores, labels) if y]
     neg = [s for s, y in zip(scores, labels) if not y]
@@ -353,7 +361,7 @@ def main():
     res = {}
     y = [1 if r["claim_support"] == "yes" else 0 for r in used]
     grp = [r["recording_id"] for r in used]
-    for f in ("verb_min", "verb_mean", "obj_min", "obj_mean", "generic_any"):
+    for f in FEATURES:
         s = [r[f] for r in used]
         au = auroc(s, y)
         lo, hi = grouped_boot(s, y, grp, a.n_boot, a.seed)
