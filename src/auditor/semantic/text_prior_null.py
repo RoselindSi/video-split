@@ -248,6 +248,34 @@ def main():
               f"  ({100 * pred / obs if obs else float('nan'):.0f}% of it)")
         print(f"    the rest, if any, is something other than word count.")
 
+    # WHAT THE BIAS IS WORTH, on the real scores rather than on the projection
+    # onto the mean direction. The projection is one component of a specific
+    # video's cosine and the rest of that cosine could in principle cancel it,
+    # so the deployment quantity is fitted on `V[seg] . T` itself -- the number
+    # an auditor would actually threshold.
+    #
+    # AND IT IS PUT IN THE SAME UNITS AS THE ERRORS. A slope in cosine per word
+    # is unreadable on its own; a slope divided by a kind's mean margin says
+    # how many words of extra length cancel that kind of error, which is a
+    # quantity a threshold has to survive.
+    seg_row = np.array([row_of[str(s)] for s in z["text_seg"]])
+    s_true = np.einsum("ij,ij->i", V[seg_row], T)
+    r2 = corr(tl, s_true)
+    sl2 = float(np.polyfit(tl, s_true, 1)[0]) if tl.std() > 1e-12 else float("nan")
+    print(f"\n  the same slope on the REAL scores, which is what a threshold "
+          f"sees:")
+    print(f"    corr(words, score) = {r2:+.3f}   slope = {sl2:+.5f} cosine "
+          f"per word\n")
+    print(f"  {'kind':<17}{'mean margin':>13}{'= words of length':>19}")
+    for k in order:
+        sel = kinds == k
+        m = float(true_m[sel].mean())
+        print(f"  {k:<17}{m:>13.4f}{(m / sl2 if sl2 else float('nan')):>19.1f}")
+    print(f"\n  A label that many words longer scores as well as a correct "
+          f"label of that kind.\n  Where the figure is near 1, one extra word "
+          f"buys back the whole error, and a\n  scorer thresholded on cosine "
+          f"ranks by length before it ranks by truth.")
+
     print(f"\n  null   = the same pair, the same perturbation, a video from "
           f"another recording.\n"
           f"  excess = how much of the accuracy needed the right video.\n"
