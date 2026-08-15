@@ -43,7 +43,7 @@ Usage:
         --model /workspace/tr1/ckpts/Qwen3-VL-Reranker-2B \
         --benchmark data/gold/paired_semantic_benchmark.jsonl \
         --data /workspace/tr1/results/auditor/naming_run.json \
-        --score_mode yes_no --n_pairings 4 \
+        --score_mode sentence_transformers --n_pairings 4 \
         --out /workspace/tr1/results/auditor/reranker_paired_scores.jsonl
 """
 from __future__ import annotations
@@ -159,7 +159,8 @@ def answer_ids(proc):
     return out
 
 
-def score_batch(model, proc, mode, frames, texts, total_pixels, ids):
+def score_batch(model, proc, mode, frames, texts, total_pixels, ids,
+                meta=None, pair_order="video_text", prompt_name=None):
     """The one place that touches the model. Returns one score per text.
 
     THE CALL IS THE ONE THIS REPO ALREADY RUNS. eval_naming_decoupled drives
@@ -169,9 +170,31 @@ def score_batch(model, proc, mode, frames, texts, total_pixels, ids):
     memory is how this project bought four API errors in the cosine file, so
     this mirrors the working one rather than improving on it."""
     import torch
-    from qwen_vl_utils import process_vision_info
     if mode == "sentence_transformers":
-        return list(model.predict([({"video": frames}, t) for t in texts]))
+        # READ OFF predict's DOCSTRING AND PairInput, not remembered. A pair is
+        # a two-element tuple whose sides may each be a modality dict, so a
+        # window is handed over as {"video": [frame paths]}; **kwargs is
+        # forwarded to preprocess and forward and names processing_kwargs
+        # explicitly, with the same structure the embedding arm already uses.
+        #
+        # do_sample_frames=False because the frames ARE the sample -- the
+        # processor otherwise tries to sample from a list of images and
+        # refuses. video_metadata because Qwen3VL writes frame TIMESTAMPS into
+        # the prompt from fps, and with pre-sampled frames it cannot infer one
+        # and defaults to 24, which flattens a 3s and an 88s segment onto the
+        # same apparent duration with the distortion scaling with length.
+        vid = {"do_sample_frames": False}
+        if meta:
+            vid["video_metadata"] = [meta] * len(texts)
+        pairs = [(({"video": frames}, t) if pair_order == "video_text"
+                  else (t, {"video": frames})) for t in texts]
+        kw = {} if prompt_name is None else {"prompt_name": prompt_name}
+        out = model.predict(pairs, batch_size=len(pairs),
+                            show_progress_bar=False,
+                            processing_kwargs={"video": vid}, **kw)
+        return [float(x) for x in np.asarray(out).reshape(-1)]
+
+    from qwen_vl_utils import process_vision_info
 
     prompts, vids_all, meta = [], [], []
     for t in texts:
@@ -234,6 +257,24 @@ def main():
     ap.add_argument("--total_pixels", type=int, default=3584 * 28 * 28,
                     help="same cap eval_naming_decoupled uses")
     ap.add_argument("--device_map", default="cuda")
+    ap.add_argument("--pair_order", default="video_text",
+                    choices=["video_text", "text_video"],
+                    help="which side is the query. The checkpoint's default "
+                         "prompt is \"Retrieve text relevant to the user's "
+                         "query.\", which reads as query=video and "
+                         "document=caption, but the docstring does not say "
+                         "which element the prompt attaches to -- so this is "
+                         "a flag rather than a decision compiled in from a "
+                         "sentence in a config")
+    ap.add_argument("--prompt_name", default=None,
+                    help="None uses the checkpoint's default_prompt_name, "
+                         "'query'. A different prompt gives a different "
+                         "number")
+    ap.add_argument("--no_metadata", action="store_true",
+                    help="omit video_metadata, letting the processor assume "
+                         "fps=24 for every segment. Kept only so the two can "
+                         "be compared rather than one silently replacing the "
+                         "other")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--dry_run", action="store_true")
     ap.add_argument("--out", required=False)
@@ -325,11 +366,22 @@ def main():
                                       sample_times(vp["start"], vp["end"],
                                                    a.n_frames),
                                       a.frame_dir, f"{j}_{vu}".replace("/", "_"))
+                dur = max(float(vp["end"]) - float(vp["start"]), 1e-3)
+                nf = len(frames)
+                # THE SAME METADATA SHAPE THE EMBEDDING ARM NEEDED, including
+                # frames_indices, which is required and must be an array --
+                # that was the fourth API error on the cosine side and there is
+                # no reason to rediscover it here.
+                meta = (None if a.no_metadata else
+                        {"fps": (nf - 1) / dur if nf > 1 else 1.0,
+                         "total_num_frames": nf, "duration": dur,
+                         "frames_indices": np.arange(nf)})
                 sc = []
                 for b in range(0, len(tl), a.batch):
                     sc += list(score_batch(model, tok, a.score_mode, frames,
                                            tl[b:b + a.batch],
-                                           a.total_pixels, ids))
+                                           a.total_pixels, ids, meta,
+                                           a.pair_order, a.prompt_name))
                 for q in frames:
                     os.remove(q)
             for t, s in zip(tl, sc):
