@@ -230,3 +230,38 @@ axes is not what capacity removes.
 0.902. The next reference point is Reranker-8B on the whole benchmark, and any
 future model is measured against that rather than against the 2B table in
 `semantic_baseline_freeze.md` §1.
+
+### 8B on the expanded reorder arms — scale solves the span arm too
+
+Both models at 8 frames, same 936 pairs, same four pairings. Only the model
+changes.
+
+| arm | n | 2B true | 8B true | 2B excess | 8B excess | null 2B → 8B |
+|---|---:|---:|---:|---|---|---|
+| `reorder_label` | 495 | 0.820 | 0.883 | +0.261 [+0.206, +0.314] | +0.400 [+0.341, +0.457] | 0.565 → 0.483 |
+| `reorder_span` | 385 | 0.561 | **0.730** | +0.061 [−0.004, +0.130] | **+0.227 [+0.160, +0.291]** | 0.500 → 0.503 |
+
+`reorder_span` was the pre-registered decider: the only arm whose order comes
+from segment timestamps rather than an annotator's phrase, and the only one
+still touching zero at 2B. Its null did not move — 0.500 to 0.503 — so all
++0.169 of the accuracy gain is `true`, and the interval leaves zero.
+
+**Decision: the custom verifier is paused.** The residual failure that would
+have motivated it is gone. Four experiments now say the same thing — more
+frames, sub-window selection, and a new architecture bought nothing that
+swapping in a 4× larger off-the-shelf checkpoint did not.
+
+**One thing that must be measured before calling the remainder a research
+problem.** At 0.730, `reorder_span` is the lowest row anywhere in this project's
+8B tables; everything else sits between 0.862 and 1.000. But this arm's ground
+truth IS the segment boundaries — `A then B` is true only if A and B were
+bounded correctly — and this project measured 34.7% of boundaries in a 72-event
+audit as annotation error. A wrong boundary makes the "correct" text false and
+scores a right answer as wrong.
+
+So 0.730 may already be near the ceiling this annotation permits rather than
+near the model's. Separating the two is cheap: rescore the span arm restricted
+to segments whose boundaries were human-confirmed in the frozen 72-event Gold
+v2. Until that runs, "cross-segment temporal grounding is the residual research
+problem" is not supported — it may be the third time this project's ceiling has
+turned out to be the annotation.
