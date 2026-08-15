@@ -249,6 +249,10 @@ def main():
                     default="yes_no",
                     help="chosen from --inspect output, not from memory")
     ap.add_argument("--n_frames", type=int, default=8)
+    ap.add_argument("--kinds",
+                    help="comma-separated kinds to keep. Every setting in a "
+                         "sweep must score the same filtered file, baseline "
+                         "included -- batch composition alone moves accuracy")
     ap.add_argument("--frame_dir", default="/tmp/reranker_frames")
     ap.add_argument("--n_pairings", type=int, default=4,
                     help="wrong-video pairings. Each one rescores every entry, "
@@ -289,6 +293,22 @@ def main():
 
     bench = [json.loads(l) for l in open(a.benchmark, encoding="utf-8")
              if l.strip()]
+    if a.kinds:
+        # A FRAME-COUNT SWEEP CANNOT AFFORD THE WHOLE BENCHMARK, and scoring a
+        # subset is not free: batch composition changes with the number of
+        # texts per segment, and that alone moved accuracy 0.006-0.018 and
+        # halved a tie rate between two earlier runs. So every frame setting
+        # in a sweep must score the SAME filtered file, including the baseline
+        # setting -- comparing a filtered 16-frame run against the unfiltered
+        # 8-frame table would confound frames with batching.
+        want = {k.strip() for k in a.kinds.split(",") if k.strip()}
+        missing = want - {r["kind"] for r in bench}
+        if missing:
+            raise SystemExit(f"--kinds names {sorted(missing)}, which this "
+                             f"benchmark does not contain; it has "
+                             f"{sorted({r['kind'] for r in bench})}")
+        bench = [r for r in bench if r["kind"] in want]
+        print(f"  --kinds {sorted(want)}: {len(bench)} pairs kept")
     segs, texts = {}, defaultdict(set)
     for p in bench:
         segs[p["segment_uid"]] = p
