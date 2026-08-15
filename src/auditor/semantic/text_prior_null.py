@@ -214,10 +214,39 @@ def main():
         print(f"  {k:<17}{proj[sel].mean():>+11.4f}{dlen[sel].mean():>+10.2f}"
               f"{corr(proj[sel], dlen[sel]):>8.3f}")
     print(f"\n  mean len = words in the original minus words in the "
-          f"counterfactual.\n  A kind with a positive projection and a "
-          f"positive length gap is winning its null\n  on length, not on "
-          f"meaning -- and the correlation says whether that holds pair by "
-          f"pair\n  or only on average.")
+          f"counterfactual.\n  THE `ALL` CORRELATION IS COMPOSITION, NOT A "
+          f"RELATION. Four kinds swap a word or\n  reorder clauses and have "
+          f"exactly zero length variance, so pooling them with the one\n  "
+          f"kind that has any measures which kind a pair belongs to. Read the "
+          f"per-kind rows.")
+
+    # THE PAIR-LEVEL CORRELATION IS UNDERPOWERED AND THE POOLED ONE IS
+    # CONFOUNDED, so neither settles length. Test it where the power is: each
+    # of the 409 TEXTS has a projection onto the same direction and a word
+    # count, and the labels vary in length on their own. n goes from 29 to
+    # 409 and the length variance is the corpus's rather than one
+    # perturbation's.
+    tp = T @ vbar
+    tl = np.array([ntok[str(s)] for s in z["text_str"]], float)
+    r = corr(tl, tp)
+    slope = float(np.polyfit(tl, tp, 1)[0]) if tl.std() > 1e-12 else float("nan")
+    print(f"\n  length, tested at n={len(tp)} texts instead of n=29 pairs:")
+    print(f"    words {tl.min():.0f}-{tl.max():.0f}, mean {tl.mean():.1f}")
+    print(f"    corr(words, projection) = {r:+.3f}   slope = "
+          f"{slope:+.5f} per word")
+    dc = [k for k in order if k == "drop_claim"]
+    if dc and not np.isnan(slope):
+        sel = kinds == "drop_claim"
+        pred = slope * dlen[sel].mean()
+        obs = proj[sel].mean()
+        # A PREDICTION, not a restatement. If length is the mechanism, the
+        # slope fitted on all 409 texts times drop_claim's 2.9-word gap has to
+        # land on drop_claim's observed projection. A correlation can be
+        # positive and still predict a tenth of the effect.
+        print(f"\n    length predicts drop_claim's prior as {pred:+.4f}; "
+              f"observed {obs:+.4f}"
+              f"  ({100 * pred / obs if obs else float('nan'):.0f}% of it)")
+        print(f"    the rest, if any, is something other than word count.")
 
     print(f"\n  null   = the same pair, the same perturbation, a video from "
           f"another recording.\n"
