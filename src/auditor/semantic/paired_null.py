@@ -104,7 +104,7 @@ def boot_excess(rec, kind_sel, t_m, n_m, n_boot, rng):
         n = np.nanmean(wins(np.concatenate([n_m[j][sel]
                                             for j in range(len(n_m))])))
         out.append(t - n)
-    return np.array(out)
+    return np.array(out) if out else np.array([np.nan])
 
 
 def main():
@@ -192,10 +192,20 @@ def main():
     print(f"\n  {'kind':<17}{'n':>5}{'true':>8}{'null':>8}{'excess':>9}"
           f"{'excess 95%':>19}{'margin':>9}{'|margin|':>10}{'sep':>7}"
           f"{'ties':>7}")
-    res = {}
+    res, skipped = {}, []
     for k in order + ["ALL"]:
         sel = np.ones(len(bench), bool) if k == "ALL" else (kinds == k)
         ok = sel & ~np.isnan(t_m)
+        # A KIND WITH NOTHING SCORED IS NOT A KIND WITH AN ACCURACY OF NaN. A
+        # frame-count sweep scores a --kinds subset against the whole
+        # benchmark file, so the kinds it left out arrive here with zero
+        # scorable pairs; the old code took a mean of an empty slice, fed an
+        # empty bootstrap to percentile and died three warnings later. Skipped
+        # and named, so a kind that vanished by accident is as visible as one
+        # left out on purpose.
+        if not ok.any():
+            skipped.append(k)
+            continue
         t = float(np.mean(wins(t_m[ok])))
         pooled = np.concatenate([m[ok] for m in n_m])
         n = float(np.nanmean(wins(pooled)))
@@ -212,6 +222,9 @@ def main():
                   "mean_margin": mm, "mean_abs_margin": am,
                   "separation": (am / ref if ref else None),
                   "tie_rate": tie}
+
+    if skipped:
+        print(f"\n  no scored pairs, skipped: {', '.join(skipped)}")
 
     print(f"\n  null pools {len(nulls)} pairings, so its precision comes from "
           f"the number of PAIRS,\n  which is what makes a handful of forward-"
