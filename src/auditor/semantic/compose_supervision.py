@@ -113,14 +113,23 @@ def claims_of(dec, offset):
 
 
 def verb_pool(claims):
+    """Cluster membership only. The -1 bucket is deliberately not built.
+
+    Keying unclustered verbs under -1 makes them look like a cluster, and a
+    draw from it produces an arbitrary substitution wearing a
+    meaning-preserving label."""
     by_cluster = defaultdict(set)
     allv = Counter()
+    unclustered = set()
     for d in claims.values():
         for a in d["actions"]:
             v = a["verb"]
             allv[v] += 1
-            by_cluster[CLUSTER_OF.get(v, -1)].add(v)
-    return allv, by_cluster
+            if CLUSTER_OF.get(v) is None:
+                unclustered.add(v)
+            else:
+                by_cluster[CLUSTER_OF[v]].add(v)
+    return allv, by_cluster, unclustered
 
 
 def main():
@@ -145,9 +154,12 @@ def main():
     a = ap.parse_args()
 
     claims = json.load(open(a.claims, encoding="utf-8"))["claims"]
-    allv, by_cluster = verb_pool(claims)
+    allv, by_cluster, unclustered = verb_pool(claims)
     print(f"{len(claims)} frozen label decompositions; {len(allv)} distinct "
           f"verbs over {len(by_cluster)} clusters")
+    print(f"  {len(unclustered)} verbs belong to no cluster and can carry "
+          f"neither a paraphrase nor a replacement: "
+          f"{sorted(unclustered)[:12]}")
     excl = set() if a.include_pool_a else excluded_recordings(a.exclude)
     if a.exclude and not a.include_pool_a and not excl:
         raise SystemExit("--exclude matched no recordings; that would build "
@@ -195,6 +207,7 @@ def main():
 
     rng = random.Random(a.seed)
     out, kinds = [], Counter()
+    unlicensed = Counter()
     for rid, vid, w in spans:
         ents, acts, temp = [], [], []
         for k, s in enumerate(w):
@@ -238,16 +251,33 @@ def main():
 
         tgt = rng.randrange(len(acts))
         v = acts[tgt]["verb"]
+        # AN UNCLUSTERED VERB LICENSES NEITHER SIDE. `CLUSTER_OF.get(v, -1)`
+        # returned -1 for every verb outside the 16 clusters, and
+        # `by_cluster[-1]` is one bucket holding all of them -- so a
+        # "same-cluster paraphrase" for such a verb drew an arbitrary
+        # unrelated verb and labelled it meaning-preserving. The audit found
+        # 79 of 338 paraphrases, 23%, were cross-cluster and marked YES.
+        # Training on those teaches that `wash` and `fold` are the same
+        # action, which is precisely the separation this supervision exists
+        # to increase.
+        #
+        # The cluster IS the semantic equivalence relation here. A verb
+        # outside every cluster has no known semantics, so neither a positive
+        # nor a negative is licensed for it, and both are skipped and counted
+        # rather than approximated.
+        ci = CLUSTER_OF.get(v)
+        if ci is None:
+            unlicensed["source verb is in no cluster"] += 1
+            continue
         far = [x for x in allv
-               if CLUSTER_OF.get(x, -2) != CLUSTER_OF.get(v, -1) and x != v]
+               if CLUSTER_OF.get(x, -2) != ci and x != v]
         if far:
             sub = rng.choice(far)
             emit("replace_verb", "no",
                  [dict(x, verb=sub) if i == tgt else x
                   for i, x in enumerate(acts)], temp,
                  f"{v} -> {sub}, different cluster")
-        near = [x for x in by_cluster.get(CLUSTER_OF.get(v, -1), ())
-                if x != v]
+        near = [x for x in by_cluster.get(ci, ()) if x != v]
         if near:
             sub = rng.choice(near)
             emit("paraphrase", "yes",
@@ -255,6 +285,8 @@ def main():
                   for i, x in enumerate(acts)], temp,
                  f"{v} -> {sub}, same cluster: meaning preserved")
 
+    for k, v in unlicensed.most_common():
+        print(f"\n  no verb pair emitted, {k}: {v} spans")
     print(f"\n{len(out)} constructed examples:")
     print(f"  {'variant':<16}{'target':<10}{'n':>6}")
     for (k, t), n in kinds.most_common():

@@ -78,6 +78,12 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--supervision", required=True)
     ap.add_argument("--claims", default="data/gold/atomic_claims_frozen.json")
+    ap.add_argument("--benchmark",
+                    help="the frozen benchmark. Reports how many of its "
+                         "wrong_verb pairs have a source verb this "
+                         "supervision covers on both sides -- adequate "
+                         "coverage in the abstract cannot move an arm it "
+                         "does not reach")
     a = ap.parse_args()
 
     claims = json.load(open(a.claims, encoding="utf-8"))["claims"]
@@ -181,6 +187,31 @@ def main():
     shared = sum(1 for v in seg_use.values() if v > 1)
     print(f"    {shared} of {len(seg_use)} segment endpoints are shared by two "
           f"spans, so adjacent spans overlap")
+
+    # DOES ANY OF THIS REACH THE EVALUATION? The benchmark's wrong_verb pairs
+    # replace a source verb drawn from the audited segments, and the training
+    # spans deliberately exclude those recordings. Verbs can still recur across
+    # recordings -- but if they largely do not, supervision that looks adequate
+    # in the abstract cannot move the arm it is meant to move.
+    if a.benchmark:
+        bench = [json.loads(l) for l in open(a.benchmark, encoding="utf-8")
+                 if l.strip()]
+        wv = [r for r in bench if r["kind"] == "wrong_verb"]
+        src = Counter()
+        for r in wv:
+            o = set(str(r["original"]).lower().split())
+            c = set(str(r["counterfactual"]).lower().split())
+            gone = [w for w in o - c if w in vcount]
+            if len(gone) == 1:
+                src[gone[0]] += 1
+        cov = {v: n for v, n in src.items() if v in pos and v in neg}
+        print(f"\n  reach into the evaluation ({len(wv)} wrong_verb pairs)")
+        print(f"    {len(src)} distinct source verbs recovered")
+        print(f"    {len(cov)} of them have two-sided supervision, covering "
+              f"{sum(cov.values())} of {sum(src.values())} pairs "
+              f"({100 * sum(cov.values()) / max(sum(src.values()), 1):.0f}%)")
+        miss = sorted(set(src) - set(cov), key=lambda v: -src[v])[:10]
+        print(f"    most frequent uncovered: {miss}")
 
     print(f"\n  which branch this supports")
     print(f"    A  verb-conditioned contrastive verifier   needs most verbs "
