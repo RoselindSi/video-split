@@ -147,7 +147,13 @@ def build(label, dec, vocab, rng):
     if quals:
         k, val = rng.choice(quals)
         head = str(val).split()[-1]
-        other = [x for x in vocab["qualifiers"].get(k, ()) if x != head]
+        # sorted() BECAUSE THE POOL IS A SET. Iterating a set of strings
+        # depends on PYTHONHASHSEED, so this draw was never reproducible:
+        # rerunning the identical code in a new process picked different
+        # substitutes, and 41 of 56 wrong_qualifier pairs moved between two
+        # runs that changed nothing. verbs and objects were already sorted;
+        # this pool was not, which is why only this kind drifted.
+        other = sorted(x for x in vocab["qualifiers"].get(k, ()) if x != head)
         if other:
             t = swap_word(label, head, rng.choice(other))
             if t:
@@ -246,6 +252,11 @@ def main():
     ap.add_argument("--benchmark",
                     default="data/gold/paired_semantic_benchmark.jsonl")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--allow_changed", action="append", default=[],
+                    help="a kind permitted to differ from --expect_unchanged. "
+                         "Naming it is how a deliberate break with the "
+                         "published tables gets recorded in the command "
+                         "rather than discovered later")
     ap.add_argument("--expect_unchanged",
                     help="a previously emitted benchmark. Every pair of every "
                          "kind it contains must come out identical, or this "
@@ -335,17 +346,30 @@ def main():
                          r["counterfactual"])
         o, n_ = {key(r) for r in old}, {key(r) for r in out
                                         if r["kind"] in okinds}
-        if o != n_:
+        # PER KIND, because "41 pairs moved" does not say whether one kind
+        # drifted or all of them did, and those need different responses. A
+        # single kind moving points at that kind's construction; every kind
+        # moving points at the segment set or the seed.
+        moved = Counter(k for _u, k, _a, _b in (o - n_) | (n_ - o))
+        for k in sorted(moved):
+            print(f"  changed, {k}: {moved[k]}")
+        bad = {k: v for k, v in moved.items() if k not in set(a.allow_changed)}
+        if bad:
             for x in sorted(o - n_)[:5]:
                 print(f"  GONE    {x}")
             for x in sorted(n_ - o)[:5]:
                 print(f"  NEW     {x}")
-            raise SystemExit(f"{len(o - n_)} pairs disappeared and "
-                             f"{len(n_ - o)} appeared among the kinds that "
-                             f"already existed. The published cosine and "
-                             f"reranker tables were computed on those pairs.")
-        print(f"  verified: all {len(o)} pairs of the pre-existing kinds are "
-              f"unchanged")
+            raise SystemExit(
+                f"{dict(bad)} moved and were not listed in --allow_changed. "
+                f"The published cosine and reranker tables were computed on "
+                f"those pairs; naming the kind on the command line is how a "
+                f"decision to break that gets recorded.")
+        if moved:
+            print(f"  {sum(moved.values())} pairs moved in kinds explicitly "
+                  f"allowed to move; every other kind is unchanged")
+        else:
+            print(f"  verified: all {len(o)} pairs of the pre-existing kinds "
+                  f"are unchanged")
 
     print(f"\n{len(out)} pairs over {len({r['segment_uid'] for r in out})} "
           f"segments, {len({r['recording_id'] for r in out})} recordings")
