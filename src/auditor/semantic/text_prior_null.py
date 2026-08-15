@@ -184,6 +184,41 @@ def main():
         print(f"  {k:<17}{int(sel.sum()):>5}{t:>8.3f}{d.mean():>8.3f}"
               f"{f'[{lo:.3f}, {hi:.3f}]':>17}{t - d.mean():>+9.3f}{pv:>8.3f}")
 
+    # WHAT THE PRIOR IS MADE OF, measured rather than explained. Averaged over
+    # videos the null margin is `diff . mean(V)`: the text prior is a
+    # projection onto ONE direction, the mean video vector, so it has a size
+    # and a sign per pair and both can be regressed on something. Length is
+    # the first candidate because it is the one thing the kinds differ in --
+    # dropping a clause shortens the text, swapping a word does not -- and a
+    # longer sentence has more content words to overlap with any scene at all.
+    vbar = V.mean(0)
+    vbar = vbar / (np.linalg.norm(vbar) + 1e-12)
+    proj = diff @ vbar
+    ntok = {}
+    for p in bench:
+        for t in (p["original"], p["counterfactual"]):
+            ntok[t] = len(str(t).split())
+    dlen = np.array([ntok[str(z["text_str"][o])] - ntok[str(z["text_str"][c])]
+                     for _s, o, c, _k in pairs], float)
+
+    def corr(x, y):
+        if x.std() < 1e-12 or y.std() < 1e-12:
+            return float("nan")
+        return float(np.corrcoef(x, y)[0, 1])
+
+    print(f"\n  the prior is one direction -- `diff . mean(video)`. Its size "
+          f"and sign per kind,\n  against the one thing the kinds differ in:\n")
+    print(f"  {'kind':<17}{'mean proj':>11}{'mean len':>10}{'corr':>8}")
+    for k in order + ["ALL"]:
+        sel = np.ones(len(pairs), bool) if k == "ALL" else (kinds == k)
+        print(f"  {k:<17}{proj[sel].mean():>+11.4f}{dlen[sel].mean():>+10.2f}"
+              f"{corr(proj[sel], dlen[sel]):>8.3f}")
+    print(f"\n  mean len = words in the original minus words in the "
+          f"counterfactual.\n  A kind with a positive projection and a "
+          f"positive length gap is winning its null\n  on length, not on "
+          f"meaning -- and the correlation says whether that holds pair by "
+          f"pair\n  or only on average.")
+
     print(f"\n  null   = the same pair, the same perturbation, a video from "
           f"another recording.\n"
           f"  excess = how much of the accuracy needed the right video.\n"
