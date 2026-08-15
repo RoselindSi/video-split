@@ -192,3 +192,41 @@ run and no new code.
 - **neither lifts** → the ceiling is in the frozen decompositions and the
   annotation, which is where this project's other lines have already landed
   twice.
+
+### 8B result — the verb axis was capacity-limited
+
+Reranker-8B, 32 frames, same 193 pairs, same four pairings.
+
+| | 2B @32 | 8B @32 |
+|---|---:|---:|
+| `wrong_verb` true | 0.701 | **0.902** |
+| `wrong_verb` excess | +0.308 | +0.484 [+0.409, +0.560] |
+| `wrong_verb` null | 0.393 | 0.418 |
+| `wrong_verb` sep | 0.46 | 0.51 |
+| `wrong_object` true | 0.911 | **1.000** |
+| `wrong_object` excess | +0.537 | +0.603 [+0.512, +0.698] |
+
+Verb error falls from 0.299 to 0.098, a two-thirds reduction, from an
+off-the-shelf checkpoint with no training, no new data and no new code. **The
+guard passes**: the null went UP, 0.393 → 0.418, so every point of the excess
+gain is `true` rising — the pattern the frame sweep failed to produce and the
+reason the guard was written.
+
+**Two things this does not say.**
+
+`wrong_object` is at 1.000 over 101 pairs, so that control is now saturated:
+it can only fall, and it can no longer resolve any improvement. "8B lifts verb
+more than object" is confounded by that ceiling. What is supported is weaker
+and still decisive: **both axes were capacity-limited and object hit the top
+first.**
+
+`sep` moved only 0.46 → 0.51 while \|margin\| grew roughly fourfold, 0.188 →
+0.702. The model did not learn verbs specifically; it became far more decisive
+overall and the verb-to-object difficulty ratio survived almost unchanged. More
+scale should keep raising verb accuracy, but the structural gap between the two
+axes is not what capacity removes.
+
+**Consequence.** Nothing in this document needs to be built to reach verb
+0.902. The next reference point is Reranker-8B on the whole benchmark, and any
+future model is measured against that rather than against the 2B table in
+`semantic_baseline_freeze.md` §1.
