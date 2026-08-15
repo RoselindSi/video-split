@@ -117,6 +117,12 @@ def main():
     ap.add_argument("--label", default=None,
                     help="what produced these scores, printed on the table so "
                          "two arms cannot be mixed up in a notebook")
+    ap.add_argument("--reference_kind", default="wrong_object",
+                    help="the kind separation is expressed relative to. A "
+                         "mean |margin| in raw units cannot be compared across "
+                         "architectures -- a cosine and a logit are different "
+                         "scales -- but its ratio to a kind the same model "
+                         "handles well can be")
     ap.add_argument("--n_boot", type=int, default=2000)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out")
@@ -170,8 +176,22 @@ def main():
     order = sorted(set(kinds.tolist()), key=lambda k: -int((kinds == k).sum()))
     rng = np.random.default_rng(a.seed)
 
+    # THE REFERENCE SCALE, computed before the loop so every row divides by
+    # the same number. A tie rate cannot serve this purpose: ties are exact
+    # equalities, so they are an artifact of how coarsely a model quantises
+    # its output -- the reranker's drop_claim tie rate halved, 0.21 to 0.10,
+    # on pairs that did not change, purely because adding two kinds altered
+    # the batch composition and therefore the padding. A model with float
+    # outputs would score ~0 ties without any additional competence.
+    rsel = (kinds == a.reference_kind) & ~np.isnan(t_m)
+    ref = float(np.nanmean(np.abs(t_m[rsel]))) if rsel.any() else 0.0
+    if not ref:
+        print(f"  !! reference kind {a.reference_kind!r} is absent; "
+              f"separation cannot be computed")
+
     print(f"\n  {'kind':<17}{'n':>5}{'true':>8}{'null':>8}{'excess':>9}"
-          f"{'excess 95%':>19}{'margin':>9}{'ties':>7}")
+          f"{'excess 95%':>19}{'margin':>9}{'|margin|':>10}{'sep':>7}"
+          f"{'ties':>7}")
     res = {}
     for k in order + ["ALL"]:
         sel = np.ones(len(bench), bool) if k == "ALL" else (kinds == k)
@@ -183,17 +203,25 @@ def main():
         d = boot_excess(rec, ok, t_m, n_m, a.n_boot, rng)
         lo, hi = np.percentile(d, [2.5, 97.5])
         mm = float(np.nanmean(t_m[ok]))
+        am = float(np.nanmean(np.abs(t_m[ok])))
         print(f"  {k:<17}{int(ok.sum()):>5}{t:>8.3f}{n:>8.3f}{t - n:>+9.3f}"
-              f"{f'[{lo:+.3f}, {hi:+.3f}]':>19}{mm:>9.4f}{tie:>7.2f}")
+              f"{f'[{lo:+.3f}, {hi:+.3f}]':>19}{mm:>9.4f}{am:>10.4f}"
+              f"{am / ref if ref else float('nan'):>7.2f}{tie:>7.2f}")
         res[k] = {"n": int(ok.sum()), "true": t, "null": n,
                   "excess": t - n, "lo": float(lo), "hi": float(hi),
-                  "mean_margin": mm, "tie_rate": tie}
+                  "mean_margin": mm, "mean_abs_margin": am,
+                  "separation": (am / ref if ref else None),
+                  "tie_rate": tie}
 
     print(f"\n  null pools {len(nulls)} pairings, so its precision comes from "
           f"the number of PAIRS,\n  which is what makes a handful of forward-"
           f"pass pairings comparable to a thousand\n  free ones. The interval "
           f"resamples recordings.")
-    print(f"  ties = share of pairs the scorer could not separate at all, each counted "
+    print(f"  |margin| = how far apart the scorer put the two texts, sign ignored.\n"
+          f"  sep = that, over the same model's {a.reference_kind}. Scale-free, "
+          f"so it compares across\n  architectures where a raw margin and a "
+          f"tie rate both cannot.\n"
+          f"  ties = share of pairs the scorer could not separate at all, each counted "
           f"as half a win.\n  A high tie rate is its own finding: it is the "
           f"scorer declining to choose, not\n  choosing wrongly.\n"
           f"  An excess interval containing 0 means that kind's accuracy is "
