@@ -112,7 +112,25 @@ def inspect(path):
                   f"(checkpoint was saved by "
                   f"{json.load(open(cst)).get('__version__', {}).get('sentence_transformers')})")
             print(f"  CrossEncoder.predict{_i.signature(CrossEncoder.predict)}")
-            print(f"  CrossEncoder.__init__{_i.signature(CrossEncoder.__init__)}")
+            # `PairInput` IS THE WHOLE QUESTION. The signature says predict
+            # takes one, and whether that is (str, str), a dict per side, or a
+            # structured message list decides how a video window is handed
+            # over -- which is the same question that took four attempts on
+            # the embedding side.
+            import sys as _s
+            for name, mod in list(_s.modules.items()):
+                if name.startswith("sentence_transformers") and \
+                        hasattr(mod, "PairInput"):
+                    print(f"\n  PairInput, from {name}:\n    "
+                          f"{getattr(mod, 'PairInput')}")
+                    break
+            else:
+                print("\n  !! PairInput is not exported by any loaded "
+                      "sentence_transformers module")
+            doc = (CrossEncoder.predict.__doc__ or "").strip()
+            print(f"\n--- CrossEncoder.predict docstring\n{doc[:3500]}")
+            if len(doc) > 3500:
+                print(f"  ... {len(doc) - 3500} more characters")
         except Exception as e:
             print(f"\n  !! could not read the CrossEncoder API: "
                   f"{type(e).__name__}: {e}")
