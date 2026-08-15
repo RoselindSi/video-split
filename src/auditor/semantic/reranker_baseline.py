@@ -76,15 +76,46 @@ def inspect(path):
             print(json.dumps(json.load(open(p, encoding="utf-8")),
                              indent=2)[:1800])
     print("\n--- what this decides")
-    print("  modules.json listing a Transformer + Pooling + Normalize means a "
-          "sentence-transformers\n  bi-encoder, NOT a reranker, and this whole "
-          "arm would be the cosine arm again.")
-    print("  An architecture ending in ForSequenceClassification with "
-          "num_labels=1 means\n  --score_mode seq_cls.")
-    print("  A plain causal LM means the score is a yes/no token logit: "
-          "--score_mode yes_no,\n  and the two token ids have to come from "
-          "this tokenizer, which is why they are\n  resolved at run time "
-          "rather than hardcoded.")
+    print("  READ modules.json AND config_sentence_transformers.json, NOT "
+          "`architectures`.\n  A trained reranker in this family still says "
+          "Qwen3VLForConditionalGeneration\n  there, which on its own reads "
+          "as a plain generative model and sends you to write\n  your own "
+          "yes/no prompt -- bypassing the score head the checkpoint was "
+          "trained with.")
+    print("    Transformer + Pooling + Normalize   bi-encoder. NOT a "
+          "reranker; this arm would\n"
+          "                                        be the cosine arm again.")
+    print("    Transformer + LogitScore            sentence-transformers "
+          "CrossEncoder:\n"
+          "                                        --score_mode "
+          "sentence_transformers")
+    print("    ForSequenceClassification, 1 label  --score_mode seq_cls")
+    print("    none of the above                   --score_mode yes_no, and "
+          "the two token ids\n"
+          "                                        come from this tokenizer "
+          "at run time")
+
+    cst = os.path.join(path, "config_sentence_transformers.json")
+    if os.path.exists(cst) and json.load(open(cst)).get(
+            "model_type") == "CrossEncoder":
+        # THE SIGNATURE, NOT THE RECOLLECTION. The embedding arm of this
+        # project lost four rounds to guessed keyword arguments -- encode_video
+        # that did not exist, frames that had to be paths, do_sample_frames
+        # that routed through processing_kwargs, frames_indices that was
+        # required. Whether predict() takes processing_kwargs at all is
+        # readable here for free.
+        import inspect as _i
+        try:
+            import sentence_transformers as st
+            from sentence_transformers import CrossEncoder
+            print(f"\n--- sentence_transformers {st.__version__} "
+                  f"(checkpoint was saved by "
+                  f"{json.load(open(cst)).get('__version__', {}).get('sentence_transformers')})")
+            print(f"  CrossEncoder.predict{_i.signature(CrossEncoder.predict)}")
+            print(f"  CrossEncoder.__init__{_i.signature(CrossEncoder.__init__)}")
+        except Exception as e:
+            print(f"\n  !! could not read the CrossEncoder API: "
+                  f"{type(e).__name__}: {e}")
 
 
 def answer_ids(proc):
