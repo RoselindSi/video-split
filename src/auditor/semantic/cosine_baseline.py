@@ -151,9 +151,26 @@ def score_benchmark(a):
     print(f"{len(bench)} pairs over {len(segs)} segments; "
           f"{n_pairs} distinct (segment, text) entries to score")
 
+    # KEPT SO THE VIDEO CAN BE SWAPPED LATER. The paired benchmark cancels
+    # recording identity, but it cannot tell a scorer that reads the video
+    # from one that prefers the original TEXT against any video at all. That
+    # second question needs text A scored against video B, which the paired
+    # score file cannot express -- it only holds the true pairing. Storing
+    # both sides' vectors makes every cross pairing computable offline,
+    # without a second GPU pass.
+    vecs_v, vecs_t = {}, {}
+
     if a.dry_run:
-        rng = random.Random(a.seed)
-        rows = [{"segment_uid": u, "text": t, "score": rng.random()}
+        rng = np.random.default_rng(a.seed)
+        d = 8
+        for u, ts in texts.items():
+            v = rng.normal(size=d)
+            vecs_v[u] = v / np.linalg.norm(v)
+            for t in ts:
+                e = rng.normal(size=d)
+                vecs_t[(u, t)] = e / np.linalg.norm(e)
+        rows = [{"segment_uid": u, "text": t,
+                 "score": float(vecs_v[u] @ vecs_t[(u, t)])}
                 for u, ts in texts.items() for t in ts]
     else:
         if not a.model or not _os.path.exists(a.model):
@@ -183,10 +200,12 @@ def score_benchmark(a):
             vv, tt = embed(model, [{"video": paths}], tl, a.prompt,
                            None if a.no_metadata else meta)
             v = vv[0] / (np.linalg.norm(vv[0]) + 1e-12)
+            vecs_v[uid] = v
             for t, e in zip(tl, tt):
+                e = e / (np.linalg.norm(e) + 1e-12)
+                vecs_t[(uid, t)] = e
                 rows.append({"segment_uid": uid, "text": t,
-                             "score": float(v @ (e / (np.linalg.norm(e)
-                                                      + 1e-12)))})
+                             "score": float(v @ e)})
             for q in paths:
                 _os.remove(q)
             if (i + 1) % 25 == 0:
@@ -202,6 +221,23 @@ def score_benchmark(a):
     print(f"  then:\n    python -m src.auditor.semantic.paired_benchmark "
           f"\\\n      --evaluate {out} --benchmark {a.benchmark_in} "
           f"--gold {a.gold[0]}")
+
+    if a.emit_embeddings and vecs_v:
+        uids = sorted(vecs_v)
+        keys = sorted(vecs_t)
+        np.savez(a.emit_embeddings,
+                 V=np.stack([vecs_v[u] for u in uids]),
+                 seg_uids=np.array(uids, dtype=object),
+                 T=np.stack([vecs_t[k] for k in keys]),
+                 text_seg=np.array([k[0] for k in keys], dtype=object),
+                 text_str=np.array([k[1] for k in keys], dtype=object),
+                 allow_pickle=True)
+        print(f"\nwrote {len(uids)} video and {len(keys)} text vectors -> "
+              f"{a.emit_embeddings}")
+        print(f"  the null runs off this file and needs no GPU:\n"
+              f"    python -m src.auditor.semantic.text_prior_null \\\n"
+              f"      --embeddings {a.emit_embeddings} "
+              f"--benchmark {a.benchmark_in}")
 
 
 def main():
@@ -238,6 +274,12 @@ def main():
                          "paired_benchmark --evaluate, instead of running the "
                          "per-event arm")
     ap.add_argument("--scores_out")
+    ap.add_argument("--emit_embeddings",
+                    help="npz of both sides' unit vectors. The paired score "
+                         "file holds only the TRUE pairing, so it cannot "
+                         "answer whether the original text would win against "
+                         "somebody else's video -- which is the null for "
+                         "every kind in the benchmark")
     ap.add_argument("--out")
     a = ap.parse_args()
 
