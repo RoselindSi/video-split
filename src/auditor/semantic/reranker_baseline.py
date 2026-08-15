@@ -357,7 +357,11 @@ def main():
                 sc = drng.normal(size=len(tl)).tolist()
             else:
                 vp = segs[vu]
-                path = video_of.get(vp["recording_id"])
+                # THE BENCHMARK'S OWN PATH WINS. naming_run.json only
+                # covers the audited recordings; reorder_span reaches 150 more,
+                # and looking them up there would silently skip every one of
+                # them while the counts above still looked right.
+                path = vp.get("video") or video_of.get(vp["recording_id"])
                 if not path:
                     print(f"  !! no video for {vp['recording_id']}; {vu} "
                           f"skipped")

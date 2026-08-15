@@ -186,11 +186,15 @@ def score_benchmark(a):
         model = SentenceTransformer(a.model, device="cuda",
                                     trust_remote_code=True)
         _os.makedirs(a.frame_dir, exist_ok=True)
-        video_of = {r["recording_id"]: r["video"]
-                    for r in json.load(open(a.data, encoding="utf-8"))}
+        video_of = ({r["recording_id"]: r["video"]
+                     for r in json.load(open(a.data, encoding="utf-8"))}
+                    if a.data else {})
         rows = []
         for i, (uid, p) in enumerate(sorted(segs.items())):
-            vid = video_of.get(p["recording_id"])
+            # The benchmark's own path wins, for the same reason as in
+            # reranker_baseline: naming_run.json covers only the audited
+            # recordings.
+            vid = p.get("video") or video_of.get(p["recording_id"])
             if not vid:
                 print(f"  !! no video for {p['recording_id']}; "
                       f"{uid} skipped")
