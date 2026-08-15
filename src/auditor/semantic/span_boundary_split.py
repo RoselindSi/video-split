@@ -61,9 +61,15 @@ def read_confirmed(paths, time_col, verdict_col, keep_values):
     an empty or a universal set, and both look like results."""
     out, seen_cols = defaultdict(list), Counter()
     for p in paths:
+        # THREE FORMATS, because this project's gold is in all three. A .jsonl
+        # handed to json.load raises on the second line, which would read as
+        # "the file is broken" rather than "it is line-delimited".
         if p.lower().endswith(".csv"):
             rows = list(csv.DictReader(open(p, newline="",
                                             encoding="utf-8-sig")))
+        elif p.lower().endswith(".jsonl"):
+            rows = [json.loads(l) for l in open(p, encoding="utf-8-sig")
+                    if l.strip()]
         else:
             blob = json.load(open(p, encoding="utf-8-sig"))
             rows = blob.get("events", blob if isinstance(blob, list)
