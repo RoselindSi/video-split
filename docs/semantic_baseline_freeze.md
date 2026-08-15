@@ -119,3 +119,52 @@ evidence`, measured on this frozen benchmark with this evaluator.
   `drop_claim`, `add_claim`, `replace_claim`: excess lower bounds must not fall
   below the frozen values, and `true` must not fall. Both are required, because
   §2 shows a scorer can raise excess while losing accuracy.
+
+## 5. Amendment — the reorder target, measured at scale
+
+Recorded after §1–4 were frozen. The frozen table is not edited; this section
+says which of its numbers may not be used and what replaces them.
+
+**The frozen `reorder` excess is unstable across null draws.** The same 28
+pairs, rescored under three different sets of wrong-video pairings, gave
+**+0.330 / +0.250 / +0.232** (nulls 0.562 / 0.643 / 0.625). At 28 pairs over 14
+recordings, redrawing which wrong video each pair receives moves the point
+estimate by 0.1. §2's "cosine beats the reranker on temporal order" rests on
+that number and is weaker than it reads there.
+
+**At scale, under the identical construction, cosine's reorder excess is
++0.093.** `reorder_label` — one segment, one annotator's label, its `and`
+clauses swapped, exactly the frozen construction — over 495 pairs and 141
+recordings: true 0.659, null 0.565, **excess +0.093 [+0.028, +0.158]**. It
+clears zero and it is 40% of the frozen estimate, with a half-width of ±0.065
+against the frozen arm's ±0.238.
+
+The only variable between the two is that the frozen originals were audited
+`claim_support=yes` and these were not. Whether the audited subset is genuinely
+cleaner or unaudited labels attenuate the effect, both readings say the same
+thing about which number to build on.
+
+**Two constructions that do not work.**
+
+| arm | n | recs | excess | 95% CI |
+|---|---:|---:|---:|---|
+| `reorder_then` — frozen 28, `and` → `then` | 28 | 14 | +0.134 | [−0.048, +0.304] |
+| `reorder_span` — two segments joined, order from timestamps | 385 | 116 | −0.019 | [−0.078, +0.035] |
+
+`reorder_span` was designed to be the clean arm — its ground truth is the
+segment boundaries rather than the annotator's ordering phrase — and it is at
+chance with a tight interval. Two explanations died before this table: all 28
+frozen pairs are joined by `and` alone, so no connective leaks; and span
+accuracy RISES with duration (0.410 / 0.536 / 0.565), so eight frames over a
+long window is not the constraint. It changed the window, the join word and the
+audit status at once, and each of the two isolable changes costs excess.
+
+**H2 is restated.** Target arm `reorder_label`, 495 pairs over 141 recordings.
+Cosine's bar is **+0.093 [+0.028, +0.158]**, not +0.330. The reranker has not
+been measured on this arm; until it is, no claim about which architecture reads
+order better is supported at scale.
+
+**Length is not a monotone prior.** On this longer-text pool (5–19 words, mean
+10.7) `corr(words, score)` is **−0.294**, slope −0.0075 per word — opposite in
+sign to the +0.0032 measured on the 438-pair pool (mean 5.8 words). Any
+correction of the form "subtract k × word count" is wrong; the effect reverses.
