@@ -159,10 +159,40 @@ accuracy RISES with duration (0.410 / 0.536 / 0.565), so eight frames over a
 long window is not the constraint. It changed the window, the join word and the
 audit status at once, and each of the two isolable changes costs excess.
 
-**H2 is restated.** Target arm `reorder_label`, 495 pairs over 141 recordings.
-Cosine's bar is **+0.093 [+0.028, +0.158]**, not +0.330. The reranker has not
-been measured on this arm; until it is, no claim about which architecture reads
-order better is supported at scale.
+**§2's temporal conclusion is REVERSED at scale.** Both arms on
+`reorder_label`, 495 pairs over 141 recordings:
+
+| arm | cosine | reranker |
+|---|---|---|
+| `reorder_label` excess | +0.093 [+0.028, +0.158] | **+0.261 [+0.206, +0.314]** |
+| `reorder_label` true | 0.659 | **0.820** |
+| `reorder_span` excess | −0.019 [−0.078, +0.035] | +0.061 [−0.004, +0.130] |
+| `reorder_then` excess (n=28) | +0.134 [−0.048, +0.304] | +0.272 [−0.020, +0.516] |
+
+The intervals on `reorder_label` are disjoint. §2 says "reorder: the
+cross-encoder is WORSE" and sets H2's bar at cosine's +0.330; both come from 28
+pairs over 14 recordings and both are wrong. **The cross-encoder reads order
+better, and by a margin no reading of the frozen arm would have found.**
+
+**H2 is restated.** Target arm `reorder_label`. The bar is the reranker's
+**+0.261 [+0.206, +0.314]**, with a half-width of ±0.054.
+
+**And H2's motivation weakens.** At scale the cross-encoder's order excess
+(+0.261) exceeds its own `wrong_verb` excess (+0.221 [+0.092, +0.339]) and its
+interval is four times tighter. Order is not the axis in most trouble — verb
+is, in both architectures and on every arm measured. A frame-level temporal
+model should be justified on verb first; H2 remains worth testing, but "temporal
+order is unsolved" is no longer supported.
+
+`reorder_span` stays dead: near chance for both arms. Its `then` join helps the
+reranker and hurts the cosine, so the join word is an encoder-specific effect
+rather than a construction defect — both at n=28 with heavily overlapping
+intervals, so that is a hint, not a finding.
+
+One caveat on `sep` in this run: `--reference_kind reorder`, so its column is
+not comparable with §1's, which normalised on `wrong_object`. In §1's units the
+reranker's `reorder_label` separation is about 0.30 — high accuracy carried by
+small margins.
 
 **Length is not a monotone prior.** On this longer-text pool (5–19 words, mean
 10.7) `corr(words, score)` is **−0.294**, slope −0.0075 per word — opposite in
