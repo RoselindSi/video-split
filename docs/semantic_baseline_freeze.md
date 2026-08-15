@@ -198,3 +198,44 @@ small margins.
 10.7) `corr(words, score)` is **−0.294**, slope −0.0075 per word — opposite in
 sign to the +0.0032 measured on the 438-pair pool (mean 5.8 words). Any
 correction of the form "subtract k × word count" is wrong; the effect reverses.
+
+## 6. Frame-count sweep — temporal resolution is not the verb bottleneck
+
+`wrong_verb` + `wrong_object` only, the same filtered file at every setting so
+frames are not confounded with batch composition (defect 4). Reranker-2B.
+
+| frames | verb true | verb null | verb excess | object true | object null | object excess | verb sep |
+|---:|---:|---:|---|---:|---:|---|---:|
+| 8 | 0.690 | 0.447 | +0.243 [+0.128, +0.359] | 0.926 | 0.420 | +0.506 [+0.390, +0.607] | 0.42 |
+| 16 | 0.707 | 0.412 | +0.295 [+0.171, +0.415] | 0.911 | 0.384 | +0.527 [+0.399, +0.637] | 0.44 |
+| 32 | 0.701 | 0.393 | +0.308 [+0.184, +0.436] | 0.911 | 0.374 | +0.537 [+0.433, +0.631] | 0.46 |
+
+**Read as excess, this says frames help the verb axis twice as much as the
+object axis (+0.065 against +0.031). Decomposed, it says neither improves.**
+
+    verb    true 0.690 -> 0.701   (+0.011; SE at n=92 is 0.048, so 0.2 SE)
+            null 0.447 -> 0.393   (-0.054)
+    object  true 0.926 -> 0.911   (-0.015)
+            null 0.420 -> 0.374   (-0.046)
+
+Every point of excess growth comes from the null degrading. `sep` is flat
+(0.42 / 0.44 / 0.46) and the verb \|margin\| is 0.1875 / 0.1875 / 0.1909 —
+four times the temporal resolution and four times the compute move it by
+nothing.
+
+**Why the null falls.** At 32 frames the wrong-video null for verb is 0.393:
+with the wrong video the model prefers the WRONG-VERB text 61% of the time. The
+substitute verb is drawn from the corpus vocabulary, so it is a generic action
+word, and the more of an arbitrary video you show, the more likely something in
+it matches a generic word. Genericity compounds with frames.
+
+**Consequence for the next stage.** Finer temporal sampling alone does not fix
+verb — eight frames already carry the motion, and the model is not encoding it
+into a direction that aligns with the verb. An `atomic temporal verifier` that
+only adds temporal attention or a higher frame rate is a more expensive 8-frame
+model. It needs verb-targeted supervision.
+
+**And a rule that now has three instances.** Excess has moved for a reason
+other than the scorer improving three times in this project: `drop_claim`'s
+length prior, `add_claim`'s adverse prior, and now a null that degrades with
+frame count. **Never report an excess without its `true` and `null` beside it.**
