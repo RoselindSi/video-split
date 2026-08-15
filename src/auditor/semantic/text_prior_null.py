@@ -92,6 +92,14 @@ def main():
                     help="the scored pairs the reported table came from. The "
                          "true accuracies are recomputed from the vectors and "
                          "checked against it")
+    ap.add_argument("--emit_pairings", type=int, default=0,
+                    help="also write the cosine scores under this many "
+                         "wrong-video pairings, in the format paired_null "
+                         "reads, so the cosine and the cross-encoder are "
+                         "compared by one evaluator on the same pairings "
+                         "instead of by 1000 free permutations against 4 "
+                         "expensive ones")
+    ap.add_argument("--pairings_out")
     ap.add_argument("--n_perm", type=int, default=1000)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out")
@@ -282,6 +290,36 @@ def main():
           f"  A kind whose true accuracy sits inside its own null interval is "
           f"measuring the text,\n  not the video, and its benchmark number "
           f"cannot be read as a semantic result.")
+
+    if a.emit_pairings:
+        # THE SAME WRONG VIDEOS THE CROSS-ENCODER WILL SEE. Built from a fresh
+        # generator at the same seed and over the same sorted segment list as
+        # reranker_baseline, so the two arms are not merely evaluated by the
+        # same statistic -- pairing j hands segment i the same video in both.
+        # Any difference in the null is then the scorer, not which permutation
+        # each arm happened to draw.
+        prng = np.random.default_rng(a.seed)
+        perms = [np.arange(len(seg_uids))]
+        for _ in range(a.emit_pairings):
+            perms.append(permute_across_recordings(rec, prng))
+        path = a.pairings_out or (a.embeddings.rsplit(".", 1)[0]
+                                  + "_paired_scores.jsonl")
+        n = 0
+        with open(path, "w", encoding="utf-8") as f:
+            for j, p in enumerate(perms):
+                for i, u in enumerate(seg_uids):
+                    vu = seg_uids[p[i]]
+                    for ti in np.flatnonzero(np.array(
+                            [str(s) for s in z["text_seg"]]) == u):
+                        f.write(json.dumps({
+                            "pairing": j, "segment_uid": u, "video_uid": vu,
+                            "text": str(z["text_str"][ti]),
+                            "score": float(V[row_of[vu]] @ T[ti])}) + "\n")
+                        n += 1
+        print(f"\nwrote {n} scores over {len(perms)} pairings -> {path}")
+        print(f"  evaluated by the SAME file that reads the reranker:\n"
+              f"    python -m src.auditor.semantic.paired_null \\\n"
+              f"      --scores {path} --benchmark {a.benchmark} --label cosine")
 
     if a.out:
         json.dump({"n_perm": a.n_perm, "n_pairs": len(pairs),
