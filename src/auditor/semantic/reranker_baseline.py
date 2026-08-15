@@ -319,9 +319,16 @@ def main():
     if not a.dry_run:
         if not a.model or not os.path.exists(a.model):
             raise SystemExit(f"--model {a.model} does not exist")
-        if not a.data:
-            raise SystemExit("--data is required; the video path per recording "
-                             "comes from naming_run.json")
+        # --data IS ONLY NEEDED FOR ROWS THAT CARRY NO PATH. reorder_label and
+        # reorder_span reach recordings naming_run.json never covered, and
+        # those benchmarks write the path per row. Demanding --data anyway
+        # rejected a file that had everything it needed -- the lookup below
+        # already prefers the row's own path.
+        no_path = [u for u, p_ in segs.items() if not p_.get("video")]
+        if no_path and not a.data:
+            raise SystemExit(
+                f"{len(no_path)} of {len(segs)} segments carry no `video` "
+                f"field, so --data is needed for those. First: {no_path[0]}")
         import torch
         from transformers import AutoProcessor
         if a.score_mode == "sentence_transformers":
