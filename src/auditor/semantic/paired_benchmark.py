@@ -177,6 +177,59 @@ def build(label, dec, vocab, rng):
             cand = recase(label, " and ".join(sw))
             if well_formed(cand, vset) and cand.lower() != label.lower():
                 out.append(("reorder", cand, "no", "two clauses swapped"))
+
+    # OVERCLAIMING, the other half of completeness. drop_claim asks whether a
+    # scorer notices a claim that is MISSING; these ask whether it notices one
+    # that is PRESENT and did not happen. A scorer that merely prefers longer,
+    # more complete-looking text passes the first and fails these.
+    #
+    # add_claim and replace_claim differ in one thing on purpose: the claim
+    # COUNT. Under a wrong video every claim is unsupported, so a scorer that
+    # scores completeness will prefer whichever text claims less -- and the
+    # reranker's drop_claim null of 0.237 says this one does exactly that. So
+    # add_claim's null is expected NOT to sit at chance: length and grounding
+    # point the SAME way there, and the null cannot separate them.
+    # replace_claim holds the count fixed so they point in different ways, and
+    # is the readable version. Both are emitted so the prediction is testable
+    # rather than assumed.
+    #
+    # THE BORROWED CLAIM IS ONLY PROBABLY FALSE. It comes from another label
+    # and is rejected if its verb or its head noun already appears here, but
+    # nothing verifies it is absent from THIS segment's video -- an adjacent
+    # action can be genuinely present. That biases both kinds toward the null,
+    # so they are conservative rather than optimistic, and the note records
+    # which clause was borrowed so a sample can be audited by hand.
+    # A SEPARATE GENERATOR, DERIVED FROM THE LABEL. Drawing the new kinds
+    # from `rng` would advance it, and every label after the first would draw
+    # different verbs and objects -- silently re-rolling the 306 pairs that
+    # the cosine and reranker tables were computed on, so the two arms would
+    # no longer be measured on the same data. Seeding from the label text
+    # keeps these kinds deterministic and leaves `rng` untouched.
+    org = random.Random(f"overclaim::{label}")
+    here = set(re.findall(r"[a-z0-9]+", label.lower()))
+    foreign = [c for c in vocab.get("clauses", ())
+               if well_formed(c, vset)
+               and not (set(re.findall(r"[a-z0-9]+", c.lower())) & here)]
+    if foreign:
+        add = org.choice(foreign)
+        cand = recase(label, f"{label} and {add[0].lower() + add[1:]}")
+        out.append(("add_claim", cand, "no",
+                    f"borrowed claim appended: {add!r}"))
+        if len(parts) > 1 and len(dec["actions"]) > 1:
+            i = org.randrange(len(parts))
+            n = len(parts[i].split())
+            # LENGTH-MATCHED, so the count AND the word count both hold. A
+            # replacement two words longer would reintroduce the very prior
+            # this kind exists to remove.
+            near = sorted(foreign, key=lambda c: abs(len(c.split()) - n))
+            sub = near[0] if abs(len(near[0].split()) - n) <= 1 else None
+            if sub:
+                sw = [sub if k == i else pp for k, pp in enumerate(parts)]
+                cand = recase(label, " and ".join(sw))
+                if well_formed(cand, vset) and cand.lower() != label.lower():
+                    out.append(("replace_claim", cand, "no",
+                                f"clause {i + 1} of {len(parts)} replaced by "
+                                f"{sub!r}"))
     return out
 
 
@@ -193,6 +246,11 @@ def main():
     ap.add_argument("--benchmark",
                     default="data/gold/paired_semantic_benchmark.jsonl")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--expect_unchanged",
+                    help="a previously emitted benchmark. Every pair of every "
+                         "kind it contains must come out identical, or this "
+                         "exits -- adding a kind must not re-roll the pairs "
+                         "the published tables were computed on")
     ap.add_argument("--out")
     a = ap.parse_args()
 
@@ -233,14 +291,23 @@ def main():
              "objects": sorted({e["name"].split()[-1]
                                 for d in claims.values()
                                 for e in d["entities"] if e.get("name")}),
-             "qualifiers": defaultdict(set)}
+             "qualifiers": defaultdict(set),
+             # Every clause any label contains, as the pool a false claim is
+             # borrowed from. Real annotation phrasing, so an overclaim is
+             # something a person plausibly wrote rather than a generated
+             # string no annotator would produce.
+             "clauses": sorted({c.strip() for lab_ in claims
+                                for c in SPLIT_CLAUSE.split(lab_)
+                                if c and c.strip()
+                                and not SPLIT_CLAUSE.fullmatch(c)})}
     for d in claims.values():
         for a_ in d["actions"]:
             for k, v in (a_.get("qualifiers") or {}).items():
                 vocab["qualifiers"][k].add(str(v).split()[-1])
     print(f"  vocabulary: {len(vocab['verbs'])} verbs, "
           f"{len(vocab['objects'])} object heads, "
-          f"{len(vocab['qualifiers'])} qualifier keys")
+          f"{len(vocab['qualifiers'])} qualifier keys, "
+          f"{len(vocab['clauses'])} clauses")
 
     rng = random.Random(a.seed)
     out, kinds = [], Counter()
@@ -255,6 +322,30 @@ def main():
                         "counterfactual": text, "kind": kind,
                         "expected": target, "note": note})
             kinds[kind] += 1
+
+    if a.expect_unchanged:
+        # THE OLD KINDS MUST COME OUT BYTE-IDENTICAL. Adding a kind is only
+        # safe if it leaves the pairs the published tables were computed on
+        # exactly where they were; a quiet re-roll would make two arms
+        # incomparable while every count still looked right.
+        old = [json.loads(l) for l in open(a.expect_unchanged,
+                                           encoding="utf-8") if l.strip()]
+        okinds = {r["kind"] for r in old}
+        key = lambda r: (r["segment_uid"], r["kind"], r["original"],
+                         r["counterfactual"])
+        o, n_ = {key(r) for r in old}, {key(r) for r in out
+                                        if r["kind"] in okinds}
+        if o != n_:
+            for x in sorted(o - n_)[:5]:
+                print(f"  GONE    {x}")
+            for x in sorted(n_ - o)[:5]:
+                print(f"  NEW     {x}")
+            raise SystemExit(f"{len(o - n_)} pairs disappeared and "
+                             f"{len(n_ - o)} appeared among the kinds that "
+                             f"already existed. The published cosine and "
+                             f"reranker tables were computed on those pairs.")
+        print(f"  verified: all {len(o)} pairs of the pre-existing kinds are "
+              f"unchanged")
 
     print(f"\n{len(out)} pairs over {len({r['segment_uid'] for r in out})} "
           f"segments, {len({r['recording_id'] for r in out})} recordings")
