@@ -71,6 +71,20 @@ def margins(bench, sc, pairing):
     return out
 
 
+def wins(m):
+    """A tie is half a win, not a loss.
+
+    `m > 0` charges every exact tie to the counterfactual. That is invisible
+    with cosine, where two float dot products essentially never collide, and it
+    is not invisible with a reranker whose head emits coarsely quantised logits
+    -- the smoke run returned 31 distinct values in 80 scores, all multiples of
+    0.125. Scoring ties as losses would then deflate the cross-encoder against
+    a baseline that cannot tie, and the architecture comparison would be partly
+    a comparison of output precision. Half credit is the usual convention for
+    paired comparisons and is what AUROC already does with ties."""
+    return np.where(np.isnan(m), np.nan, (m > 0) + 0.5 * (m == 0))
+
+
 def boot_excess(rec, kind_sel, t_m, n_m, n_boot, rng):
     """Resample RECORDINGS, not pairs.
 
@@ -86,8 +100,9 @@ def boot_excess(rec, kind_sel, t_m, n_m, n_boot, rng):
         sel = np.concatenate([idx[recs[i]] for i in take]) if len(recs) else []
         if len(sel) == 0:
             continue
-        t = np.nanmean(t_m[sel] > 0)
-        n = np.nanmean(np.concatenate([n_m[j][sel] for j in range(len(n_m))]) > 0)
+        t = np.nanmean(wins(t_m[sel]))
+        n = np.nanmean(wins(np.concatenate([n_m[j][sel]
+                                            for j in range(len(n_m))])))
         out.append(t - n)
     return np.array(out)
 
@@ -156,28 +171,32 @@ def main():
     rng = np.random.default_rng(a.seed)
 
     print(f"\n  {'kind':<17}{'n':>5}{'true':>8}{'null':>8}{'excess':>9}"
-          f"{'excess 95%':>19}{'margin':>9}")
+          f"{'excess 95%':>19}{'margin':>9}{'ties':>7}")
     res = {}
     for k in order + ["ALL"]:
         sel = np.ones(len(bench), bool) if k == "ALL" else (kinds == k)
         ok = sel & ~np.isnan(t_m)
-        t = float(np.mean(t_m[ok] > 0))
+        t = float(np.mean(wins(t_m[ok])))
         pooled = np.concatenate([m[ok] for m in n_m])
-        n = float(np.nanmean(pooled > 0))
+        n = float(np.nanmean(wins(pooled)))
+        tie = float(np.mean(t_m[ok] == 0))
         d = boot_excess(rec, ok, t_m, n_m, a.n_boot, rng)
         lo, hi = np.percentile(d, [2.5, 97.5])
         mm = float(np.nanmean(t_m[ok]))
         print(f"  {k:<17}{int(ok.sum()):>5}{t:>8.3f}{n:>8.3f}{t - n:>+9.3f}"
-              f"{f'[{lo:+.3f}, {hi:+.3f}]':>19}{mm:>9.4f}")
+              f"{f'[{lo:+.3f}, {hi:+.3f}]':>19}{mm:>9.4f}{tie:>7.2f}")
         res[k] = {"n": int(ok.sum()), "true": t, "null": n,
                   "excess": t - n, "lo": float(lo), "hi": float(hi),
-                  "mean_margin": mm}
+                  "mean_margin": mm, "tie_rate": tie}
 
     print(f"\n  null pools {len(nulls)} pairings, so its precision comes from "
           f"the number of PAIRS,\n  which is what makes a handful of forward-"
           f"pass pairings comparable to a thousand\n  free ones. The interval "
           f"resamples recordings.")
-    print(f"  An excess interval containing 0 means that kind's accuracy is "
+    print(f"  ties = share of pairs the scorer could not separate at all, each counted "
+          f"as half a win.\n  A high tie rate is its own finding: it is the "
+          f"scorer declining to choose, not\n  choosing wrongly.\n"
+          f"  An excess interval containing 0 means that kind's accuracy is "
           f"reachable without\n  the right video, whatever the accuracy "
           f"itself looks like.")
 
