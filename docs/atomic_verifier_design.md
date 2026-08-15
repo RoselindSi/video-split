@@ -149,3 +149,46 @@ audit named: `flip`, `apply`, `coat`, `secure`, `crumple`, `unroll`, `spread`,
   kind nor a bigger head is indicated.
 - **Excess rises while accuracy does not** → the guard fired; report it as a
   null result, not a gain.
+
+## 7. G0 result — the gate did not pass. Do not build §3.
+
+Reranker-2B, 193 pairs, 3 sub-windows of 8 frames against a whole window of 24,
+same run and same batching.
+
+| rule | verb true | verb excess | object true | object excess | verb sep |
+|---|---:|---|---:|---|---:|
+| whole (24 frames) | 0.717 | +0.296 [+0.180, +0.419] | 0.921 | +0.525 [+0.428, +0.618] | 0.43 |
+| max_abs | 0.728 | +0.291 [+0.182, +0.400] | 0.950 | +0.547 [+0.432, +0.656] | 0.47 |
+| mean | 0.745 | +0.307 [+0.193, +0.415] | 0.950 | +0.552 [+0.438, +0.656] | 0.37 |
+
+The gate was pre-registered on the difference between the axes. Under
+`max_abs`, verb gains +0.011 and **object gains +0.029** — the difference is
+−0.018, the wrong sign. Under `mean` both gain +0.029, identical. Verb excess
+does not move at all (+0.296 → +0.291 / +0.307).
+
+**`mean` beating `max_abs` on verb (0.745 vs 0.728) is the tell.** If the
+evidence were localised, picking the strongest sub-window would beat averaging
+three. It does not, which is the signature of variance reduction from three
+semi-independent scorings rather than of selection finding anything. At n=92
+the SE is 0.047, so +0.028 is 0.6 SE — both axes' gains are inside noise.
+
+**H is false as stated.** A verb's evidence is not a short stretch being
+averaged away by a global pool; there is nothing for a claim-conditioned
+selector to select. §3 is not built.
+
+### What replaces it
+
+The stop condition said the next question is representation rather than
+localisation, and there is a cheaper test of that than any new architecture:
+**is the verb axis capacity-limited?** `Qwen3-VL-Reranker-8B` exists and the
+sweep tooling already takes `--kinds wrong_verb,wrong_object`, so this is one
+run and no new code.
+
+- **8B lifts verb much more than object** → the weakness is representational
+  capacity, and the move is a bigger backbone, not a new architecture.
+- **both lift proportionally** → verb is not specially hard for the model;
+  it is specially hard in this data, and the next question is the 33 singleton
+  verbs and the 51 verbs with no supervision at all.
+- **neither lifts** → the ceiling is in the frozen decompositions and the
+  annotation, which is where this project's other lines have already landed
+  twice.
