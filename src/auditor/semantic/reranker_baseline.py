@@ -65,9 +65,21 @@ INSTRUCTION = ("Given a video segment, judge whether the caption is a correct "
 def inspect(path):
     """Read the API off the checkpoint instead of remembering it."""
     print(f"{path}\n")
+    # EVERY SUBDIRECTORY, not two guessed names. The module directories are
+    # where a checkpoint keeps its head's configuration, and listing only
+    # `1_Pooling` and `2_Dense` hid `1_LogitScore/` -- which is exactly the
+    # file that differed between the 2B and the 8B and stopped the 8B loading.
     for f in sorted(os.listdir(path)):
-        if f.endswith((".json", ".txt")) or f in ("1_Pooling", "2_Dense"):
+        full = os.path.join(path, f)
+        if os.path.isdir(full):
+            print(f"  {f}/  {sorted(os.listdir(full))}")
+        elif f.endswith((".json", ".txt")):
             print(f"  {f}")
+    for f in sorted(os.listdir(path)):
+        cfg = os.path.join(path, f, "config.json")
+        if os.path.isdir(os.path.join(path, f)) and os.path.exists(cfg):
+            print(f"\n--- {f}/config.json")
+            print(json.dumps(json.load(open(cfg, encoding="utf-8")), indent=2))
     for f in ("config.json", "modules.json", "sentence_bert_config.json",
               "config_sentence_transformers.json"):
         p = os.path.join(path, f)
