@@ -173,8 +173,15 @@ def score_benchmark(a):
                  "score": float(vecs_v[u] @ vecs_t[(u, t)])}
                 for u, ts in texts.items() for t in ts]
     else:
-        if not a.model or not _os.path.exists(a.model):
+        # A MISSING PATH IS NOT A MISSING FLAG. Both used to print "--model is
+        # required", which sends you to look at the command line you already
+        # wrote correctly instead of at the path that does not exist.
+        if not a.model:
             raise SystemExit("--model is required unless --dry_run")
+        if not _os.path.exists(a.model):
+            raise SystemExit(f"--model {a.model} does not exist. Find the "
+                             f"checkpoint with:\n  find / -maxdepth 6 -name "
+                             f"modules.json -path '*mbedding*' 2>/dev/null")
         from sentence_transformers import SentenceTransformer
         model = SentenceTransformer(a.model, device="cuda",
                                     trust_remote_code=True)
