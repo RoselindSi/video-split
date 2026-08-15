@@ -87,33 +87,80 @@ def inspect(path):
           "rather than hardcoded.")
 
 
-def score_batch(model, tok, mode, frames, texts, device):
-    """The one place that touches the model. Returns one score per text."""
+def answer_ids(proc):
+    """The two answer tokens, resolved against THIS tokenizer.
+
+    Hardcoded ids are a silent failure: a wrong id indexes a real logit and
+    produces a real-looking score. Leading-space and bare variants are both
+    tried and the one that round-trips to a single token wins."""
+    tk = getattr(proc, "tokenizer", proc)
+    out = []
+    for word in ("yes", "no"):
+        got = None
+        for cand in (f" {word}", word, word.capitalize(), f" {word.capitalize()}"):
+            ids = tk.encode(cand, add_special_tokens=False)
+            if len(ids) == 1:
+                got = ids[0]
+                break
+        if got is None:
+            raise SystemExit(f"'{word}' is not a single token in this "
+                             f"tokenizer, so a yes/no logit contrast is not "
+                             f"defined. Use --score_mode seq_cls.")
+        out.append(got)
+    return out
+
+
+def score_batch(model, proc, mode, frames, texts, total_pixels, ids):
+    """The one place that touches the model. Returns one score per text.
+
+    THE CALL IS THE ONE THIS REPO ALREADY RUNS. eval_naming_decoupled drives
+    Qwen3-VL through apply_chat_template(tokenize=False) -> process_vision_info
+    -> proc(text=, images=, videos=, video_metadata=), and that path works on
+    this checkpoint family today. Writing a second, tidier-looking path from
+    memory is how this project bought four API errors in the cosine file, so
+    this mirrors the working one rather than improving on it."""
     import torch
+    from qwen_vl_utils import process_vision_info
     if mode == "sentence_transformers":
         return list(model.predict([({"video": frames}, t) for t in texts]))
-    msgs = [[{"role": "user", "content": [
-        {"type": "video", "video": frames},
-        {"type": "text", "text": f"{INSTRUCTION}\nCaption: {t}\nAnswer:"}]}]
-        for t in texts]
-    batch = tok.apply_chat_template(
-        msgs, tokenize=True, add_generation_prompt=True,
-        return_dict=True, return_tensors="pt", padding=True).to(device)
+
+    prompts, vids_all, meta = [], [], []
+    for t in texts:
+        msgs = [{"role": "user", "content": [
+            {"type": "video", "video": frames, "total_pixels": total_pixels},
+            {"type": "text",
+             "text": f"{INSTRUCTION}\nCaption: {t}\nAnswer:"}]}]
+        prompts.append(proc.apply_chat_template(msgs, tokenize=False,
+                                                add_generation_prompt=True))
+        _im, vv, vkw = process_vision_info(msgs, return_video_kwargs=True)
+        fps = vkw.get("fps", 2.0)
+        fps = float(fps[0] if isinstance(fps, list) else fps)
+        nf = vv[0].shape[0] if hasattr(vv[0], "shape") else len(vv[0])
+        vids_all.append(vv[0])
+        meta.append({"fps": fps, "total_num_frames": int(nf),
+                     "duration": float(nf) / fps})
+    inp = proc(text=prompts, images=None, videos=vids_all,
+               video_metadata=meta, padding=True,
+               return_tensors="pt").to(model.device)
     with torch.no_grad():
-        logits = model(**batch).logits
+        logits = model(**inp).logits
     if mode == "seq_cls":
         return logits.squeeze(-1).float().cpu().tolist()
+
+    # THE LAST REAL TOKEN, NOT POSITION -1. Batched prompts are padded, and
+    # which end carries the padding depends on the tokenizer's padding_side.
+    # Reading position -1 is correct under left padding and silently reads a
+    # pad token under right padding -- a bug that produces plausible scores.
+    # The last position with attention_mask == 1 is correct under either.
+    am = inp["attention_mask"]
+    last = am.shape[1] - 1 - am.flip(1).argmax(1)
+    row = logits[torch.arange(logits.shape[0]), last].float()
     # YES/NO AS A DIFFERENCE, not as P(yes). The absolute yes-logit moves with
     # sequence length and prompt shape; the contrast between the two answer
-    # tokens is what the reranker family is trained to separate, and it is the
-    # quantity that stays on one scale across captions of different lengths --
-    # which matters here more than anywhere, since the length prior is the
-    # thing being measured.
-    ids = [tok.convert_tokens_to_ids(x) for x in ("yes", "no")]
-    if any(i is None or i < 0 for i in ids):
-        ids = [tok.encode(x, add_special_tokens=False)[0] for x in (" yes", " no")]
-    last = logits[:, -1, :].float()
-    return (last[:, ids[0]] - last[:, ids[1]]).cpu().tolist()
+    # tokens is what stays on one scale across captions of different lengths,
+    # which matters here more than anywhere since the length prior is the thing
+    # being measured.
+    return (row[:, ids[0]] - row[:, ids[1]]).cpu().tolist()
 
 
 def main():
@@ -134,7 +181,10 @@ def main():
     ap.add_argument("--n_pairings", type=int, default=4,
                     help="wrong-video pairings. Each one rescores every entry, "
                          "so this is (n_pairings+1) x 409 forward passes")
-    ap.add_argument("--batch", type=int, default=8)
+    ap.add_argument("--batch", type=int, default=4)
+    ap.add_argument("--total_pixels", type=int, default=3584 * 28 * 28,
+                    help="same cap eval_naming_decoupled uses")
+    ap.add_argument("--device_map", default="cuda")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--dry_run", action="store_true")
     ap.add_argument("--out", required=False)
@@ -175,7 +225,7 @@ def main():
         same = int(sum(rec[p[i]] == rec[i] for i in range(len(uids))))
         print(f"    pairing {j}: {same} segments kept their own recording")
 
-    model = tok = None
+    model = tok = ids = None
     if not a.dry_run:
         if not a.model or not os.path.exists(a.model):
             raise SystemExit(f"--model {a.model} does not exist")
@@ -189,15 +239,19 @@ def main():
             model = CrossEncoder(a.model, trust_remote_code=True)
         elif a.score_mode == "seq_cls":
             from transformers import AutoModelForSequenceClassification as M
-            model = M.from_pretrained(a.model, torch_dtype=torch.bfloat16,
-                                      device_map="cuda",
+            model = M.from_pretrained(a.model, dtype=torch.bfloat16,
+                                      device_map=a.device_map,
                                       trust_remote_code=True).eval()
         else:
-            from transformers import AutoModelForCausalLM as M
-            model = M.from_pretrained(a.model, torch_dtype=torch.bfloat16,
-                                      device_map="cuda",
-                                      trust_remote_code=True).eval()
-        tok = AutoProcessor.from_pretrained(a.model, trust_remote_code=True)
+            # THE CLASS THIS REPO ALREADY LOADS Qwen3-VL WITH. CausalLM is the
+            # habitual guess and it does not carry the vision tower.
+            from transformers import AutoModelForImageTextToText as M
+            model = M.from_pretrained(a.model, dtype=torch.bfloat16,
+                                      device_map=a.device_map).eval()
+        tok = AutoProcessor.from_pretrained(a.model)
+        ids = (None if a.score_mode != "yes_no" else answer_ids(tok))
+        if ids:
+            print(f"  yes/no token ids from this tokenizer: {ids}")
         os.makedirs(a.frame_dir, exist_ok=True)
 
     video_of = ({r["recording_id"]: r["video"]
@@ -225,7 +279,8 @@ def main():
                 sc = []
                 for b in range(0, len(tl), a.batch):
                     sc += list(score_batch(model, tok, a.score_mode, frames,
-                                           tl[b:b + a.batch], "cuda"))
+                                           tl[b:b + a.batch],
+                                           a.total_pixels, ids))
                 for q in frames:
                     os.remove(q)
             for t, s in zip(tl, sc):
