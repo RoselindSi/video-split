@@ -155,8 +155,14 @@ def get_video(rec):
 
 def load_recordings(paths):
     """recseg json: records with recording_id, video, segments [[label,s,e]]."""
+    # GLOB, LIKE EVERY OTHER --recseg IN THIS PACKAGE. compose_supervision's
+    # `resolve` expands patterns and directories; this one required a literal
+    # path, so the identical argument that finds 161 recordings for the
+    # sampler found nothing here and every packet was skipped with a message
+    # about missing recordings rather than about the pattern.
+    from src.auditor.semantic.compose_supervision import resolve
     recs = {}
-    for p in paths:
+    for p in resolve(list(paths)):
         if not os.path.exists(p):
             print(f"  !! {p} not found")
             continue
