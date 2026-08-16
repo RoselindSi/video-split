@@ -91,7 +91,7 @@ def read_confirmed(paths, time_col, verdict_col, keep_values):
             tc = time_col or next((c for c in TIME_COLS if r.get(c)), None)
             if not rid or not tc or not str(r.get(tc, "")).strip():
                 continue
-            if verdict_col:
+            if verdict_col and keep_values is not None:
                 v = str(r.get(verdict_col, "")).strip().lower()
                 if keep_values and v not in keep_values:
                     continue
@@ -170,6 +170,11 @@ def main():
     print(f"\nconfirmed boundaries:")
     conf = read_confirmed(a.confirmed, a.time_col, a.verdict_col,
                           {x.lower() for x in a.keep})
+    rejected = read_confirmed(a.confirmed, a.time_col, a.verdict_col,
+                              None) if a.verdict_col else defaultdict(list)
+    for rid in list(rejected):
+        keep = {round(t, 3) for t in conf.get(rid, ())}
+        rejected[rid] = [t for t in rejected[rid] if round(t, 3) not in keep]
     n_conf = sum(len(v) for v in conf.values())
     print(f"  {n_conf} confirmed boundaries over {len(conf)} recordings")
     if not n_conf:
@@ -178,16 +183,31 @@ def main():
                          "above -- an empty set would send every pair to the "
                          "unconfirmed half and look like a finding.")
 
-    lab = []
+    # THREE STATES, NOT TWO. "not confirmed" was reported as the complement of
+    # "confirmed", so a join nobody ever looked at was counted alongside one a
+    # human judged not to be a boundary. Those are different claims: the first
+    # is unknown, the second is evidence. The complement is overwhelmingly the
+    # first -- among spans the arm has scored there is currently NO recording
+    # holding both a confirmed join and a judged-not-a-boundary one.
+    lab, unaud = [], []
     for p in bench:
         t = p.get("_inner")
-        ok = (t is not None and
-              any(abs(t - c) <= a.tol_s
-                  for c in conf.get(p["recording_id"], ())))
-        lab.append(ok)
-    lab = np.array(lab)
-    print(f"  {int(lab.sum())} pairs sit on a confirmed boundary, "
-          f"{int((~lab).sum())} do not")
+        c_hit = (t is not None and
+                 any(abs(t - c) <= a.tol_s
+                     for c in conf.get(p["recording_id"], ())))
+        r_hit = (t is not None and
+                 any(abs(t - c) <= a.tol_s
+                     for c in rejected.get(p["recording_id"], ())))
+        lab.append(c_hit)
+        unaud.append(not c_hit and not r_hit)
+    lab, unaud = np.array(lab), np.array(unaud)
+    print(f"  {int(lab.sum())} joins confirmed, "
+          f"{int((~lab & ~unaud).sum())} judged NOT a boundary, "
+          f"{int(unaud.sum())} never audited")
+    if not (~lab & ~unaud).any():
+        print(f"  !! nothing was judged NOT a boundary, so the second row "
+              f"below is 'unaudited',\n     not 'not confirmed' -- unknown "
+              f"status, not evidence against.")
     if lab.sum() == 0 or (~lab).sum() == 0:
         raise SystemExit("the split is degenerate; check --tol_s and the "
                          "columns above.")
@@ -242,8 +262,10 @@ def main():
 
     print(f"\n  {'half':<26}{'n':>5}{'recs':>6}{'true':>8}{'null':>8}"
           f"{'excess':>9}{'excess 95%':>19}")
+    other = "judged NOT a boundary" if (~lab & ~unaud).any() \
+        else "unaudited (status unknown)"
     for name, sel in (("boundary confirmed", lab),
-                      ("boundary not confirmed", ~lab),
+                      (other, ~lab),
                       ("all", np.ones(len(bench), bool))):
         ok = sel & ~np.isnan(t_m)
         if not ok.any():

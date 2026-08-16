@@ -275,7 +275,7 @@ both kinds so the contrast is within-recording.
 | half | n | recs | true | null | excess | 95% |
 |---|---:|---:|---:|---:|---|---|
 | boundary confirmed | 17 | 11 | **0.882** | 0.449 | +0.434 | [+0.208, +0.671] |
-| boundary not confirmed | 27 | 11 | 0.704 | 0.500 | +0.204 | [−0.020, +0.393] |
+| boundary **unaudited** | 27 | 11 | 0.704 | 0.500 | +0.204 | [−0.020, +0.393] |
 
 **The restriction was necessary and it changed the answer.** Unrestricted, the
 confirmed half sat in 13 recordings and the unconfirmed one in 114, and those
@@ -287,6 +287,16 @@ wrong-video null cannot see a boundary. Within recordings the nulls agree
 **On confirmed boundaries the model scores 0.882** — inside the 0.862–1.000
 band every other axis of the 8B table occupies. The lowest row in this project
 looks like it is set by boundary quality rather than by temporal grounding.
+
+**The second row is mislabelled in the run that produced it, and the correction
+matters.** "not confirmed" was computed as the complement of "confirmed", so a
+join nobody ever looked at was pooled with one a human judged not to be a
+boundary. Those are different claims — unknown status against evidence against
+— and the complement is almost entirely the first. Among the spans this arm has
+scored there is currently **no recording at all** holding both a confirmed join
+and a judged-not-a-boundary one, so the contrast the split was built to make
+does not yet exist in the data. What the table compares is confirmed against
+UNKNOWN, whose base rate carries roughly 35% wrong boundaries.
 
 **Not established.** 17 against 27 pairs over 11 clusters, overlapping
 intervals, Fisher p ≈ 0.16. The direction is consistent across three nested
