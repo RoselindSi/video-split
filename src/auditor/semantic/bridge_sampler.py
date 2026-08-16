@@ -203,9 +203,32 @@ def main():
                   if any(abs(x[2] - t) <= a.tol_s
                          for t in bt["not_confirmed"])
                   else "unaudited")
+            # WHAT IS MISSING IS `NOT A BOUNDARY`, so the selection has to
+            # aim there. The frozen ontology says `same_instance ->
+            # NO_BOUNDARY`, and two clauses sharing a verb or an object head
+            # is what one instance cut in half looks like. That is a property
+            # of the annotation, not a model's opinion -- but it is still
+            # enrichment, so it is recorded per target.
+            da, db = claims.get(x[0]), claims.get(y[0])
+            why = []
+            if da and db:
+                va = {q["verb"] for q in da["actions"]}
+                vb = {q["verb"] for q in db["actions"]}
+                oa = {str(q.get("name", "")).split()[-1]
+                      for q in da["entities"] if q.get("name")}
+                ob = {str(q.get("name", "")).split()[-1]
+                      for q in db["entities"] if q.get("name")}
+                if va & vb:
+                    why.append(f"same verb {sorted(va & vb)}")
+                if oa & ob:
+                    why.append(f"same object {sorted(oa & ob)}")
+            if (x[2] - x[1]) < 2.0 or (y[2] - y[1]) < 2.0:
+                why.append("one side under 2s")
             span_cand[rid].append({
                 "start": x[1], "end": y[2], "internal_join": x[2],
                 "clause_a": x[0], "clause_b": y[0], "join_status": st,
+                "why_selected": why or ["adjacent labelled pair"],
+                "likely_no_boundary": bool(why),
                 "already_scored": (rid, round(x[1], 3)) in scored_spans})
 
     # --- rank ------------------------------------------------------------
@@ -306,8 +329,12 @@ def main():
             rid = r["recording_id"]
             sc = sorted(sem_cand.get(rid, ()),
                         key=lambda c: -len(c["why_selected"]))
+            # Scored first, then the ones that might come back NOT a
+            # boundary, since that verdict is the one no recording has.
             sp = sorted(span_cand.get(rid, ()),
-                        key=lambda c: (not c["already_scored"], c["start"]))
+                        key=lambda c: (not c["already_scored"],
+                                       not c["likely_no_boundary"],
+                                       c["start"]))
             pack.append(dict(r, sem_targets=sc[:a.per_recording],
                              span_targets=sp[:a.per_recording]))
         json.dump({"generated_for": "bridge audit",
