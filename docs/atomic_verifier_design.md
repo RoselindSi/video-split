@@ -265,3 +265,32 @@ to segments whose boundaries were human-confirmed in the frozen 72-event Gold
 v2. Until that runs, "cross-segment temporal grounding is the residual research
 problem" is not supported — it may be the third time this project's ceiling has
 turned out to be the annotation.
+
+### Whose ceiling is reorder_span's 0.730 — directional, not established
+
+Split by whether the boundary BETWEEN the two segments was human-confirmed in
+the 72- and 188-event boundary gold, restricted to the 11 recordings that carry
+both kinds so the contrast is within-recording.
+
+| half | n | recs | true | null | excess | 95% |
+|---|---:|---:|---:|---:|---|---|
+| boundary confirmed | 17 | 11 | **0.882** | 0.449 | +0.434 | [+0.208, +0.671] |
+| boundary not confirmed | 27 | 11 | 0.704 | 0.500 | +0.204 | [−0.020, +0.393] |
+
+**The restriction was necessary and it changed the answer.** Unrestricted, the
+confirmed half sat in 13 recordings and the unconfirmed one in 114, and those
+13 entered the boundary audit because of the detector's failure modes rather
+than at random — the two halves' nulls differed, 0.575 against 0.498, and a
+wrong-video null cannot see a boundary. Within recordings the nulls agree
+(0.449 / 0.500) and the accuracy gap grows from +0.118 to +0.178.
+
+**On confirmed boundaries the model scores 0.882** — inside the 0.862–1.000
+band every other axis of the 8B table occupies. The lowest row in this project
+looks like it is set by boundary quality rather than by temporal grounding.
+
+**Not established.** 17 against 27 pairs over 11 clusters, overlapping
+intervals, Fisher p ≈ 0.16. The direction is consistent across three nested
+cuts (+0.119 at n=16, +0.118 at n=25, +0.178 within-recording) but those are
+the same pairs three ways, not three pieces of evidence. Settling it needs more
+confirmed boundaries inside the span arm's recordings — which is annotation,
+not modelling.
