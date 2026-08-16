@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,internal_join,clause_a,clause_b,join_relation,boundary_time,boundary_interval_start,boundary_interval_end,auditor,notes
+recording_000224_SPAN1,recording_000224,368.5,398.0,372.0,Unpack box from plastic bag,Seal cardboard box with tape,,,,,,
+recording_000224_SPAN2,recording_000224,457.0,482.0,479.0,Unpack USB and flatten box,Place flat box into bag,,,,,,
+recording_000224_SPAN3,recording_000224,612.0,625.0,619.0,Seal box bottom with tape,Place item in box and close flaps,,,,,,
+recording_000224_SPAN4,recording_000224,619.0,629.0,625.0,Place item in box and close flaps,Seal box top with tape,,,,,,

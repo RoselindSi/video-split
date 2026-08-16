@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,internal_join,clause_a,clause_b,join_relation,boundary_time,boundary_interval_start,boundary_interval_end,auditor,notes
+recording_000150_SPAN1,recording_000150,553.0,557.5,555.5,Flip remote control from back to front,Flip remote control from front to back,,,,,,
+recording_000150_SPAN2,recording_000150,556.0,561.0,557.5,Flip remote control from front to back,Flip remote control from back to front,,,,,,
+recording_000150_SPAN3,recording_000150,565.0,569.5,567.0,Flip remote control from back to front,Flip remote control from front to back,,,,,,
+recording_000150_SPAN4,recording_000150,568.0,573.0,569.5,Flip remote control from front to back,Flip remote control from back to front,,,,,,

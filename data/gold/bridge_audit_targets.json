@@ -1,0 +1,4079 @@
+{
+  "generated_for": "bridge audit",
+  "both_class_today": [
+    "recording_000220"
+  ],
+  "both_boundary_today": [],
+  "packets": [
+    {
+      "recording_id": "recording_000176",
+      "tier": 3,
+      "why": "one audit from BOTH on both arms",
+      "sem_gap": "needs NO",
+      "bnd_gap": "needs not_confirmed",
+      "n_sem_candidates": 53,
+      "n_span_candidates": 40,
+      "n_spans_already_scored": 4,
+      "sem_targets": [
+        {
+          "start": 307.0,
+          "end": 327.0,
+          "label": "Clean and reinstall sink strainer",
+          "why_selected": [
+            "rare verb",
+            "label reused 65x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 327.0,
+          "end": 347.0,
+          "label": "Clean and reinstall sink strainer",
+          "why_selected": [
+            "rare verb",
+            "label reused 65x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 347.0,
+          "end": 367.5,
+          "label": "Clean and reinstall sink strainer",
+          "why_selected": [
+            "rare verb",
+            "label reused 65x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 529.5,
+          "end": 568.5,
+          "label": "Rinse and replace sink strainer",
+          "why_selected": [
+            "label reused 53x",
+            "duration >3x this recording's median",
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 11.5,
+          "end": 26.5,
+          "internal_join": 14.5,
+          "clause_a": "Remove sink strainer",
+          "clause_b": "Rinse sink strainer",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['strainer']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 62.0,
+          "end": 71.0,
+          "internal_join": 70.0,
+          "clause_a": "Install sink strainer",
+          "clause_b": "Remove sink strainer",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['strainer']",
+            "one side under 2s"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 92.5,
+          "end": 105.0,
+          "internal_join": 93.5,
+          "clause_a": "Remove sink strainer",
+          "clause_b": "Rinse sink strainer",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['strainer']",
+            "one side under 2s"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 176.5,
+          "end": 194.0,
+          "internal_join": 188.5,
+          "clause_a": "Rinse sink strainer",
+          "clause_b": "Install sink strainer into drain",
+          "join_status": "confirmed",
+          "why_selected": [
+            "same object ['strainer']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000242",
+      "tier": 3,
+      "why": "one audit from BOTH on both arms",
+      "sem_gap": "needs YES",
+      "bnd_gap": "needs not_confirmed",
+      "n_sem_candidates": 43,
+      "n_span_candidates": 60,
+      "n_spans_already_scored": 4,
+      "sem_targets": [
+        {
+          "start": 39.5,
+          "end": 44.0,
+          "label": "Reopen and inspect cardboard box",
+          "why_selected": [
+            "rare verb",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 93.0,
+          "end": 106.0,
+          "label": "Verify box contents and seal the top end with tape",
+          "why_selected": [
+            "rare verb",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 106.0,
+          "end": 118.0,
+          "label": "Recheck box contents and reseal the top end",
+          "why_selected": [
+            "rare verb",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 200.0,
+          "end": 226.0,
+          "label": "Open and reseal cardboard box (store in bag and retrieve)",
+          "why_selected": [
+            "duration >3x this recording's median",
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 93.0,
+          "end": 118.0,
+          "internal_join": 106.0,
+          "clause_a": "Verify box contents and seal the top end with tape",
+          "clause_b": "Recheck box contents and reseal the top end",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['box']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 143.5,
+          "end": 151.5,
+          "internal_join": 147.5,
+          "clause_a": "Place cardboard box into plastic bag",
+          "clause_b": "Retrieve cardboard box from plastic bag",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['box']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 164.0,
+          "end": 167.0,
+          "internal_join": 164.5,
+          "clause_a": "Open box flaps for third inspection",
+          "clause_b": "Inspect box interior third time",
+          "join_status": "confirmed",
+          "why_selected": [
+            "same object ['box']",
+            "one side under 2s"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 21.5,
+          "end": 39.5,
+          "internal_join": 28.5,
+          "clause_a": "Relocate black plastic bag",
+          "clause_b": "Seal cardboard box with tape (first)",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": true
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000250",
+      "tier": 3,
+      "why": "one audit from BOTH on both arms",
+      "sem_gap": "needs NO",
+      "bnd_gap": "needs not_confirmed",
+      "n_sem_candidates": 37,
+      "n_span_candidates": 39,
+      "n_spans_already_scored": 4,
+      "sem_targets": [
+        {
+          "start": 319.5,
+          "end": 330.0,
+          "label": "Unseal and open cardboard box",
+          "why_selected": [
+            "rare verb",
+            "label reused 63x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 116.0,
+          "end": 149.5,
+          "label": "Remove cardboard box from black plastic bag",
+          "why_selected": [
+            "label reused 27x",
+            "duration >3x this recording's median"
+          ]
+        },
+        {
+          "start": 438.0,
+          "end": 459.0,
+          "label": "Seal bottom of cardboard box with tape",
+          "why_selected": [
+            "label reused 10x",
+            "duration >3x this recording's median"
+          ]
+        },
+        {
+          "start": 561.5,
+          "end": 573.0,
+          "label": "Unseal and open box",
+          "why_selected": [
+            "label reused 11x",
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 586.5,
+          "end": 596.0,
+          "internal_join": 590.0,
+          "clause_a": "Flatten empty box",
+          "clause_b": "Store box in plastic bag",
+          "join_status": "confirmed",
+          "why_selected": [
+            "same object ['box']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 644.5,
+          "end": 657.5,
+          "internal_join": 651.0,
+          "clause_a": "Unseal box top",
+          "clause_b": "Remove keychain from box",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['box']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 319.5,
+          "end": 336.0,
+          "internal_join": 330.0,
+          "clause_a": "Unseal and open cardboard box",
+          "clause_b": "Retrieve USB drive from the box",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": true
+        },
+        {
+          "start": 624.5,
+          "end": 639.0,
+          "internal_join": 629.5,
+          "clause_a": "Place keychain into box",
+          "clause_b": "Seal box top with tape",
+          "join_status": "confirmed",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": true
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000272",
+      "tier": 3,
+      "why": "one audit from BOTH on both arms",
+      "sem_gap": "needs NO",
+      "bnd_gap": "needs not_confirmed",
+      "n_sem_candidates": 44,
+      "n_span_candidates": 50,
+      "n_spans_already_scored": 4,
+      "sem_targets": [
+        {
+          "start": 137.7,
+          "end": 160.0,
+          "label": "Open the sealed box and retrieve the USB drive",
+          "why_selected": [
+            "duration >3x this recording's median",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 188.8,
+          "end": 201.5,
+          "label": "Assemble box and seal bottom with tape",
+          "why_selected": [
+            "label reused 5x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 201.6,
+          "end": 208.0,
+          "label": "Insert USB drive into box and close flaps",
+          "why_selected": [
+            "label reused 8x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 232.0,
+          "end": 238.5,
+          "label": "Open box and remove USB drive",
+          "why_selected": [
+            "label reused 34x",
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 261.3,
+          "end": 282.5,
+          "internal_join": 265.8,
+          "clause_a": "Remove box from plastic bag",
+          "clause_b": "Seal box end with tape",
+          "join_status": "confirmed",
+          "why_selected": [
+            "same object ['box']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 606.0,
+          "end": 628.0,
+          "internal_join": 622.0,
+          "clause_a": "Store cardboard box in plastic bag",
+          "clause_b": "Retrieve cardboard box from plastic bag",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['box']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 308.5,
+          "end": 330.2,
+          "internal_join": 314.0,
+          "clause_a": "Remove USB drive from cardboard box",
+          "clause_b": "Flatten empty box and stow in plastic bag",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": true
+        },
+        {
+          "start": 358.0,
+          "end": 377.5,
+          "internal_join": 367.0,
+          "clause_a": "Seal box bottom with adhesive tape",
+          "clause_b": "Remove sealing tape from box",
+          "join_status": "confirmed",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": true
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000465",
+      "tier": 3,
+      "why": "one audit from BOTH on both arms",
+      "sem_gap": "needs NO",
+      "bnd_gap": "needs not_confirmed",
+      "n_sem_candidates": 44,
+      "n_span_candidates": 42,
+      "n_spans_already_scored": 4,
+      "sem_targets": [
+        {
+          "start": 410.5,
+          "end": 445.5,
+          "label": "Test charging cable with mobile phone",
+          "why_selected": [
+            "label reused 8x",
+            "duration >3x this recording's median"
+          ]
+        },
+        {
+          "start": 11.0,
+          "end": 18.5,
+          "label": "Test charging cable with phone",
+          "why_selected": [
+            "label reused 10x"
+          ]
+        },
+        {
+          "start": 19.5,
+          "end": 30.5,
+          "label": "Coil and store cable in drawer",
+          "why_selected": [
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 32.0,
+          "end": 35.5,
+          "label": "Retrieve cable from drawer",
+          "why_selected": [
+            "label reused 11x"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 32.0,
+          "end": 47.0,
+          "internal_join": 35.5,
+          "clause_a": "Retrieve cable from drawer",
+          "clause_b": "Test charging cable with phone",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['cable']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 198.0,
+          "end": 214.5,
+          "internal_join": 204.5,
+          "clause_a": "Store charging cable in drawer",
+          "clause_b": "Retrieve charging cable from drawer",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": true
+        },
+        {
+          "start": 483.0,
+          "end": 502.0,
+          "internal_join": 488.0,
+          "clause_a": "Retrieve cable from drawer",
+          "clause_b": "Test cable compatibility with phone",
+          "join_status": "confirmed",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": true
+        },
+        {
+          "start": 599.0,
+          "end": 612.0,
+          "internal_join": 604.0,
+          "clause_a": "Store recoil charging cable in drawer",
+          "clause_b": "Retrieve charging cable from drawer",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": true
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000022",
+      "tier": 3,
+      "why": "one audit from BOTH on both arms",
+      "sem_gap": "needs NO",
+      "bnd_gap": "needs not_confirmed",
+      "n_sem_candidates": 18,
+      "n_span_candidates": 24,
+      "n_spans_already_scored": 2,
+      "sem_targets": [
+        {
+          "start": 588.2,
+          "end": 627.0,
+          "label": "Inspect and handle cleaned mug",
+          "why_selected": [
+            "duration >3x this recording's median",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 2.0,
+          "end": 7.0,
+          "label": "Pick up and position mug at sink",
+          "why_selected": [
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 49.5,
+          "end": 57.0,
+          "label": "Shake off water and place mug on counter",
+          "why_selected": [
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 73.0,
+          "end": 99.0,
+          "label": "Scrub mug interior by hand",
+          "why_selected": [
+            "label reused 5x"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 449.2,
+          "end": 472.2,
+          "internal_join": 466.8,
+          "clause_a": "Rinse mug after scrubbing",
+          "clause_b": "Place washed mug on counter",
+          "join_status": "confirmed",
+          "why_selected": [
+            "same object ['mug']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 234.5,
+          "end": 248.0,
+          "internal_join": 237.0,
+          "clause_a": "Shake water off hands",
+          "clause_b": "Grasp mug for repositioning",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": true
+        },
+        {
+          "start": 2.0,
+          "end": 14.5,
+          "internal_join": 7.0,
+          "clause_a": "Pick up and position mug at sink",
+          "clause_b": "First rinse of the mug",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        },
+        {
+          "start": 7.0,
+          "end": 33.5,
+          "internal_join": 14.5,
+          "clause_a": "First rinse of the mug",
+          "clause_b": "Scrub the inside of the mug",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000037",
+      "tier": 3,
+      "why": "one audit from BOTH on both arms",
+      "sem_gap": "needs NO",
+      "bnd_gap": "needs not_confirmed",
+      "n_sem_candidates": 9,
+      "n_span_candidates": 4,
+      "n_spans_already_scored": 2,
+      "sem_targets": [
+        {
+          "start": 30.0,
+          "end": 50.0,
+          "label": "Rinse entire mug and set down",
+          "why_selected": [
+            "rare verb",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 464.6,
+          "end": 526.0,
+          "label": "Final rinse and inspection of mug",
+          "why_selected": [
+            "duration >3x this recording's median",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 120.0,
+          "end": 141.0,
+          "label": "Scrub mug interior",
+          "why_selected": [
+            "label reused 19x"
+          ]
+        },
+        {
+          "start": 141.0,
+          "end": 156.0,
+          "label": "Rinse mug under running water",
+          "why_selected": [
+            "label reused 25x"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 4.0,
+          "end": 30.0,
+          "internal_join": 12.0,
+          "clause_a": "Rinse mug interior",
+          "clause_b": "Scrub mug interior with fingers",
+          "join_status": "confirmed",
+          "why_selected": [
+            "same object ['mug']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 164.0,
+          "end": 192.0,
+          "internal_join": 173.0,
+          "clause_a": "Rinse mug under running water",
+          "clause_b": "Scrub mug interior",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['mug']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 30.0,
+          "end": 59.0,
+          "internal_join": 50.0,
+          "clause_a": "Rinse entire mug and set down",
+          "clause_b": "Fill mug with tap water",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        },
+        {
+          "start": 272.0,
+          "end": 297.0,
+          "internal_join": 280.5,
+          "clause_a": "Rinsing mug under running water (second pass)",
+          "clause_b": "Scrubbing mug interior (second pass)",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000188",
+      "tier": 3,
+      "why": "one audit from BOTH on both arms",
+      "sem_gap": "needs YES",
+      "bnd_gap": "needs not_confirmed",
+      "n_sem_candidates": 19,
+      "n_span_candidates": 15,
+      "n_spans_already_scored": 2,
+      "sem_targets": [
+        {
+          "start": 418.8,
+          "end": 455.3,
+          "label": "Unbox and inspect first packaged portable charger",
+          "why_selected": [
+            "rare verb",
+            "duration >3x this recording's median",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 39.0,
+          "end": 48.0,
+          "label": "Repack first portable charger and close product box",
+          "why_selected": [
+            "rare verb",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 74.1,
+          "end": 107.1,
+          "label": "Unbox, inspect, and repackage portable charger (unit 2)",
+          "why_selected": [
+            "duration >3x this recording's median",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 272.3,
+          "end": 307.8,
+          "label": "Unbox, inspect, and repack second portable power bank",
+          "why_selected": [
+            "duration >3x this recording's median",
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 32.6,
+          "end": 48.0,
+          "internal_join": 39.0,
+          "clause_a": "Inspect first portable charger",
+          "clause_b": "Repack first portable charger and close product box",
+          "join_status": "confirmed",
+          "why_selected": [
+            "same object ['charger']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 19.5,
+          "end": 32.6,
+          "internal_join": 25.0,
+          "clause_a": "Remove wrapped device from first product box",
+          "clause_b": "Unwrap first portable charger from protective packaging",
+          "join_status": "confirmed",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": true
+        },
+        {
+          "start": 25.0,
+          "end": 39.0,
+          "internal_join": 32.6,
+          "clause_a": "Unwrap first portable charger from protective packaging",
+          "clause_b": "Inspect first portable charger",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['charger']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": false
+        },
+        {
+          "start": 353.8,
+          "end": 360.2,
+          "internal_join": 358.3,
+          "clause_a": "Repackage second power bank and close inner box",
+          "clause_b": "Reapply outer packaging sleeve to second power bank box",
+          "join_status": "unaudited",
+          "why_selected": [
+            "one side under 2s"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": false
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000230",
+      "tier": 3,
+      "why": "one audit from BOTH on both arms",
+      "sem_gap": "needs NO",
+      "bnd_gap": "needs not_confirmed",
+      "n_sem_candidates": 57,
+      "n_span_candidates": 74,
+      "n_spans_already_scored": 2,
+      "sem_targets": [
+        {
+          "start": 17.0,
+          "end": 38.0,
+          "label": "Disassemble box and store in plastic bag",
+          "why_selected": [
+            "rare verb",
+            "label reused 18x",
+            "duration >3x this recording's median",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 398.0,
+          "end": 417.0,
+          "label": "Retrieve and reassemble cardboard box",
+          "why_selected": [
+            "rare verb",
+            "label reused 20x",
+            "duration >3x this recording's median",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 375.5,
+          "end": 397.0,
+          "label": "Disassemble and store cardboard box",
+          "why_selected": [
+            "rare verb",
+            "duration >3x this recording's median",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 38.0,
+          "end": 57.0,
+          "label": "Retrieve, reassemble and reseal cardboard box",
+          "why_selected": [
+            "duration >3x this recording's median",
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 186.5,
+          "end": 202.0,
+          "internal_join": 190.0,
+          "clause_a": "Remove cardboard box from black plastic bag",
+          "clause_b": "Seal empty cardboard box with transparent tape",
+          "join_status": "confirmed",
+          "why_selected": [
+            "same object ['box']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 398.0,
+          "end": 422.2,
+          "internal_join": 417.0,
+          "clause_a": "Retrieve and reassemble cardboard box",
+          "clause_b": "Repack USB drive into cardboard box",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": true
+        },
+        {
+          "start": 38.0,
+          "end": 62.5,
+          "internal_join": 57.0,
+          "clause_a": "Retrieve, reassemble and reseal cardboard box",
+          "clause_b": "Open the cardboard box",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        },
+        {
+          "start": 57.0,
+          "end": 66.0,
+          "internal_join": 62.5,
+          "clause_a": "Open the cardboard box",
+          "clause_b": "Close top flaps of cardboard box",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000105",
+      "tier": 3,
+      "why": "one audit from BOTH on both arms",
+      "sem_gap": "needs YES",
+      "bnd_gap": "needs not_confirmed",
+      "n_sem_candidates": 66,
+      "n_span_candidates": 14,
+      "n_spans_already_scored": 1,
+      "sem_targets": [
+        {
+          "start": 358.5,
+          "end": 400.5,
+          "label": "fold and press tissue edge",
+          "why_selected": [
+            "label reused 16x",
+            "duration >3x this recording's median",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 11.8,
+          "end": 17.8,
+          "label": "Extract tissue from pack",
+          "why_selected": [
+            "rare verb",
+            "label reused 11x"
+          ]
+        },
+        {
+          "start": 117.0,
+          "end": 173.0,
+          "label": "Paper fold-unfold cycle",
+          "why_selected": [
+            "label reused 35x",
+            "duration >3x this recording's median"
+          ]
+        },
+        {
+          "start": 173.5,
+          "end": 240.0,
+          "label": "Retrieve and unfold a new tissue",
+          "why_selected": [
+            "duration >3x this recording's median",
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 577.0,
+          "end": 587.0,
+          "internal_join": 582.0,
+          "clause_a": "8th tissue fold and press",
+          "clause_b": "9th tissue fold and press",
+          "join_status": "confirmed",
+          "why_selected": [
+            "same verb ['fold', 'press']",
+            "same object ['tissue']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 11.8,
+          "end": 23.2,
+          "internal_join": 17.8,
+          "clause_a": "Extract tissue from pack",
+          "clause_b": "Unfold and lay tissue flat",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        },
+        {
+          "start": 294.2,
+          "end": 302.5,
+          "internal_join": 298.3,
+          "clause_a": "fold and unfold paper",
+          "clause_b": "fold and press tissue edge",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        },
+        {
+          "start": 535.6,
+          "end": 547.0,
+          "internal_join": 537.8,
+          "clause_a": "Discard folded tissue",
+          "clause_b": "Retrieve new tissue from pack",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000282",
+      "tier": 3,
+      "why": "one audit from BOTH on both arms",
+      "sem_gap": "needs NO",
+      "bnd_gap": "needs not_confirmed",
+      "n_sem_candidates": 39,
+      "n_span_candidates": 57,
+      "n_spans_already_scored": 0,
+      "sem_targets": [
+        {
+          "start": 184.0,
+          "end": 210.0,
+          "label": "Assemble and seal cardboard box",
+          "why_selected": [
+            "label reused 5x",
+            "duration >3x this recording's median",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 345.0,
+          "end": 358.0,
+          "label": "Unseal and open cardboard box",
+          "why_selected": [
+            "rare verb",
+            "label reused 63x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 395.5,
+          "end": 419.0,
+          "label": "Pack USB drive into outer box and seal the other end",
+          "why_selected": [
+            "rare verb",
+            "duration >3x this recording's median",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 164.5,
+          "end": 179.9,
+          "label": "Collapse and store empty cardboard box",
+          "why_selected": [
+            "rare verb",
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 533.5,
+          "end": 544.5,
+          "internal_join": 543.2,
+          "clause_a": "Reassemble box for sealing",
+          "clause_b": "Flip box and open top flaps",
+          "join_status": "unaudited",
+          "why_selected": [
+            "one side under 2s"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": false
+        },
+        {
+          "start": 543.2,
+          "end": 547.8,
+          "internal_join": 544.5,
+          "clause_a": "Flip box and open top flaps",
+          "clause_b": "Place USB drive into box",
+          "join_status": "confirmed",
+          "why_selected": [
+            "one side under 2s"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": false
+        },
+        {
+          "start": 0.5,
+          "end": 12.0,
+          "internal_join": 8.0,
+          "clause_a": "Unseal top of first cardboard box",
+          "clause_b": "Open top flaps of first cardboard box",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        },
+        {
+          "start": 8.0,
+          "end": 16.0,
+          "internal_join": 12.0,
+          "clause_a": "Open top flaps of first cardboard box",
+          "clause_b": "Remove USB drive from first box",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000160",
+      "tier": 1,
+      "why": "one audit from BOTH on span",
+      "sem_gap": "unaudited",
+      "bnd_gap": "needs not_confirmed",
+      "n_sem_candidates": 45,
+      "n_span_candidates": 24,
+      "n_spans_already_scored": 4,
+      "sem_targets": [
+        {
+          "start": 497.1,
+          "end": 516.1,
+          "label": "Clean and reinstall sink strainer",
+          "why_selected": [
+            "rare verb",
+            "label reused 65x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 516.1,
+          "end": 536.1,
+          "label": "Clean and reinstall sink strainer",
+          "why_selected": [
+            "rare verb",
+            "label reused 65x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 536.1,
+          "end": 558.6,
+          "label": "Clean and reinstall sink strainer",
+          "why_selected": [
+            "rare verb",
+            "label reused 65x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 134.0,
+          "end": 159.0,
+          "label": "Rinse and seat sink strainer",
+          "why_selected": [
+            "label reused 11x",
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 197.2,
+          "end": 209.5,
+          "internal_join": 207.5,
+          "clause_a": "Reinstall and adjust sink drain strainer",
+          "clause_b": "Remove sink drain strainer",
+          "join_status": "confirmed",
+          "why_selected": [
+            "same object ['strainer']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 221.0,
+          "end": 231.0,
+          "internal_join": 229.0,
+          "clause_a": "Reinstall and adjust sink drain strainer",
+          "clause_b": "Remove sink drain strainer",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['strainer']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 326.1,
+          "end": 337.5,
+          "internal_join": 329.5,
+          "clause_a": "Remove sink strainer",
+          "clause_b": "Rinse sink strainer",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['strainer']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 345.1,
+          "end": 357.0,
+          "internal_join": 347.6,
+          "clause_a": "Remove sink strainer",
+          "clause_b": "Rinse sink strainer",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['strainer']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000181",
+      "tier": 1,
+      "why": "one audit from BOTH on semantic",
+      "sem_gap": "needs NO",
+      "bnd_gap": "unaudited",
+      "n_sem_candidates": 60,
+      "n_span_candidates": 22,
+      "n_spans_already_scored": 4,
+      "sem_targets": [
+        {
+          "start": 73.5,
+          "end": 93.5,
+          "label": "Rinse and reseat sink drain strainer",
+          "why_selected": [
+            "rare verb",
+            "label reused 19x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 93.5,
+          "end": 108.5,
+          "label": "Rinse and reseat sink drain strainer",
+          "why_selected": [
+            "rare verb",
+            "label reused 19x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 108.5,
+          "end": 126.0,
+          "label": "Rinse and reseat sink drain strainer",
+          "why_selected": [
+            "rare verb",
+            "label reused 19x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 126.0,
+          "end": 142.0,
+          "label": "Rinse and replace sink strainer",
+          "why_selected": [
+            "label reused 53x",
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 233.0,
+          "end": 252.5,
+          "internal_join": 242.8,
+          "clause_a": "Clean sink drain strainer",
+          "clause_b": "Rinse and re-seat sink strainer",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['strainer']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 315.0,
+          "end": 323.0,
+          "internal_join": 316.5,
+          "clause_a": "Remove sink strainer",
+          "clause_b": "Rinse sink strainer",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['strainer']",
+            "one side under 2s"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 352.5,
+          "end": 365.5,
+          "internal_join": 353.8,
+          "clause_a": "Remove sink strainer",
+          "clause_b": "Rinse sink strainer",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['strainer']",
+            "one side under 2s"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 537.0,
+          "end": 566.0,
+          "internal_join": 552.5,
+          "clause_a": "Clean and re-seat sink strainer",
+          "clause_b": "Clean sink drain strainer and wipe sink basin",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same verb ['clean']",
+            "same object ['strainer']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000213",
+      "tier": 1,
+      "why": "one audit from BOTH on semantic",
+      "sem_gap": "needs NO",
+      "bnd_gap": "unaudited",
+      "n_sem_candidates": 53,
+      "n_span_candidates": 6,
+      "n_spans_already_scored": 4,
+      "sem_targets": [
+        {
+          "start": 666.5,
+          "end": 680.0,
+          "label": "Clean and reinstall sink strainer",
+          "why_selected": [
+            "rare verb",
+            "label reused 65x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 680.0,
+          "end": 690.5,
+          "label": "Clean and reinstall sink strainer",
+          "why_selected": [
+            "rare verb",
+            "label reused 65x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 690.5,
+          "end": 701.8,
+          "label": "Clean and reinstall sink strainer",
+          "why_selected": [
+            "rare verb",
+            "label reused 65x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 70.2,
+          "end": 83.2,
+          "label": "Clean and replace sink strainer",
+          "why_selected": [
+            "label reused 51x",
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 57.5,
+          "end": 83.2,
+          "internal_join": 70.2,
+          "clause_a": "Clean sink drain strainer",
+          "clause_b": "Clean and replace sink strainer",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same verb ['clean']",
+            "same object ['strainer']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 164.2,
+          "end": 186.0,
+          "internal_join": 176.3,
+          "clause_a": "Remove, rinse and reseat sink strainer",
+          "clause_b": "Rinse and seat sink strainer",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same verb ['rinse']",
+            "same object ['strainer']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 289.1,
+          "end": 310.8,
+          "internal_join": 299.9,
+          "clause_a": "Clean and replace sink drain strainer",
+          "clause_b": "Clean sink drain strainer",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same verb ['clean']",
+            "same object ['strainer']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 537.5,
+          "end": 564.5,
+          "internal_join": 548.5,
+          "clause_a": "Rinse and re-seat sink strainer",
+          "clause_b": "Clean and replace sink strainer",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['strainer']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000236",
+      "tier": 1,
+      "why": "one audit from BOTH on span",
+      "sem_gap": "unaudited",
+      "bnd_gap": "needs not_confirmed",
+      "n_sem_candidates": 51,
+      "n_span_candidates": 61,
+      "n_spans_already_scored": 4,
+      "sem_targets": [
+        {
+          "start": 34.0,
+          "end": 44.0,
+          "label": "Disassemble box and store in bag",
+          "why_selected": [
+            "label reused 5x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 111.0,
+          "end": 114.0,
+          "label": "Insert USB drive into box and close flaps",
+          "why_selected": [
+            "label reused 8x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 133.5,
+          "end": 140.5,
+          "label": "Disassemble and flatten cardboard box",
+          "why_selected": [
+            "label reused 16x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 205.0,
+          "end": 223.0,
+          "label": "Open and prepare larger cardboard box",
+          "why_selected": [
+            "duration >3x this recording's median",
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 60.5,
+          "end": 71.0,
+          "internal_join": 64.0,
+          "clause_a": "Open untaped cardboard box",
+          "clause_b": "Seal cardboard box with adhesive tape",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['box']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 477.5,
+          "end": 489.5,
+          "internal_join": 482.0,
+          "clause_a": "Retrieve cardboard box from plastic bag",
+          "clause_b": "Seal cardboard box with adhesive tape",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['box']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 547.0,
+          "end": 552.5,
+          "internal_join": 548.5,
+          "clause_a": "Close cardboard box top flaps",
+          "clause_b": "Re-seal box top with packing tape",
+          "join_status": "confirmed",
+          "why_selected": [
+            "one side under 2s"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 447.0,
+          "end": 477.0,
+          "internal_join": 462.0,
+          "clause_a": "Unpack USB drive from cardboard box",
+          "clause_b": "Flatten cardboard box and store in plastic bag",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": true
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000343",
+      "tier": 1,
+      "why": "one audit from BOTH on semantic",
+      "sem_gap": "needs NO",
+      "bnd_gap": "unaudited",
+      "n_sem_candidates": 56,
+      "n_span_candidates": 11,
+      "n_spans_already_scored": 4,
+      "sem_targets": [
+        {
+          "start": 69.5,
+          "end": 82.5,
+          "label": "Apply liquid to pan and return bottle",
+          "why_selected": [
+            "label reused 10x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 83.5,
+          "end": 97.0,
+          "label": "Apply liquid to pan and return bottle",
+          "why_selected": [
+            "label reused 10x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 97.5,
+          "end": 109.5,
+          "label": "Apply liquid to pan and return bottle",
+          "why_selected": [
+            "label reused 10x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 110.5,
+          "end": 122.5,
+          "label": "Apply liquid to pan and return bottle",
+          "why_selected": [
+            "label reused 10x",
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 233.5,
+          "end": 257.2,
+          "internal_join": 246.2,
+          "clause_a": "Apply liquid to pan with brush",
+          "clause_b": "Coat pan with liquid using spatula",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['pan']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 477.0,
+          "end": 498.6,
+          "internal_join": 487.6,
+          "clause_a": "Apply liquid to pan with brush from bottle",
+          "clause_b": "Apply liquid to pan with brush and bottle",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same verb ['apply']",
+            "same object ['pan']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 531.0,
+          "end": 553.0,
+          "internal_join": 543.0,
+          "clause_a": "Apply liquid to pan with brush and bottle",
+          "clause_b": "Pan liquid application cycle",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same verb ['apply']",
+            "same object ['pan']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 597.5,
+          "end": 618.2,
+          "internal_join": 607.7,
+          "clause_a": "Pan liquid application cycle",
+          "clause_b": "apply liquid coat to pan",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same verb ['apply']",
+            "same object ['pan']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000388",
+      "tier": 1,
+      "why": "one audit from BOTH on semantic",
+      "sem_gap": "needs NO",
+      "bnd_gap": "unaudited",
+      "n_sem_candidates": 22,
+      "n_span_candidates": 8,
+      "n_spans_already_scored": 4,
+      "sem_targets": [
+        {
+          "start": 24.0,
+          "end": 93.5,
+          "label": "Cover bowl with plastic wrap",
+          "why_selected": [
+            "label reused 30x",
+            "duration >3x this recording's median"
+          ]
+        },
+        {
+          "start": 93.5,
+          "end": 110.5,
+          "label": "Remove and discard plastic wrap from bowl",
+          "why_selected": [
+            "label reused 21x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 137.8,
+          "end": 179.9,
+          "label": "Fold and tuck plastic wrap around bowl sides to seal",
+          "why_selected": [
+            "rare verb",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 206.6,
+          "end": 260.1,
+          "label": "Seal plastic wrap around bowl rim",
+          "why_selected": [
+            "label reused 12x",
+            "duration >3x this recording's median"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 610.0,
+          "end": 635.1,
+          "internal_join": 620.0,
+          "clause_a": "Unroll plastic wrap to required length",
+          "clause_b": "Place and smooth plastic wrap over the bowl",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['wrap']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 440.7,
+          "end": 462.7,
+          "internal_join": 445.7,
+          "clause_a": "Prepare plastic wrap roll",
+          "clause_b": "Unroll and tear plastic wrap sheet",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": true
+        },
+        {
+          "start": 601.8,
+          "end": 610.0,
+          "internal_join": 605.8,
+          "clause_a": "Manipulate and discard ice cube into basin",
+          "clause_b": "Adjust bowl and prepare plastic wrap roll",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": true
+        },
+        {
+          "start": 605.8,
+          "end": 620.0,
+          "internal_join": 610.0,
+          "clause_a": "Adjust bowl and prepare plastic wrap roll",
+          "clause_b": "Unroll plastic wrap to required length",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": true
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000391",
+      "tier": 1,
+      "why": "one audit from BOTH on semantic",
+      "sem_gap": "needs NO",
+      "bnd_gap": "unaudited",
+      "n_sem_candidates": 25,
+      "n_span_candidates": 25,
+      "n_spans_already_scored": 4,
+      "sem_targets": [
+        {
+          "start": 241.5,
+          "end": 250.5,
+          "label": "Uncoil USB cable",
+          "why_selected": [
+            "rare verb",
+            "label reused 26x"
+          ]
+        },
+        {
+          "start": 264.0,
+          "end": 268.5,
+          "label": "Uncoil USB cable",
+          "why_selected": [
+            "rare verb",
+            "label reused 26x"
+          ]
+        },
+        {
+          "start": 281.0,
+          "end": 284.5,
+          "label": "Uncoil USB cable",
+          "why_selected": [
+            "rare verb",
+            "label reused 26x"
+          ]
+        },
+        {
+          "start": 296.0,
+          "end": 299.0,
+          "label": "Uncoil USB cable",
+          "why_selected": [
+            "rare verb",
+            "label reused 26x"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 231.0,
+          "end": 250.5,
+          "internal_join": 239.5,
+          "clause_a": "Fold USB cable and place on table",
+          "clause_b": "Uncoil USB cable",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['cable']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 241.5,
+          "end": 260.5,
+          "internal_join": 250.5,
+          "clause_a": "Uncoil USB cable",
+          "clause_b": "Recoil USB cable",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['cable']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 272.5,
+          "end": 284.5,
+          "internal_join": 279.0,
+          "clause_a": "Recoil USB cable",
+          "clause_b": "Uncoil USB cable",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['cable']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 281.0,
+          "end": 293.5,
+          "internal_join": 284.5,
+          "clause_a": "Uncoil USB cable",
+          "clause_b": "Recoil USB cable",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['cable']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000406",
+      "tier": 1,
+      "why": "one audit from BOTH on semantic",
+      "sem_gap": "needs NO",
+      "bnd_gap": "unaudited",
+      "n_sem_candidates": 23,
+      "n_span_candidates": 11,
+      "n_spans_already_scored": 4,
+      "sem_targets": [
+        {
+          "start": 320.7,
+          "end": 391.3,
+          "label": "Covering a bowl with plastic wrap",
+          "why_selected": [
+            "label reused 6x",
+            "duration >3x this recording's median"
+          ]
+        },
+        {
+          "start": 462.3,
+          "end": 469.8,
+          "label": "Removing and discarding plastic wrap",
+          "why_selected": [
+            "label reused 5x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 548.3,
+          "end": 556.6,
+          "label": "Pick up plastic wrap roll and locate edge",
+          "why_selected": [
+            "rare verb",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 617.0,
+          "end": 623.0,
+          "label": "Crumple and discard used plastic wrap",
+          "why_selected": [
+            "label reused 5x",
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 556.6,
+          "end": 570.5,
+          "internal_join": 561.6,
+          "clause_a": "Unroll a sheet of plastic wrap",
+          "clause_b": "Place plastic wrap over bowl and smooth",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['wrap']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 13.5,
+          "end": 37.0,
+          "internal_join": 27.0,
+          "clause_a": "Prepare plastic wrap roll",
+          "clause_b": "Drape plastic wrap over the bowl",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": true
+        },
+        {
+          "start": 462.3,
+          "end": 490.3,
+          "internal_join": 469.8,
+          "clause_a": "Removing and discarding plastic wrap",
+          "clause_b": "Handling plastic wrap roll",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": true
+        },
+        {
+          "start": 548.3,
+          "end": 561.6,
+          "internal_join": 556.6,
+          "clause_a": "Pick up plastic wrap roll and locate edge",
+          "clause_b": "Unroll a sheet of plastic wrap",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": true
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000438",
+      "tier": 1,
+      "why": "one audit from BOTH on semantic",
+      "sem_gap": "needs NO",
+      "bnd_gap": "unaudited",
+      "n_sem_candidates": 20,
+      "n_span_candidates": 10,
+      "n_spans_already_scored": 4,
+      "sem_targets": [
+        {
+          "start": 229.0,
+          "end": 239.9,
+          "label": "Remove and crumple plastic wrap",
+          "why_selected": [
+            "label reused 6x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 250.0,
+          "end": 308.0,
+          "label": "Wrap a bowl with plastic wrap",
+          "why_selected": [
+            "label reused 5x",
+            "duration >3x this recording's median"
+          ]
+        },
+        {
+          "start": 308.0,
+          "end": 322.5,
+          "label": "Crumple and discard used plastic wrap",
+          "why_selected": [
+            "label reused 5x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 336.0,
+          "end": 389.0,
+          "label": "Apply and seal plastic wrap to bowl",
+          "why_selected": [
+            "duration >3x this recording's median",
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 46.0,
+          "end": 71.0,
+          "internal_join": 65.0,
+          "clause_a": "Press and seal plastic wrap on the bowl",
+          "clause_b": "Unwrap plastic wrap from a bowl",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['wrap']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 181.0,
+          "end": 185.5,
+          "internal_join": 182.0,
+          "clause_a": "Manipulate small transparent object",
+          "clause_b": "Retrieve plastic wrap roll",
+          "join_status": "unaudited",
+          "why_selected": [
+            "one side under 2s"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 212.0,
+          "end": 239.9,
+          "internal_join": 229.0,
+          "clause_a": "Secure plastic wrap around bowl",
+          "clause_b": "Remove and crumple plastic wrap",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['wrap']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 182.0,
+          "end": 212.0,
+          "internal_join": 185.5,
+          "clause_a": "Retrieve plastic wrap roll",
+          "clause_b": "Unroll and tear plastic wrap sheet",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": true
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000385",
+      "tier": 1,
+      "why": "one audit from BOTH on semantic",
+      "sem_gap": "needs NO",
+      "bnd_gap": "unaudited",
+      "n_sem_candidates": 11,
+      "n_span_candidates": 5,
+      "n_spans_already_scored": 3,
+      "sem_targets": [
+        {
+          "start": 84.5,
+          "end": 119.9,
+          "label": "Cover bowl with new plastic wrap",
+          "why_selected": [
+            "label reused 12x",
+            "duration >3x this recording's median"
+          ]
+        },
+        {
+          "start": 194.0,
+          "end": 256.0,
+          "label": "Fold and seal plastic wrap around the bowl rim",
+          "why_selected": [
+            "duration >3x this recording's median",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 396.1,
+          "end": 464.1,
+          "label": "Inspect and adjust covered bowl",
+          "why_selected": [
+            "duration >3x this recording's median",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 492.1,
+          "end": 572.7,
+          "label": "Fold and press plastic wrap to seal",
+          "why_selected": [
+            "duration >3x this recording's median",
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 256.0,
+          "end": 274.1,
+          "internal_join": 264.0,
+          "clause_a": "Crumple removed plastic wrap",
+          "clause_b": "Unroll plastic wrap over bowl",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['wrap']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 264.0,
+          "end": 284.1,
+          "internal_join": 274.1,
+          "clause_a": "Unroll plastic wrap over bowl",
+          "clause_b": "Smooth plastic wrap on bowl",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['wrap']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 370.1,
+          "end": 396.1,
+          "internal_join": 380.1,
+          "clause_a": "Smooth plastic wrap on bowl top",
+          "clause_b": "Secure wrap around bowl rim",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['wrap']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 22.4,
+          "end": 40.2,
+          "internal_join": 31.8,
+          "clause_a": "Unroll plastic wrap",
+          "clause_b": "Cover bowl with plastic wrap",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000030",
+      "tier": 1,
+      "why": "one audit from BOTH on semantic",
+      "sem_gap": "needs NO",
+      "bnd_gap": "unaudited",
+      "n_sem_candidates": 131,
+      "n_span_candidates": 97,
+      "n_spans_already_scored": 2,
+      "sem_targets": [
+        {
+          "start": 65.0,
+          "end": 72.0,
+          "label": "slide water bottle back and forth on table",
+          "why_selected": [
+            "label reused 9x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 72.0,
+          "end": 79.0,
+          "label": "slide water bottle back and forth on table",
+          "why_selected": [
+            "label reused 9x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 79.0,
+          "end": 87.0,
+          "label": "slide water bottle back and forth on table",
+          "why_selected": [
+            "label reused 9x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 87.0,
+          "end": 91.0,
+          "label": "slide water bottle back and forth on table",
+          "why_selected": [
+            "label reused 9x",
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 356.0,
+          "end": 362.0,
+          "internal_join": 359.5,
+          "clause_a": "Reposition water bottle on table",
+          "clause_b": "Move water bottle from left to center position",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['bottle']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 537.0,
+          "end": 544.0,
+          "internal_join": 541.0,
+          "clause_a": "Move water bottle from table center to left",
+          "clause_b": "Reposition water bottle on table",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['bottle']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 2.0,
+          "end": 8.2,
+          "internal_join": 5.1,
+          "clause_a": "Slide bottle left from center (upright)",
+          "clause_b": "Slide bottle back to center from left (upright)",
+          "join_status": "unaudited",
+          "why_selected": [
+            "one side under 2s"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": false
+        },
+        {
+          "start": 6.2,
+          "end": 11.2,
+          "internal_join": 8.2,
+          "clause_a": "Slide bottle back to center from left (upright)",
+          "clause_b": "Slide bottle forward from center (upright)",
+          "join_status": "unaudited",
+          "why_selected": [
+            "one side under 2s"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": false
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000031",
+      "tier": 1,
+      "why": "one audit from BOTH on span",
+      "sem_gap": "unaudited",
+      "bnd_gap": "needs not_confirmed",
+      "n_sem_candidates": 14,
+      "n_span_candidates": 13,
+      "n_spans_already_scored": 2,
+      "sem_targets": [
+        {
+          "start": 50.0,
+          "end": 59.9,
+          "label": "Tuck and secure rolled umbrella",
+          "why_selected": [
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 129.0,
+          "end": 145.0,
+          "label": "Fold and align umbrella canopy panels",
+          "why_selected": [
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 170.0,
+          "end": 206.0,
+          "label": "Adjust and secure folded umbrella",
+          "why_selected": [
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 206.0,
+          "end": 218.0,
+          "label": "Adjusting the bag strap and buckle",
+          "why_selected": [
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 482.5,
+          "end": 505.0,
+          "internal_join": 495.0,
+          "clause_a": "Fold side edges and adjust straps and power cord",
+          "clause_b": "Fold the top portion of the heat cap downward",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same verb ['fold']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 479.0,
+          "end": 495.0,
+          "internal_join": 482.5,
+          "clause_a": "Lay the electric heat cap flat on the table",
+          "clause_b": "Fold side edges and adjust straps and power cord",
+          "join_status": "confirmed",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": true
+        },
+        {
+          "start": 5.0,
+          "end": 23.0,
+          "internal_join": 14.0,
+          "clause_a": "Fold canopy edges inward to align ribs",
+          "clause_b": "Fold aligned canopy into rectangular shape",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        },
+        {
+          "start": 14.0,
+          "end": 39.0,
+          "internal_join": 23.0,
+          "clause_a": "Fold aligned canopy into rectangular shape",
+          "clause_b": "Fold rectangular canopy into narrow strip",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000102",
+      "tier": 1,
+      "why": "one audit from BOTH on semantic",
+      "sem_gap": "needs YES",
+      "bnd_gap": "unaudited",
+      "n_sem_candidates": 57,
+      "n_span_candidates": 11,
+      "n_spans_already_scored": 2,
+      "sem_targets": [
+        {
+          "start": 530.0,
+          "end": 552.7,
+          "label": "Fold and crease paper edge",
+          "why_selected": [
+            "rare verb",
+            "label reused 16x",
+            "duration >3x this recording's median",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 124.0,
+          "end": 128.0,
+          "label": "Fold and crease sheet edge",
+          "why_selected": [
+            "rare verb",
+            "label reused 13x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 128.0,
+          "end": 132.0,
+          "label": "Fold and crease sheet edge",
+          "why_selected": [
+            "rare verb",
+            "label reused 13x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 132.0,
+          "end": 136.0,
+          "label": "Fold and crease sheet edge",
+          "why_selected": [
+            "rare verb",
+            "label reused 13x",
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 16.5,
+          "end": 30.0,
+          "internal_join": 23.5,
+          "clause_a": "Second fold and press tissue",
+          "clause_b": "Third fold and press tissue",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same verb ['fold', 'press']",
+            "same object ['tissue']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 477.0,
+          "end": 500.0,
+          "internal_join": 490.0,
+          "clause_a": "fold and unfold tissue",
+          "clause_b": "Fold and crease paper edge",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same verb ['fold']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 115.0,
+          "end": 128.0,
+          "internal_join": 124.0,
+          "clause_a": "Fold and unfold a paper sheet",
+          "clause_b": "Fold and crease sheet edge",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same verb ['fold']",
+            "same object ['sheet']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": false
+        },
+        {
+          "start": 7.0,
+          "end": 23.5,
+          "internal_join": 16.5,
+          "clause_a": "First fold and press tissue",
+          "clause_b": "Second fold and press tissue",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000327",
+      "tier": 1,
+      "why": "one audit from BOTH on semantic",
+      "sem_gap": "needs NO",
+      "bnd_gap": "unaudited",
+      "n_sem_candidates": 54,
+      "n_span_candidates": 25,
+      "n_spans_already_scored": 1,
+      "sem_targets": [
+        {
+          "start": 126.0,
+          "end": 134.5,
+          "label": "Apply liquid to pan and spread with brush",
+          "why_selected": [
+            "rare verb",
+            "label reused 33x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 137.0,
+          "end": 148.5,
+          "label": "Apply liquid to pan and spread with brush",
+          "why_selected": [
+            "rare verb",
+            "label reused 33x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 151.5,
+          "end": 163.0,
+          "label": "Apply liquid to pan and spread with brush",
+          "why_selected": [
+            "rare verb",
+            "label reused 33x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 165.5,
+          "end": 174.5,
+          "label": "Apply liquid to pan and spread with brush",
+          "why_selected": [
+            "rare verb",
+            "label reused 33x",
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 410.1,
+          "end": 439.2,
+          "internal_join": 428.5,
+          "clause_a": "Apply liquid to pan and spread with brush",
+          "clause_b": "Pour liquid and spread in pan with brush",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same verb ['spread']",
+            "same object ['pan']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 0.5,
+          "end": 22.5,
+          "internal_join": 11.0,
+          "clause_a": "1st liquid coating application",
+          "clause_b": "2nd liquid coating application",
+          "join_status": "confirmed",
+          "why_selected": [
+            "same verb ['apply']",
+            "same object ['pan']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": false
+        },
+        {
+          "start": 12.5,
+          "end": 33.0,
+          "internal_join": 22.5,
+          "clause_a": "2nd liquid coating application",
+          "clause_b": "3rd liquid coating application",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        },
+        {
+          "start": 73.0,
+          "end": 93.4,
+          "internal_join": 82.8,
+          "clause_a": "Apply liquid to pan with brush (cycle 2)",
+          "clause_b": "Apply liquid to pan with brush (cycle 3)",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000471",
+      "tier": 1,
+      "why": "one audit from BOTH on semantic",
+      "sem_gap": "needs NO",
+      "bnd_gap": "unaudited",
+      "n_sem_candidates": 8,
+      "n_span_candidates": 13,
+      "n_spans_already_scored": 1,
+      "sem_targets": [
+        {
+          "start": 48.3,
+          "end": 52.5,
+          "label": "Wipe the neck and handle base of the thermal carafe",
+          "why_selected": [
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 112.5,
+          "end": 127.3,
+          "label": "Wipe thermos lid and top handle assembly",
+          "why_selected": [
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 134.4,
+          "end": 137.9,
+          "label": "Wipe thermos lid and top handle assembly (detail pass)",
+          "why_selected": [
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 140.1,
+          "end": 171.8,
+          "label": "Wipe full thermos body (multiple sides) with right hand",
+          "why_selected": [
+            "duration >3x this recording's median"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 480.7,
+          "end": 497.8,
+          "internal_join": 485.4,
+          "clause_a": "Wipe kettle lid and top cap",
+          "clause_b": "Wipe upper kettle body",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same verb ['wipe']",
+            "same object ['kettle']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 11.5,
+          "end": 19.4,
+          "internal_join": 14.3,
+          "clause_a": "Wipe the thermal carafe lid",
+          "clause_b": "Wipe the upper body of the thermal carafe",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        },
+        {
+          "start": 14.3,
+          "end": 23.2,
+          "internal_join": 19.4,
+          "clause_a": "Wipe the upper body of the thermal carafe",
+          "clause_b": "Wipe the thermal carafe lid (second pass)",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        },
+        {
+          "start": 19.4,
+          "end": 28.5,
+          "internal_join": 23.2,
+          "clause_a": "Wipe the thermal carafe lid (second pass)",
+          "clause_b": "Wipe the middle body of the thermal carafe",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000061",
+      "tier": 1,
+      "why": "one audit from BOTH on semantic",
+      "sem_gap": "needs YES",
+      "bnd_gap": "unaudited",
+      "n_sem_candidates": 35,
+      "n_span_candidates": 6,
+      "n_spans_already_scored": 0,
+      "sem_targets": [
+        {
+          "start": 121.3,
+          "end": 123.3,
+          "label": "Extract tissue from pack",
+          "why_selected": [
+            "rare verb",
+            "label reused 11x"
+          ]
+        },
+        {
+          "start": 123.3,
+          "end": 164.8,
+          "label": "Wipe table surface with tissue",
+          "why_selected": [
+            "label reused 35x",
+            "duration >3x this recording's median"
+          ]
+        },
+        {
+          "start": 164.8,
+          "end": 167.3,
+          "label": "Extract tissue from pack",
+          "why_selected": [
+            "rare verb",
+            "label reused 11x"
+          ]
+        },
+        {
+          "start": 167.3,
+          "end": 228.8,
+          "label": "Wipe table surface with tissue",
+          "why_selected": [
+            "label reused 35x",
+            "duration >3x this recording's median"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 231.5,
+          "end": 243.5,
+          "internal_join": 240.5,
+          "clause_a": "Wiping table surface (second phase)",
+          "clause_b": "Flat object manipulation step",
+          "join_status": "unaudited",
+          "why_selected": [
+            "one side under 2s"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": false
+        },
+        {
+          "start": 65.5,
+          "end": 77.8,
+          "internal_join": 74.2,
+          "clause_a": "Wipe table surface with tissue",
+          "clause_b": "Retrieve new tissue from pack",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        },
+        {
+          "start": 74.2,
+          "end": 86.8,
+          "internal_join": 77.8,
+          "clause_a": "Retrieve new tissue from pack",
+          "clause_b": "Wipe table surface with tissue",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        },
+        {
+          "start": 228.8,
+          "end": 240.5,
+          "internal_join": 231.5,
+          "clause_a": "Adjusting tissue pack",
+          "clause_b": "Wiping table surface (second phase)",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000080",
+      "tier": 1,
+      "why": "one audit from BOTH on semantic",
+      "sem_gap": "needs NO",
+      "bnd_gap": "unaudited",
+      "n_sem_candidates": 33,
+      "n_span_candidates": 4,
+      "n_spans_already_scored": 0,
+      "sem_targets": [
+        {
+          "start": 60.5,
+          "end": 75.5,
+          "label": "Wipe table and dispose of used tissue",
+          "why_selected": [
+            "rare verb",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 78.0,
+          "end": 93.5,
+          "label": "Wipe table and dispose of used tissue",
+          "why_selected": [
+            "rare verb",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 96.0,
+          "end": 111.5,
+          "label": "Wipe table and dispose of used tissue",
+          "why_selected": [
+            "rare verb",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 113.0,
+          "end": 130.6,
+          "label": "Wipe table and dispose of used tissue",
+          "why_selected": [
+            "rare verb",
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 601.0,
+          "end": 616.0,
+          "internal_join": 604.0,
+          "clause_a": "Retrieve tissue from pack",
+          "clause_b": "Fold tissue paper",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        },
+        {
+          "start": 604.0,
+          "end": 619.5,
+          "internal_join": 616.0,
+          "clause_a": "Fold tissue paper",
+          "clause_b": "Crumple and discard tissue",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        },
+        {
+          "start": 622.0,
+          "end": 637.0,
+          "internal_join": 626.0,
+          "clause_a": "Retrieve tissue from pack",
+          "clause_b": "Fold tissue paper",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        },
+        {
+          "start": 626.0,
+          "end": 640.0,
+          "internal_join": 637.0,
+          "clause_a": "Fold tissue paper",
+          "clause_b": "Crumple and discard tissue",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000086",
+      "tier": 1,
+      "why": "one audit from BOTH on semantic",
+      "sem_gap": "needs YES",
+      "bnd_gap": "unaudited",
+      "n_sem_candidates": 44,
+      "n_span_candidates": 0,
+      "n_spans_already_scored": 0,
+      "sem_targets": [
+        {
+          "start": 10.0,
+          "end": 20.5,
+          "label": "Flatten and fold tissue/paper sheet",
+          "why_selected": [
+            "label reused 5x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 20.5,
+          "end": 30.0,
+          "label": "Flatten and fold tissue/paper sheet",
+          "why_selected": [
+            "label reused 5x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 30.0,
+          "end": 39.0,
+          "label": "Flatten and fold tissue/paper sheet",
+          "why_selected": [
+            "label reused 5x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 39.0,
+          "end": 47.5,
+          "label": "Flatten and fold tissue/paper sheet",
+          "why_selected": [
+            "label reused 5x",
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": []
+    },
+    {
+      "recording_id": "recording_000110",
+      "tier": 1,
+      "why": "one audit from BOTH on semantic",
+      "sem_gap": "needs NO",
+      "bnd_gap": "unaudited",
+      "n_sem_candidates": 9,
+      "n_span_candidates": 33,
+      "n_spans_already_scored": 0,
+      "sem_targets": [
+        {
+          "start": 272.2,
+          "end": 312.9,
+          "label": "Wipe countertop with squeegee",
+          "why_selected": [
+            "label reused 6x",
+            "duration >3x this recording's median"
+          ]
+        },
+        {
+          "start": 391.5,
+          "end": 419.6,
+          "label": "Clean countertop with squeegee",
+          "why_selected": [
+            "label reused 9x",
+            "duration >3x this recording's median"
+          ]
+        },
+        {
+          "start": 505.4,
+          "end": 594.1,
+          "label": "Second squeegee cleaning session",
+          "why_selected": [
+            "duration >3x this recording's median"
+          ]
+        },
+        {
+          "start": 594.1,
+          "end": 605.2,
+          "label": "Washing hands and splashing water on countertop",
+          "why_selected": [
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 645.5,
+          "end": 649.4,
+          "internal_join": 647.5,
+          "clause_a": "Wipe countertop",
+          "clause_b": "Disassemble cleaning tool",
+          "join_status": "unaudited",
+          "why_selected": [
+            "one side under 2s"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": false
+        },
+        {
+          "start": 647.5,
+          "end": 654.4,
+          "internal_join": 649.4,
+          "clause_a": "Disassemble cleaning tool",
+          "clause_b": "Assemble cleaning tool",
+          "join_status": "unaudited",
+          "why_selected": [
+            "one side under 2s"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": false
+        },
+        {
+          "start": 649.4,
+          "end": 655.4,
+          "internal_join": 654.4,
+          "clause_a": "Assemble cleaning tool",
+          "clause_b": "Wipe countertop",
+          "join_status": "unaudited",
+          "why_selected": [
+            "one side under 2s"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": false
+        },
+        {
+          "start": 654.4,
+          "end": 657.5,
+          "internal_join": 655.4,
+          "clause_a": "Wipe countertop",
+          "clause_b": "Disassemble cleaning tool",
+          "join_status": "unaudited",
+          "why_selected": [
+            "one side under 2s"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": false
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000134",
+      "tier": 1,
+      "why": "one audit from BOTH on semantic",
+      "sem_gap": "needs NO",
+      "bnd_gap": "unaudited",
+      "n_sem_candidates": 7,
+      "n_span_candidates": 17,
+      "n_spans_already_scored": 0,
+      "sem_targets": [
+        {
+          "start": 542.1,
+          "end": 561.6,
+          "label": "Fold one tissue sheet and stack it",
+          "why_selected": [
+            "rare verb",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 561.6,
+          "end": 573.1,
+          "label": "Fold one tissue sheet and stack it",
+          "why_selected": [
+            "rare verb",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 573.1,
+          "end": 587.1,
+          "label": "Fold one tissue sheet and stack it",
+          "why_selected": [
+            "rare verb",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 183.0,
+          "end": 204.0,
+          "label": "Folding a tissue sheet",
+          "why_selected": [
+            "label reused 11x"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 293.0,
+          "end": 320.7,
+          "internal_join": 309.4,
+          "clause_a": "Fold a new tissue from the pack (starts in this window)",
+          "clause_b": "Fold a paper sheet into a compact rectangle",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        },
+        {
+          "start": 343.3,
+          "end": 364.0,
+          "internal_join": 356.7,
+          "clause_a": "Fold a paper sheet into a compact rectangle",
+          "clause_b": "Fold paper sheet (starts in this window)",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        },
+        {
+          "start": 356.7,
+          "end": 374.0,
+          "internal_join": 364.0,
+          "clause_a": "Fold paper sheet (starts in this window)",
+          "clause_b": "Fold second paper sheet",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        },
+        {
+          "start": 364.0,
+          "end": 384.0,
+          "internal_join": 374.0,
+          "clause_a": "Fold second paper sheet",
+          "clause_b": "Fold third paper sheet",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000150",
+      "tier": 1,
+      "why": "one audit from BOTH on semantic",
+      "sem_gap": "needs NO",
+      "bnd_gap": "unaudited",
+      "n_sem_candidates": 125,
+      "n_span_candidates": 21,
+      "n_spans_already_scored": 0,
+      "sem_targets": [
+        {
+          "start": 4.0,
+          "end": 6.0,
+          "label": "Flip remote control to opposite side",
+          "why_selected": [
+            "label reused 36x"
+          ]
+        },
+        {
+          "start": 9.5,
+          "end": 11.0,
+          "label": "Flip remote control to opposite side",
+          "why_selected": [
+            "label reused 36x"
+          ]
+        },
+        {
+          "start": 13.0,
+          "end": 15.0,
+          "label": "Flip remote control to opposite side",
+          "why_selected": [
+            "label reused 36x"
+          ]
+        },
+        {
+          "start": 15.5,
+          "end": 17.0,
+          "label": "Flip remote control to opposite side",
+          "why_selected": [
+            "label reused 36x"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 553.0,
+          "end": 557.5,
+          "internal_join": 555.5,
+          "clause_a": "Flip remote control from back to front",
+          "clause_b": "Flip remote control from front to back",
+          "join_status": "unaudited",
+          "why_selected": [
+            "one side under 2s"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": false
+        },
+        {
+          "start": 556.0,
+          "end": 561.0,
+          "internal_join": 557.5,
+          "clause_a": "Flip remote control from front to back",
+          "clause_b": "Flip remote control from back to front",
+          "join_status": "unaudited",
+          "why_selected": [
+            "one side under 2s"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": false
+        },
+        {
+          "start": 565.0,
+          "end": 569.5,
+          "internal_join": 567.0,
+          "clause_a": "Flip remote control from back to front",
+          "clause_b": "Flip remote control from front to back",
+          "join_status": "unaudited",
+          "why_selected": [
+            "one side under 2s"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": false
+        },
+        {
+          "start": 568.0,
+          "end": 573.0,
+          "internal_join": 569.5,
+          "clause_a": "Flip remote control from front to back",
+          "clause_b": "Flip remote control from back to front",
+          "join_status": "unaudited",
+          "why_selected": [
+            "one side under 2s"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": false
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000193",
+      "tier": 1,
+      "why": "one audit from BOTH on semantic",
+      "sem_gap": "needs NO",
+      "bnd_gap": "unaudited",
+      "n_sem_candidates": 66,
+      "n_span_candidates": 50,
+      "n_spans_already_scored": 0,
+      "sem_targets": [
+        {
+          "start": 244.0,
+          "end": 249.2,
+          "label": "Telescopic rod extend-retract cycle",
+          "why_selected": [
+            "rare verb",
+            "label reused 25x"
+          ]
+        },
+        {
+          "start": 249.3,
+          "end": 255.1,
+          "label": "Telescopic rod extend-retract cycle",
+          "why_selected": [
+            "rare verb",
+            "label reused 25x"
+          ]
+        },
+        {
+          "start": 255.2,
+          "end": 259.5,
+          "label": "Telescopic rod extend-retract cycle",
+          "why_selected": [
+            "rare verb",
+            "label reused 25x"
+          ]
+        },
+        {
+          "start": 259.6,
+          "end": 264.1,
+          "label": "Telescopic rod extend-retract cycle",
+          "why_selected": [
+            "rare verb",
+            "label reused 25x"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 40.0,
+          "end": 55.0,
+          "internal_join": 45.5,
+          "clause_a": "Adjust and secure telescopic rod end fittings",
+          "clause_b": "Retract telescopic rod sections",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        },
+        {
+          "start": 83.0,
+          "end": 104.0,
+          "internal_join": 98.0,
+          "clause_a": "Retract telescopic rod fully",
+          "clause_b": "Extend telescopic rod to full length",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        },
+        {
+          "start": 98.0,
+          "end": 112.0,
+          "internal_join": 104.0,
+          "clause_a": "Extend telescopic rod to full length",
+          "clause_b": "Retract telescopic rod fully",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        },
+        {
+          "start": 104.0,
+          "end": 129.5,
+          "internal_join": 112.0,
+          "clause_a": "Retract telescopic rod fully",
+          "clause_b": "Extend telescopic rod to full length",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000419",
+      "tier": 1,
+      "why": "one audit from BOTH on semantic",
+      "sem_gap": "needs NO",
+      "bnd_gap": "unaudited",
+      "n_sem_candidates": 13,
+      "n_span_candidates": 4,
+      "n_spans_already_scored": 0,
+      "sem_targets": [
+        {
+          "start": 93.6,
+          "end": 112.6,
+          "label": "Tighten wrap and tear from roll",
+          "why_selected": [
+            "rare verb",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 371.1,
+          "end": 438.3,
+          "label": "Cover bowl with plastic wrap",
+          "why_selected": [
+            "label reused 30x",
+            "duration >3x this recording's median"
+          ]
+        },
+        {
+          "start": 507.9,
+          "end": 565.9,
+          "label": "Apply new plastic wrap to bowl",
+          "why_selected": [
+            "label reused 9x",
+            "duration >3x this recording's median"
+          ]
+        },
+        {
+          "start": 580.3,
+          "end": 637.9,
+          "label": "Apply new plastic wrap to bowl",
+          "why_selected": [
+            "label reused 9x",
+            "duration >3x this recording's median"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 68.6,
+          "end": 93.6,
+          "internal_join": 76.6,
+          "clause_a": "Unroll plastic wrap onto table",
+          "clause_b": "Position bowl and press wrap around it",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        },
+        {
+          "start": 187.3,
+          "end": 216.1,
+          "internal_join": 209.1,
+          "clause_a": "Unroll plastic wrap sheet",
+          "clause_b": "Position bowl on wrap",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        },
+        {
+          "start": 438.3,
+          "end": 466.3,
+          "internal_join": 448.8,
+          "clause_a": "Crumble and discard used plastic wrap",
+          "clause_b": "Unroll new plastic wrap from roll",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        },
+        {
+          "start": 682.4,
+          "end": 690.9,
+          "internal_join": 688.9,
+          "clause_a": "Crumpling discarded plastic packaging",
+          "clause_b": "Discarding crumpled plastic in trash bin",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000422",
+      "tier": 1,
+      "why": "one audit from BOTH on semantic",
+      "sem_gap": "needs NO",
+      "bnd_gap": "unaudited",
+      "n_sem_candidates": 14,
+      "n_span_candidates": 4,
+      "n_spans_already_scored": 0,
+      "sem_targets": [
+        {
+          "start": 313.2,
+          "end": 353.3,
+          "label": "Unrolling and laying a plastic wrap sheet on the table",
+          "why_selected": [
+            "rare verb",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 444.4,
+          "end": 455.7,
+          "label": "Crumble plastic wrap and discard into basin",
+          "why_selected": [
+            "rare verb",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 44.5,
+          "end": 74.2,
+          "label": "Unrolling plastic wrap",
+          "why_selected": [
+            "label reused 6x"
+          ]
+        },
+        {
+          "start": 78.6,
+          "end": 114.2,
+          "label": "Seal plastic wrap around bowl rim",
+          "why_selected": [
+            "label reused 12x"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 129.0,
+          "end": 159.0,
+          "internal_join": 144.0,
+          "clause_a": "Pull and drape plastic wrap over bowl",
+          "clause_b": "Adjust and test plastic wrap seal",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        },
+        {
+          "start": 144.0,
+          "end": 173.5,
+          "internal_join": 159.0,
+          "clause_a": "Adjust and test plastic wrap seal",
+          "clause_b": "Remove, crumple and discard used wrap",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        },
+        {
+          "start": 580.1,
+          "end": 595.6,
+          "internal_join": 593.1,
+          "clause_a": "Crumpling plastic wrap",
+          "clause_b": "Discarding plastic wrap into bucket",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        },
+        {
+          "start": 593.1,
+          "end": 620.8,
+          "internal_join": 595.6,
+          "clause_a": "Discarding plastic wrap into bucket",
+          "clause_b": "Picking up plastic wrap roll",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": false
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000164",
+      "tier": 2,
+      "why": "unaudited but rich on both arms",
+      "sem_gap": "unaudited",
+      "bnd_gap": "unaudited",
+      "n_sem_candidates": 31,
+      "n_span_candidates": 19,
+      "n_spans_already_scored": 4,
+      "sem_targets": [
+        {
+          "start": 140.5,
+          "end": 170.0,
+          "label": "Clean and reinstall sink strainer",
+          "why_selected": [
+            "rare verb",
+            "label reused 65x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 170.5,
+          "end": 202.5,
+          "label": "Clean and reinstall sink strainer",
+          "why_selected": [
+            "rare verb",
+            "label reused 65x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 202.5,
+          "end": 227.0,
+          "label": "Clean and reinstall sink strainer",
+          "why_selected": [
+            "rare verb",
+            "label reused 65x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 227.0,
+          "end": 247.0,
+          "label": "Clean and reinstall sink strainer",
+          "why_selected": [
+            "rare verb",
+            "label reused 65x",
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 304.5,
+          "end": 320.6,
+          "internal_join": 307.0,
+          "clause_a": "Remove sink strainer",
+          "clause_b": "Rinse sink strainer",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['strainer']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 355.6,
+          "end": 375.1,
+          "internal_join": 357.0,
+          "clause_a": "Remove sink strainer",
+          "clause_b": "Rinse sink strainer",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['strainer']",
+            "one side under 2s"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 386.0,
+          "end": 414.6,
+          "internal_join": 404.0,
+          "clause_a": "Rinse sink strainer",
+          "clause_b": "Install sink strainer",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['strainer']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 414.6,
+          "end": 433.6,
+          "internal_join": 415.8,
+          "clause_a": "Remove sink strainer",
+          "clause_b": "Rinse sink strainer",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['strainer']",
+            "one side under 2s"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000183",
+      "tier": 2,
+      "why": "unaudited but rich on both arms",
+      "sem_gap": "unaudited",
+      "bnd_gap": "unaudited",
+      "n_sem_candidates": 51,
+      "n_span_candidates": 30,
+      "n_spans_already_scored": 4,
+      "sem_targets": [
+        {
+          "start": 66.6,
+          "end": 73.7,
+          "label": "Install sink strainer",
+          "why_selected": [
+            "rare verb",
+            "label reused 23x"
+          ]
+        },
+        {
+          "start": 85.9,
+          "end": 93.0,
+          "label": "Install sink strainer",
+          "why_selected": [
+            "rare verb",
+            "label reused 23x"
+          ]
+        },
+        {
+          "start": 104.2,
+          "end": 109.2,
+          "label": "Install sink strainer",
+          "why_selected": [
+            "rare verb",
+            "label reused 23x"
+          ]
+        },
+        {
+          "start": 196.0,
+          "end": 215.0,
+          "label": "Rinse and replace sink drain strainer",
+          "why_selected": [
+            "label reused 165x",
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 11.0,
+          "end": 30.5,
+          "internal_join": 15.0,
+          "clause_a": "Remove sink strainer",
+          "clause_b": "Rinse sink strainer",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['strainer']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 66.6,
+          "end": 85.9,
+          "internal_join": 73.7,
+          "clause_a": "Install sink strainer",
+          "clause_b": "Rinse sink strainer",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['strainer']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 104.2,
+          "end": 125.8,
+          "internal_join": 109.2,
+          "clause_a": "Install sink strainer",
+          "clause_b": "Rinse sink strainer",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['strainer']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 160.0,
+          "end": 171.0,
+          "internal_join": 161.0,
+          "clause_a": "Remove and position strainer",
+          "clause_b": "Rinse sink strainer",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['strainer']",
+            "one side under 2s"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000199",
+      "tier": 2,
+      "why": "unaudited but rich on both arms",
+      "sem_gap": "unaudited",
+      "bnd_gap": "unaudited",
+      "n_sem_candidates": 63,
+      "n_span_candidates": 60,
+      "n_spans_already_scored": 4,
+      "sem_targets": [
+        {
+          "start": 491.5,
+          "end": 521.0,
+          "label": "Clean and reinstall sink strainer",
+          "why_selected": [
+            "rare verb",
+            "label reused 65x",
+            "duration >3x this recording's median",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 521.0,
+          "end": 539.5,
+          "label": "Clean and reinstall sink strainer",
+          "why_selected": [
+            "rare verb",
+            "label reused 65x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 681.0,
+          "end": 709.0,
+          "label": "Clean and reinstall sink drain strainer",
+          "why_selected": [
+            "label reused 14x",
+            "duration >3x this recording's median",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 14.0,
+          "end": 29.0,
+          "label": "Rinse and clean sink strainer under running water",
+          "why_selected": [
+            "label reused 5x",
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 93.4,
+          "end": 107.0,
+          "internal_join": 94.8,
+          "clause_a": "Remove sink strainer",
+          "clause_b": "Rinse sink strainer",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['strainer']",
+            "one side under 2s"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 267.9,
+          "end": 279.6,
+          "internal_join": 269.4,
+          "clause_a": "Remove sink strainer",
+          "clause_b": "Rinse sink strainer",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['strainer']",
+            "one side under 2s"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 335.0,
+          "end": 354.5,
+          "internal_join": 337.5,
+          "clause_a": "Remove sink strainer",
+          "clause_b": "Rinse sink strainer",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['strainer']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 465.0,
+          "end": 491.5,
+          "internal_join": 466.5,
+          "clause_a": "Remove sink strainer",
+          "clause_b": "Rinse sink strainer",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['strainer']",
+            "one side under 2s"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000221",
+      "tier": 2,
+      "why": "unaudited but rich on both arms",
+      "sem_gap": "unaudited",
+      "bnd_gap": "unaudited",
+      "n_sem_candidates": 62,
+      "n_span_candidates": 70,
+      "n_spans_already_scored": 4,
+      "sem_targets": [
+        {
+          "start": 162.7,
+          "end": 165.1,
+          "label": "Unseal and open cardboard box",
+          "why_selected": [
+            "rare verb",
+            "label reused 63x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 467.0,
+          "end": 486.2,
+          "label": "Pack USB drive into cardboard box and seal",
+          "why_selected": [
+            "label reused 10x",
+            "duration >3x this recording's median",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 489.1,
+          "end": 497.8,
+          "label": "Unseal and open cardboard box",
+          "why_selected": [
+            "rare verb",
+            "label reused 63x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 88.8,
+          "end": 94.6,
+          "label": "Disassemble and flatten cardboard box",
+          "why_selected": [
+            "label reused 16x",
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 43.0,
+          "end": 53.5,
+          "internal_join": 48.0,
+          "clause_a": "Store cardboard box in plastic bag",
+          "clause_b": "Retrieve cardboard box from plastic bag",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['box']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 153.6,
+          "end": 165.1,
+          "internal_join": 162.6,
+          "clause_a": "Seal empty cardboard box with tape",
+          "clause_b": "Unseal and open cardboard box",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['box']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 457.0,
+          "end": 467.0,
+          "internal_join": 462.0,
+          "clause_a": "Store cardboard box in plastic bag",
+          "clause_b": "Retrieve cardboard box from plastic bag",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['box']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 289.0,
+          "end": 305.0,
+          "internal_join": 294.0,
+          "clause_a": "Unpack USB drive from cardboard box",
+          "clause_b": "Seal cardboard box with adhesive tape",
+          "join_status": "unaudited",
+          "why_selected": [
+            "adjacent labelled pair"
+          ],
+          "likely_no_boundary": false,
+          "already_scored": true
+        }
+      ]
+    },
+    {
+      "recording_id": "recording_000224",
+      "tier": 2,
+      "why": "unaudited but rich on both arms",
+      "sem_gap": "unaudited",
+      "bnd_gap": "unaudited",
+      "n_sem_candidates": 44,
+      "n_span_candidates": 58,
+      "n_spans_already_scored": 4,
+      "sem_targets": [
+        {
+          "start": 43.0,
+          "end": 49.5,
+          "label": "Open box and take out USB drive",
+          "why_selected": [
+            "label reused 12x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 69.5,
+          "end": 80.2,
+          "label": "Assemble box and seal bottom with tape",
+          "why_selected": [
+            "label reused 5x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 110.0,
+          "end": 116.0,
+          "label": "Open box and take out USB drive",
+          "why_selected": [
+            "label reused 12x",
+            "multi-clause"
+          ]
+        },
+        {
+          "start": 169.0,
+          "end": 176.0,
+          "label": "Remove USB drive from box and place on table",
+          "why_selected": [
+            "label reused 9x",
+            "multi-clause"
+          ]
+        }
+      ],
+      "span_targets": [
+        {
+          "start": 368.5,
+          "end": 398.0,
+          "internal_join": 372.0,
+          "clause_a": "Unpack box from plastic bag",
+          "clause_b": "Seal cardboard box with tape",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['box']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 457.0,
+          "end": 482.0,
+          "internal_join": 479.0,
+          "clause_a": "Unpack USB and flatten box",
+          "clause_b": "Place flat box into bag",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['box']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 612.0,
+          "end": 625.0,
+          "internal_join": 619.0,
+          "clause_a": "Seal box bottom with tape",
+          "clause_b": "Place item in box and close flaps",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['box']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        },
+        {
+          "start": 619.0,
+          "end": 629.0,
+          "internal_join": 625.0,
+          "clause_a": "Place item in box and close flaps",
+          "clause_b": "Seal box top with tape",
+          "join_status": "unaudited",
+          "why_selected": [
+            "same object ['box']"
+          ],
+          "likely_no_boundary": true,
+          "already_scored": true
+        }
+      ]
+    }
+  ]
+}

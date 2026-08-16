@@ -1,0 +1,1480 @@
+{
+  "config": {
+    "migrated": "data/gold/pair_schema_v2_migrated.csv",
+    "labels": "data/gold/boundary_v1_labels_ontology_v2.json",
+    "policy": "configs/auditor/instance_relation_policy_v2.yaml",
+    "feat_cache": [
+      "/workspace/tr1/data_recseg/feat_10fps_batch3_multi.pt",
+      "/workspace/tr1/data_recseg/feat_10fps_eval_clean_multi.pt"
+    ],
+    "local_cache": [
+      "/workspace/tr1/data_recseg/feat_local_batch3.pt",
+      "/workspace/tr1/data_recseg/feat_local_dev.pt"
+    ],
+    "compare_oof": "/workspace/tr1/results/auditor/boundary_v1_oof_ontology_v2.json",
+    "decisions": "/workspace/tr1/results/hal/c3/policy_decisions_v4.primary_transportability_frontier.csv",
+    "half_s": 6.0,
+    "n_frames": 25,
+    "pca_dim": 32,
+    "hidden": 96,
+    "dropout": 0.3,
+    "epochs": 60,
+    "lr": 0.001,
+    "weight_decay": 0.01,
+    "n_folds": 5,
+    "probes": true,
+    "n_boot": 2000,
+    "seed": 0
+  },
+  "events": [
+    {
+      "event_id": "recording_000002_batch3_raw_change_peak_t602.0",
+      "recording_id": "recording_000002",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.00012628188414964825
+    },
+    {
+      "event_id": "recording_000005_batch3_raw_change_peak_t513.0",
+      "recording_id": "recording_000005",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.6779578328132629
+    },
+    {
+      "event_id": "recording_000006_batch3_gt_boundary_t229.0",
+      "recording_id": "recording_000006",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.0007654958171769977
+    },
+    {
+      "event_id": "recording_000006_batch3_gt_boundary_t77.3",
+      "recording_id": "recording_000006",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.02771526575088501
+    },
+    {
+      "event_id": "recording_000006_batch3_raw_change_peak_t393.0",
+      "recording_id": "recording_000006",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.0002668460365384817
+    },
+    {
+      "event_id": "recording_000006_batch3_raw_change_peak_t468.0",
+      "recording_id": "recording_000006",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.0020256927236914635
+    },
+    {
+      "event_id": "recording_000008_batch3_gt_boundary_t163.0",
+      "recording_id": "recording_000008",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.0017747849924489856
+    },
+    {
+      "event_id": "recording_000008_batch3_gt_boundary_t650.1",
+      "recording_id": "recording_000008",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.9885525703430176
+    },
+    {
+      "event_id": "recording_000011_batch3_raw_change_peak_t218.0",
+      "recording_id": "recording_000011",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.999941349029541
+    },
+    {
+      "event_id": "recording_000011_batch3_raw_change_peak_t260.0",
+      "recording_id": "recording_000011",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.9999796152114868
+    },
+    {
+      "event_id": "recording_000011_batch3_raw_change_peak_t352.0",
+      "recording_id": "recording_000011",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.999963641166687
+    },
+    {
+      "event_id": "recording_000013_batch3_gt_boundary_t516.0",
+      "recording_id": "recording_000013",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.9999841451644897
+    },
+    {
+      "event_id": "recording_000019_batch3_gt_boundary_t112.5",
+      "recording_id": "recording_000019",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.9982967972755432
+    },
+    {
+      "event_id": "recording_000019_batch3_gt_boundary_t173.0",
+      "recording_id": "recording_000019",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.9877591729164124
+    },
+    {
+      "event_id": "recording_000019_batch3_gt_boundary_t9.5",
+      "recording_id": "recording_000019",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.3932189345359802
+    },
+    {
+      "event_id": "recording_000020_batch3_raw_change_peak_t67.0",
+      "recording_id": "recording_000020",
+      "relation": "new_action",
+      "y": 1.0,
+      "p_boundary": 0.7305925488471985
+    },
+    {
+      "event_id": "recording_000022_missed_signal_present_not_top_t366.5",
+      "recording_id": "recording_000022",
+      "relation": "new_action",
+      "y": 1.0,
+      "p_boundary": 0.006737882271409035
+    },
+    {
+      "event_id": "recording_000022_missed_weak_signal_t466.8",
+      "recording_id": "recording_000022",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.36324867606163025
+    },
+    {
+      "event_id": "recording_000023_batch3_raw_change_peak_t333.0",
+      "recording_id": "recording_000023",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.9972165822982788
+    },
+    {
+      "event_id": "recording_000024_batch3_raw_change_peak_t584.0",
+      "recording_id": "recording_000024",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.9940444827079773
+    },
+    {
+      "event_id": "recording_000025_batch3_gt_boundary_t112.0",
+      "recording_id": "recording_000025",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.9983231425285339
+    },
+    {
+      "event_id": "recording_000025_batch3_gt_boundary_t413.5",
+      "recording_id": "recording_000025",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.999861478805542
+    },
+    {
+      "event_id": "recording_000025_batch3_gt_boundary_t516.0",
+      "recording_id": "recording_000025",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.9998867511749268
+    },
+    {
+      "event_id": "recording_000026_batch3_raw_change_peak_t206.0",
+      "recording_id": "recording_000026",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.0007166584255173802
+    },
+    {
+      "event_id": "recording_000027_batch3_gt_boundary_t142.0",
+      "recording_id": "recording_000027",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.9998735189437866
+    },
+    {
+      "event_id": "recording_000027_batch3_gt_boundary_t541.0",
+      "recording_id": "recording_000027",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.956666111946106
+    },
+    {
+      "event_id": "recording_000028_batch3_raw_change_peak_t273.0",
+      "recording_id": "recording_000028",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.9966392517089844
+    },
+    {
+      "event_id": "recording_000029_batch3_gt_boundary_t519.0",
+      "recording_id": "recording_000029",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.36153122782707214
+    },
+    {
+      "event_id": "recording_000029_batch3_raw_change_peak_t163.0",
+      "recording_id": "recording_000029",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.012289158068597317
+    },
+    {
+      "event_id": "recording_000029_batch3_raw_change_peak_t442.0",
+      "recording_id": "recording_000029",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.5555985569953918
+    },
+    {
+      "event_id": "recording_000030_false_gap_t556.0",
+      "recording_id": "recording_000030",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.9999396800994873
+    },
+    {
+      "event_id": "recording_000030_late_t387.5",
+      "recording_id": "recording_000030",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.999910831451416
+    },
+    {
+      "event_id": "recording_000030_late_t501.0",
+      "recording_id": "recording_000030",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.9999840259552002
+    },
+    {
+      "event_id": "recording_000033_batch3_raw_change_peak_t566.0",
+      "recording_id": "recording_000033",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.9992063641548157
+    },
+    {
+      "event_id": "recording_000035_batch3_gt_boundary_t473.0",
+      "recording_id": "recording_000035",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.9864872097969055
+    },
+    {
+      "event_id": "recording_000035_batch3_raw_change_peak_t132.0",
+      "recording_id": "recording_000035",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.9998929500579834
+    },
+    {
+      "event_id": "recording_000035_batch3_raw_change_peak_t351.0",
+      "recording_id": "recording_000035",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.9998422861099243
+    },
+    {
+      "event_id": "recording_000037_early_t156.0",
+      "recording_id": "recording_000037",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.9885412454605103
+    },
+    {
+      "event_id": "recording_000042_batch3_raw_change_peak_t234.0",
+      "recording_id": "recording_000042",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.9998693466186523
+    },
+    {
+      "event_id": "recording_000046_missed_signal_present_not_top_t378.7",
+      "recording_id": "recording_000046",
+      "relation": "new_action",
+      "y": 1.0,
+      "p_boundary": 0.0005810263101011515
+    },
+    {
+      "event_id": "recording_000048_batch3_raw_change_peak_t96.0",
+      "recording_id": "recording_000048",
+      "relation": "new_action",
+      "y": 1.0,
+      "p_boundary": 0.002943070139735937
+    },
+    {
+      "event_id": "recording_000049_batch3_gt_boundary_t94.5",
+      "recording_id": "recording_000049",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.11046379059553146
+    },
+    {
+      "event_id": "recording_000049_batch3_raw_change_peak_t325.0",
+      "recording_id": "recording_000049",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.9944171905517578
+    },
+    {
+      "event_id": "recording_000050_batch3_gt_boundary_t291.5",
+      "recording_id": "recording_000050",
+      "relation": "new_action",
+      "y": 1.0,
+      "p_boundary": 0.04651651531457901
+    },
+    {
+      "event_id": "recording_000050_batch3_raw_change_peak_t104.0",
+      "recording_id": "recording_000050",
+      "relation": "new_action",
+      "y": 1.0,
+      "p_boundary": 0.004334580153226852
+    },
+    {
+      "event_id": "recording_000053_late_t207.5",
+      "recording_id": "recording_000053",
+      "relation": "new_action",
+      "y": 1.0,
+      "p_boundary": 0.9574165344238281
+    },
+    {
+      "event_id": "recording_000054_batch3_raw_change_peak_t47.0",
+      "recording_id": "recording_000054",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 6.694499461445957e-05
+    },
+    {
+      "event_id": "recording_000056_batch3_gt_boundary_t261.0",
+      "recording_id": "recording_000056",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.9770227670669556
+    },
+    {
+      "event_id": "recording_000057_batch3_raw_change_peak_t149.0",
+      "recording_id": "recording_000057",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.9386930465698242
+    },
+    {
+      "event_id": "recording_000057_batch3_raw_change_peak_t524.0",
+      "recording_id": "recording_000057",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.2186853289604187
+    },
+    {
+      "event_id": "recording_000058_batch3_raw_change_peak_t585.0",
+      "recording_id": "recording_000058",
+      "relation": "new_action",
+      "y": 1.0,
+      "p_boundary": 0.00016440445324406028
+    },
+    {
+      "event_id": "recording_000064_batch3_raw_change_peak_t401.0",
+      "recording_id": "recording_000064",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.9179234504699707
+    },
+    {
+      "event_id": "recording_000065_batch3_raw_change_peak_t466.0",
+      "recording_id": "recording_000065",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.01443688478320837
+    },
+    {
+      "event_id": "recording_000067_batch3_gt_boundary_t440.5",
+      "recording_id": "recording_000067",
+      "relation": "new_action",
+      "y": 1.0,
+      "p_boundary": 0.9998471736907959
+    },
+    {
+      "event_id": "recording_000069_batch3_gt_boundary_t330.0",
+      "recording_id": "recording_000069",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.004656347446143627
+    },
+    {
+      "event_id": "recording_000071_batch3_gt_boundary_t160.5",
+      "recording_id": "recording_000071",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.0896846279501915
+    },
+    {
+      "event_id": "recording_000075_batch3_gt_boundary_t191.5",
+      "recording_id": "recording_000075",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.00037751643685624003
+    },
+    {
+      "event_id": "recording_000079_batch3_raw_change_peak_t156.0",
+      "recording_id": "recording_000079",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.009182633832097054
+    },
+    {
+      "event_id": "recording_000088_batch3_gt_boundary_t275.0",
+      "recording_id": "recording_000088",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 7.550638201792026e-06
+    },
+    {
+      "event_id": "recording_000088_batch3_raw_change_peak_t651.0",
+      "recording_id": "recording_000088",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 9.623703954275697e-05
+    },
+    {
+      "event_id": "recording_000096_batch3_raw_change_peak_t185.0",
+      "recording_id": "recording_000096",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 1.2807123312086333e-05
+    },
+    {
+      "event_id": "recording_000096_batch3_raw_change_peak_t608.0",
+      "recording_id": "recording_000096",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 8.364469977095723e-06
+    },
+    {
+      "event_id": "recording_000096_batch3_raw_change_peak_t77.0",
+      "recording_id": "recording_000096",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 7.595559964101994e-06
+    },
+    {
+      "event_id": "recording_000098_batch3_raw_change_peak_t617.0",
+      "recording_id": "recording_000098",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.0010687108151614666
+    },
+    {
+      "event_id": "recording_000099_batch3_gt_boundary_t474.0",
+      "recording_id": "recording_000099",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.03186073899269104
+    },
+    {
+      "event_id": "recording_000101_batch3_gt_boundary_t48.0",
+      "recording_id": "recording_000101",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.007512521464377642
+    },
+    {
+      "event_id": "recording_000101_batch3_raw_change_peak_t145.0",
+      "recording_id": "recording_000101",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 3.174176890752278e-05
+    },
+    {
+      "event_id": "recording_000102_duplicate_t471.5",
+      "recording_id": "recording_000102",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.0036836890503764153
+    },
+    {
+      "event_id": "recording_000102_early_t164.0",
+      "recording_id": "recording_000102",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.00010563143587205559
+    },
+    {
+      "event_id": "recording_000102_false_mid_segment_t439.0",
+      "recording_id": "recording_000102",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.00013465798110701144
+    },
+    {
+      "event_id": "recording_000102_false_mid_segment_t484.0",
+      "recording_id": "recording_000102",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.003632873296737671
+    },
+    {
+      "event_id": "recording_000102_missed_weak_signal_t23.5",
+      "recording_id": "recording_000102",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 8.7470461949124e-06
+    },
+    {
+      "event_id": "recording_000103_batch3_gt_boundary_t333.0",
+      "recording_id": "recording_000103",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 1.3926426618127152e-05
+    },
+    {
+      "event_id": "recording_000104_batch3_gt_boundary_t392.0",
+      "recording_id": "recording_000104",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 2.1092921087983996e-05
+    },
+    {
+      "event_id": "recording_000105_false_gap_t501.5",
+      "recording_id": "recording_000105",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.015493396669626236
+    },
+    {
+      "event_id": "recording_000105_false_gap_t505.5",
+      "recording_id": "recording_000105",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.005632697604596615
+    },
+    {
+      "event_id": "recording_000105_missed_weak_signal_t72.0",
+      "recording_id": "recording_000105",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.00012099677405785769
+    },
+    {
+      "event_id": "recording_000108_batch3_gt_boundary_t517.5",
+      "recording_id": "recording_000108",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 3.77927535737399e-05
+    },
+    {
+      "event_id": "recording_000110_false_gap_t178.5",
+      "recording_id": "recording_000110",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.04008622467517853
+    },
+    {
+      "event_id": "recording_000112_false_mid_segment_t429.0",
+      "recording_id": "recording_000112",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.0008401229279115796
+    },
+    {
+      "event_id": "recording_000116_false_near_edge_t562.0",
+      "recording_id": "recording_000116",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.0015273584285750985
+    },
+    {
+      "event_id": "recording_000121_batch3_raw_change_peak_t556.0",
+      "recording_id": "recording_000121",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.00016976990445982665
+    },
+    {
+      "event_id": "recording_000125_batch3_raw_change_peak_t126.0",
+      "recording_id": "recording_000125",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.0008310275734402239
+    },
+    {
+      "event_id": "recording_000133_batch3_raw_change_peak_t295.0",
+      "recording_id": "recording_000133",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.9999078512191772
+    },
+    {
+      "event_id": "recording_000135_batch3_gt_boundary_t559.0",
+      "recording_id": "recording_000135",
+      "relation": "new_action",
+      "y": 1.0,
+      "p_boundary": 0.8944019079208374
+    },
+    {
+      "event_id": "recording_000137_batch3_raw_change_peak_t299.0",
+      "recording_id": "recording_000137",
+      "relation": "new_action",
+      "y": 1.0,
+      "p_boundary": 0.0001824290375225246
+    },
+    {
+      "event_id": "recording_000140_batch3_raw_change_peak_t574.0",
+      "recording_id": "recording_000140",
+      "relation": "new_action",
+      "y": 1.0,
+      "p_boundary": 0.988014280796051
+    },
+    {
+      "event_id": "recording_000141_batch3_gt_boundary_t203.5",
+      "recording_id": "recording_000141",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.000845479080453515
+    },
+    {
+      "event_id": "recording_000141_batch3_gt_boundary_t408.5",
+      "recording_id": "recording_000141",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 2.9434313546516933e-05
+    },
+    {
+      "event_id": "recording_000141_batch3_gt_boundary_t450.0",
+      "recording_id": "recording_000141",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 2.3506037905463018e-05
+    },
+    {
+      "event_id": "recording_000141_batch3_raw_change_peak_t418.0",
+      "recording_id": "recording_000141",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.0014475389616563916
+    },
+    {
+      "event_id": "recording_000144_batch3_gt_boundary_t40.5",
+      "recording_id": "recording_000144",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 1.624954165890813e-05
+    },
+    {
+      "event_id": "recording_000144_batch3_raw_change_peak_t171.0",
+      "recording_id": "recording_000144",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 4.371730483399006e-06
+    },
+    {
+      "event_id": "recording_000145_batch3_gt_boundary_t558.0",
+      "recording_id": "recording_000145",
+      "relation": "new_action",
+      "y": 1.0,
+      "p_boundary": 0.9801674485206604
+    },
+    {
+      "event_id": "recording_000146_batch3_raw_change_peak_t615.0",
+      "recording_id": "recording_000146",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.9991638660430908
+    },
+    {
+      "event_id": "recording_000147_batch3_raw_change_peak_t265.0",
+      "recording_id": "recording_000147",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.09389220178127289
+    },
+    {
+      "event_id": "recording_000149_batch3_gt_boundary_t101.6",
+      "recording_id": "recording_000149",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 1.1820347026514355e-05
+    },
+    {
+      "event_id": "recording_000149_batch3_gt_boundary_t193.2",
+      "recording_id": "recording_000149",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 2.3176999093266204e-05
+    },
+    {
+      "event_id": "recording_000149_batch3_gt_boundary_t488.2",
+      "recording_id": "recording_000149",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 1.6290441635646857e-05
+    },
+    {
+      "event_id": "recording_000149_batch3_raw_change_peak_t425.0",
+      "recording_id": "recording_000149",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 1.1620933037193026e-05
+    },
+    {
+      "event_id": "recording_000150_missed_weak_signal_t9.5",
+      "recording_id": "recording_000150",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.0007050316198728979
+    },
+    {
+      "event_id": "recording_000151_batch3_gt_boundary_t64.0",
+      "recording_id": "recording_000151",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 9.497239261690993e-06
+    },
+    {
+      "event_id": "recording_000152_batch3_gt_boundary_t9.5",
+      "recording_id": "recording_000152",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.0025420032907277346
+    },
+    {
+      "event_id": "recording_000152_batch3_raw_change_peak_t553.0",
+      "recording_id": "recording_000152",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 4.810608152183704e-05
+    },
+    {
+      "event_id": "recording_000153_batch3_gt_boundary_t149.9",
+      "recording_id": "recording_000153",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 3.512255352688953e-05
+    },
+    {
+      "event_id": "recording_000153_batch3_gt_boundary_t223.5",
+      "recording_id": "recording_000153",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 6.126715106802294e-06
+    },
+    {
+      "event_id": "recording_000153_batch3_raw_change_peak_t241.0",
+      "recording_id": "recording_000153",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 1.3538041457650252e-05
+    },
+    {
+      "event_id": "recording_000153_batch3_raw_change_peak_t367.0",
+      "recording_id": "recording_000153",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 4.420609548105858e-05
+    },
+    {
+      "event_id": "recording_000155_batch3_raw_change_peak_t228.0",
+      "recording_id": "recording_000155",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.9906721711158752
+    },
+    {
+      "event_id": "recording_000156_batch3_gt_boundary_t254.0",
+      "recording_id": "recording_000156",
+      "relation": "new_action",
+      "y": 1.0,
+      "p_boundary": 0.9996598958969116
+    },
+    {
+      "event_id": "recording_000157_batch3_raw_change_peak_t632.0",
+      "recording_id": "recording_000157",
+      "relation": "new_action",
+      "y": 1.0,
+      "p_boundary": 0.16847658157348633
+    },
+    {
+      "event_id": "recording_000158_batch3_gt_boundary_t622.5",
+      "recording_id": "recording_000158",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 4.164770871284418e-05
+    },
+    {
+      "event_id": "recording_000160_exact_t575.6",
+      "recording_id": "recording_000160",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.04144805297255516
+    },
+    {
+      "event_id": "recording_000161_batch3_raw_change_peak_t159.0",
+      "recording_id": "recording_000161",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 4.2619089072104543e-05
+    },
+    {
+      "event_id": "recording_000161_batch3_raw_change_peak_t599.0",
+      "recording_id": "recording_000161",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.9051476716995239
+    },
+    {
+      "event_id": "recording_000163_batch3_raw_change_peak_t397.0",
+      "recording_id": "recording_000163",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.0001652084174565971
+    },
+    {
+      "event_id": "recording_000169_batch3_gt_boundary_t350.0",
+      "recording_id": "recording_000169",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.8476321697235107
+    },
+    {
+      "event_id": "recording_000170_batch3_gt_boundary_t634.0",
+      "recording_id": "recording_000170",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.9744714498519897
+    },
+    {
+      "event_id": "recording_000170_batch3_gt_boundary_t659.4",
+      "recording_id": "recording_000170",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.9999322891235352
+    },
+    {
+      "event_id": "recording_000175_batch3_raw_change_peak_t160.0",
+      "recording_id": "recording_000175",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.0009776022052392364
+    },
+    {
+      "event_id": "recording_000178_batch3_raw_change_peak_t211.0",
+      "recording_id": "recording_000178",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.9656689763069153
+    },
+    {
+      "event_id": "recording_000178_batch3_raw_change_peak_t360.0",
+      "recording_id": "recording_000178",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.7594686150550842
+    },
+    {
+      "event_id": "recording_000179_batch3_raw_change_peak_t324.0",
+      "recording_id": "recording_000179",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.9813469648361206
+    },
+    {
+      "event_id": "recording_000180_batch3_gt_boundary_t392.5",
+      "recording_id": "recording_000180",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.0009119613678194582
+    },
+    {
+      "event_id": "recording_000180_batch3_raw_change_peak_t71.0",
+      "recording_id": "recording_000180",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 7.768464274704456e-05
+    },
+    {
+      "event_id": "recording_000182_batch3_gt_boundary_t14.0",
+      "recording_id": "recording_000182",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.00038946891436353326
+    },
+    {
+      "event_id": "recording_000182_batch3_raw_change_peak_t543.0",
+      "recording_id": "recording_000182",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 7.092715532053262e-05
+    },
+    {
+      "event_id": "recording_000183_exact_t144.0",
+      "recording_id": "recording_000183",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.0004562371759675443
+    },
+    {
+      "event_id": "recording_000185_batch3_raw_change_peak_t407.0",
+      "recording_id": "recording_000185",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.00039311099681071937
+    },
+    {
+      "event_id": "recording_000185_batch3_raw_change_peak_t87.0",
+      "recording_id": "recording_000185",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.0001549201551824808
+    },
+    {
+      "event_id": "recording_000186_batch3_raw_change_peak_t427.0",
+      "recording_id": "recording_000186",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.5765414834022522
+    },
+    {
+      "event_id": "recording_000187_batch3_gt_boundary_t112.0",
+      "recording_id": "recording_000187",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.00011032990732928738
+    },
+    {
+      "event_id": "recording_000187_batch3_gt_boundary_t319.3",
+      "recording_id": "recording_000187",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.01570942997932434
+    },
+    {
+      "event_id": "recording_000187_batch3_raw_change_peak_t354.0",
+      "recording_id": "recording_000187",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.7926274538040161
+    },
+    {
+      "event_id": "recording_000187_batch3_raw_change_peak_t367.0",
+      "recording_id": "recording_000187",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.01109335757791996
+    },
+    {
+      "event_id": "recording_000189_batch3_gt_boundary_t296.7",
+      "recording_id": "recording_000189",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.028156470507383347
+    },
+    {
+      "event_id": "recording_000189_batch3_raw_change_peak_t137.0",
+      "recording_id": "recording_000189",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 6.468712672358379e-05
+    },
+    {
+      "event_id": "recording_000190_batch3_raw_change_peak_t524.0",
+      "recording_id": "recording_000190",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 6.839859997853637e-05
+    },
+    {
+      "event_id": "recording_000191_batch3_gt_boundary_t49.0",
+      "recording_id": "recording_000191",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 9.494449477642775e-05
+    },
+    {
+      "event_id": "recording_000193_missed_signal_present_not_top_t264.2",
+      "recording_id": "recording_000193",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.004829327575862408
+    },
+    {
+      "event_id": "recording_000195_batch3_gt_boundary_t407.2",
+      "recording_id": "recording_000195",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.001186421955935657
+    },
+    {
+      "event_id": "recording_000195_batch3_raw_change_peak_t110.0",
+      "recording_id": "recording_000195",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 1.5801702829776332e-05
+    },
+    {
+      "event_id": "recording_000197_batch3_raw_change_peak_t32.0",
+      "recording_id": "recording_000197",
+      "relation": "new_action",
+      "y": 1.0,
+      "p_boundary": 0.01030554249882698
+    },
+    {
+      "event_id": "recording_000197_batch3_raw_change_peak_t96.0",
+      "recording_id": "recording_000197",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.013603607192635536
+    },
+    {
+      "event_id": "recording_000201_batch3_gt_boundary_t132.1",
+      "recording_id": "recording_000201",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.9986590147018433
+    },
+    {
+      "event_id": "recording_000201_batch3_raw_change_peak_t272.0",
+      "recording_id": "recording_000201",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 6.731064058840275e-05
+    },
+    {
+      "event_id": "recording_000201_batch3_raw_change_peak_t498.0",
+      "recording_id": "recording_000201",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.6928182244300842
+    },
+    {
+      "event_id": "recording_000202_batch3_gt_boundary_t49.0",
+      "recording_id": "recording_000202",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.00026034278562292457
+    },
+    {
+      "event_id": "recording_000204_batch3_raw_change_peak_t484.0",
+      "recording_id": "recording_000204",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.7301257252693176
+    },
+    {
+      "event_id": "recording_000205_batch3_gt_boundary_t77.5",
+      "recording_id": "recording_000205",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.9976303577423096
+    },
+    {
+      "event_id": "recording_000206_batch3_raw_change_peak_t616.0",
+      "recording_id": "recording_000206",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.009997540153563023
+    },
+    {
+      "event_id": "recording_000209_batch3_gt_boundary_t257.0",
+      "recording_id": "recording_000209",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.7431684136390686
+    },
+    {
+      "event_id": "recording_000210_batch3_raw_change_peak_t451.0",
+      "recording_id": "recording_000210",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.5975887775421143
+    },
+    {
+      "event_id": "recording_000212_batch3_gt_boundary_t502.2",
+      "recording_id": "recording_000212",
+      "relation": "new_action",
+      "y": 1.0,
+      "p_boundary": 0.0014643805334344506
+    },
+    {
+      "event_id": "recording_000212_batch3_raw_change_peak_t228.0",
+      "recording_id": "recording_000212",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.0007610923494212329
+    },
+    {
+      "event_id": "recording_000212_batch3_raw_change_peak_t342.0",
+      "recording_id": "recording_000212",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.05956130474805832
+    },
+    {
+      "event_id": "recording_000213_late_t150.0",
+      "recording_id": "recording_000213",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.9590542912483215
+    },
+    {
+      "event_id": "recording_000214_batch3_gt_boundary_t26.8",
+      "recording_id": "recording_000214",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.004534448031336069
+    },
+    {
+      "event_id": "recording_000218_batch3_gt_boundary_t123.1",
+      "recording_id": "recording_000218",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.009716246277093887
+    },
+    {
+      "event_id": "recording_000218_batch3_raw_change_peak_t333.0",
+      "recording_id": "recording_000218",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.3107089698314667
+    },
+    {
+      "event_id": "recording_000218_batch3_raw_change_peak_t366.0",
+      "recording_id": "recording_000218",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.6077855229377747
+    },
+    {
+      "event_id": "recording_000219_batch3_raw_change_peak_t87.0",
+      "recording_id": "recording_000219",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.00093222560826689
+    },
+    {
+      "event_id": "recording_000220_early_t143.8",
+      "recording_id": "recording_000220",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.00012675407924689353
+    },
+    {
+      "event_id": "recording_000220_exact_t522.0",
+      "recording_id": "recording_000220",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 6.42373415757902e-05
+    },
+    {
+      "event_id": "recording_000242_false_near_edge_t29.5",
+      "recording_id": "recording_000242",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.0049841515719890594
+    },
+    {
+      "event_id": "recording_000242_late_t143.5",
+      "recording_id": "recording_000242",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.0012479810975492
+    },
+    {
+      "event_id": "recording_000242_missed_signal_present_not_top_t156.5",
+      "recording_id": "recording_000242",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.002071446506306529
+    },
+    {
+      "event_id": "recording_000282_false_mid_segment_t412.5",
+      "recording_id": "recording_000282",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.1894501894712448
+    },
+    {
+      "event_id": "recording_000325_late_t40.5",
+      "recording_id": "recording_000325",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.2879345715045929
+    },
+    {
+      "event_id": "recording_000327_duplicate_t11.5",
+      "recording_id": "recording_000327",
+      "relation": "same_action_new_instance",
+      "y": 1.0,
+      "p_boundary": 0.9996755123138428
+    },
+    {
+      "event_id": "recording_000343_false_mid_segment_t547.0",
+      "recording_id": "recording_000343",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.03243444859981537
+    },
+    {
+      "event_id": "recording_000385_false_gap_t348.0",
+      "recording_id": "recording_000385",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 4.2892595956800506e-05
+    },
+    {
+      "event_id": "recording_000385_false_mid_segment_t209.0",
+      "recording_id": "recording_000385",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 2.0097725155210355e-06
+    },
+    {
+      "event_id": "recording_000385_false_mid_segment_t266.5",
+      "recording_id": "recording_000385",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 4.989349326933734e-05
+    },
+    {
+      "event_id": "recording_000385_false_mid_segment_t412.5",
+      "recording_id": "recording_000385",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 2.742052311077714e-05
+    },
+    {
+      "event_id": "recording_000385_false_near_edge_t577.5",
+      "recording_id": "recording_000385",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 8.571294893044978e-05
+    },
+    {
+      "event_id": "recording_000388_false_mid_segment_t124.5",
+      "recording_id": "recording_000388",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 1.3031514754402451e-05
+    },
+    {
+      "event_id": "recording_000388_false_mid_segment_t375.5",
+      "recording_id": "recording_000388",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 8.398298086831346e-05
+    },
+    {
+      "event_id": "recording_000388_false_mid_segment_t618.0",
+      "recording_id": "recording_000388",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 2.487575329723768e-05
+    },
+    {
+      "event_id": "recording_000388_false_mid_segment_t63.0",
+      "recording_id": "recording_000388",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 4.0757182432571426e-05
+    },
+    {
+      "event_id": "recording_000388_false_mid_segment_t67.5",
+      "recording_id": "recording_000388",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 8.546891331207007e-05
+    },
+    {
+      "event_id": "recording_000388_missed_signal_present_not_top_t601.8",
+      "recording_id": "recording_000388",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.0006025014445185661
+    },
+    {
+      "event_id": "recording_000406_duplicate_t571.0",
+      "recording_id": "recording_000406",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.006252969615161419
+    },
+    {
+      "event_id": "recording_000406_exact_t490.3",
+      "recording_id": "recording_000406",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.0007379889138974249
+    },
+    {
+      "event_id": "recording_000406_false_mid_segment_t29.5",
+      "recording_id": "recording_000406",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 4.976981927029556e-06
+    },
+    {
+      "event_id": "recording_000406_false_mid_segment_t595.5",
+      "recording_id": "recording_000406",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 6.784163997508585e-05
+    },
+    {
+      "event_id": "recording_000406_false_near_edge_t455.5",
+      "recording_id": "recording_000406",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 1.4331886632135138e-05
+    },
+    {
+      "event_id": "recording_000406_missed_weak_signal_t556.6",
+      "recording_id": "recording_000406",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 4.62560637970455e-05
+    },
+    {
+      "event_id": "recording_000419_false_mid_segment_t137.0",
+      "recording_id": "recording_000419",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.00012273670290596783
+    },
+    {
+      "event_id": "recording_000419_false_mid_segment_t286.5",
+      "recording_id": "recording_000419",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 8.083340071607381e-05
+    },
+    {
+      "event_id": "recording_000419_false_mid_segment_t605.5",
+      "recording_id": "recording_000419",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.00015715578047093004
+    },
+    {
+      "event_id": "recording_000419_false_mid_segment_t618.0",
+      "recording_id": "recording_000419",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.017424985766410828
+    },
+    {
+      "event_id": "recording_000422_false_mid_segment_t228.5",
+      "recording_id": "recording_000422",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 2.471805055392906e-05
+    },
+    {
+      "event_id": "recording_000422_false_mid_segment_t381.0",
+      "recording_id": "recording_000422",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 8.502691343892366e-06
+    },
+    {
+      "event_id": "recording_000422_false_mid_segment_t561.0",
+      "recording_id": "recording_000422",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.0006507390062324703
+    },
+    {
+      "event_id": "recording_000423_false_mid_segment_t590.0",
+      "recording_id": "recording_000423",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.007292425259947777
+    },
+    {
+      "event_id": "recording_000431_false_mid_segment_t271.0",
+      "recording_id": "recording_000431",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 1.676221472735051e-05
+    },
+    {
+      "event_id": "recording_000431_false_mid_segment_t427.5",
+      "recording_id": "recording_000431",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 7.303494385269005e-06
+    },
+    {
+      "event_id": "recording_000431_false_mid_segment_t470.5",
+      "recording_id": "recording_000431",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 6.600868800887838e-06
+    },
+    {
+      "event_id": "recording_000431_false_near_edge_t262.0",
+      "recording_id": "recording_000431",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 2.5493227440165356e-05
+    },
+    {
+      "event_id": "recording_000431_false_near_edge_t440.5",
+      "recording_id": "recording_000431",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 1.3634127753903158e-05
+    },
+    {
+      "event_id": "recording_000431_missed_signal_present_not_top_t178.2",
+      "recording_id": "recording_000431",
+      "relation": "new_action",
+      "y": 1.0,
+      "p_boundary": 0.20078128576278687
+    },
+    {
+      "event_id": "recording_000438_false_mid_segment_t224.0",
+      "recording_id": "recording_000438",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 6.020325963618234e-05
+    },
+    {
+      "event_id": "recording_000438_false_mid_segment_t476.0",
+      "recording_id": "recording_000438",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 6.819800182711333e-05
+    },
+    {
+      "event_id": "recording_000438_false_mid_segment_t53.0",
+      "recording_id": "recording_000438",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 0.0006422697915695608
+    },
+    {
+      "event_id": "recording_000438_false_mid_segment_t575.0",
+      "recording_id": "recording_000438",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 2.0050432794960216e-05
+    },
+    {
+      "event_id": "recording_000471_missed_weak_signal_t485.4",
+      "recording_id": "recording_000471",
+      "relation": "same_instance",
+      "y": 0.0,
+      "p_boundary": 9.584268809703644e-06
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,internal_join,clause_a,clause_b,join_relation,boundary_time,boundary_interval_start,boundary_interval_end,auditor,notes
+recording_000188_SPAN1,recording_000188,32.6,48.0,39.0,Inspect first portable charger,Repack first portable charger and close product box,,,,,,
+recording_000188_SPAN2,recording_000188,19.5,32.6,25.0,Remove wrapped device from first product box,Unwrap first portable charger from protective packaging,,,,,,
+recording_000188_SPAN3,recording_000188,25.0,39.0,32.6,Unwrap first portable charger from protective packaging,Inspect first portable charger,,,,,,
+recording_000188_SPAN4,recording_000188,353.8,360.2,358.3,Repackage second power bank and close inner box,Reapply outer packaging sleeve to second power bank box,,,,,,

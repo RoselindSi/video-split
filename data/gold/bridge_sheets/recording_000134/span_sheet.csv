@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,internal_join,clause_a,clause_b,join_relation,boundary_time,boundary_interval_start,boundary_interval_end,auditor,notes
+recording_000134_SPAN1,recording_000134,293.0,320.7,309.4,Fold a new tissue from the pack (starts in this window),Fold a paper sheet into a compact rectangle,,,,,,
+recording_000134_SPAN2,recording_000134,343.3,364.0,356.7,Fold a paper sheet into a compact rectangle,Fold paper sheet (starts in this window),,,,,,
+recording_000134_SPAN3,recording_000134,356.7,374.0,364.0,Fold paper sheet (starts in this window),Fold second paper sheet,,,,,,
+recording_000134_SPAN4,recording_000134,364.0,384.0,374.0,Fold second paper sheet,Fold third paper sheet,,,,,,

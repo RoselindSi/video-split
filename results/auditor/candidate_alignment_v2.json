@@ -1,0 +1,781 @@
+{
+  "tol": 0.5,
+  "max_retime_s": 2.0,
+  "n_positive": 58,
+  "alignment": {
+    "EXACT": {
+      "n": 12,
+      "recordings": 9
+    },
+    "EARLY": {
+      "n": 0,
+      "recordings": 0
+    },
+    "LATE": {
+      "n": 1,
+      "recordings": 1
+    },
+    "DUPLICATE": {
+      "n": 0,
+      "recordings": 0
+    },
+    "NO_VALID": {
+      "n": 0,
+      "recordings": 0
+    },
+    "UNDECIDABLE": {
+      "n": 45,
+      "recordings": 36
+    }
+  },
+  "binary": {
+    "aligned": 12,
+    "misaligned": 1,
+    "unusable": 45,
+    "recordings": {
+      "ALIGNED": 9,
+      "MISALIGNED": 1
+    }
+  },
+  "go": false,
+  "sweep": {
+    "0.25": {
+      "alignment": {
+        "UNDECIDABLE": 45,
+        "EXACT": 12,
+        "LATE": 1
+      },
+      "aligned": 12,
+      "misaligned": 1
+    },
+    "0.5": {
+      "alignment": {
+        "UNDECIDABLE": 45,
+        "EXACT": 12,
+        "LATE": 1
+      },
+      "aligned": 12,
+      "misaligned": 1
+    },
+    "1.0": {
+      "alignment": {
+        "UNDECIDABLE": 45,
+        "EXACT": 13
+      },
+      "aligned": 13,
+      "misaligned": 0
+    },
+    "1.5": {
+      "alignment": {
+        "UNDECIDABLE": 45,
+        "EXACT": 13
+      },
+      "aligned": 13,
+      "misaligned": 0
+    }
+  },
+  "conflicts": {
+    "exists_but_invalid": 0,
+    "same_instance_with_timing": 6,
+    "shared_boundary_groups": 0,
+    "shared_boundary_mixed_relation": 0
+  },
+  "events": {
+    "recording_000005_batch3_raw_change_peak_t513.0": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000005",
+      "candidate_time": 513.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000006_batch3_raw_change_peak_t468.0": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000006",
+      "candidate_time": 468.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000011_batch3_raw_change_peak_t352.0": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000011",
+      "candidate_time": 352.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000013_batch3_gt_boundary_t516.0": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000013",
+      "candidate_time": 516.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000019_batch3_gt_boundary_t112.5": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000019",
+      "candidate_time": 112.5,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000019_batch3_gt_boundary_t9.5": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000019",
+      "candidate_time": 9.5,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000020_batch3_raw_change_peak_t67.0": {
+      "instance_relation": "new_action",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000020",
+      "candidate_time": 67.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000022_missed_signal_present_not_top_t366.5": {
+      "instance_relation": "new_action",
+      "alignment": "EXACT",
+      "offset_s": 0.0,
+      "why": null,
+      "recording_id": "recording_000022",
+      "candidate_time": 366.5,
+      "corrected_time": 366.5,
+      "split": "dev_original72",
+      "source_category": "missed_signal_present_not_top",
+      "in_gold": true
+    },
+    "recording_000022_missed_weak_signal_t466.8": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "EXACT",
+      "offset_s": 0.0,
+      "why": null,
+      "recording_id": "recording_000022",
+      "candidate_time": 466.8,
+      "corrected_time": 466.8,
+      "split": "dev_original72",
+      "source_category": "missed_weak_signal",
+      "in_gold": true
+    },
+    "recording_000023_batch3_raw_change_peak_t333.0": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000023",
+      "candidate_time": 333.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000024_batch3_raw_change_peak_t584.0": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000024",
+      "candidate_time": 584.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000025_batch3_gt_boundary_t413.5": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000025",
+      "candidate_time": 413.5,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000025_batch3_gt_boundary_t516.0": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000025",
+      "candidate_time": 516.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000026_batch3_raw_change_peak_t206.0": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000026",
+      "candidate_time": 206.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000027_batch3_gt_boundary_t541.0": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000027",
+      "candidate_time": 541.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000029_batch3_raw_change_peak_t442.0": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000029",
+      "candidate_time": 442.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000030_false_gap_t556.0": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "EXACT",
+      "offset_s": 0.0,
+      "why": null,
+      "recording_id": "recording_000030",
+      "candidate_time": 556.0,
+      "corrected_time": 556.0,
+      "split": "dev_original72",
+      "source_category": "false_gap",
+      "in_gold": true
+    },
+    "recording_000030_late_t387.5": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "EXACT",
+      "offset_s": 0.25,
+      "why": null,
+      "recording_id": "recording_000030",
+      "candidate_time": 387.5,
+      "corrected_time": 387.75,
+      "split": "dev_original72",
+      "source_category": "late",
+      "in_gold": true
+    },
+    "recording_000030_late_t501.0": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "EXACT",
+      "offset_s": 0.25,
+      "why": null,
+      "recording_id": "recording_000030",
+      "candidate_time": 501.0,
+      "corrected_time": 501.25,
+      "split": "dev_original72",
+      "source_category": "late",
+      "in_gold": true
+    },
+    "recording_000033_batch3_raw_change_peak_t566.0": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000033",
+      "candidate_time": 566.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000035_batch3_gt_boundary_t473.0": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000035",
+      "candidate_time": 473.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000035_batch3_raw_change_peak_t132.0": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000035",
+      "candidate_time": 132.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000035_batch3_raw_change_peak_t351.0": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000035",
+      "candidate_time": 351.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000046_missed_signal_present_not_top_t378.7": {
+      "instance_relation": "new_action",
+      "alignment": "EXACT",
+      "offset_s": 0.0,
+      "why": null,
+      "recording_id": "recording_000046",
+      "candidate_time": 378.7,
+      "corrected_time": 378.7,
+      "split": "dev_original72",
+      "source_category": "missed_signal_present_not_top",
+      "in_gold": true
+    },
+    "recording_000048_batch3_raw_change_peak_t96.0": {
+      "instance_relation": "new_action",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000048",
+      "candidate_time": 96.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000049_batch3_gt_boundary_t94.5": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000049",
+      "candidate_time": 94.5,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000049_batch3_raw_change_peak_t325.0": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000049",
+      "candidate_time": 325.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000050_batch3_gt_boundary_t291.5": {
+      "instance_relation": "new_action",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000050",
+      "candidate_time": 291.5,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000050_batch3_raw_change_peak_t104.0": {
+      "instance_relation": "new_action",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000050",
+      "candidate_time": 104.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000053_late_t207.5": {
+      "instance_relation": "new_action",
+      "alignment": "EXACT",
+      "offset_s": 0.25,
+      "why": null,
+      "recording_id": "recording_000053",
+      "candidate_time": 207.5,
+      "corrected_time": 207.75,
+      "split": "dev_original72",
+      "source_category": "late",
+      "in_gold": true
+    },
+    "recording_000058_batch3_raw_change_peak_t585.0": {
+      "instance_relation": "new_action",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000058",
+      "candidate_time": 585.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000067_batch3_gt_boundary_t440.5": {
+      "instance_relation": "new_action",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000067",
+      "candidate_time": 440.5,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000104_batch3_gt_boundary_t392.0": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000104",
+      "candidate_time": 392.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000135_batch3_gt_boundary_t559.0": {
+      "instance_relation": "new_action",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000135",
+      "candidate_time": 559.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000137_batch3_raw_change_peak_t299.0": {
+      "instance_relation": "new_action",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000137",
+      "candidate_time": 299.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000140_batch3_raw_change_peak_t574.0": {
+      "instance_relation": "new_action",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000140",
+      "candidate_time": 574.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000145_batch3_gt_boundary_t558.0": {
+      "instance_relation": "new_action",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000145",
+      "candidate_time": 558.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000152_batch3_gt_boundary_t9.5": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000152",
+      "candidate_time": 9.5,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000156_batch3_gt_boundary_t254.0": {
+      "instance_relation": "new_action",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000156",
+      "candidate_time": 254.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000157_batch3_raw_change_peak_t632.0": {
+      "instance_relation": "new_action",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000157",
+      "candidate_time": 632.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000160_exact_t575.6": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "EXACT",
+      "offset_s": -0.05000000000006821,
+      "why": null,
+      "recording_id": "recording_000160",
+      "candidate_time": 575.6,
+      "corrected_time": 575.55,
+      "split": "dev_original72",
+      "source_category": "exact",
+      "in_gold": true
+    },
+    "recording_000169_batch3_gt_boundary_t350.0": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000169",
+      "candidate_time": 350.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000170_batch3_gt_boundary_t634.0": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000170",
+      "candidate_time": 634.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000170_batch3_gt_boundary_t659.4": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000170",
+      "candidate_time": 659.4,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000179_batch3_raw_change_peak_t324.0": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000179",
+      "candidate_time": 324.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000180_batch3_gt_boundary_t392.5": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000180",
+      "candidate_time": 392.5,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000183_exact_t144.0": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "EXACT",
+      "offset_s": 0.0,
+      "why": null,
+      "recording_id": "recording_000183",
+      "candidate_time": 144.0,
+      "corrected_time": 144.0,
+      "split": "dev_original72",
+      "source_category": "exact",
+      "in_gold": true
+    },
+    "recording_000197_batch3_raw_change_peak_t32.0": {
+      "instance_relation": "new_action",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000197",
+      "candidate_time": 32.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000201_batch3_gt_boundary_t132.1": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000201",
+      "candidate_time": 132.1,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000201_batch3_raw_change_peak_t498.0": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000201",
+      "candidate_time": 498.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000209_batch3_gt_boundary_t257.0": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000209",
+      "candidate_time": 257.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000212_batch3_gt_boundary_t502.2": {
+      "instance_relation": "new_action",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000212",
+      "candidate_time": 502.2,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000218_batch3_gt_boundary_t123.1": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000218",
+      "candidate_time": 123.1,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000218_batch3_raw_change_peak_t366.0": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "UNDECIDABLE",
+      "offset_s": null,
+      "why": "not in the audit gold",
+      "recording_id": "recording_000218",
+      "candidate_time": 366.0,
+      "corrected_time": null,
+      "split": null,
+      "source_category": null,
+      "in_gold": false
+    },
+    "recording_000242_late_t143.5": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "EXACT",
+      "offset_s": 0.25,
+      "why": null,
+      "recording_id": "recording_000242",
+      "candidate_time": 143.5,
+      "corrected_time": 143.75,
+      "split": "test_batch2",
+      "source_category": "late",
+      "in_gold": true
+    },
+    "recording_000325_late_t40.5": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "EXACT",
+      "offset_s": 0.25,
+      "why": null,
+      "recording_id": "recording_000325",
+      "candidate_time": 40.5,
+      "corrected_time": 40.75,
+      "split": "test_batch2",
+      "source_category": "late",
+      "in_gold": true
+    },
+    "recording_000327_duplicate_t11.5": {
+      "instance_relation": "same_action_new_instance",
+      "alignment": "LATE",
+      "offset_s": -1.0,
+      "why": null,
+      "recording_id": "recording_000327",
+      "candidate_time": 11.5,
+      "corrected_time": 10.5,
+      "split": "test_batch2",
+      "source_category": "duplicate",
+      "in_gold": true
+    },
+    "recording_000431_missed_signal_present_not_top_t178.2": {
+      "instance_relation": "new_action",
+      "alignment": "EXACT",
+      "offset_s": 0.0,
+      "why": null,
+      "recording_id": "recording_000431",
+      "candidate_time": 178.2,
+      "corrected_time": 178.2,
+      "split": "test_batch2",
+      "source_category": "missed_signal_present_not_top",
+      "in_gold": true
+    }
+  }
+}

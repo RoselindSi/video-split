@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,candidate_label,claim_support,granularity,major_action_missing,action_presence,segment_structure,upstream_timing_issue,auditor,notes
+recording_000242_SEM1,recording_000242,39.5,44.0,Reopen and inspect cardboard box,,,,,,,,
+recording_000242_SEM2,recording_000242,93.0,106.0,Verify box contents and seal the top end with tape,,,,,,,,
+recording_000242_SEM3,recording_000242,106.0,118.0,Recheck box contents and reseal the top end,,,,,,,,
+recording_000242_SEM4,recording_000242,200.0,226.0,Open and reseal cardboard box (store in bag and retrieve),,,,,,,,

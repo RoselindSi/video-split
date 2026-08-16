@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,candidate_label,claim_support,granularity,major_action_missing,action_presence,segment_structure,upstream_timing_issue,auditor,notes
+recording_000221_SEM1,recording_000221,162.7,165.1,Unseal and open cardboard box,,,,,,,,
+recording_000221_SEM2,recording_000221,467.0,486.2,Pack USB drive into cardboard box and seal,,,,,,,,
+recording_000221_SEM3,recording_000221,489.1,497.8,Unseal and open cardboard box,,,,,,,,
+recording_000221_SEM4,recording_000221,88.8,94.6,Disassemble and flatten cardboard box,,,,,,,,

@@ -1,0 +1,919 @@
+{
+  "193/t264.2": {
+    "event_id": "recording_000193_missed_signal_present_not_top_t264.2",
+    "recording_id": "recording_000193",
+    "candidate_time": 264.2,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000193_s259.6",
+        "stored_label": "Telescopic rod extend-retract cycle",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000193_s264.2",
+        "stored_label": "Telescopic rod extend-retract cycle",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "22/t240.0": {
+    "event_id": "recording_000022_false_mid_segment_t240.0",
+    "recording_id": "recording_000022",
+    "candidate_time": 240.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000022_s234.5",
+        "stored_label": "Shake water off hands",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000022_s237.5",
+        "stored_label": "Grasp mug for repositioning",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000022_s248.0",
+        "stored_label": "Scrub mug interior",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "385/t412.5": {
+    "event_id": "recording_000385_false_mid_segment_t412.5",
+    "recording_id": "recording_000385",
+    "candidate_time": 412.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000385_s380.1",
+        "stored_label": "Secure wrap around bowl rim",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000385_s396.1",
+        "stored_label": "Inspect and adjust covered bowl",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000385_s492.1",
+        "stored_label": "Fold and press plastic wrap to seal",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "272/t320.0": {
+    "event_id": "recording_000272_false_mid_segment_t320.0",
+    "recording_id": "recording_000272",
+    "candidate_time": 320.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000272_s308.5",
+        "stored_label": "Remove USB drive from cardboard box",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000272_s314.0",
+        "stored_label": "Flatten empty box and stow in plastic bag",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000272_s333.8",
+        "stored_label": "Retrieve and reshape cardboard box",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "102/t164.0": {
+    "event_id": "recording_000102_early_t164.0",
+    "recording_id": "recording_000102",
+    "candidate_time": 164.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000102_s160.0",
+        "stored_label": "Fold and crease sheet edge",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000102_s164.0",
+        "stored_label": "Fold and crease sheet edge",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "102/t471.5": {
+    "event_id": "recording_000102_duplicate_t471.5",
+    "recording_id": "recording_000102",
+    "candidate_time": 471.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000102_s468.0",
+        "stored_label": "fold and unfold tissue",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000102_s471.0",
+        "stored_label": "fold and unfold tissue",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000102_s474.0",
+        "stored_label": "fold and unfold tissue",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "102/t439.0": {
+    "event_id": "recording_000102_false_mid_segment_t439.0",
+    "recording_id": "recording_000102",
+    "candidate_time": 439.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000102_s435.0",
+        "stored_label": "fold and unfold tissue",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000102_s438.0",
+        "stored_label": "fold and unfold tissue",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000102_s441.0",
+        "stored_label": "fold and unfold tissue",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "105/t505.5": {
+    "event_id": "recording_000105_false_gap_t505.5",
+    "recording_id": "recording_000105",
+    "candidate_time": 505.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000105_s400.5",
+        "stored_label": "Crumple and discard a tissue",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000105_s535.6",
+        "stored_label": "Discard folded tissue",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "385/t266.5": {
+    "event_id": "recording_000385_false_mid_segment_t266.5",
+    "recording_id": "recording_000385",
+    "candidate_time": 266.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000385_s256.0",
+        "stored_label": "Crumple removed plastic wrap",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000385_s264.0",
+        "stored_label": "Unroll plastic wrap over bowl",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000385_s274.1",
+        "stored_label": "Smooth plastic wrap on bowl",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "385/t348.0": {
+    "event_id": "recording_000385_false_gap_t348.0",
+    "recording_id": "recording_000385",
+    "candidate_time": 348.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000385_s274.1",
+        "stored_label": "Smooth plastic wrap on bowl",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000385_s370.1",
+        "stored_label": "Smooth plastic wrap on bowl top",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "86/t530.5": {
+    "event_id": "recording_000086_duplicate_t530.5",
+    "recording_id": "recording_000086",
+    "candidate_time": 530.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000086_s525.0",
+        "stored_label": "Fold a disposable mask",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000086_s530.0",
+        "stored_label": "Fold a disposable mask",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000086_s535.0",
+        "stored_label": "Fold a disposable mask",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "80/t478.5": {
+    "event_id": "recording_000080_early_t478.5",
+    "recording_id": "recording_000080",
+    "candidate_time": 478.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000080_s458.0",
+        "stored_label": "Wipe table with paper towel and discard used towel",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000080_s478.5",
+        "stored_label": "Wipe table with paper towel and discard used towel",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "385/t209.0": {
+    "event_id": "recording_000385_false_mid_segment_t209.0",
+    "recording_id": "recording_000385",
+    "candidate_time": 209.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000385_s185.0",
+        "stored_label": "Smooth plastic wrap on the bowl's top surface",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000385_s194.0",
+        "stored_label": "Fold and seal plastic wrap around the bowl rim",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000385_s256.0",
+        "stored_label": "Crumple removed plastic wrap",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "80/t559.5": {
+    "event_id": "recording_000080_late_t559.5",
+    "recording_id": "recording_000080",
+    "candidate_time": 559.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000080_s538.0",
+        "stored_label": "Wipe table with tissue and discard",
+        "shown_in_sheet": false
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000080_s559.5",
+        "stored_label": "Fold and discard a paper tissue",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "242/t164.5": {
+    "event_id": "recording_000242_missed_signal_present_not_top_t164.5",
+    "recording_id": "recording_000242",
+    "candidate_time": 164.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000242_s164.0",
+        "stored_label": "Open box flaps for third inspection",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000242_s164.5",
+        "stored_label": "Inspect box interior third time",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "105/t582.0": {
+    "event_id": "recording_000105_missed_signal_present_not_top_t582.0",
+    "recording_id": "recording_000105",
+    "candidate_time": 582.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000105_s577.0",
+        "stored_label": "8th tissue fold and press",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000105_s582.0",
+        "stored_label": "9th tissue fold and press",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "272/t265.9": {
+    "event_id": "recording_000272_missed_signal_present_not_top_t265.9",
+    "recording_id": "recording_000272",
+    "candidate_time": 265.9,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000272_s261.3",
+        "stored_label": "Remove box from plastic bag",
+        "shown_in_sheet": false
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000272_s265.9",
+        "stored_label": "Seal box end with tape",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "105/t501.5": {
+    "event_id": "recording_000105_false_gap_t501.5",
+    "recording_id": "recording_000105",
+    "candidate_time": 501.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000105_s400.5",
+        "stored_label": "Crumple and discard a tissue",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000105_s535.6",
+        "stored_label": "Discard folded tissue",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "465/t166.5": {
+    "event_id": "recording_000465_false_mid_segment_t166.5",
+    "recording_id": "recording_000465",
+    "candidate_time": 166.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000465_s139.7",
+        "stored_label": "Test charging cable with phone",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000465_s155.3",
+        "stored_label": "Store charging cable in drawer",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000465_s172.1",
+        "stored_label": "Retrieve charging cable from drawer",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "236/t102.0": {
+    "event_id": "recording_000236_missed_signal_present_not_top_t102.0",
+    "recording_id": "recording_000236",
+    "candidate_time": 102.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000236_s98.0",
+        "stored_label": "Open untaped cardboard box",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000236_s102.0",
+        "stored_label": "Seal cardboard box with adhesive tape",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "242/t29.5": {
+    "event_id": "recording_000242_false_near_edge_t29.5",
+    "recording_id": "recording_000242",
+    "candidate_time": 29.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000242_s21.5",
+        "stored_label": "Relocate black plastic bag",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000242_s28.5",
+        "stored_label": "Seal cardboard box with tape (first)",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000242_s39.5",
+        "stored_label": "Reopen and inspect cardboard box",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "102/t23.5": {
+    "event_id": "recording_000102_missed_weak_signal_t23.5",
+    "recording_id": "recording_000102",
+    "candidate_time": 23.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000102_s16.5",
+        "stored_label": "Second fold and press tissue",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000102_s23.5",
+        "stored_label": "Third fold and press tissue",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "80/t113.0": {
+    "event_id": "recording_000080_early_t113.0",
+    "recording_id": "recording_000080",
+    "candidate_time": 113.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000080_s96.0",
+        "stored_label": "Wipe table and dispose of used tissue",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000080_s113.0",
+        "stored_label": "Wipe table and dispose of used tissue",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "181/t564.0": {
+    "event_id": "recording_000181_false_near_edge_t564.0",
+    "recording_id": "recording_000181",
+    "candidate_time": 564.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000181_s537.0",
+        "stored_label": "Clean and re-seat sink strainer",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000181_s552.5",
+        "stored_label": "Clean sink drain strainer and wipe sink basin",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000181_s566.0",
+        "stored_label": "Clean sink drain strainer and wipe sink basin",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "105/t72.0": {
+    "event_id": "recording_000105_missed_weak_signal_t72.0",
+    "recording_id": "recording_000105",
+    "candidate_time": 72.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000105_s69.0",
+        "stored_label": "Paper fold-unfold cycle",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000105_s72.0",
+        "stored_label": "Paper fold-unfold cycle",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "150/t234.5": {
+    "event_id": "recording_000150_duplicate_t234.5",
+    "recording_id": "recording_000150",
+    "candidate_time": 234.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000150_s231.0",
+        "stored_label": "Flip black rectangular object to opposite side",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000150_s234.0",
+        "stored_label": "Flip black rectangular object to opposite side",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000150_s237.0",
+        "stored_label": "Flip black rectangular object to opposite side",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "343/t400.5": {
+    "event_id": "recording_000343_false_mid_segment_t400.5",
+    "recording_id": "recording_000343",
+    "candidate_time": 400.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000343_s384.8",
+        "stored_label": "Apply liquid coating to pan with brush",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000343_s396.8",
+        "stored_label": "Apply liquid coating to pan with brush",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000343_s408.8",
+        "stored_label": "Apply liquid coating to pan with brush",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "419/t618.0": {
+    "event_id": "recording_000419_false_mid_segment_t618.0",
+    "recording_id": "recording_000419",
+    "candidate_time": 618.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000419_s565.9",
+        "stored_label": "Crumple used plastic wrap",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000419_s580.3",
+        "stored_label": "Apply new plastic wrap to bowl",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000419_s637.9",
+        "stored_label": "Wrapping bowl with plastic wrap",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "406/t571.0": {
+    "event_id": "recording_000406_duplicate_t571.0",
+    "recording_id": "recording_000406",
+    "candidate_time": 571.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000406_s561.6",
+        "stored_label": "Place plastic wrap over bowl and smooth",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000406_s570.5",
+        "stored_label": "Seal plastic wrap around bowl rim",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000406_s617.0",
+        "stored_label": "Crumple and discard used plastic wrap",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "220/t586.4": {
+    "event_id": "recording_000220_missed_weak_signal_t586.4",
+    "recording_id": "recording_000220",
+    "candidate_time": 586.4,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000220_s583.8",
+        "stored_label": "Display upper side of slippers",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000220_s586.4",
+        "stored_label": "Display insole side of slippers",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "438/t476.0": {
+    "event_id": "recording_000438_false_mid_segment_t476.0",
+    "recording_id": "recording_000438",
+    "candidate_time": 476.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000438_s390.0",
+        "stored_label": "Wrapping bowl with plastic wrap from roll",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000438_s467.0",
+        "stored_label": "Unroll plastic wrap from roll and position over bowl",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000438_s492.0",
+        "stored_label": "Secure plastic wrap around bowl",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "220/t153.0": {
+    "event_id": "recording_000220_false_mid_segment_t153.0",
+    "recording_id": "recording_000220",
+    "candidate_time": 153.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000220_s143.8",
+        "stored_label": "Slipper pair flip cycle",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000220_s149.8",
+        "stored_label": "Slipper pair flip cycle",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000220_s155.8",
+        "stored_label": "Slipper pair flip cycle",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "419/t605.5": {
+    "event_id": "recording_000419_false_mid_segment_t605.5",
+    "recording_id": "recording_000419",
+    "candidate_time": 605.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000419_s565.9",
+        "stored_label": "Crumple used plastic wrap",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000419_s580.3",
+        "stored_label": "Apply new plastic wrap to bowl",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000419_s637.9",
+        "stored_label": "Wrapping bowl with plastic wrap",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "150/t34.0": {
+    "event_id": "recording_000150_missed_signal_present_not_top_t34.0",
+    "recording_id": "recording_000150",
+    "candidate_time": 34.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000150_s32.0",
+        "stored_label": "Flip remote control to opposite side",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000150_s34.0",
+        "stored_label": "Flip remote control to opposite side",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "388/t618.0": {
+    "event_id": "recording_000388_false_mid_segment_t618.0",
+    "recording_id": "recording_000388",
+    "candidate_time": 618.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000388_s605.8",
+        "stored_label": "Adjust bowl and prepare plastic wrap roll",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000388_s610.0",
+        "stored_label": "Unroll plastic wrap to required length",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000388_s620.0",
+        "stored_label": "Place and smooth plastic wrap over the bowl",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "388/t124.5": {
+    "event_id": "recording_000388_false_mid_segment_t124.5",
+    "recording_id": "recording_000388",
+    "candidate_time": 124.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000388_s93.5",
+        "stored_label": "Remove and discard plastic wrap from bowl",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000388_s111.0",
+        "stored_label": "Unroll plastic wrap from roll",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000388_s137.8",
+        "stored_label": "Fold and tuck plastic wrap around bowl sides to seal",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "343/t274.5": {
+    "event_id": "recording_000343_false_mid_segment_t274.5",
+    "recording_id": "recording_000343",
+    "candidate_time": 274.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000343_s258.1",
+        "stored_label": "Coat pan with liquid using spatula",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000343_s271.9",
+        "stored_label": "Coat pan with liquid using spatula",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000343_s281.8",
+        "stored_label": "Coat pan with liquid using spatula",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "406/t595.5": {
+    "event_id": "recording_000406_false_mid_segment_t595.5",
+    "recording_id": "recording_000406",
+    "candidate_time": 595.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000406_s561.6",
+        "stored_label": "Place plastic wrap over bowl and smooth",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000406_s570.5",
+        "stored_label": "Seal plastic wrap around bowl rim",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000406_s617.0",
+        "stored_label": "Crumple and discard used plastic wrap",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "422/t620.8": {
+    "event_id": "recording_000422_missed_signal_present_not_top_t620.8",
+    "recording_id": "recording_000422",
+    "candidate_time": 620.8,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000422_s596.1",
+        "stored_label": "Picking up plastic wrap roll",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000422_s620.8",
+        "stored_label": "Positioning unrolled plastic film over a bowl on a table",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "423/t590.0": {
+    "event_id": "recording_000423_false_mid_segment_t590.0",
+    "recording_id": "recording_000423",
+    "candidate_time": 590.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000423_s528.1",
+        "stored_label": "Applying plastic wrap to bowl",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000423_s572.5",
+        "stored_label": "Cover bowl with plastic cling wrap",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000423_s615.3",
+        "stored_label": "Secure plastic wrap around bowl edges",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "220/t143.8": {
+    "event_id": "recording_000220_early_t143.8",
+    "recording_id": "recording_000220",
+    "candidate_time": 143.8,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000220_s137.8",
+        "stored_label": "Slipper pair flip cycle",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000220_s143.8",
+        "stored_label": "Slipper pair flip cycle",
+        "shown_in_sheet": true
+      }
+    ]
+  }
+}

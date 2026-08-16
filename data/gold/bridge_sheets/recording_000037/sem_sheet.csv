@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,candidate_label,claim_support,granularity,major_action_missing,action_presence,segment_structure,upstream_timing_issue,auditor,notes
+recording_000037_SEM1,recording_000037,30.0,50.0,Rinse entire mug and set down,,,,,,,,
+recording_000037_SEM2,recording_000037,464.6,526.0,Final rinse and inspection of mug,,,,,,,,
+recording_000037_SEM3,recording_000037,120.0,141.0,Scrub mug interior,,,,,,,,
+recording_000037_SEM4,recording_000037,141.0,156.0,Rinse mug under running water,,,,,,,,

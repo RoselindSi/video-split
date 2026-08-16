@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,internal_join,clause_a,clause_b,join_relation,boundary_time,boundary_interval_start,boundary_interval_end,auditor,notes
+recording_000061_SPAN1,recording_000061,231.5,243.5,240.5,Wiping table surface (second phase),Flat object manipulation step,,,,,,
+recording_000061_SPAN2,recording_000061,65.5,77.8,74.2,Wipe table surface with tissue,Retrieve new tissue from pack,,,,,,
+recording_000061_SPAN3,recording_000061,74.2,86.8,77.8,Retrieve new tissue from pack,Wipe table surface with tissue,,,,,,
+recording_000061_SPAN4,recording_000061,228.8,240.5,231.5,Adjusting tissue pack,Wiping table surface (second phase),,,,,,

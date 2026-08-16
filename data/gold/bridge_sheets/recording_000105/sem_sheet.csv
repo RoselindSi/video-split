@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,candidate_label,claim_support,granularity,major_action_missing,action_presence,segment_structure,upstream_timing_issue,auditor,notes
+recording_000105_SEM1,recording_000105,358.5,400.5,fold and press tissue edge,,,,,,,,
+recording_000105_SEM2,recording_000105,11.8,17.8,Extract tissue from pack,,,,,,,,
+recording_000105_SEM3,recording_000105,117.0,173.0,Paper fold-unfold cycle,,,,,,,,
+recording_000105_SEM4,recording_000105,173.5,240.0,Retrieve and unfold a new tissue,,,,,,,,

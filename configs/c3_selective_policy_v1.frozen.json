@@ -1,0 +1,56 @@
+{
+  "frozen": true,
+  "policy": {
+    "name": "B_global_local_agreement",
+    "family": "agreement",
+    "score_a": "P1 (global) alone",
+    "score_b": "local alone",
+    "keep_above": 0.75,
+    "min_reliability": 0.7,
+    "reject_below": 0.3
+  },
+  "reliability_column": "detect_coverage",
+  "selection": {
+    "min_auto_keep_precision": 0.95,
+    "max_sharp_false_reject_rate": 0.05,
+    "objective": "maximize_automatic_coverage",
+    "_comment": "Precision-first, in this order: an auto-keep stream that is not trustworthy is worse than no automation, so precision is a constraint rather than something traded off. The sharp false-reject cap stops the policy from buying precision by rejecting real boundaries. Only then is automatic coverage maximised. Ties go to the higher auto-keep precision. These three numbers are fixed here; if nothing satisfies them the honest output is 'nothing qualifies', not a relaxed threshold."
+  },
+  "selected_on": [
+    "/workspace/tr1/results/hal/c3/local_events.csv",
+    "/workspace/tr1/results/hal/c3/local_events_batch3.csv"
+  ],
+  "n_dev_events": 313,
+  "source_config": "configs/c3_selective_policy_v1.json",
+  "source_config_sha256": "57d784f8e7627c69",
+  "dev_metrics": {
+    "n_clean": 313,
+    "n_positive": 160,
+    "n_negative": 153,
+    "auto_keep_coverage": 0.19488817891373802,
+    "auto_keep_precision": 0.9508196721311475,
+    "auto_keep_precision_wilson": [
+      0.8650865720629857,
+      0.9831343231647693
+    ],
+    "false_keep_count": 3,
+    "same_action_false_accept_rate": 0.0196078431372549,
+    "auto_reject_coverage": 0.26517571884984026,
+    "auto_reject_precision": 0.9036144578313253,
+    "auto_reject_precision_wilson": [
+      0.8211717868492707,
+      0.9503478535074248
+    ],
+    "sharp_false_reject_rate": 0.05,
+    "review_rate": 0.5399361022364217,
+    "automatic_coverage": 0.46006389776357826,
+    "sharp_recall_after_automatic": 0.95,
+    "abstain_insufficient_margin_rate": 0.268370607028754,
+    "abstain_low_local_reliability_rate": 0.2364217252396166,
+    "abstain_global_local_disagreement_rate": 0.03514376996805112,
+    "auto_keep_precision_bootstrap": [
+      0.8846153846153846,
+      1.0
+    ]
+  }
+}

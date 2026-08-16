@@ -1,0 +1,84 @@
+{
+  "tol": 0.5,
+  "n_perm": 2000,
+  "usable_events": 45,
+  "missing_recordings": [],
+  "references": {
+    "audited old sample (peak-selected)": 6.21,
+    "stored GT annotation": 0.54
+  },
+  "results": {
+    "midpoint": {
+      "n_events": 45,
+      "n_boundaries": 58,
+      "n_recordings": 36,
+      "boundary_centric": {
+        "observed": 7,
+        "null_mean": 4.6,
+        "null_95": [
+          1,
+          9
+        ],
+        "ratio": 1.52,
+        "p_value": 0.17441
+      },
+      "peak_centric": {
+        "observed": 7,
+        "null_mean": 4.6,
+        "null_95": [
+          1,
+          9
+        ],
+        "ratio": 1.52,
+        "p_value": 0.17441
+      },
+      "paired_vs_stored": {
+        "human_rate": 0.1207,
+        "stored_rate": 0.0538,
+        "difference": 0.0669,
+        "null_mean": -0.0132,
+        "null_95": [
+          -0.0775,
+          0.066
+        ],
+        "p_value": 0.02449
+      }
+    },
+    "interval_aware": {
+      "n_events": 45,
+      "n_boundaries": 58,
+      "n_recordings": 36,
+      "boundary_centric": {
+        "observed": 12,
+        "null_mean": 8.27,
+        "null_95": [
+          4,
+          13
+        ],
+        "ratio": 1.45,
+        "p_value": 0.10195
+      },
+      "peak_centric": {
+        "observed": 12,
+        "null_mean": 8.99,
+        "null_95": [
+          4,
+          15
+        ],
+        "ratio": 1.33,
+        "p_value": 0.1929
+      },
+      "paired_vs_stored": {
+        "human_rate": 0.2069,
+        "stored_rate": 0.0538,
+        "difference": 0.1531,
+        "null_mean": 0.0491,
+        "null_95": [
+          -0.0305,
+          0.1408
+        ],
+        "p_value": 0.01149
+      }
+    }
+  }
+}

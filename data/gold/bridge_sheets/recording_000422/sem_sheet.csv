@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,candidate_label,claim_support,granularity,major_action_missing,action_presence,segment_structure,upstream_timing_issue,auditor,notes
+recording_000422_SEM1,recording_000422,313.2,353.3,Unrolling and laying a plastic wrap sheet on the table,,,,,,,,
+recording_000422_SEM2,recording_000422,444.4,455.7,Crumble plastic wrap and discard into basin,,,,,,,,
+recording_000422_SEM3,recording_000422,44.5,74.2,Unrolling plastic wrap,,,,,,,,
+recording_000422_SEM4,recording_000422,78.6,114.2,Seal plastic wrap around bowl rim,,,,,,,,

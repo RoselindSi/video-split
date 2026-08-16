@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,candidate_label,claim_support,granularity,major_action_missing,action_presence,segment_structure,upstream_timing_issue,auditor,notes
+recording_000080_SEM1,recording_000080,60.5,75.5,Wipe table and dispose of used tissue,,,,,,,,
+recording_000080_SEM2,recording_000080,78.0,93.5,Wipe table and dispose of used tissue,,,,,,,,
+recording_000080_SEM3,recording_000080,96.0,111.5,Wipe table and dispose of used tissue,,,,,,,,
+recording_000080_SEM4,recording_000080,113.0,130.6,Wipe table and dispose of used tissue,,,,,,,,

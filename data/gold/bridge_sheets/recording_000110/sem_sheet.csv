@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,candidate_label,claim_support,granularity,major_action_missing,action_presence,segment_structure,upstream_timing_issue,auditor,notes
+recording_000110_SEM1,recording_000110,272.2,312.9,Wipe countertop with squeegee,,,,,,,,
+recording_000110_SEM2,recording_000110,391.5,419.6,Clean countertop with squeegee,,,,,,,,
+recording_000110_SEM3,recording_000110,505.4,594.1,Second squeegee cleaning session,,,,,,,,
+recording_000110_SEM4,recording_000110,594.1,605.2,Washing hands and splashing water on countertop,,,,,,,,

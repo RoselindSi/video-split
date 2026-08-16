@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,candidate_label,claim_support,granularity,major_action_missing,action_presence,segment_structure,upstream_timing_issue,auditor,notes
+recording_000388_SEM1,recording_000388,24.0,93.5,Cover bowl with plastic wrap,,,,,,,,
+recording_000388_SEM2,recording_000388,93.5,110.5,Remove and discard plastic wrap from bowl,,,,,,,,
+recording_000388_SEM3,recording_000388,137.8,179.9,Fold and tuck plastic wrap around bowl sides to seal,,,,,,,,
+recording_000388_SEM4,recording_000388,206.6,260.1,Seal plastic wrap around bowl rim,,,,,,,,

@@ -1,0 +1,277 @@
+{
+  "n_joined": 37,
+  "point_median": 0.9730896353721619,
+  "none_median": 0.016881436575204134,
+  "pooled_iqr": 0.953225618111901,
+  "subtypes": [
+    {
+      "subtype": "smooth_ramp",
+      "n": 8,
+      "recordings": 8,
+      "median_p_point": 0.25768652465194464,
+      "iqr": 0.9192771583620925,
+      "at_or_above_point_median": 1,
+      "at_or_below_none_median": 4
+    },
+    {
+      "subtype": "overlapping_transition",
+      "n": 8,
+      "recordings": 7,
+      "median_p_point": 0.48350422477233224,
+      "iqr": 0.9734527809605424,
+      "at_or_above_point_median": 2,
+      "at_or_below_none_median": 4
+    },
+    {
+      "subtype": "multi_step_transition",
+      "n": 12,
+      "recordings": 11,
+      "median_p_point": 0.3257226161658764,
+      "iqr": 0.9855547805782408,
+      "at_or_above_point_median": 4,
+      "at_or_below_none_median": 5
+    },
+    {
+      "subtype": "point_like",
+      "n": 7,
+      "recordings": 6,
+      "median_p_point": 0.00424422649666667,
+      "iqr": 0.22452842117490945,
+      "at_or_above_point_median": 0,
+      "at_or_below_none_median": 4
+    },
+    {
+      "subtype": "ambiguous_interval",
+      "n": 2,
+      "recordings": 2,
+      "median_p_point": 0.46943175373598933,
+      "iqr": 0.46557045402005315,
+      "at_or_above_point_median": 0,
+      "at_or_below_none_median": 1
+    }
+  ],
+  "events": [
+    {
+      "event_id": "recording_000022_missed_signal_present_not_top_t366.5",
+      "subtype": "multi_step_transition",
+      "confidence": "3_sure",
+      "p_point": 0.00658721337094903
+    },
+    {
+      "event_id": "recording_000204_batch3_raw_change_peak_t484.0",
+      "subtype": "smooth_ramp",
+      "confidence": "3_sure",
+      "p_point": 0.00020950385078322142
+    },
+    {
+      "event_id": "recording_000178_batch3_raw_change_peak_t360.0",
+      "subtype": "overlapping_transition",
+      "confidence": "3_sure",
+      "p_point": 0.9666946530342102
+    },
+    {
+      "event_id": "recording_000212_batch3_gt_boundary_t502.2",
+      "subtype": "multi_step_transition",
+      "confidence": "3_sure",
+      "p_point": 0.9876229763031006
+    },
+    {
+      "event_id": "recording_000212_batch3_raw_change_peak_t248.0",
+      "subtype": "overlapping_transition",
+      "confidence": "3_sure",
+      "p_point": 0.9984915256500244
+    },
+    {
+      "event_id": "recording_000192_batch3_gt_boundary_t485.6",
+      "subtype": "point_like",
+      "confidence": "2_lean",
+      "p_point": 0.0007695771637372673
+    },
+    {
+      "event_id": "recording_000431_false_near_edge_t440.5",
+      "subtype": "overlapping_transition",
+      "confidence": "3_sure",
+      "p_point": 4.1013579902937636e-05
+    },
+    {
+      "event_id": "recording_000406_false_mid_segment_t29.5",
+      "subtype": "multi_step_transition",
+      "confidence": "3_sure",
+      "p_point": 0.0017088598106056452
+    },
+    {
+      "event_id": "recording_000058_batch3_raw_change_peak_t585.0",
+      "subtype": "smooth_ramp",
+      "confidence": "2_lean",
+      "p_point": 0.0006329362513497472
+    },
+    {
+      "event_id": "recording_000049_batch3_gt_boundary_t94.5",
+      "subtype": "point_like",
+      "confidence": "3_sure",
+      "p_point": 0.00424422649666667
+    },
+    {
+      "event_id": "recording_000156_batch3_gt_boundary_t254.0",
+      "subtype": "point_like",
+      "confidence": "2_lean",
+      "p_point": 0.39106133580207825
+    },
+    {
+      "event_id": "recording_000163_batch3_raw_change_peak_t397.0",
+      "subtype": "smooth_ramp",
+      "confidence": "2_lean",
+      "p_point": 0.0020217953715473413
+    },
+    {
+      "event_id": "recording_000465_early_t599.0",
+      "subtype": "overlapping_transition",
+      "confidence": "3_sure",
+      "p_point": 0.9895933866500854
+    },
+    {
+      "event_id": "recording_000028_batch3_raw_change_peak_t273.0",
+      "subtype": "overlapping_transition",
+      "confidence": "3_sure",
+      "p_point": 0.9682298898696899
+    },
+    {
+      "event_id": "recording_000388_false_mid_segment_t618.0",
+      "subtype": "multi_step_transition",
+      "confidence": "2_lean",
+      "p_point": 0.0003703129477798939
+    },
+    {
+      "event_id": "recording_000213_late_t150.0",
+      "subtype": "multi_step_transition",
+      "confidence": "3_sure",
+      "p_point": 0.9964627623558044
+    },
+    {
+      "event_id": "recording_000145_batch3_gt_boundary_t558.0",
+      "subtype": "multi_step_transition",
+      "confidence": "3_sure",
+      "p_point": 0.9110838770866394
+    },
+    {
+      "event_id": "recording_000029_batch3_raw_change_peak_t163.0",
+      "subtype": "smooth_ramp",
+      "confidence": "2_lean",
+      "p_point": 0.9099828004837036
+    },
+    {
+      "event_id": "recording_000206_batch3_raw_change_peak_t616.0",
+      "subtype": "ambiguous_interval",
+      "confidence": "2_lean",
+      "p_point": 0.003861299715936184
+    },
+    {
+      "event_id": "recording_000388_false_mid_segment_t375.5",
+      "subtype": "point_like",
+      "confidence": "3_sure",
+      "p_point": 0.058891650289297104
+    },
+    {
+      "event_id": "recording_000048_batch3_raw_change_peak_t528.0",
+      "subtype": "ambiguous_interval",
+      "confidence": "2_lean",
+      "p_point": 0.9350022077560425
+    },
+    {
+      "event_id": "recording_000431_false_mid_segment_t427.5",
+      "subtype": "overlapping_transition",
+      "confidence": "2_lean",
+      "p_point": 0.00014363961236085743
+    },
+    {
+      "event_id": "recording_000050_batch3_gt_boundary_t291.5",
+      "subtype": "multi_step_transition",
+      "confidence": "3_sure",
+      "p_point": 0.03686394542455673
+    },
+    {
+      "event_id": "recording_000197_batch3_raw_change_peak_t32.0",
+      "subtype": "multi_step_transition",
+      "confidence": "2_lean",
+      "p_point": 0.0031824579928070307
+    },
+    {
+      "event_id": "recording_000158_batch3_gt_boundary_t622.5",
+      "subtype": "smooth_ramp",
+      "confidence": "3_sure",
+      "p_point": 0.016196666285395622
+    },
+    {
+      "event_id": "recording_000179_batch3_raw_change_peak_t324.0",
+      "subtype": "multi_step_transition",
+      "confidence": "2_lean",
+      "p_point": 0.990606427192688
+    },
+    {
+      "event_id": "recording_000150_missed_weak_signal_t9.5",
+      "subtype": "point_like",
+      "confidence": "3_sure",
+      "p_point": 0.6399987936019897
+    },
+    {
+      "event_id": "recording_000438_false_mid_segment_t476.0",
+      "subtype": "overlapping_transition",
+      "confidence": "3_sure",
+      "p_point": 5.10837617184734e-06
+    },
+    {
+      "event_id": "recording_000282_false_mid_segment_t412.5",
+      "subtype": "multi_step_transition",
+      "confidence": "2_lean",
+      "p_point": 0.9999632835388184
+    },
+    {
+      "event_id": "recording_000406_exact_t490.3",
+      "subtype": "multi_step_transition",
+      "confidence": "3_sure",
+      "p_point": 0.00031493944698013365
+    },
+    {
+      "event_id": "recording_000161_batch3_raw_change_peak_t599.0",
+      "subtype": "smooth_ramp",
+      "confidence": "2_lean",
+      "p_point": 0.9863206744194031
+    },
+    {
+      "event_id": "recording_000406_missed_weak_signal_t556.6",
+      "subtype": "smooth_ramp",
+      "confidence": "2_lean",
+      "p_point": 0.9538585543632507
+    },
+    {
+      "event_id": "recording_000419_false_mid_segment_t605.5",
+      "subtype": "overlapping_transition",
+      "confidence": "3_sure",
+      "p_point": 0.00031379651045426726
+    },
+    {
+      "event_id": "recording_000185_batch3_raw_change_peak_t407.0",
+      "subtype": "smooth_ramp",
+      "confidence": "3_sure",
+      "p_point": 0.49917638301849365
+    },
+    {
+      "event_id": "recording_000029_batch3_gt_boundary_t519.0",
+      "subtype": "multi_step_transition",
+      "confidence": "2_lean",
+      "p_point": 0.614581286907196
+    },
+    {
+      "event_id": "recording_000388_false_mid_segment_t124.5",
+      "subtype": "point_like",
+      "confidence": "3_sure",
+      "p_point": 0.00012656657781917602
+    },
+    {
+      "event_id": "recording_000220_exact_t522.0",
+      "subtype": "point_like",
+      "confidence": "2_lean",
+      "p_point": 3.5445245885057375e-06
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,internal_join,clause_a,clause_b,join_relation,boundary_time,boundary_interval_start,boundary_interval_end,auditor,notes
+recording_000080_SPAN1,recording_000080,601.0,616.0,604.0,Retrieve tissue from pack,Fold tissue paper,,,,,,
+recording_000080_SPAN2,recording_000080,604.0,619.5,616.0,Fold tissue paper,Crumple and discard tissue,,,,,,
+recording_000080_SPAN3,recording_000080,622.0,637.0,626.0,Retrieve tissue from pack,Fold tissue paper,,,,,,
+recording_000080_SPAN4,recording_000080,626.0,640.0,637.0,Fold tissue paper,Crumple and discard tissue,,,,,,

@@ -1,0 +1,345 @@
+{
+  "tol": 0.5,
+  "max_assoc_s": 2.0,
+  "positives_only": false,
+  "sweep": {
+    "0.25": {
+      "aligned": 14,
+      "misaligned": 18,
+      "mis_recordings": 14
+    },
+    "0.5": {
+      "aligned": 18,
+      "misaligned": 14,
+      "mis_recordings": 12
+    },
+    "1.0": {
+      "aligned": 20,
+      "misaligned": 12,
+      "mis_recordings": 11
+    }
+  },
+  "no_peak_boundaries": 94,
+  "rows": [
+    {
+      "recording_id": "recording_000022",
+      "boundary_time": 366.5,
+      "peak_time": 364.5,
+      "offset_s": 2.0,
+      "score": null,
+      "label": "EARLY",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000188",
+      "boundary_time": 455.0,
+      "peak_time": 456.0,
+      "offset_s": -1.0,
+      "score": null,
+      "label": "LATE",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000188",
+      "boundary_time": 456.0,
+      "peak_time": 456.0,
+      "offset_s": 0.0,
+      "score": null,
+      "label": "ALIGNED",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000176",
+      "boundary_time": 90.5,
+      "peak_time": 90.5,
+      "offset_s": 0.0,
+      "score": null,
+      "label": "ALIGNED",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000176",
+      "boundary_time": 92.5,
+      "peak_time": 90.5,
+      "offset_s": 2.0,
+      "score": null,
+      "label": "EARLY",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000176",
+      "boundary_time": 345.5,
+      "peak_time": 345.5,
+      "offset_s": 0.0,
+      "score": null,
+      "label": "ALIGNED",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000176",
+      "boundary_time": 347.0,
+      "peak_time": 345.5,
+      "offset_s": 1.5,
+      "score": null,
+      "label": "EARLY",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000102",
+      "boundary_time": 164.2,
+      "peak_time": 164.5,
+      "offset_s": -0.3,
+      "score": null,
+      "label": "ALIGNED",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000150",
+      "boundary_time": 498.2,
+      "peak_time": 498.5,
+      "offset_s": -0.3,
+      "score": null,
+      "label": "ALIGNED",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000181",
+      "boundary_time": 564.0,
+      "peak_time": 564.0,
+      "offset_s": 0.0,
+      "score": null,
+      "label": "ALIGNED",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000181",
+      "boundary_time": 566.0,
+      "peak_time": 564.0,
+      "offset_s": 2.0,
+      "score": null,
+      "label": "EARLY",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000030",
+      "boundary_time": 387.8,
+      "peak_time": 389.0,
+      "offset_s": -1.2,
+      "score": null,
+      "label": "LATE",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000030",
+      "boundary_time": 556.0,
+      "peak_time": 556.0,
+      "offset_s": 0.0,
+      "score": null,
+      "label": "ALIGNED",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000213",
+      "boundary_time": 229.5,
+      "peak_time": 230.5,
+      "offset_s": -1.0,
+      "score": null,
+      "label": "LATE",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000213",
+      "boundary_time": 230.5,
+      "peak_time": 230.5,
+      "offset_s": 0.0,
+      "score": null,
+      "label": "ALIGNED",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000213",
+      "boundary_time": 240.2,
+      "peak_time": 240.5,
+      "offset_s": -0.3,
+      "score": null,
+      "label": "ALIGNED",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000213",
+      "boundary_time": 242.5,
+      "peak_time": 242.5,
+      "offset_s": 0.0,
+      "score": null,
+      "label": "ALIGNED",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000213",
+      "boundary_time": 242.5,
+      "peak_time": 240.5,
+      "offset_s": 2.0,
+      "score": null,
+      "label": "DUPLICATE",
+      "rank_at_boundary": 1,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000080",
+      "boundary_time": 558.5,
+      "peak_time": 558.5,
+      "offset_s": 0.0,
+      "score": null,
+      "label": "ALIGNED",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000080",
+      "boundary_time": 559.8,
+      "peak_time": 558.5,
+      "offset_s": 1.3,
+      "score": null,
+      "label": "EARLY",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000183",
+      "boundary_time": 353.0,
+      "peak_time": 355.0,
+      "offset_s": -2.0,
+      "score": null,
+      "label": "LATE",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000183",
+      "boundary_time": 355.0,
+      "peak_time": 355.0,
+      "offset_s": 0.0,
+      "score": null,
+      "label": "ALIGNED",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000220",
+      "boundary_time": 521.8,
+      "peak_time": 523.0,
+      "offset_s": -1.2,
+      "score": null,
+      "label": "LATE",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000134",
+      "boundary_time": 128.9,
+      "peak_time": 130.0,
+      "offset_s": -1.1,
+      "score": null,
+      "label": "LATE",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000134",
+      "boundary_time": 130.0,
+      "peak_time": 130.0,
+      "offset_s": 0.0,
+      "score": null,
+      "label": "ALIGNED",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000134",
+      "boundary_time": 562.0,
+      "peak_time": 562.5,
+      "offset_s": -0.5,
+      "score": null,
+      "label": "ALIGNED",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000110",
+      "boundary_time": 504.0,
+      "peak_time": 504.0,
+      "offset_s": 0.0,
+      "score": null,
+      "label": "ALIGNED",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000110",
+      "boundary_time": 505.4,
+      "peak_time": 504.0,
+      "offset_s": 1.4,
+      "score": null,
+      "label": "EARLY",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000196",
+      "boundary_time": 243.0,
+      "peak_time": 243.0,
+      "offset_s": 0.0,
+      "score": null,
+      "label": "ALIGNED",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000037",
+      "boundary_time": 155.8,
+      "peak_time": 157.5,
+      "offset_s": -1.7,
+      "score": null,
+      "label": "LATE",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000037",
+      "boundary_time": 157.5,
+      "peak_time": 157.5,
+      "offset_s": 0.0,
+      "score": null,
+      "label": "ALIGNED",
+      "rank_at_boundary": 0,
+      "relation": []
+    },
+    {
+      "recording_id": "recording_000086",
+      "boundary_time": 530.5,
+      "peak_time": 530.5,
+      "offset_s": 0.0,
+      "score": null,
+      "label": "ALIGNED",
+      "rank_at_boundary": 0,
+      "relation": []
+    }
+  ]
+}

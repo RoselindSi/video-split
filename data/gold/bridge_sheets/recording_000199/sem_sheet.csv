@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,candidate_label,claim_support,granularity,major_action_missing,action_presence,segment_structure,upstream_timing_issue,auditor,notes
+recording_000199_SEM1,recording_000199,491.5,521.0,Clean and reinstall sink strainer,,,,,,,,
+recording_000199_SEM2,recording_000199,521.0,539.5,Clean and reinstall sink strainer,,,,,,,,
+recording_000199_SEM3,recording_000199,681.0,709.0,Clean and reinstall sink drain strainer,,,,,,,,
+recording_000199_SEM4,recording_000199,14.0,29.0,Rinse and clean sink strainer under running water,,,,,,,,

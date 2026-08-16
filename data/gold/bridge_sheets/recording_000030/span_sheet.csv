@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,internal_join,clause_a,clause_b,join_relation,boundary_time,boundary_interval_start,boundary_interval_end,auditor,notes
+recording_000030_SPAN1,recording_000030,356.0,362.0,359.5,Reposition water bottle on table,Move water bottle from left to center position,,,,,,
+recording_000030_SPAN2,recording_000030,537.0,544.0,541.0,Move water bottle from table center to left,Reposition water bottle on table,,,,,,
+recording_000030_SPAN3,recording_000030,2.0,8.2,5.1,Slide bottle left from center (upright),Slide bottle back to center from left (upright),,,,,,
+recording_000030_SPAN4,recording_000030,6.2,11.2,8.2,Slide bottle back to center from left (upright),Slide bottle forward from center (upright),,,,,,

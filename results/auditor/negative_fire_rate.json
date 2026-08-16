@@ -1,0 +1,105 @@
+{
+  "window": 2.0,
+  "peaks_provenance": "held_out",
+  "n_events": 39,
+  "arms": {
+    "positive": 21,
+    "negative:no_action_change": 10,
+    "negative:phase_change_only": 8
+  },
+  "results": {
+    "positive": {
+      "fired": 16,
+      "n": 21,
+      "rate": 0.7619,
+      "null_mean": 0.2161,
+      "p_value": 0.0005
+    },
+    "no_action_change": {
+      "fired": 5,
+      "n": 10,
+      "rate": 0.5,
+      "null_mean": 0.305,
+      "p_value": 0.15242
+    },
+    "phase_change_only": {
+      "fired": 5,
+      "n": 8,
+      "rate": 0.625,
+      "null_mean": 0.4009,
+      "p_value": 0.18341
+    }
+  },
+  "sweep": {
+    "0.5": {
+      "positive": {
+        "rate": 0.619,
+        "null": 0.0646
+      },
+      "no_action_change": {
+        "rate": 0.3,
+        "null": 0.1128
+      },
+      "phase_change_only": {
+        "rate": 0.5,
+        "null": 0.1631
+      }
+    },
+    "1.0": {
+      "positive": {
+        "rate": 0.7143,
+        "null": 0.1201
+      },
+      "no_action_change": {
+        "rate": 0.4,
+        "null": 0.187
+      },
+      "phase_change_only": {
+        "rate": 0.5,
+        "null": 0.2687
+      }
+    },
+    "2.0": {
+      "positive": {
+        "rate": 0.7619,
+        "null": 0.2183
+      },
+      "no_action_change": {
+        "rate": 0.5,
+        "null": 0.305
+      },
+      "phase_change_only": {
+        "rate": 0.625,
+        "null": 0.4047
+      }
+    },
+    "3.0": {
+      "positive": {
+        "rate": 0.8095,
+        "null": 0.3024
+      },
+      "no_action_change": {
+        "rate": 0.5,
+        "null": 0.3978
+      },
+      "phase_change_only": {
+        "rate": 0.625,
+        "null": 0.4934
+      }
+    },
+    "5.0": {
+      "positive": {
+        "rate": 0.8095,
+        "null": 0.442
+      },
+      "no_action_change": {
+        "rate": 0.6,
+        "null": 0.5185
+      },
+      "phase_change_only": {
+        "rate": 0.875,
+        "null": 0.61
+      }
+    }
+  }
+}

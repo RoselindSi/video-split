@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,candidate_label,claim_support,granularity,major_action_missing,action_presence,segment_structure,upstream_timing_issue,auditor,notes
+recording_000230_SEM1,recording_000230,17.0,38.0,Disassemble box and store in plastic bag,,,,,,,,
+recording_000230_SEM2,recording_000230,398.0,417.0,Retrieve and reassemble cardboard box,,,,,,,,
+recording_000230_SEM3,recording_000230,375.5,397.0,Disassemble and store cardboard box,,,,,,,,
+recording_000230_SEM4,recording_000230,38.0,57.0,"Retrieve, reassemble and reseal cardboard box",,,,,,,,

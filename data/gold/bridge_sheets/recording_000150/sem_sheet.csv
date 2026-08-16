@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,candidate_label,claim_support,granularity,major_action_missing,action_presence,segment_structure,upstream_timing_issue,auditor,notes
+recording_000150_SEM1,recording_000150,4.0,6.0,Flip remote control to opposite side,,,,,,,,
+recording_000150_SEM2,recording_000150,9.5,11.0,Flip remote control to opposite side,,,,,,,,
+recording_000150_SEM3,recording_000150,13.0,15.0,Flip remote control to opposite side,,,,,,,,
+recording_000150_SEM4,recording_000150,15.5,17.0,Flip remote control to opposite side,,,,,,,,

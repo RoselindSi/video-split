@@ -1,0 +1,1034 @@
+{
+  "22/t466.8": {
+    "event_id": "recording_000022_missed_weak_signal_t466.8",
+    "recording_id": "recording_000022",
+    "candidate_time": 466.8,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000022_s449.2",
+        "stored_label": "Rinse mug after scrubbing",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000022_s466.8",
+        "stored_label": "Place washed mug on counter",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "30/t556": {
+    "event_id": "recording_000030_false_gap_t556.0",
+    "recording_id": "recording_000030",
+    "candidate_time": 556.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000030_s552.0",
+        "stored_label": "Reposition water bottle on table",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000030_s557.0",
+        "stored_label": "Reposition water bottle on table",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "37/t156": {
+    "event_id": "recording_000037_early_t156.0",
+    "recording_id": "recording_000037",
+    "candidate_time": 156.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000037_s141.0",
+        "stored_label": "Rinse mug under running water",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000037_s164.0",
+        "stored_label": "Rinse mug under running water",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "53/t486": {
+    "event_id": "recording_000053_missed_weak_signal_t486.0",
+    "recording_id": "recording_000053",
+    "candidate_time": 486.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000053_s468.0",
+        "stored_label": "taking a tissue from the tissue box",
+        "shown_in_sheet": false
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000053_s486.0",
+        "stored_label": "Fill dark bottles from table into bowl",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "61/t590": {
+    "event_id": "recording_000061_exact_t590.0",
+    "recording_id": "recording_000061",
+    "candidate_time": 590.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000061_s580.0",
+        "stored_label": "Bottle manipulation over bowl",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000061_s622.5",
+        "stored_label": "Place tissue pack on table",
+        "shown_in_sheet": false
+      }
+    ]
+  },
+  "102/t164.5": {
+    "event_id": "recording_000102_duplicate_t164.5",
+    "recording_id": "recording_000102",
+    "candidate_time": 164.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000102_s160.0",
+        "stored_label": "Fold and crease sheet edge",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000102_s164.0",
+        "stored_label": "Fold and crease sheet edge",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000102_s168.0",
+        "stored_label": "Fold and crease sheet edge",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "102/t484": {
+    "event_id": "recording_000102_false_mid_segment_t484.0",
+    "recording_id": "recording_000102",
+    "candidate_time": 484.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000102_s474.0",
+        "stored_label": "fold and unfold tissue",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000102_s477.0",
+        "stored_label": "fold and unfold tissue",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000102_s490.0",
+        "stored_label": "Fold and crease paper edge",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "102/t95": {
+    "event_id": "recording_000102_missed_weak_signal_t95.0",
+    "recording_id": "recording_000102",
+    "candidate_time": 95.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000102_s90.0",
+        "stored_label": "Fold and unfold a paper sheet",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000102_s95.0",
+        "stored_label": "Fold and unfold a paper sheet",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "110/t504": {
+    "event_id": "recording_000110_false_near_edge_t504.0",
+    "recording_id": "recording_000110",
+    "candidate_time": 504.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000110_s460.8",
+        "stored_label": "Wipe back counter behind sink",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000110_s493.7",
+        "stored_label": "Hand rinsing under faucet",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000110_s505.4",
+        "stored_label": "Second squeegee cleaning session",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "134/t130": {
+    "event_id": "recording_000134_false_near_edge_t130.0",
+    "recording_id": "recording_000134",
+    "candidate_time": 130.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000134_s100.5",
+        "stored_label": "Fold a tissue paper into a compact rectangle (starts here)",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000134_s128.9",
+        "stored_label": "Fold second tissue sheet into compact rectangle",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000134_s149.2",
+        "stored_label": "Fold third tissue sheet into compact rectangle",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "134/t562.5": {
+    "event_id": "recording_000134_false_near_edge_t562.5",
+    "recording_id": "recording_000134",
+    "candidate_time": 562.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000134_s542.1",
+        "stored_label": "Fold one tissue sheet and stack it",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000134_s561.6",
+        "stored_label": "Fold one tissue sheet and stack it",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000134_s573.1",
+        "stored_label": "Fold one tissue sheet and stack it",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "176/t90.5": {
+    "event_id": "recording_000176_false_mid_segment_t90.5",
+    "recording_id": "recording_000176",
+    "candidate_time": 90.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000176_s71.0",
+        "stored_label": "Rinse sink strainer",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000176_s83.5",
+        "stored_label": "Install sink strainer",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000176_s92.5",
+        "stored_label": "Remove sink strainer",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "181/t73.5": {
+    "event_id": "recording_000181_late_t73.5",
+    "recording_id": "recording_000181",
+    "candidate_time": 73.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000181_s54.3",
+        "stored_label": "Clean sink drain strainer",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000181_s73.5",
+        "stored_label": "Rinse and reseat sink drain strainer",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "181/t233": {
+    "event_id": "recording_000181_late_t233.0",
+    "recording_id": "recording_000181",
+    "candidate_time": 233.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000181_s222.0",
+        "stored_label": "Clean sink drain strainer",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000181_s233.0",
+        "stored_label": "Clean sink drain strainer",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "188/t456": {
+    "event_id": "recording_000188_false_gap_t456.0",
+    "recording_id": "recording_000188",
+    "candidate_time": 456.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000188_s418.8",
+        "stored_label": "Unbox and inspect first packaged portable charger",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000188_s494.3",
+        "stored_label": "Inspect first portable charger",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "213/t230.5": {
+    "event_id": "recording_000213_duplicate_t230.5",
+    "recording_id": "recording_000213",
+    "candidate_time": 230.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000213_s217.0",
+        "stored_label": "Rinse and seat sink strainer",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000213_s230.0",
+        "stored_label": "Rinse and seat sink strainer",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000213_s252.1",
+        "stored_label": "Clean and replace sink drain strainer",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "213/t242.5": {
+    "event_id": "recording_000213_false_gap_t242.5",
+    "recording_id": "recording_000213",
+    "candidate_time": 242.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000213_s230.0",
+        "stored_label": "Rinse and seat sink strainer",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000213_s252.1",
+        "stored_label": "Clean and replace sink drain strainer",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "220/t137.8": {
+    "event_id": "recording_000220_early_t137.8",
+    "recording_id": "recording_000220",
+    "candidate_time": 137.8,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000220_s131.8",
+        "stored_label": "Slipper pair flip cycle",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000220_s137.8",
+        "stored_label": "Slipper pair flip cycle",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "220/t289.5": {
+    "event_id": "recording_000220_missed_weak_signal_t289.5",
+    "recording_id": "recording_000220",
+    "candidate_time": 289.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000220_s286.5",
+        "stored_label": "Display footbed side of slippers",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000220_s289.5",
+        "stored_label": "Display upper side of slippers",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "230/t404.5": {
+    "event_id": "recording_000230_false_mid_segment_t404.5",
+    "recording_id": "recording_000230",
+    "candidate_time": 404.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000230_s375.5",
+        "stored_label": "Disassemble and store cardboard box",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000230_s398.0",
+        "stored_label": "Retrieve and reassemble cardboard box",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000230_s417.0",
+        "stored_label": "Repack USB drive into cardboard box",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "230/t397": {
+    "event_id": "recording_000230_missed_signal_present_not_top_t397.0",
+    "recording_id": "recording_000230",
+    "candidate_time": 397.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000230_s375.5",
+        "stored_label": "Disassemble and store cardboard box",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000230_s398.0",
+        "stored_label": "Retrieve and reassemble cardboard box",
+        "shown_in_sheet": false
+      }
+    ]
+  },
+  "236/t572.8": {
+    "event_id": "recording_000236_missed_signal_present_not_top_t572.8",
+    "recording_id": "recording_000236",
+    "candidate_time": 572.8,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000236_s569.0",
+        "stored_label": "Close cardboard box top flaps again",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000236_s577.0",
+        "stored_label": "Dispose of box in plastic bag",
+        "shown_in_sheet": false
+      }
+    ]
+  },
+  "242/t352": {
+    "event_id": "recording_000242_missed_weak_signal_t352.0",
+    "recording_id": "recording_000242",
+    "candidate_time": 352.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000242_s344.0",
+        "stored_label": "Seal second box with tape",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000242_s352.5",
+        "stored_label": "Unseal and open second box",
+        "shown_in_sheet": false
+      }
+    ]
+  },
+  "250/t629.5": {
+    "event_id": "recording_000250_exact_t629.5",
+    "recording_id": "recording_000250",
+    "candidate_time": 629.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000250_s624.5",
+        "stored_label": "Place keychain into box",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000250_s629.5",
+        "stored_label": "Seal box top with tape",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "265/t88": {
+    "event_id": "recording_000265_early_t88.0",
+    "recording_id": "recording_000265",
+    "candidate_time": 88.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000265_s84.0",
+        "stored_label": "Remove cardboard box from black plastic bag",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000265_s88.0",
+        "stored_label": "Pack USB drive into box and seal with tape",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "265/t298.5": {
+    "event_id": "recording_000265_missed_signal_present_not_top_t298.5",
+    "recording_id": "recording_000265",
+    "candidate_time": 298.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000265_s297.0",
+        "stored_label": "Open reassembled cardboard box",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000265_s298.5",
+        "stored_label": "Begin sealing cardboard box",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "272/t618": {
+    "event_id": "recording_000272_false_mid_segment_t618.5",
+    "recording_id": "recording_000272",
+    "candidate_time": 618.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000272_s591.0",
+        "stored_label": "Remove adhesive tape from box side panel",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000272_s606.0",
+        "stored_label": "Store cardboard box in plastic bag",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000272_s623.0",
+        "stored_label": "Retrieve cardboard box from plastic bag",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "282/t544.5": {
+    "event_id": "recording_000282_exact_t544.5",
+    "recording_id": "recording_000282",
+    "candidate_time": 544.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000282_s543.2",
+        "stored_label": "Flip box and open top flaps",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000282_s545.0",
+        "stored_label": "Place USB drive into box",
+        "shown_in_sheet": false
+      }
+    ]
+  },
+  "327/t386.5": {
+    "event_id": "recording_000327_false_near_edge_t386.5",
+    "recording_id": "recording_000327",
+    "candidate_time": 386.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000327_s365.2",
+        "stored_label": "Apply liquid to pan and spread with brush",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000327_s376.7",
+        "stored_label": "Apply liquid to pan and spread with brush",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000327_s388.1",
+        "stored_label": "Apply liquid to pan and spread with brush",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "343/t547": {
+    "event_id": "recording_000343_false_mid_segment_t547.0",
+    "recording_id": "recording_000343",
+    "candidate_time": 547.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000343_s531.0",
+        "stored_label": "Apply liquid to pan with brush and bottle",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000343_s543.5",
+        "stored_label": "Pan liquid application cycle",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000343_s553.5",
+        "stored_label": "Pan liquid application cycle",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "343/t222.5": {
+    "event_id": "recording_000343_false_near_edge_t222.5",
+    "recording_id": "recording_000343",
+    "candidate_time": 222.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000343_s209.5",
+        "stored_label": "Apply liquid to pan with brush",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000343_s221.5",
+        "stored_label": "Apply liquid to pan with brush",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000343_s233.5",
+        "stored_label": "Apply liquid to pan with brush",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "385/t577.5": {
+    "event_id": "recording_000385_false_near_edge_t577.5",
+    "recording_id": "recording_000385",
+    "candidate_time": 577.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000385_s492.1",
+        "stored_label": "Fold and press plastic wrap to seal",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000385_s573.2",
+        "stored_label": "Cover bowl with new plastic wrap",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000385_s644.6",
+        "stored_label": "Remove and discard plastic wrap from bowl",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "388/t67.5": {
+    "event_id": "recording_000388_false_mid_segment_t67.5",
+    "recording_id": "recording_000388",
+    "candidate_time": 67.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000388_s24.0",
+        "stored_label": "Cover bowl with plastic wrap",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000388_s93.5",
+        "stored_label": "Remove and discard plastic wrap from bowl",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "388/t601.8": {
+    "event_id": "recording_000388_missed_signal_present_not_top_t601.8",
+    "recording_id": "recording_000388",
+    "candidate_time": 601.8,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000388_s546.8",
+        "stored_label": "Secure plastic wrap around bowl",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000388_s601.8",
+        "stored_label": "Manipulate and discard ice cube into basin",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "391/t242.5": {
+    "event_id": "recording_000391_false_near_edge_t242.5",
+    "recording_id": "recording_000391",
+    "candidate_time": 242.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000391_s231.0",
+        "stored_label": "Fold USB cable and place on table",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000391_s241.5",
+        "stored_label": "Uncoil USB cable",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000391_s252.0",
+        "stored_label": "Recoil USB cable",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "406/t490.3": {
+    "event_id": "recording_000406_exact_t490.3",
+    "recording_id": "recording_000406",
+    "candidate_time": 490.3,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000406_s470.3",
+        "stored_label": "Handling plastic wrap roll",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000406_s490.3",
+        "stored_label": "Position wrap over bowl opening",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "406/t29.5": {
+    "event_id": "recording_000406_false_mid_segment_t29.5",
+    "recording_id": "recording_000406",
+    "candidate_time": 29.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000406_s13.5",
+        "stored_label": "Prepare plastic wrap roll",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000406_s27.0",
+        "stored_label": "Drape plastic wrap over the bowl",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000406_s37.0",
+        "stored_label": "Seal plastic wrap around the bowl",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "406/t455": {
+    "event_id": "recording_000406_false_near_edge_t455.5",
+    "recording_id": "recording_000406",
+    "candidate_time": 455.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000406_s320.7",
+        "stored_label": "Covering a bowl with plastic wrap",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000406_s391.8",
+        "stored_label": "Cover bowl with new cling film from roll",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000406_s462.3",
+        "stored_label": "Removing and discarding plastic wrap",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "406/t556.6": {
+    "event_id": "recording_000406_missed_weak_signal_t556.6",
+    "recording_id": "recording_000406",
+    "candidate_time": 556.6,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000406_s548.3",
+        "stored_label": "Pick up plastic wrap roll and locate edge",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000406_s556.6",
+        "stored_label": "Unroll a sheet of plastic wrap",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "419/t688.9": {
+    "event_id": "recording_000419_missed_weak_signal_t688.9",
+    "recording_id": "recording_000419",
+    "candidate_time": 688.9,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000419_s682.4",
+        "stored_label": "Crumpling discarded plastic packaging",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000419_s688.9",
+        "stored_label": "Discarding crumpled plastic in trash bin",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "422/t381": {
+    "event_id": "recording_000422_false_mid_segment_t381.0",
+    "recording_id": "recording_000422",
+    "candidate_time": 381.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000422_s313.2",
+        "stored_label": "Unrolling and laying a plastic wrap sheet on the table",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000422_s353.3",
+        "stored_label": "Adjusting bowl and plastic wrap position",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000422_s390.8",
+        "stored_label": "Seal plastic wrap to bowl rim",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "431/t427.5": {
+    "event_id": "recording_000431_false_mid_segment_t427.5",
+    "recording_id": "recording_000431",
+    "candidate_time": 427.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000431_s404.2",
+        "stored_label": "Crumple plastic wrap into ball",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000431_s419.2",
+        "stored_label": "Unroll and tear plastic wrap sheet",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000431_s441.2",
+        "stored_label": "Position bowl and cover with wrap",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "431/t440.5": {
+    "event_id": "recording_000431_false_near_edge_t440.5",
+    "recording_id": "recording_000431",
+    "candidate_time": 440.5,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000431_s404.2",
+        "stored_label": "Crumple plastic wrap into ball",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000431_s419.2",
+        "stored_label": "Unroll and tear plastic wrap sheet",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000431_s441.2",
+        "stored_label": "Position bowl and cover with wrap",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "431/t178.2": {
+    "event_id": "recording_000431_missed_signal_present_not_top_t178.2",
+    "recording_id": "recording_000431",
+    "candidate_time": 178.2,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000431_s169.2",
+        "stored_label": "Crumble the removed plastic wrap",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000431_s209.2",
+        "stored_label": "Secure plastic wrap around the bowl",
+        "shown_in_sheet": false
+      }
+    ]
+  },
+  "438/t224": {
+    "event_id": "recording_000438_false_mid_segment_t224.0",
+    "recording_id": "recording_000438",
+    "candidate_time": 224.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000438_s185.5",
+        "stored_label": "Unroll and tear plastic wrap sheet",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000438_s212.0",
+        "stored_label": "Secure plastic wrap around bowl",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 2,
+        "segment_uid": "recording_000438_s229.0",
+        "stored_label": "Remove and crumple plastic wrap",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "438/t182": {
+    "event_id": "recording_000438_missed_signal_present_not_top_t182.0",
+    "recording_id": "recording_000438",
+    "candidate_time": 182.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000438_s181.0",
+        "stored_label": "Manipulate small transparent object",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000438_s182.0",
+        "stored_label": "Retrieve plastic wrap roll",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "465/t247": {
+    "event_id": "recording_000465_false_gap_t247.0",
+    "recording_id": "recording_000465",
+    "candidate_time": 247.0,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000465_s241.2",
+        "stored_label": "Store charging cable in drawer",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000465_s248.0",
+        "stored_label": "Test charging cable with mobile phone",
+        "shown_in_sheet": true
+      }
+    ]
+  },
+  "471/t485.4": {
+    "event_id": "recording_000471_missed_weak_signal_t485.4",
+    "recording_id": "recording_000471",
+    "candidate_time": 485.4,
+    "segments": [
+      {
+        "seg_index": 0,
+        "segment_uid": "recording_000471_s480.7",
+        "stored_label": "Wipe kettle lid and top cap",
+        "shown_in_sheet": true
+      },
+      {
+        "seg_index": 1,
+        "segment_uid": "recording_000471_s485.4",
+        "stored_label": "Wipe upper kettle body",
+        "shown_in_sheet": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "tol": 0.5,
+  "n_matched": 25,
+  "excluded_no_identity": 19,
+  "excluded_unmatched": 1,
+  "results": {
+    "midpoint_exploratory": {
+      "human-closer count": {
+        "observed": 13,
+        "null_mean": 11.9675,
+        "null_95": [
+          8,
+          17
+        ],
+        "p_value": 0.4068
+      },
+      "median(d_stored - d_human)": {
+        "observed": 0.10000000000002274,
+        "null_mean": 0.1315,
+        "null_95": [
+          -0.09999999999999432,
+          0.5
+        ],
+        "p_value": 0.29585
+      }
+    },
+    "midpoint": {
+      "n": 25,
+      "recordings": 22,
+      "human_closer": 13,
+      "stored_closer": 9,
+      "tie": 3,
+      "median_human": 2.9,
+      "median_stored": 4.0,
+      "hit_human": 2,
+      "hit_stored": 0,
+      "delta": 0.08,
+      "bootstrap_95": [
+        0.0,
+        0.1786
+      ],
+      "null_mean": 0.0137,
+      "null_95": [
+        -0.12,
+        0.12
+      ],
+      "p_value": 0.23738
+    },
+    "interval_aware_exploratory": {
+      "human-closer count": {
+        "observed": 16,
+        "null_mean": 14.373,
+        "null_95": [
+          10,
+          18
+        ],
+        "p_value": 0.28836
+      },
+      "median(d_stored - d_human)": {
+        "observed": 1.0,
+        "null_mean": 0.4475,
+        "null_95": [
+          0.0,
+          1.4324060240477365
+        ],
+        "p_value": 0.14943
+      }
+    },
+    "interval_aware": {
+      "n": 25,
+      "recordings": 22,
+      "human_closer": 16,
+      "stored_closer": 3,
+      "tie": 6,
+      "median_human": 2.5,
+      "median_stored": 4.0,
+      "hit_human": 4,
+      "hit_stored": 0,
+      "delta": 0.16,
+      "bootstrap_95": [
+        0.04,
+        0.2963
+      ],
+      "null_mean": 0.1058,
+      "null_95": [
+        0.0,
+        0.24
+      ],
+      "p_value": 0.29435
+    }
+  }
+}

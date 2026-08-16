@@ -1,0 +1,517 @@
+{
+  "n_events": 62,
+  "n_yes": 45,
+  "bar": 0.6640522875816993,
+  "results": {
+    "min": {
+      "auroc": 0.7098039215686275,
+      "lo": 0.4531914893617021,
+      "hi": 0.8758169934640523,
+      "bar": 0.6640522875816993
+    },
+    "mean": {
+      "auroc": 0.7503267973856209,
+      "lo": 0.5169491525423728,
+      "hi": 0.9115646258503401,
+      "bar": 0.6640522875816993
+    }
+  },
+  "events": [
+    {
+      "audit_key": "22/t466.8",
+      "min": -1.125,
+      "mean": -0.90625,
+      "n_segments": 2,
+      "y": 1,
+      "recording_id": "recording_000022"
+    },
+    {
+      "audit_key": "30/t556",
+      "min": -1.9375,
+      "mean": -1.875,
+      "n_segments": 2,
+      "y": 1,
+      "recording_id": "recording_000030"
+    },
+    {
+      "audit_key": "37/t156",
+      "min": -0.8125,
+      "mean": -0.75,
+      "n_segments": 2,
+      "y": 1,
+      "recording_id": "recording_000037"
+    },
+    {
+      "audit_key": "61/t590",
+      "min": -1.0625,
+      "mean": -1.0625,
+      "n_segments": 1,
+      "y": 0,
+      "recording_id": "recording_000061"
+    },
+    {
+      "audit_key": "102/t164.5",
+      "min": -2.625,
+      "mean": -2.4375,
+      "n_segments": 3,
+      "y": 0,
+      "recording_id": "recording_000102"
+    },
+    {
+      "audit_key": "102/t484",
+      "min": -2.625,
+      "mean": -1.9166666666666667,
+      "n_segments": 3,
+      "y": 0,
+      "recording_id": "recording_000102"
+    },
+    {
+      "audit_key": "102/t95",
+      "min": -2.8125,
+      "mean": -2.71875,
+      "n_segments": 2,
+      "y": 0,
+      "recording_id": "recording_000102"
+    },
+    {
+      "audit_key": "110/t504",
+      "min": -2.375,
+      "mean": -1.9166666666666667,
+      "n_segments": 3,
+      "y": 1,
+      "recording_id": "recording_000110"
+    },
+    {
+      "audit_key": "134/t562.5",
+      "min": -0.875,
+      "mean": -0.8541666666666666,
+      "n_segments": 3,
+      "y": 1,
+      "recording_id": "recording_000134"
+    },
+    {
+      "audit_key": "176/t90.5",
+      "min": -0.625,
+      "mean": -0.4791666666666667,
+      "n_segments": 3,
+      "y": 1,
+      "recording_id": "recording_000176"
+    },
+    {
+      "audit_key": "181/t73.5",
+      "min": -0.5,
+      "mean": -0.1875,
+      "n_segments": 2,
+      "y": 1,
+      "recording_id": "recording_000181"
+    },
+    {
+      "audit_key": "181/t233",
+      "min": -0.4375,
+      "mean": -0.4375,
+      "n_segments": 2,
+      "y": 1,
+      "recording_id": "recording_000181"
+    },
+    {
+      "audit_key": "188/t456",
+      "min": -1.5,
+      "mean": -1.5,
+      "n_segments": 2,
+      "y": 0,
+      "recording_id": "recording_000188"
+    },
+    {
+      "audit_key": "213/t230.5",
+      "min": -0.4375,
+      "mean": 0.0,
+      "n_segments": 3,
+      "y": 1,
+      "recording_id": "recording_000213"
+    },
+    {
+      "audit_key": "220/t137.8",
+      "min": -1.6875,
+      "mean": -1.625,
+      "n_segments": 2,
+      "y": 1,
+      "recording_id": "recording_000220"
+    },
+    {
+      "audit_key": "220/t289.5",
+      "min": -1.375,
+      "mean": -1.15625,
+      "n_segments": 2,
+      "y": 0,
+      "recording_id": "recording_000220"
+    },
+    {
+      "audit_key": "230/t404.5",
+      "min": -2.25,
+      "mean": -1.8125,
+      "n_segments": 3,
+      "y": 1,
+      "recording_id": "recording_000230"
+    },
+    {
+      "audit_key": "230/t397",
+      "min": -2.25,
+      "mean": -2.25,
+      "n_segments": 1,
+      "y": 1,
+      "recording_id": "recording_000230"
+    },
+    {
+      "audit_key": "250/t629.5",
+      "min": -1.6875,
+      "mean": -1.28125,
+      "n_segments": 2,
+      "y": 1,
+      "recording_id": "recording_000250"
+    },
+    {
+      "audit_key": "272/t618",
+      "min": -1.25,
+      "mean": -1.0833333333333333,
+      "n_segments": 3,
+      "y": 1,
+      "recording_id": "recording_000272"
+    },
+    {
+      "audit_key": "282/t544.5",
+      "min": -1.5,
+      "mean": -1.5,
+      "n_segments": 1,
+      "y": 1,
+      "recording_id": "recording_000282"
+    },
+    {
+      "audit_key": "327/t386.5",
+      "min": -1.375,
+      "mean": -1.2916666666666667,
+      "n_segments": 3,
+      "y": 1,
+      "recording_id": "recording_000327"
+    },
+    {
+      "audit_key": "343/t547",
+      "min": -2.5,
+      "mean": -1.6666666666666667,
+      "n_segments": 3,
+      "y": 1,
+      "recording_id": "recording_000343"
+    },
+    {
+      "audit_key": "343/t222.5",
+      "min": -0.75,
+      "mean": -0.5625,
+      "n_segments": 3,
+      "y": 1,
+      "recording_id": "recording_000343"
+    },
+    {
+      "audit_key": "388/t67.5",
+      "min": -0.4375,
+      "mean": -0.34375,
+      "n_segments": 2,
+      "y": 1,
+      "recording_id": "recording_000388"
+    },
+    {
+      "audit_key": "388/t601.8",
+      "min": -0.0625,
+      "mean": 0.3125,
+      "n_segments": 2,
+      "y": 1,
+      "recording_id": "recording_000388"
+    },
+    {
+      "audit_key": "391/t242.5",
+      "min": -2.25,
+      "mean": -1.4375,
+      "n_segments": 3,
+      "y": 1,
+      "recording_id": "recording_000391"
+    },
+    {
+      "audit_key": "406/t490.3",
+      "min": -1.3125,
+      "mean": -1.03125,
+      "n_segments": 2,
+      "y": 1,
+      "recording_id": "recording_000406"
+    },
+    {
+      "audit_key": "406/t29.5",
+      "min": -1.125,
+      "mean": -0.4375,
+      "n_segments": 3,
+      "y": 1,
+      "recording_id": "recording_000406"
+    },
+    {
+      "audit_key": "406/t556.6",
+      "min": -1.0,
+      "mean": -1.0,
+      "n_segments": 2,
+      "y": 1,
+      "recording_id": "recording_000406"
+    },
+    {
+      "audit_key": "419/t688.9",
+      "min": -3.0625,
+      "mean": -2.75,
+      "n_segments": 2,
+      "y": 1,
+      "recording_id": "recording_000419"
+    },
+    {
+      "audit_key": "422/t381",
+      "min": -0.6875,
+      "mean": -0.20833333333333334,
+      "n_segments": 3,
+      "y": 1,
+      "recording_id": "recording_000422"
+    },
+    {
+      "audit_key": "438/t224",
+      "min": -1.5625,
+      "mean": -0.8958333333333334,
+      "n_segments": 3,
+      "y": 1,
+      "recording_id": "recording_000438"
+    },
+    {
+      "audit_key": "465/t247",
+      "min": -1.375,
+      "mean": -1.0625,
+      "n_segments": 2,
+      "y": 1,
+      "recording_id": "recording_000465"
+    },
+    {
+      "audit_key": "471/t485.4",
+      "min": -1.375,
+      "mean": -1.3125,
+      "n_segments": 2,
+      "y": 1,
+      "recording_id": "recording_000471"
+    },
+    {
+      "audit_key": "80/t113",
+      "min": -0.1875,
+      "mean": -0.15625,
+      "n_segments": 2,
+      "y": 1,
+      "recording_id": "recording_000080"
+    },
+    {
+      "audit_key": "80/t478.5",
+      "min": -0.1875,
+      "mean": -0.1875,
+      "n_segments": 2,
+      "y": 1,
+      "recording_id": "recording_000080"
+    },
+    {
+      "audit_key": "86/t530.5",
+      "min": -4.0625,
+      "mean": -3.2916666666666665,
+      "n_segments": 3,
+      "y": 0,
+      "recording_id": "recording_000086"
+    },
+    {
+      "audit_key": "102/t23.5",
+      "min": -1.5625,
+      "mean": -1.53125,
+      "n_segments": 2,
+      "y": 0,
+      "recording_id": "recording_000102"
+    },
+    {
+      "audit_key": "102/t164",
+      "min": -2.625,
+      "mean": -2.46875,
+      "n_segments": 2,
+      "y": 0,
+      "recording_id": "recording_000102"
+    },
+    {
+      "audit_key": "102/t439",
+      "min": -2.25,
+      "mean": -1.9166666666666667,
+      "n_segments": 3,
+      "y": 0,
+      "recording_id": "recording_000102"
+    },
+    {
+      "audit_key": "102/t471.5",
+      "min": -1.625,
+      "mean": -1.4166666666666667,
+      "n_segments": 3,
+      "y": 0,
+      "recording_id": "recording_000102"
+    },
+    {
+      "audit_key": "105/t72",
+      "min": -2.6875,
+      "mean": -2.65625,
+      "n_segments": 2,
+      "y": 0,
+      "recording_id": "recording_000105"
+    },
+    {
+      "audit_key": "105/t501.5",
+      "min": -0.9375,
+      "mean": -0.53125,
+      "n_segments": 2,
+      "y": 0,
+      "recording_id": "recording_000105"
+    },
+    {
+      "audit_key": "105/t505.5",
+      "min": -0.9375,
+      "mean": -0.53125,
+      "n_segments": 2,
+      "y": 0,
+      "recording_id": "recording_000105"
+    },
+    {
+      "audit_key": "105/t582",
+      "min": -1.6875,
+      "mean": -1.625,
+      "n_segments": 2,
+      "y": 0,
+      "recording_id": "recording_000105"
+    },
+    {
+      "audit_key": "150/t34",
+      "min": -1.1875,
+      "mean": -1.1875,
+      "n_segments": 2,
+      "y": 1,
+      "recording_id": "recording_000150"
+    },
+    {
+      "audit_key": "150/t234.5",
+      "min": -2.4375,
+      "mean": -2.25,
+      "n_segments": 3,
+      "y": 1,
+      "recording_id": "recording_000150"
+    },
+    {
+      "audit_key": "220/t143.8",
+      "min": -1.5625,
+      "mean": -1.53125,
+      "n_segments": 2,
+      "y": 1,
+      "recording_id": "recording_000220"
+    },
+    {
+      "audit_key": "220/t153",
+      "min": -1.5,
+      "mean": -1.4166666666666667,
+      "n_segments": 3,
+      "y": 1,
+      "recording_id": "recording_000220"
+    },
+    {
+      "audit_key": "220/t586.4",
+      "min": -1.3125,
+      "mean": -1.03125,
+      "n_segments": 2,
+      "y": 0,
+      "recording_id": "recording_000220"
+    },
+    {
+      "audit_key": "242/t164.5",
+      "min": -2.6875,
+      "mean": -2.5625,
+      "n_segments": 2,
+      "y": 0,
+      "recording_id": "recording_000242"
+    },
+    {
+      "audit_key": "272/t265.9",
+      "min": -2.25,
+      "mean": -2.25,
+      "n_segments": 1,
+      "y": 1,
+      "recording_id": "recording_000272"
+    },
+    {
+      "audit_key": "272/t320",
+      "min": -2.0625,
+      "mean": -1.5416666666666667,
+      "n_segments": 3,
+      "y": 1,
+      "recording_id": "recording_000272"
+    },
+    {
+      "audit_key": "343/t274.5",
+      "min": -1.0,
+      "mean": -0.7916666666666666,
+      "n_segments": 3,
+      "y": 1,
+      "recording_id": "recording_000343"
+    },
+    {
+      "audit_key": "343/t400.5",
+      "min": -1.4375,
+      "mean": -1.3125,
+      "n_segments": 3,
+      "y": 1,
+      "recording_id": "recording_000343"
+    },
+    {
+      "audit_key": "385/t209",
+      "min": -1.625,
+      "mean": -0.75,
+      "n_segments": 3,
+      "y": 1,
+      "recording_id": "recording_000385"
+    },
+    {
+      "audit_key": "388/t124.5",
+      "min": -1.0,
+      "mean": -0.5,
+      "n_segments": 3,
+      "y": 1,
+      "recording_id": "recording_000388"
+    },
+    {
+      "audit_key": "419/t605.5",
+      "min": -2.125,
+      "mean": -1.125,
+      "n_segments": 3,
+      "y": 1,
+      "recording_id": "recording_000419"
+    },
+    {
+      "audit_key": "419/t618",
+      "min": -2.125,
+      "mean": -1.125,
+      "n_segments": 3,
+      "y": 1,
+      "recording_id": "recording_000419"
+    },
+    {
+      "audit_key": "422/t620.8",
+      "min": -2.0,
+      "mean": -0.625,
+      "n_segments": 2,
+      "y": 1,
+      "recording_id": "recording_000422"
+    },
+    {
+      "audit_key": "465/t166.5",
+      "min": -1.375,
+      "mean": -0.8333333333333334,
+      "n_segments": 3,
+      "y": 1,
+      "recording_id": "recording_000465"
+    }
+  ]
+}

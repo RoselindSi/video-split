@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,candidate_label,claim_support,granularity,major_action_missing,action_presence,segment_structure,upstream_timing_issue,auditor,notes
+recording_000188_SEM1,recording_000188,418.8,455.3,Unbox and inspect first packaged portable charger,,,,,,,,
+recording_000188_SEM2,recording_000188,39.0,48.0,Repack first portable charger and close product box,,,,,,,,
+recording_000188_SEM3,recording_000188,74.1,107.1,"Unbox, inspect, and repackage portable charger (unit 2)",,,,,,,,
+recording_000188_SEM4,recording_000188,272.3,307.8,"Unbox, inspect, and repack second portable power bank",,,,,,,,

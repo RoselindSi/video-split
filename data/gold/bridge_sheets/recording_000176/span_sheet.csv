@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,internal_join,clause_a,clause_b,join_relation,boundary_time,boundary_interval_start,boundary_interval_end,auditor,notes
+recording_000176_SPAN1,recording_000176,11.5,26.5,14.5,Remove sink strainer,Rinse sink strainer,,,,,,
+recording_000176_SPAN2,recording_000176,62.0,71.0,70.0,Install sink strainer,Remove sink strainer,,,,,,
+recording_000176_SPAN3,recording_000176,92.5,105.0,93.5,Remove sink strainer,Rinse sink strainer,,,,,,
+recording_000176_SPAN4,recording_000176,176.5,194.0,188.5,Rinse sink strainer,Install sink strainer into drain,,,,,,

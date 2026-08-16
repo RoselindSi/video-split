@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,internal_join,clause_a,clause_b,join_relation,boundary_time,boundary_interval_start,boundary_interval_end,auditor,notes
+recording_000181_SPAN1,recording_000181,233.0,252.5,242.8,Clean sink drain strainer,Rinse and re-seat sink strainer,,,,,,
+recording_000181_SPAN2,recording_000181,315.0,323.0,316.5,Remove sink strainer,Rinse sink strainer,,,,,,
+recording_000181_SPAN3,recording_000181,352.5,365.5,353.8,Remove sink strainer,Rinse sink strainer,,,,,,
+recording_000181_SPAN4,recording_000181,537.0,566.0,552.5,Clean and re-seat sink strainer,Clean sink drain strainer and wipe sink basin,,,,,,

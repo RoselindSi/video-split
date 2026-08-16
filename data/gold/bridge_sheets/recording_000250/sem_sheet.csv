@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,candidate_label,claim_support,granularity,major_action_missing,action_presence,segment_structure,upstream_timing_issue,auditor,notes
+recording_000250_SEM1,recording_000250,319.5,330.0,Unseal and open cardboard box,,,,,,,,
+recording_000250_SEM2,recording_000250,116.0,149.5,Remove cardboard box from black plastic bag,,,,,,,,
+recording_000250_SEM3,recording_000250,438.0,459.0,Seal bottom of cardboard box with tape,,,,,,,,
+recording_000250_SEM4,recording_000250,561.5,573.0,Unseal and open box,,,,,,,,

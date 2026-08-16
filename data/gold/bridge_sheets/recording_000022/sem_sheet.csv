@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,candidate_label,claim_support,granularity,major_action_missing,action_presence,segment_structure,upstream_timing_issue,auditor,notes
+recording_000022_SEM1,recording_000022,588.2,627.0,Inspect and handle cleaned mug,,,,,,,,
+recording_000022_SEM2,recording_000022,2.0,7.0,Pick up and position mug at sink,,,,,,,,
+recording_000022_SEM3,recording_000022,49.5,57.0,Shake off water and place mug on counter,,,,,,,,
+recording_000022_SEM4,recording_000022,73.0,99.0,Scrub mug interior by hand,,,,,,,,

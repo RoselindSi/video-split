@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,candidate_label,claim_support,granularity,major_action_missing,action_presence,segment_structure,upstream_timing_issue,auditor,notes
+recording_000236_SEM1,recording_000236,34.0,44.0,Disassemble box and store in bag,,,,,,,,
+recording_000236_SEM2,recording_000236,111.0,114.0,Insert USB drive into box and close flaps,,,,,,,,
+recording_000236_SEM3,recording_000236,133.5,140.5,Disassemble and flatten cardboard box,,,,,,,,
+recording_000236_SEM4,recording_000236,205.0,223.0,Open and prepare larger cardboard box,,,,,,,,

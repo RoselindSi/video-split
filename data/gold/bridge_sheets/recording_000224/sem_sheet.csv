@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,candidate_label,claim_support,granularity,major_action_missing,action_presence,segment_structure,upstream_timing_issue,auditor,notes
+recording_000224_SEM1,recording_000224,43.0,49.5,Open box and take out USB drive,,,,,,,,
+recording_000224_SEM2,recording_000224,69.5,80.2,Assemble box and seal bottom with tape,,,,,,,,
+recording_000224_SEM3,recording_000224,110.0,116.0,Open box and take out USB drive,,,,,,,,
+recording_000224_SEM4,recording_000224,169.0,176.0,Remove USB drive from box and place on table,,,,,,,,

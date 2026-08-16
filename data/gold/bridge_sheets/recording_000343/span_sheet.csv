@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,internal_join,clause_a,clause_b,join_relation,boundary_time,boundary_interval_start,boundary_interval_end,auditor,notes
+recording_000343_SPAN1,recording_000343,233.5,257.2,246.2,Apply liquid to pan with brush,Coat pan with liquid using spatula,,,,,,
+recording_000343_SPAN2,recording_000343,477.0,498.6,487.6,Apply liquid to pan with brush from bottle,Apply liquid to pan with brush and bottle,,,,,,
+recording_000343_SPAN3,recording_000343,531.0,553.0,543.0,Apply liquid to pan with brush and bottle,Pan liquid application cycle,,,,,,
+recording_000343_SPAN4,recording_000343,597.5,618.2,607.7,Pan liquid application cycle,apply liquid coat to pan,,,,,,

@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,candidate_label,claim_support,granularity,major_action_missing,action_presence,segment_structure,upstream_timing_issue,auditor,notes
+recording_000343_SEM1,recording_000343,69.5,82.5,Apply liquid to pan and return bottle,,,,,,,,
+recording_000343_SEM2,recording_000343,83.5,97.0,Apply liquid to pan and return bottle,,,,,,,,
+recording_000343_SEM3,recording_000343,97.5,109.5,Apply liquid to pan and return bottle,,,,,,,,
+recording_000343_SEM4,recording_000343,110.5,122.5,Apply liquid to pan and return bottle,,,,,,,,

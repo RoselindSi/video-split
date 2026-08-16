@@ -1,0 +1,61 @@
+{
+  "tol": 0.5,
+  "max_assoc_s": 2.0,
+  "positives_only": true,
+  "sweep": {
+    "0.25": {
+      "aligned": 1,
+      "misaligned": 2,
+      "mis_recordings": 2
+    },
+    "0.5": {
+      "aligned": 1,
+      "misaligned": 2,
+      "mis_recordings": 2
+    },
+    "1.0": {
+      "aligned": 1,
+      "misaligned": 2,
+      "mis_recordings": 2
+    }
+  },
+  "no_peak_boundaries": 10,
+  "rows": [
+    {
+      "recording_id": "recording_000022",
+      "boundary_time": 366.5,
+      "peak_time": 364.5,
+      "offset_s": 2.0,
+      "score": null,
+      "label": "EARLY",
+      "rank_at_boundary": 0,
+      "relation": [
+        "new_action"
+      ]
+    },
+    {
+      "recording_id": "recording_000030",
+      "boundary_time": 387.8,
+      "peak_time": 389.0,
+      "offset_s": -1.2,
+      "score": null,
+      "label": "LATE",
+      "rank_at_boundary": 0,
+      "relation": [
+        "same_action_new_instance"
+      ]
+    },
+    {
+      "recording_id": "recording_000030",
+      "boundary_time": 556.0,
+      "peak_time": 556.0,
+      "offset_s": 0.0,
+      "score": null,
+      "label": "ALIGNED",
+      "rank_at_boundary": 0,
+      "relation": [
+        "same_action_new_instance"
+      ]
+    }
+  ]
+}

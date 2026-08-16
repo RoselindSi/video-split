@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,internal_join,clause_a,clause_b,join_relation,boundary_time,boundary_interval_start,boundary_interval_end,auditor,notes
+recording_000102_SPAN1,recording_000102,16.5,30.0,23.5,Second fold and press tissue,Third fold and press tissue,,,,,,
+recording_000102_SPAN2,recording_000102,477.0,500.0,490.0,fold and unfold tissue,Fold and crease paper edge,,,,,,
+recording_000102_SPAN3,recording_000102,115.0,128.0,124.0,Fold and unfold a paper sheet,Fold and crease sheet edge,,,,,,
+recording_000102_SPAN4,recording_000102,7.0,23.5,16.5,First fold and press tissue,Second fold and press tissue,,,,,,

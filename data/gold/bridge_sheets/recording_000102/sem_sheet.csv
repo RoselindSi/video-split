@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,candidate_label,claim_support,granularity,major_action_missing,action_presence,segment_structure,upstream_timing_issue,auditor,notes
+recording_000102_SEM1,recording_000102,530.0,552.7,Fold and crease paper edge,,,,,,,,
+recording_000102_SEM2,recording_000102,124.0,128.0,Fold and crease sheet edge,,,,,,,,
+recording_000102_SEM3,recording_000102,128.0,132.0,Fold and crease sheet edge,,,,,,,,
+recording_000102_SEM4,recording_000102,132.0,136.0,Fold and crease sheet edge,,,,,,,,

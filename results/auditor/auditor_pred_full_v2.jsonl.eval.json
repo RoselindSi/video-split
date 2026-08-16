@@ -1,0 +1,201 @@
+{
+  "n_gold": 72,
+  "n_predicted": 72,
+  "fields": {
+    "temporal_truth": {
+      "n": 72,
+      "acc": 0.4861111111111111,
+      "correct": 35,
+      "schema_violations": 0,
+      "missing": 0
+    },
+    "gt_boundary_relation": {
+      "n": 72,
+      "acc": 0.3472222222222222,
+      "correct": 25,
+      "schema_violations": 0,
+      "missing": 0
+    },
+    "model_boundary_behavior": {
+      "n": 72,
+      "acc": 0.4305555555555556,
+      "correct": 31,
+      "schema_violations": 0,
+      "missing": 0
+    },
+    "candidate_boundary_validity": {
+      "n": 72,
+      "acc": 0.4861111111111111,
+      "correct": 35,
+      "schema_violations": 0,
+      "missing": 0
+    },
+    "label_support": {
+      "n": 72,
+      "acc": 0.5833333333333334,
+      "correct": 42,
+      "schema_violations": 0,
+      "missing": 0
+    },
+    "label_completeness": {
+      "n": 72,
+      "acc": 0.3888888888888889,
+      "correct": 28,
+      "schema_violations": 0,
+      "missing": 0
+    },
+    "label_granularity": {
+      "n": 72,
+      "acc": 0.2777777777777778,
+      "correct": 20,
+      "schema_violations": 0,
+      "missing": 0
+    },
+    "semantic_relation": {
+      "n": 72,
+      "acc": 0.375,
+      "correct": 27,
+      "schema_violations": 0,
+      "missing": 0
+    },
+    "object_relation": {
+      "n": 72,
+      "acc": 0.8472222222222222,
+      "correct": 61,
+      "schema_violations": 0,
+      "missing": 0
+    },
+    "boundary_contrastive_role": {
+      "n": 72,
+      "acc": 0.4444444444444444,
+      "correct": 32,
+      "schema_violations": 0,
+      "missing": 0
+    },
+    "naming_contrastive_role": {
+      "n": 72,
+      "acc": 0.2916666666666667,
+      "correct": 21,
+      "schema_violations": 0,
+      "missing": 0
+    },
+    "temporal_correction_action": {
+      "n": 72,
+      "acc": 0.3472222222222222,
+      "correct": 25,
+      "schema_violations": 0,
+      "missing": 0
+    },
+    "semantic_correction_action": {
+      "n": 72,
+      "acc": 0.2916666666666667,
+      "correct": 21,
+      "schema_violations": 0,
+      "missing": 0
+    },
+    "review_confidence": {
+      "n": 72,
+      "acc": 0.7638888888888888,
+      "correct": 55,
+      "schema_violations": 0,
+      "missing": 0
+    }
+  },
+  "boundary_validity_binary": {
+    "label": "candidate_boundary_valid",
+    "tp": 23,
+    "fp": 8,
+    "fn": 20,
+    "tn": 12,
+    "precision": 0.7419354838709677,
+    "recall": 0.5348837209302325,
+    "f1": 0.6216216216216216,
+    "n_pos_gold": 43,
+    "accuracy": 0.5555555555555556,
+    "n": 63
+  },
+  "label_wrong_detection": {
+    "label": "label_wrong",
+    "tp": 2,
+    "fp": 10,
+    "fn": 19,
+    "tn": 41,
+    "precision": 0.16666666666666666,
+    "recall": 0.09523809523809523,
+    "f1": 0.12121212121212123,
+    "n_pos_gold": 21
+  },
+  "corrected_verb": {
+    "n": 70,
+    "top1_exact": 0.14285714285714285,
+    "top1_soft": 0.15714285714285714
+  },
+  "corrected_time": {
+    "n": 34,
+    "mae": 0.6838235294117655,
+    "median": 0.2999999999999545,
+    "within_0.5s": 0.6470588235294118,
+    "within_1.0s": 0.7941176470588235
+  },
+  "boundary_exclude": {
+    "label": "boundary_exclude",
+    "tp": 0,
+    "fp": 10,
+    "fn": 9,
+    "tn": 53,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "n_pos_gold": 9
+  },
+  "auto_proposal_agreement": {
+    "correct": 50,
+    "n": 72
+  },
+  "hard_slices": {
+    "true_boundary_kept_valid": {
+      "ok": 23,
+      "n": 43
+    },
+    "motion_neg_called_spurious": {
+      "ok": 12,
+      "n": 20
+    },
+    "coarse_wrongly_flagged_incorrect": {
+      "bad": 1,
+      "n": 14
+    }
+  },
+  "confidence_calibration": {
+    "temporal_truth": {
+      "high(>=0.8)": [
+        32,
+        63
+      ],
+      "medium(0.5-0.8)": [
+        3,
+        9
+      ]
+    },
+    "label_support": {
+      "high(>=0.8)": [
+        37,
+        63
+      ],
+      "medium(0.5-0.8)": [
+        5,
+        9
+      ]
+    },
+    "motion_neg_called_spurious": {
+      "medium(0.5-0.8)": [
+        3,
+        3
+      ],
+      "high(>=0.8)": [
+        9,
+        17
+      ]
+    }
+  }
+}

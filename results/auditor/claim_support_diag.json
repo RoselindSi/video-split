@@ -1,0 +1,434 @@
+{
+  "coverage": {
+    "with_features": 48,
+    "n_yes": 29,
+    "n_no": 6,
+    "no_event_map": 0,
+    "no_prediction": 0
+  },
+  "min_detectable_auroc": 0.7528735632183908,
+  "features": {
+    "verb_min": {
+      "auroc": 0.5201149425287356,
+      "grouped_95": [
+        0.15517241379310345,
+        0.6666666666666666
+      ]
+    },
+    "verb_mean": {
+      "auroc": 0.6063218390804598,
+      "grouped_95": [
+        0.15517241379310345,
+        0.7777777777777778
+      ]
+    },
+    "obj_min": {
+      "auroc": 0.6839080459770115,
+      "grouped_95": [
+        0.45454545454545453,
+        0.859375
+      ]
+    },
+    "obj_mean": {
+      "auroc": 0.7097701149425287,
+      "grouped_95": [
+        0.2857142857142857,
+        0.921875
+      ]
+    },
+    "generic_any": {
+      "auroc": 0.5,
+      "grouped_95": [
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "events": [
+    {
+      "audit_key": "22/t466.8",
+      "claim_support": "yes",
+      "recording_id": "recording_000022",
+      "n_segments_used": 2,
+      "verb_min": 1.0,
+      "verb_mean": 1.0,
+      "obj_min": 0.3333333333333333,
+      "obj_mean": 0.45238095238095244,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "30/t556",
+      "claim_support": "yes",
+      "recording_id": "recording_000030",
+      "n_segments_used": 2,
+      "verb_min": 0.0,
+      "verb_mean": 0.0,
+      "obj_min": 0.0,
+      "obj_mean": 0.0,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "37/t156",
+      "claim_support": "yes",
+      "recording_id": "recording_000037",
+      "n_segments_used": 2,
+      "verb_min": 1.0,
+      "verb_mean": 1.0,
+      "obj_min": 0.28571428571428575,
+      "obj_mean": 0.28571428571428575,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "61/t590",
+      "claim_support": "no",
+      "recording_id": "recording_000061",
+      "n_segments_used": 1,
+      "verb_min": 0.0,
+      "verb_mean": 0.0,
+      "obj_min": 0.0,
+      "obj_mean": 0.0,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "102/t164.5",
+      "claim_support": "no",
+      "recording_id": "recording_000102",
+      "n_segments_used": 3,
+      "verb_min": 0.0,
+      "verb_mean": 0.0,
+      "obj_min": 0.28571428571428575,
+      "obj_mean": 0.28571428571428575,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "102/t484",
+      "claim_support": "no",
+      "recording_id": "recording_000102",
+      "n_segments_used": 3,
+      "verb_min": 0.0,
+      "verb_mean": 0.0,
+      "obj_min": 0.0,
+      "obj_mean": 0.0,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "102/t95",
+      "claim_support": "no",
+      "recording_id": "recording_000102",
+      "n_segments_used": 2,
+      "verb_min": 0.0,
+      "verb_mean": 0.0,
+      "obj_min": 0.0,
+      "obj_mean": 0.0,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "110/t504",
+      "claim_support": "yes",
+      "recording_id": "recording_000110",
+      "n_segments_used": 3,
+      "verb_min": 0.0,
+      "verb_mean": 0.3333333333333333,
+      "obj_min": 0.0,
+      "obj_mean": 0.2619047619047619,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "134/t562.5",
+      "claim_support": "yes",
+      "recording_id": "recording_000134",
+      "n_segments_used": 3,
+      "verb_min": 0.0,
+      "verb_mean": 0.0,
+      "obj_min": 0.28571428571428575,
+      "obj_mean": 0.28571428571428575,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "176/t90.5",
+      "claim_support": "yes",
+      "recording_id": "recording_000176",
+      "n_segments_used": 3,
+      "verb_min": 0.0,
+      "verb_mean": 0.3333333333333333,
+      "obj_min": 0.0,
+      "obj_mean": 0.13333333333333333,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "181/t73.5",
+      "claim_support": "yes",
+      "recording_id": "recording_000181",
+      "n_segments_used": 2,
+      "verb_min": 1.0,
+      "verb_mean": 1.0,
+      "obj_min": 0.0,
+      "obj_mean": 0.0,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "181/t233",
+      "claim_support": "yes",
+      "recording_id": "recording_000181",
+      "n_segments_used": 2,
+      "verb_min": 1.0,
+      "verb_mean": 1.0,
+      "obj_min": 0.0,
+      "obj_mean": 0.0,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "188/t456",
+      "claim_support": "no",
+      "recording_id": "recording_000188",
+      "n_segments_used": 2,
+      "verb_min": 1.0,
+      "verb_mean": 1.0,
+      "obj_min": 0.28571428571428575,
+      "obj_mean": 0.5428571428571429,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "213/t230.5",
+      "claim_support": "yes",
+      "recording_id": "recording_000213",
+      "n_segments_used": 3,
+      "verb_min": 0.0,
+      "verb_mean": 0.0,
+      "obj_min": 0.0,
+      "obj_mean": 0.0,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "220/t137.8",
+      "claim_support": "yes",
+      "recording_id": "recording_000220",
+      "n_segments_used": 2,
+      "verb_min": 0.0,
+      "verb_mean": 0.0,
+      "obj_min": 0.0,
+      "obj_mean": 0.0,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "220/t289.5",
+      "claim_support": "no",
+      "recording_id": "recording_000220",
+      "n_segments_used": 2,
+      "verb_min": 0.0,
+      "verb_mean": 0.0,
+      "obj_min": 0.0,
+      "obj_mean": 0.0,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "230/t404.5",
+      "claim_support": "yes",
+      "recording_id": "recording_000230",
+      "n_segments_used": 3,
+      "verb_min": 0.0,
+      "verb_mean": 0.0,
+      "obj_min": 0.25,
+      "obj_mean": 0.2619047619047619,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "230/t397",
+      "claim_support": "yes",
+      "recording_id": "recording_000230",
+      "n_segments_used": 1,
+      "verb_min": 0.0,
+      "verb_mean": 0.0,
+      "obj_min": 0.28571428571428575,
+      "obj_mean": 0.28571428571428575,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "250/t629.5",
+      "claim_support": "yes",
+      "recording_id": "recording_000250",
+      "n_segments_used": 2,
+      "verb_min": 0.0,
+      "verb_mean": 0.0,
+      "obj_min": 0.28571428571428575,
+      "obj_mean": 0.30952380952380953,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "272/t618",
+      "claim_support": "yes",
+      "recording_id": "recording_000272",
+      "n_segments_used": 3,
+      "verb_min": 0.0,
+      "verb_mean": 0.3333333333333333,
+      "obj_min": 0.0,
+      "obj_mean": 0.23148148148148148,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "282/t544.5",
+      "claim_support": "yes",
+      "recording_id": "recording_000282",
+      "n_segments_used": 1,
+      "verb_min": 0.0,
+      "verb_mean": 0.0,
+      "obj_min": 0.25,
+      "obj_mean": 0.25,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "327/t386.5",
+      "claim_support": "yes",
+      "recording_id": "recording_000327",
+      "n_segments_used": 3,
+      "verb_min": 1.0,
+      "verb_mean": 1.0,
+      "obj_min": 0.5,
+      "obj_mean": 0.5,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "343/t547",
+      "claim_support": "yes",
+      "recording_id": "recording_000343",
+      "n_segments_used": 3,
+      "verb_min": 0.0,
+      "verb_mean": 0.0,
+      "obj_min": 0.0,
+      "obj_mean": 0.0,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "343/t222.5",
+      "claim_support": "yes",
+      "recording_id": "recording_000343",
+      "n_segments_used": 3,
+      "verb_min": 0.0,
+      "verb_mean": 0.0,
+      "obj_min": 0.0,
+      "obj_mean": 0.0,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "388/t67.5",
+      "claim_support": "yes",
+      "recording_id": "recording_000388",
+      "n_segments_used": 2,
+      "verb_min": 0.0,
+      "verb_mean": 0.0,
+      "obj_min": 0.6666666666666665,
+      "obj_mean": 0.7619047619047619,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "388/t601.8",
+      "claim_support": "yes",
+      "recording_id": "recording_000388",
+      "n_segments_used": 2,
+      "verb_min": 0.0,
+      "verb_mean": 0.0,
+      "obj_min": 0.0,
+      "obj_mean": 0.33333333333333326,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "391/t242.5",
+      "claim_support": "yes",
+      "recording_id": "recording_000391",
+      "n_segments_used": 3,
+      "verb_min": 0.0,
+      "verb_mean": 0.6666666666666666,
+      "obj_min": 0.4,
+      "obj_mean": 0.5904761904761905,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "406/t490.3",
+      "claim_support": "yes",
+      "recording_id": "recording_000406",
+      "n_segments_used": 2,
+      "verb_min": 0.0,
+      "verb_mean": 0.5,
+      "obj_min": 0.5,
+      "obj_mean": 0.6785714285714286,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "406/t29.5",
+      "claim_support": "yes",
+      "recording_id": "recording_000406",
+      "n_segments_used": 3,
+      "verb_min": 0.0,
+      "verb_mean": 0.0,
+      "obj_min": 0.5714285714285715,
+      "obj_mean": 0.6626984126984127,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "406/t556.6",
+      "claim_support": "yes",
+      "recording_id": "recording_000406",
+      "n_segments_used": 2,
+      "verb_min": 0.0,
+      "verb_mean": 0.0,
+      "obj_min": 0.3636363636363636,
+      "obj_mean": 0.43181818181818177,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "419/t688.9",
+      "claim_support": "yes",
+      "recording_id": "recording_000419",
+      "n_segments_used": 2,
+      "verb_min": 0.0,
+      "verb_mean": 0.0,
+      "obj_min": 0.25,
+      "obj_mean": 0.2678571428571429,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "422/t381",
+      "claim_support": "yes",
+      "recording_id": "recording_000422",
+      "n_segments_used": 3,
+      "verb_min": 0.0,
+      "verb_mean": 0.3333333333333333,
+      "obj_min": 0.4444444444444444,
+      "obj_mean": 0.5703703703703703,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "438/t224",
+      "claim_support": "yes",
+      "recording_id": "recording_000438",
+      "n_segments_used": 3,
+      "verb_min": 0.0,
+      "verb_mean": 0.0,
+      "obj_min": 0.4444444444444445,
+      "obj_mean": 0.5608465608465608,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "465/t247",
+      "claim_support": "yes",
+      "recording_id": "recording_000465",
+      "n_segments_used": 2,
+      "verb_min": 0.0,
+      "verb_mean": 0.0,
+      "obj_min": 0.28571428571428575,
+      "obj_mean": 0.30952380952380953,
+      "generic_any": 0.0
+    },
+    {
+      "audit_key": "471/t485.4",
+      "claim_support": "yes",
+      "recording_id": "recording_000471",
+      "n_segments_used": 2,
+      "verb_min": 1.0,
+      "verb_mean": 1.0,
+      "obj_min": 0.7499999999999999,
+      "obj_mean": 0.8035714285714285,
+      "generic_any": 0.0
+    }
+  ]
+}

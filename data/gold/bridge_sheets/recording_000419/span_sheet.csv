@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,internal_join,clause_a,clause_b,join_relation,boundary_time,boundary_interval_start,boundary_interval_end,auditor,notes
+recording_000419_SPAN1,recording_000419,68.6,93.6,76.6,Unroll plastic wrap onto table,Position bowl and press wrap around it,,,,,,
+recording_000419_SPAN2,recording_000419,187.3,216.1,209.1,Unroll plastic wrap sheet,Position bowl on wrap,,,,,,
+recording_000419_SPAN3,recording_000419,438.3,466.3,448.8,Crumble and discard used plastic wrap,Unroll new plastic wrap from roll,,,,,,
+recording_000419_SPAN4,recording_000419,682.4,690.9,688.9,Crumpling discarded plastic packaging,Discarding crumpled plastic in trash bin,,,,,,

@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,internal_join,clause_a,clause_b,join_relation,boundary_time,boundary_interval_start,boundary_interval_end,auditor,notes
+recording_000022_SPAN1,recording_000022,449.2,472.2,466.8,Rinse mug after scrubbing,Place washed mug on counter,,,,,,
+recording_000022_SPAN2,recording_000022,234.5,248.0,237.0,Shake water off hands,Grasp mug for repositioning,,,,,,
+recording_000022_SPAN3,recording_000022,2.0,14.5,7.0,Pick up and position mug at sink,First rinse of the mug,,,,,,
+recording_000022_SPAN4,recording_000022,7.0,33.5,14.5,First rinse of the mug,Scrub the inside of the mug,,,,,,

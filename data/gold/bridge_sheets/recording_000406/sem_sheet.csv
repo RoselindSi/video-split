@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,candidate_label,claim_support,granularity,major_action_missing,action_presence,segment_structure,upstream_timing_issue,auditor,notes
+recording_000406_SEM1,recording_000406,320.7,391.3,Covering a bowl with plastic wrap,,,,,,,,
+recording_000406_SEM2,recording_000406,462.3,469.8,Removing and discarding plastic wrap,,,,,,,,
+recording_000406_SEM3,recording_000406,548.3,556.6,Pick up plastic wrap roll and locate edge,,,,,,,,
+recording_000406_SEM4,recording_000406,617.0,623.0,Crumple and discard used plastic wrap,,,,,,,,

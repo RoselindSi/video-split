@@ -1,0 +1,189 @@
+{
+  "n_gold": 15,
+  "n_predicted": 15,
+  "fields": {
+    "temporal_truth": {
+      "n": 15,
+      "acc": 0.4666666666666667,
+      "correct": 7,
+      "schema_violations": 0,
+      "missing": 0
+    },
+    "gt_boundary_relation": {
+      "n": 15,
+      "acc": 0.4,
+      "correct": 6,
+      "schema_violations": 0,
+      "missing": 0
+    },
+    "model_boundary_behavior": {
+      "n": 15,
+      "acc": 0.2,
+      "correct": 3,
+      "schema_violations": 0,
+      "missing": 0
+    },
+    "candidate_boundary_validity": {
+      "n": 15,
+      "acc": 0.4666666666666667,
+      "correct": 7,
+      "schema_violations": 0,
+      "missing": 0
+    },
+    "label_support": {
+      "n": 15,
+      "acc": 0.5333333333333333,
+      "correct": 8,
+      "schema_violations": 0,
+      "missing": 0
+    },
+    "label_completeness": {
+      "n": 15,
+      "acc": 0.4,
+      "correct": 6,
+      "schema_violations": 0,
+      "missing": 0
+    },
+    "label_granularity": {
+      "n": 15,
+      "acc": 0.26666666666666666,
+      "correct": 4,
+      "schema_violations": 0,
+      "missing": 0
+    },
+    "semantic_relation": {
+      "n": 15,
+      "acc": 0.4,
+      "correct": 6,
+      "schema_violations": 0,
+      "missing": 0
+    },
+    "object_relation": {
+      "n": 15,
+      "acc": 0.7333333333333333,
+      "correct": 11,
+      "schema_violations": 0,
+      "missing": 0
+    },
+    "boundary_contrastive_role": {
+      "n": 15,
+      "acc": 0.4666666666666667,
+      "correct": 7,
+      "schema_violations": 0,
+      "missing": 0
+    },
+    "naming_contrastive_role": {
+      "n": 15,
+      "acc": 0.3333333333333333,
+      "correct": 5,
+      "schema_violations": 0,
+      "missing": 0
+    },
+    "temporal_correction_action": {
+      "n": 15,
+      "acc": 0.4,
+      "correct": 6,
+      "schema_violations": 0,
+      "missing": 0
+    },
+    "semantic_correction_action": {
+      "n": 15,
+      "acc": 0.3333333333333333,
+      "correct": 5,
+      "schema_violations": 0,
+      "missing": 0
+    },
+    "review_confidence": {
+      "n": 15,
+      "acc": 0.8,
+      "correct": 12,
+      "schema_violations": 0,
+      "missing": 0
+    }
+  },
+  "boundary_validity_binary": {
+    "label": "candidate_boundary_valid",
+    "tp": 6,
+    "fp": 4,
+    "fn": 4,
+    "tn": 1,
+    "precision": 0.6,
+    "recall": 0.6,
+    "f1": 0.6,
+    "n_pos_gold": 10,
+    "accuracy": 0.4666666666666667,
+    "n": 15
+  },
+  "label_wrong_detection": {
+    "label": "label_wrong",
+    "tp": 1,
+    "fp": 3,
+    "fn": 4,
+    "tn": 7,
+    "precision": 0.25,
+    "recall": 0.2,
+    "f1": 0.22222222222222224,
+    "n_pos_gold": 5
+  },
+  "corrected_verb": {
+    "n": 14,
+    "top1_exact": 0.2857142857142857,
+    "top1_soft": 0.2857142857142857
+  },
+  "corrected_time": {
+    "n": 8,
+    "mae": 1.0500000000000025,
+    "median": 0.5,
+    "within_0.5s": 0.75,
+    "within_1.0s": 0.75
+  },
+  "boundary_exclude": {
+    "label": "boundary_exclude",
+    "tp": 0,
+    "fp": 1,
+    "fn": 0,
+    "tn": 14,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "n_pos_gold": 0
+  },
+  "auto_proposal_agreement": {
+    "correct": 11,
+    "n": 15
+  },
+  "hard_slices": {
+    "true_boundary_kept_valid": {
+      "ok": 6,
+      "n": 10
+    },
+    "motion_neg_called_spurious": {
+      "ok": 1,
+      "n": 5
+    },
+    "coarse_wrongly_flagged_incorrect": {
+      "bad": 0,
+      "n": 0
+    }
+  },
+  "confidence_calibration": {
+    "temporal_truth": {
+      "high(>=0.8)": [
+        7,
+        15
+      ]
+    },
+    "label_support": {
+      "high(>=0.8)": [
+        8,
+        15
+      ]
+    },
+    "motion_neg_called_spurious": {
+      "high(>=0.8)": [
+        1,
+        5
+      ]
+    }
+  }
+}

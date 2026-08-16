@@ -1,0 +1,1314 @@
+{
+  "n": 186,
+  "per_seed_auroc": [
+    0.5814393939393939,
+    0.5922979797979798,
+    0.5859848484848484,
+    0.5988636363636364,
+    0.603030303030303
+  ],
+  "events": [
+    {
+      "event_id": "recording_000022_missed_signal_present_not_top_t366.5",
+      "recording_id": "recording_000022",
+      "y": 1.0,
+      "p_video": 0.9589420557022095,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000150_missed_signal_present_not_top_t34.0",
+      "recording_id": "recording_000150",
+      "y": 0.0,
+      "p_video": 0.22000057995319366,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000188_missed_signal_present_not_top_t25.0",
+      "recording_id": "recording_000188",
+      "y": 1.0,
+      "p_video": 0.00965487135690637,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000188_missed_signal_present_not_top_t39.0",
+      "recording_id": "recording_000188",
+      "y": 1.0,
+      "p_video": 0.04423752838920336,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000176_missed_signal_present_not_top_t188.5",
+      "recording_id": "recording_000176",
+      "y": 1.0,
+      "p_video": 0.0019902583095245062,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000046_missed_signal_present_not_top_t378.7",
+      "recording_id": "recording_000046",
+      "y": 1.0,
+      "p_video": 0.0007916997768916189,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000193_missed_signal_present_not_top_t264.2",
+      "recording_id": "recording_000193",
+      "y": 0.0,
+      "p_video": 0.002352897869423032,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000105_missed_signal_present_not_top_t582.0",
+      "recording_id": "recording_000105",
+      "y": 0.0,
+      "p_video": 4.493856031331234e-05,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000022_missed_weak_signal_t466.8",
+      "recording_id": "recording_000022",
+      "y": 1.0,
+      "p_video": 0.9994435787200928,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000102_missed_weak_signal_t23.5",
+      "recording_id": "recording_000102",
+      "y": 0.0,
+      "p_video": 1.3486722673405893e-05,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000105_missed_weak_signal_t72.0",
+      "recording_id": "recording_000105",
+      "y": 0.0,
+      "p_video": 1.3216195020504528e-05,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000053_missed_weak_signal_t486.0",
+      "recording_id": "recording_000053",
+      "y": 0.0,
+      "p_video": 0.0009072807268239557,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000102_missed_weak_signal_t95.0",
+      "recording_id": "recording_000102",
+      "y": 0.0,
+      "p_video": 0.0001753345801262185,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000150_missed_weak_signal_t9.5",
+      "recording_id": "recording_000150",
+      "y": 1.0,
+      "p_video": 0.01605252963490784,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000220_missed_weak_signal_t586.4",
+      "recording_id": "recording_000220",
+      "y": 0.0,
+      "p_video": 0.0006181782744533848,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000220_missed_weak_signal_t289.5",
+      "recording_id": "recording_000220",
+      "y": 0.0,
+      "p_video": 0.03734281977522187,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000181_late_t233.0",
+      "recording_id": "recording_000181",
+      "y": 0.0,
+      "p_video": 0.06909835757687688,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000030_late_t387.5",
+      "recording_id": "recording_000030",
+      "y": 1.0,
+      "p_video": 0.15750376619398593,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000181_late_t73.5",
+      "recording_id": "recording_000181",
+      "y": 1.0,
+      "p_video": 0.00044840765767730775,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000213_late_t43.0",
+      "recording_id": "recording_000213",
+      "y": 0.0,
+      "p_video": 0.25246055200695994,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000213_late_t150.0",
+      "recording_id": "recording_000213",
+      "y": 1.0,
+      "p_video": 0.4892698973417282,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000053_late_t207.5",
+      "recording_id": "recording_000053",
+      "y": 1.0,
+      "p_video": 0.24088639728724956,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000030_late_t501.0",
+      "recording_id": "recording_000030",
+      "y": 0.0,
+      "p_video": 0.550233781337738,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000080_late_t559.5",
+      "recording_id": "recording_000080",
+      "y": 0.0,
+      "p_video": 0.00591702894307673,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000181_exact_t93.5",
+      "recording_id": "recording_000181",
+      "y": 1.0,
+      "p_video": 0.000942448858404532,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000030_exact_t12.2",
+      "recording_id": "recording_000030",
+      "y": 1.0,
+      "p_video": 0.9731678605079651,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000116_exact_t435.2",
+      "recording_id": "recording_000116",
+      "y": 1.0,
+      "p_video": 0.9961424708366394,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000160_exact_t575.6",
+      "recording_id": "recording_000160",
+      "y": 0.0,
+      "p_video": 0.9144993782043457,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000183_exact_t144.0",
+      "recording_id": "recording_000183",
+      "y": 1.0,
+      "p_video": 0.49757651686668397,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000220_exact_t522.0",
+      "recording_id": "recording_000220",
+      "y": 0.0,
+      "p_video": 0.00789406480107573,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000061_exact_t590.0",
+      "recording_id": "recording_000061",
+      "y": 0.0,
+      "p_video": 0.3685956409201026,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000160_exact_t207.5",
+      "recording_id": "recording_000160",
+      "y": 1.0,
+      "p_video": 0.9911857485771179,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000134_false_near_edge_t130.0",
+      "recording_id": "recording_000134",
+      "y": 0.0,
+      "p_video": 0.06502213818021119,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000176_false_near_edge_t345.5",
+      "recording_id": "recording_000176",
+      "y": 0.0,
+      "p_video": 0.14837507288902999,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000116_false_near_edge_t562.0",
+      "recording_id": "recording_000116",
+      "y": 1.0,
+      "p_video": 0.11736280336044728,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000181_false_near_edge_t564.0",
+      "recording_id": "recording_000181",
+      "y": 0.0,
+      "p_video": 0.12969148345291615,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000134_false_near_edge_t562.5",
+      "recording_id": "recording_000134",
+      "y": 0.0,
+      "p_video": 0.004552558821160346,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000110_false_near_edge_t504.0",
+      "recording_id": "recording_000110",
+      "y": 0.0,
+      "p_video": 0.735073310136795,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000183_false_near_edge_t355.0",
+      "recording_id": "recording_000183",
+      "y": 0.0,
+      "p_video": 0.10676302560605108,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000213_false_near_edge_t547.0",
+      "recording_id": "recording_000213",
+      "y": 0.0,
+      "p_video": 0.9604440093040466,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000102_false_mid_segment_t439.0",
+      "recording_id": "recording_000102",
+      "y": 0.0,
+      "p_video": 1.8877404909289907e-05,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000022_false_mid_segment_t240.0",
+      "recording_id": "recording_000022",
+      "y": 0.0,
+      "p_video": 0.8137497305870056,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000220_false_mid_segment_t153.0",
+      "recording_id": "recording_000220",
+      "y": 0.0,
+      "p_video": 0.0004943706604535692,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000102_false_mid_segment_t484.0",
+      "recording_id": "recording_000102",
+      "y": 0.0,
+      "p_video": 4.138843869441189e-05,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000196_false_mid_segment_t243.0",
+      "recording_id": "recording_000196",
+      "y": 0.0,
+      "p_video": 0.8983821034431457,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000150_false_mid_segment_t498.5",
+      "recording_id": "recording_000150",
+      "y": 0.0,
+      "p_video": 0.008791314566042274,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000112_false_mid_segment_t429.0",
+      "recording_id": "recording_000112",
+      "y": 1.0,
+      "p_video": 0.9955562710762024,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000176_false_mid_segment_t90.5",
+      "recording_id": "recording_000176",
+      "y": 0.0,
+      "p_video": 0.010009452397935093,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000188_false_gap_t456.0",
+      "recording_id": "recording_000188",
+      "y": 0.0,
+      "p_video": 0.31068701967597007,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000080_false_gap_t169.0",
+      "recording_id": "recording_000080",
+      "y": 0.0,
+      "p_video": 0.0020211585098877547,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000110_false_gap_t178.5",
+      "recording_id": "recording_000110",
+      "y": 1.0,
+      "p_video": 0.5820349611341953,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000030_false_gap_t556.0",
+      "recording_id": "recording_000030",
+      "y": 0.0,
+      "p_video": 0.629085797071457,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000213_false_gap_t242.5",
+      "recording_id": "recording_000213",
+      "y": 0.0,
+      "p_video": 0.4389535436406732,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000105_false_gap_t505.5",
+      "recording_id": "recording_000105",
+      "y": 0.0,
+      "p_video": 3.276312381785829e-05,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000105_false_gap_t501.5",
+      "recording_id": "recording_000105",
+      "y": 0.0,
+      "p_video": 9.809679067984688e-06,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000134_false_gap_t528.0",
+      "recording_id": "recording_000134",
+      "y": 0.0,
+      "p_video": 0.23513163751922547,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000220_early_t143.8",
+      "recording_id": "recording_000220",
+      "y": 0.0,
+      "p_video": 0.024373241886496543,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000102_early_t164.0",
+      "recording_id": "recording_000102",
+      "y": 0.0,
+      "p_video": 0.0002339486516575562,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000080_early_t478.5",
+      "recording_id": "recording_000080",
+      "y": 0.0,
+      "p_video": 0.31782561615109445,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000037_early_t156.0",
+      "recording_id": "recording_000037",
+      "y": 0.0,
+      "p_video": 0.7985054671764373,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000061_early_t167.3",
+      "recording_id": "recording_000061",
+      "y": 1.0,
+      "p_video": 0.7268312811851502,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000080_early_t113.0",
+      "recording_id": "recording_000080",
+      "y": 0.0,
+      "p_video": 0.03680200893431902,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000022_early_t336.9",
+      "recording_id": "recording_000022",
+      "y": 1.0,
+      "p_video": 0.9528208017349243,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000220_early_t137.8",
+      "recording_id": "recording_000220",
+      "y": 0.0,
+      "p_video": 0.22726376987993718,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000150_duplicate_t234.5",
+      "recording_id": "recording_000150",
+      "y": 0.0,
+      "p_video": 7.981309099704958e-05,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000213_duplicate_t230.5",
+      "recording_id": "recording_000213",
+      "y": 0.0,
+      "p_video": 0.21560606099665164,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000037_duplicate_t408.5",
+      "recording_id": "recording_000037",
+      "y": 1.0,
+      "p_video": 0.5379644155502319,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000102_duplicate_t164.5",
+      "recording_id": "recording_000102",
+      "y": 0.0,
+      "p_video": 3.7387530755950135e-05,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000102_duplicate_t471.5",
+      "recording_id": "recording_000102",
+      "y": 0.0,
+      "p_video": 1.3410124211077346e-05,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000037_duplicate_t12.5",
+      "recording_id": "recording_000037",
+      "y": 1.0,
+      "p_video": 0.99940185546875,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000265_exact_t495.0",
+      "recording_id": "recording_000265",
+      "y": 1.0,
+      "p_video": 0.44517671391367913,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000325_exact_t594.9",
+      "recording_id": "recording_000325",
+      "y": 1.0,
+      "p_video": 0.05185324288904667,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000250_exact_t629.5",
+      "recording_id": "recording_000250",
+      "y": 0.0,
+      "p_video": 0.00044632743229158225,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000250_exact_t272.5",
+      "recording_id": "recording_000250",
+      "y": 1.0,
+      "p_video": 0.9995450258255005,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000325_exact_t461.8",
+      "recording_id": "recording_000325",
+      "y": 1.0,
+      "p_video": 0.2107495279982686,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000250_exact_t590.0",
+      "recording_id": "recording_000250",
+      "y": 1.0,
+      "p_video": 0.28879027590155604,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000406_exact_t490.3",
+      "recording_id": "recording_000406",
+      "y": 0.0,
+      "p_video": 0.05540752602973953,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000282_exact_t544.5",
+      "recording_id": "recording_000282",
+      "y": 1.0,
+      "p_video": 0.0006478418334154412,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000320_exact_t548.2",
+      "recording_id": "recording_000320",
+      "y": 1.0,
+      "p_video": 0.9962093472480774,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000272_missed_weak_signal_t577.5",
+      "recording_id": "recording_000272",
+      "y": 0.0,
+      "p_video": 0.00014145573150017298,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000406_missed_weak_signal_t556.6",
+      "recording_id": "recording_000406",
+      "y": 0.0,
+      "p_video": 0.01185592906549573,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000236_missed_weak_signal_t547.0",
+      "recording_id": "recording_000236",
+      "y": 0.0,
+      "p_video": 0.007303803623653948,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000272_missed_weak_signal_t367.0",
+      "recording_id": "recording_000272",
+      "y": 0.0,
+      "p_video": 0.37037702202796935,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000242_missed_weak_signal_t352.0",
+      "recording_id": "recording_000242",
+      "y": 0.0,
+      "p_video": 0.04276820162194781,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000224_missed_weak_signal_t398.0",
+      "recording_id": "recording_000224",
+      "y": 1.0,
+      "p_video": 0.00044238197879167276,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000419_missed_weak_signal_t688.9",
+      "recording_id": "recording_000419",
+      "y": 0.0,
+      "p_video": 0.0013820579159073531,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000471_missed_weak_signal_t485.4",
+      "recording_id": "recording_000471",
+      "y": 0.0,
+      "p_video": 0.788854593038559,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000438_false_mid_segment_t53.0",
+      "recording_id": "recording_000438",
+      "y": 1.0,
+      "p_video": 0.013474124508502428,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000327_false_mid_segment_t437.0",
+      "recording_id": "recording_000327",
+      "y": 1.0,
+      "p_video": 0.20204211883246898,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000419_false_mid_segment_t286.5",
+      "recording_id": "recording_000419",
+      "y": 1.0,
+      "p_video": 0.6818532645702362,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000388_false_mid_segment_t618.0",
+      "recording_id": "recording_000388",
+      "y": 0.0,
+      "p_video": 2.082779446936911e-05,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000385_false_mid_segment_t412.5",
+      "recording_id": "recording_000385",
+      "y": 0.0,
+      "p_video": 0.00011738644734577974,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000438_false_mid_segment_t575.0",
+      "recording_id": "recording_000438",
+      "y": 0.0,
+      "p_video": 0.09373315423727036,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000265_false_mid_segment_t315.0",
+      "recording_id": "recording_000265",
+      "y": 0.0,
+      "p_video": 0.5865161687135696,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000419_false_mid_segment_t605.5",
+      "recording_id": "recording_000419",
+      "y": 0.0,
+      "p_video": 0.0013445959542877973,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000236_false_mid_segment_t386.0",
+      "recording_id": "recording_000236",
+      "y": 0.0,
+      "p_video": 0.78759685754776,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000422_false_mid_segment_t561.0",
+      "recording_id": "recording_000422",
+      "y": 1.0,
+      "p_video": 0.00018778590092551894,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000431_false_mid_segment_t470.5",
+      "recording_id": "recording_000431",
+      "y": 1.0,
+      "p_video": 0.0011569830472581088,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000282_false_mid_segment_t204.0",
+      "recording_id": "recording_000282",
+      "y": 0.0,
+      "p_video": 0.017545923590660095,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000438_false_mid_segment_t476.0",
+      "recording_id": "recording_000438",
+      "y": 0.0,
+      "p_video": 0.00304055922315456,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000282_false_mid_segment_t412.5",
+      "recording_id": "recording_000282",
+      "y": 0.0,
+      "p_video": 0.00037960089757689276,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000343_false_mid_segment_t400.5",
+      "recording_id": "recording_000343",
+      "y": 0.0,
+      "p_video": 0.9998371243476868,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000230_false_mid_segment_t404.5",
+      "recording_id": "recording_000230",
+      "y": 0.0,
+      "p_video": 0.13985166512429714,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000242_false_mid_segment_t111.0",
+      "recording_id": "recording_000242",
+      "y": 0.0,
+      "p_video": 0.2054616205394268,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000406_false_mid_segment_t595.5",
+      "recording_id": "recording_000406",
+      "y": 0.0,
+      "p_video": 0.004156985360896215,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000438_false_mid_segment_t224.0",
+      "recording_id": "recording_000438",
+      "y": 1.0,
+      "p_video": 0.08325461857020855,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000406_false_mid_segment_t29.5",
+      "recording_id": "recording_000406",
+      "y": 0.0,
+      "p_video": 0.2385765991813969,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000236_false_mid_segment_t449.5",
+      "recording_id": "recording_000236",
+      "y": 0.0,
+      "p_video": 0.2310423951363191,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000388_false_mid_segment_t375.5",
+      "recording_id": "recording_000388",
+      "y": 0.0,
+      "p_video": 3.5471873707138e-05,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000272_false_mid_segment_t618.5",
+      "recording_id": "recording_000272",
+      "y": 0.0,
+      "p_video": 0.2370475172996521,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000272_false_mid_segment_t320.0",
+      "recording_id": "recording_000272",
+      "y": 0.0,
+      "p_video": 0.00019623999251052737,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000422_false_mid_segment_t228.5",
+      "recording_id": "recording_000422",
+      "y": 1.0,
+      "p_video": 5.669224083248991e-06,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000343_false_mid_segment_t547.0",
+      "recording_id": "recording_000343",
+      "y": 0.0,
+      "p_video": 0.9231876611709595,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000431_false_mid_segment_t427.5",
+      "recording_id": "recording_000431",
+      "y": 0.0,
+      "p_video": 0.49135816991329195,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000388_false_mid_segment_t63.0",
+      "recording_id": "recording_000388",
+      "y": 0.0,
+      "p_video": 0.0003162865061312914,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000250_false_mid_segment_t334.0",
+      "recording_id": "recording_000250",
+      "y": 0.0,
+      "p_video": 0.3132257260382175,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000224_false_mid_segment_t615.5",
+      "recording_id": "recording_000224",
+      "y": 0.0,
+      "p_video": 0.00022318535338854416,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000325_false_mid_segment_t569.5",
+      "recording_id": "recording_000325",
+      "y": 0.0,
+      "p_video": 0.018566004745662213,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000385_false_mid_segment_t266.5",
+      "recording_id": "recording_000385",
+      "y": 0.0,
+      "p_video": 0.0046041333334869705,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000343_false_mid_segment_t274.5",
+      "recording_id": "recording_000343",
+      "y": 0.0,
+      "p_video": 0.9994708180427552,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000431_false_mid_segment_t271.0",
+      "recording_id": "recording_000431",
+      "y": 1.0,
+      "p_video": 0.0001332338975771563,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000419_false_mid_segment_t137.0",
+      "recording_id": "recording_000419",
+      "y": 1.0,
+      "p_video": 0.0006363717686326709,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000327_false_mid_segment_t156.0",
+      "recording_id": "recording_000327",
+      "y": 0.0,
+      "p_video": 0.9836917519569397,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000423_false_mid_segment_t590.0",
+      "recording_id": "recording_000423",
+      "y": 0.0,
+      "p_video": 0.4974133662879467,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000465_false_mid_segment_t166.5",
+      "recording_id": "recording_000465",
+      "y": 0.0,
+      "p_video": 0.44864414967596533,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000388_false_mid_segment_t124.5",
+      "recording_id": "recording_000388",
+      "y": 0.0,
+      "p_video": 4.1278943353972866e-05,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000385_false_mid_segment_t209.0",
+      "recording_id": "recording_000385",
+      "y": 0.0,
+      "p_video": 0.007117687189020216,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000422_false_mid_segment_t381.0",
+      "recording_id": "recording_000422",
+      "y": 1.0,
+      "p_video": 0.0002514882246032357,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000388_false_mid_segment_t67.5",
+      "recording_id": "recording_000388",
+      "y": 0.0,
+      "p_video": 0.0164730072603561,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000419_false_mid_segment_t618.0",
+      "recording_id": "recording_000419",
+      "y": 0.0,
+      "p_video": 0.03759750286117196,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000250_duplicate_t645.0",
+      "recording_id": "recording_000250",
+      "y": 0.0,
+      "p_video": 0.5364450201392174,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000327_duplicate_t11.5",
+      "recording_id": "recording_000327",
+      "y": 0.0,
+      "p_video": 0.971687114238739,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000406_duplicate_t571.0",
+      "recording_id": "recording_000406",
+      "y": 0.0,
+      "p_video": 0.0007002794023719616,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000265_false_near_edge_t165.5",
+      "recording_id": "recording_000265",
+      "y": 0.0,
+      "p_video": 5.4900990289752374e-05,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000422_false_near_edge_t458.0",
+      "recording_id": "recording_000422",
+      "y": 1.0,
+      "p_video": 0.0037282209435943515,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000465_false_near_edge_t489.0",
+      "recording_id": "recording_000465",
+      "y": 1.0,
+      "p_video": 0.9995628356933594,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000391_false_near_edge_t242.5",
+      "recording_id": "recording_000391",
+      "y": 1.0,
+      "p_video": 0.03762496653944254,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000320_false_near_edge_t41.5",
+      "recording_id": "recording_000320",
+      "y": 0.0,
+      "p_video": 0.06895731680560857,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000419_false_near_edge_t309.5",
+      "recording_id": "recording_000419",
+      "y": 1.0,
+      "p_video": 0.00198806143598631,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000406_false_near_edge_t455.5",
+      "recording_id": "recording_000406",
+      "y": 0.0,
+      "p_video": 0.6489956319332123,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000385_false_near_edge_t577.5",
+      "recording_id": "recording_000385",
+      "y": 0.0,
+      "p_video": 0.1746737977489829,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000320_false_near_edge_t461.0",
+      "recording_id": "recording_000320",
+      "y": 0.0,
+      "p_video": 0.9256944179534912,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000343_false_near_edge_t222.5",
+      "recording_id": "recording_000343",
+      "y": 1.0,
+      "p_video": 0.9999125123023986,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000242_false_near_edge_t29.5",
+      "recording_id": "recording_000242",
+      "y": 0.0,
+      "p_video": 0.006117486604489386,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000431_false_near_edge_t440.5",
+      "recording_id": "recording_000431",
+      "y": 0.0,
+      "p_video": 0.1985757328569889,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000431_false_near_edge_t262.0",
+      "recording_id": "recording_000431",
+      "y": 1.0,
+      "p_video": 0.0003427107585594058,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000327_false_near_edge_t386.5",
+      "recording_id": "recording_000327",
+      "y": 0.0,
+      "p_video": 0.9855427265167236,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000242_missed_signal_present_not_top_t156.5",
+      "recording_id": "recording_000242",
+      "y": 0.0,
+      "p_video": 0.0003832211921690032,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000265_missed_signal_present_not_top_t298.5",
+      "recording_id": "recording_000265",
+      "y": 0.0,
+      "p_video": 8.554647974960972e-05,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000325_missed_signal_present_not_top_t32.5",
+      "recording_id": "recording_000325",
+      "y": 1.0,
+      "p_video": 0.015533595625311137,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000230_missed_signal_present_not_top_t650.0",
+      "recording_id": "recording_000230",
+      "y": 0.0,
+      "p_video": 0.08411938778590411,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000325_missed_signal_present_not_top_t136.5",
+      "recording_id": "recording_000325",
+      "y": 0.0,
+      "p_video": 0.014964726311154664,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000438_missed_signal_present_not_top_t182.0",
+      "recording_id": "recording_000438",
+      "y": 0.0,
+      "p_video": 2.534377999836579e-05,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000230_missed_signal_present_not_top_t632.5",
+      "recording_id": "recording_000230",
+      "y": 1.0,
+      "p_video": 0.9227127313613892,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000242_missed_signal_present_not_top_t164.5",
+      "recording_id": "recording_000242",
+      "y": 0.0,
+      "p_video": 0.23182804537937046,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000343_missed_signal_present_not_top_t445.2",
+      "recording_id": "recording_000343",
+      "y": 0.0,
+      "p_video": 0.999410891532898,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000224_missed_signal_present_not_top_t612.0",
+      "recording_id": "recording_000224",
+      "y": 0.0,
+      "p_video": 0.0003246916632633656,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000272_missed_signal_present_not_top_t265.9",
+      "recording_id": "recording_000272",
+      "y": 0.0,
+      "p_video": 0.0027960322331637144,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000236_missed_signal_present_not_top_t102.0",
+      "recording_id": "recording_000236",
+      "y": 0.0,
+      "p_video": 0.003067826683400199,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000236_missed_signal_present_not_top_t572.8",
+      "recording_id": "recording_000236",
+      "y": 0.0,
+      "p_video": 0.006163194240070879,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000438_missed_signal_present_not_top_t181.0",
+      "recording_id": "recording_000438",
+      "y": 0.0,
+      "p_video": 0.11034931689500808,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000465_missed_signal_present_not_top_t66.1",
+      "recording_id": "recording_000465",
+      "y": 1.0,
+      "p_video": 0.5847703013569117,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000230_missed_signal_present_not_top_t253.0",
+      "recording_id": "recording_000230",
+      "y": 1.0,
+      "p_video": 0.7711277574300766,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000236_missed_signal_present_not_top_t548.5",
+      "recording_id": "recording_000236",
+      "y": 0.0,
+      "p_video": 0.9757695078849793,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000224_missed_signal_present_not_top_t479.0",
+      "recording_id": "recording_000224",
+      "y": 1.0,
+      "p_video": 0.0012469233886804431,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000230_missed_signal_present_not_top_t397.0",
+      "recording_id": "recording_000230",
+      "y": 1.0,
+      "p_video": 0.9883208274841309,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000422_missed_signal_present_not_top_t620.8",
+      "recording_id": "recording_000422",
+      "y": 0.0,
+      "p_video": 0.0003363687010278227,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000282_missed_signal_present_not_top_t493.0",
+      "recording_id": "recording_000282",
+      "y": 1.0,
+      "p_video": 0.025013066153042017,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000431_missed_signal_present_not_top_t178.2",
+      "recording_id": "recording_000431",
+      "y": 1.0,
+      "p_video": 0.021481258678250015,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000250_missed_signal_present_not_top_t218.3",
+      "recording_id": "recording_000250",
+      "y": 0.0,
+      "p_video": 0.0035593041917309164,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000388_missed_signal_present_not_top_t601.8",
+      "recording_id": "recording_000388",
+      "y": 0.0,
+      "p_video": 8.239443195634522e-05,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000230_missed_signal_present_not_top_t190.0",
+      "recording_id": "recording_000230",
+      "y": 0.0,
+      "p_video": 0.7342762529850007,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000422_missed_signal_present_not_top_t312.7",
+      "recording_id": "recording_000422",
+      "y": 1.0,
+      "p_video": 0.04712044808547944,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000385_late_t84.5",
+      "recording_id": "recording_000385",
+      "y": 1.0,
+      "p_video": 0.7994874954223633,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000343_late_t628.5",
+      "recording_id": "recording_000343",
+      "y": 1.0,
+      "p_video": 0.9999713897705078,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000242_late_t143.5",
+      "recording_id": "recording_000242",
+      "y": 1.0,
+      "p_video": 0.001958077077870257,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000391_late_t286.5",
+      "recording_id": "recording_000391",
+      "y": 1.0,
+      "p_video": 0.0023338890634477137,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000325_late_t40.5",
+      "recording_id": "recording_000325",
+      "y": 1.0,
+      "p_video": 0.004429019486997277,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000465_early_t100.9",
+      "recording_id": "recording_000465",
+      "y": 1.0,
+      "p_video": 0.7807323127985001,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000465_early_t599.0",
+      "recording_id": "recording_000465",
+      "y": 1.0,
+      "p_video": 0.5784650593996048,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000224_early_t368.5",
+      "recording_id": "recording_000224",
+      "y": 1.0,
+      "p_video": 0.21498992219567298,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000272_early_t576.5",
+      "recording_id": "recording_000272",
+      "y": 1.0,
+      "p_video": 0.000144818101398414,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000265_early_t605.0",
+      "recording_id": "recording_000265",
+      "y": 1.0,
+      "p_video": 0.00032312729163095353,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000265_early_t88.0",
+      "recording_id": "recording_000265",
+      "y": 0.0,
+      "p_video": 0.0005166839458979666,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000385_false_gap_t348.0",
+      "recording_id": "recording_000385",
+      "y": 0.0,
+      "p_video": 0.02602805565111339,
+      "p_naming": null
+    },
+    {
+      "event_id": "recording_000465_false_gap_t247.0",
+      "recording_id": "recording_000465",
+      "y": 0.0,
+      "p_video": 0.9534952521324158,
+      "p_naming": null
+    }
+  ]
+}

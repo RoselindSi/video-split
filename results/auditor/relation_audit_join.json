@@ -1,0 +1,508 @@
+{
+  "n": 54,
+  "stored_point": {
+    "n": 30,
+    "by_relation": {
+      "same_action_new_instance": 12,
+      "cannot_determine": 4,
+      "new_action": 9,
+      "same_instance": 3,
+      "terminal_action_end": 2
+    }
+  },
+  "policy_decisions": {
+    "boundary": 30,
+    "REVIEW (evidence missing)": 8,
+    "not a boundary": 9,
+    "REVIEW (policy undefined)": 3,
+    "UNRESOLVED (shape unknown)": 4
+  },
+  "events": [
+    {
+      "event_id": "recording_000005_batch3_raw_change_peak_t30.0",
+      "relation": "cannot_determine",
+      "confidence": "3_sure",
+      "why": "大部分时间双手不在画面中；candidate附近只能看到双手伸向拖鞋，前后动作关系无法可靠确定。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "REVIEW (evidence missing)"
+    },
+    {
+      "event_id": "recording_000005_batch3_raw_change_peak_t372.0",
+      "relation": "initial_action_start",
+      "confidence": "3_sure",
+      "why": "candidate前持续idle/无动作，candidate后右手开始新的拖鞋交互；这是从inactive状态进入第一个动作实例，属于initial_action_start。",
+      "stored": "?",
+      "shape": "UNKNOWN",
+      "policy": "REVIEW (policy undefined)"
+    },
+    {
+      "event_id": "recording_000005_batch3_raw_change_peak_t513.0",
+      "relation": "same_action_new_instance",
+      "confidence": "3_sure",
+      "why": "一次双手放入/取回拖鞋的实例完成后视线/交互重置，随后再次开始同样的双手放入拖鞋动作。",
+      "stored": "?",
+      "shape": "UNKNOWN",
+      "policy": "UNRESOLVED (shape unknown)"
+    },
+    {
+      "event_id": "recording_000020_batch3_raw_change_peak_t67.0",
+      "relation": "new_action",
+      "confidence": "3_sure",
+      "why": "双手把杯子放桌面并释放进入idle，随后重新拿杯并打开水龙头冲洗；前后task-level goal不同。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000022_missed_signal_present_not_top_t366.5",
+      "relation": "new_action",
+      "confidence": "3_sure",
+      "why": "前面是接水/冲洗杯子，随后右手进入杯内开始搓洗；从rinse转为scrub，是新的task-level action。",
+      "stored": "INTERVAL_TRANSITION",
+      "shape": "gradual",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000022_missed_weak_signal_t466.8",
+      "relation": "same_action_new_instance",
+      "confidence": "3_sure",
+      "why": "一轮接水/冲洗/倒水并放下杯子完成，双手释放idle，随后重新拿起杯子开始下一轮同类冲洗动作。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000030_false_gap_t556.0",
+      "relation": "same_action_new_instance",
+      "confidence": "3_sure",
+      "why": "一次杯子左→右移动完成后双手释放并idle，随后重新抓杯开始反向移动；有明确disengagement和重新接触。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000030_late_t387.5",
+      "relation": "same_action_new_instance",
+      "confidence": "3_sure",
+      "why": "一次杯子左右移动实例结束后双手释放idle，再重新抓取开始下一次同类移动实例。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000030_late_t501.0",
+      "relation": "same_action_new_instance",
+      "confidence": "3_sure",
+      "why": "一次杯子左右移动实例结束后双手释放idle，再重新抓取开始下一次同类移动实例。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000035_batch3_raw_change_peak_t351.0",
+      "relation": "same_action_new_instance",
+      "confidence": "3_sure",
+      "why": "杯子一次移动完成后双手释放idle，随后重新抓取开始下一次同类移动实例。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000037_early_t156.0",
+      "relation": "same_instance",
+      "confidence": "3_sure",
+      "why": "接水、冲洗、倒水并把杯子放桌上构成一个连续实例，中间没有明显disengagement/reset。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "not a boundary"
+    },
+    {
+      "event_id": "recording_000046_missed_signal_present_not_top_t378.7",
+      "relation": "new_action",
+      "confidence": "2_lean",
+      "why": "可见流程从团纸巾并丢弃切到抽取并折叠新纸巾；task-level action改变，但手部位于画面边缘，判断依赖一定上下文推断。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000048_batch3_raw_change_peak_t96.0",
+      "relation": "new_action",
+      "confidence": "2_lean",
+      "why": "可见流程从团纸巾并丢弃切到抽取并折叠新纸巾；task-level action改变，但手部位于画面边缘，判断依赖一定上下文推断。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000050_batch3_gt_boundary_t291.5",
+      "relation": "new_action",
+      "confidence": "3_sure",
+      "why": "丢弃旧纸巾后抽取并折叠新纸巾，随后开始擦桌子；candidate两侧属于不同task-level action，即使中间没有明显idle。",
+      "stored": "INTERVAL_TRANSITION",
+      "shape": "gradual",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000050_batch3_raw_change_peak_t104.0",
+      "relation": "new_action",
+      "confidence": "3_sure",
+      "why": "从擦桌子转为团纸并丢弃、再抽取新纸巾；task-level goal改变，即使动作连续没有明显disengagement。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000053_late_t207.5",
+      "relation": "new_action",
+      "confidence": "2_lean",
+      "why": "可见流程从丢弃旧纸巾转为抽取/折叠新纸巾并开始擦桌子；task-level action改变，但手部位于画面边缘，需要一定上下文推断。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000058_batch3_raw_change_peak_t585.0",
+      "relation": "new_action",
+      "confidence": "3_sure",
+      "why": "丢弃旧纸巾后立即抽取并折叠新纸巾，随后开始擦桌子；虽然中间没有idle，但task-level action发生改变。",
+      "stored": "INTERVAL_TRANSITION",
+      "shape": "gradual",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000061_early_t167.3",
+      "relation": "cannot_determine",
+      "confidence": "3_sure",
+      "why": "大部分关键手部动作在画面外，只能看到candidate附近双手抽取纸巾并折好，无法可靠确定两侧relation。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "REVIEW (evidence missing)"
+    },
+    {
+      "event_id": "recording_000067_batch3_gt_boundary_t440.5",
+      "relation": "new_action",
+      "confidence": "3_sure",
+      "why": "丢旧纸巾→准备新纸巾→开始擦桌子，task-level action改变，即使中间没有明显中断。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000068_batch3_raw_change_peak_t464.0",
+      "relation": "cannot_determine",
+      "confidence": "3_sure",
+      "why": "candidate前关键手部动作在画面外；candidate后可见丢旧纸并取新纸，但两侧relation无法可靠确定。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "REVIEW (evidence missing)"
+    },
+    {
+      "event_id": "recording_000088_batch3_gt_boundary_t275.0",
+      "relation": "same_instance",
+      "confidence": "3_sure",
+      "why": "双手持续按着纸巾小幅度擦桌子，中间没有disengagement或reset。",
+      "stored": "?",
+      "shape": "UNKNOWN",
+      "policy": "not a boundary"
+    },
+    {
+      "event_id": "recording_000101_batch3_gt_boundary_t48.0",
+      "relation": "same_instance",
+      "confidence": "3_sure",
+      "why": "双手持续按着纸巾中等幅度擦桌子，中间没有disengagement或reset。",
+      "stored": "?",
+      "shape": "UNKNOWN",
+      "policy": "not a boundary"
+    },
+    {
+      "event_id": "recording_000103_batch3_gt_boundary_t333.0",
+      "relation": "same_instance",
+      "confidence": "3_sure",
+      "why": "双手持续按着纸巾小幅度擦桌子，中间没有disengagement或reset。",
+      "stored": "?",
+      "shape": "UNKNOWN",
+      "policy": "not a boundary"
+    },
+    {
+      "event_id": "recording_000104_batch3_gt_boundary_t392.0",
+      "relation": "same_action_new_instance",
+      "confidence": "3_sure",
+      "why": "擦桌子实例中双手离开纸巾并进入idle，随后重新接触纸巾继续同一擦桌动作；有明确release/idle和re-engagement。",
+      "stored": "?",
+      "shape": "UNKNOWN",
+      "policy": "UNRESOLVED (shape unknown)"
+    },
+    {
+      "event_id": "recording_000108_batch3_gt_boundary_t517.5",
+      "relation": "same_instance",
+      "confidence": "3_sure",
+      "why": "双手持续按着纸巾小幅度擦桌子，中间没有disengagement或reset。",
+      "stored": "?",
+      "shape": "UNKNOWN",
+      "policy": "not a boundary"
+    },
+    {
+      "event_id": "recording_000122_batch3_raw_change_peak_t544.0",
+      "relation": "cannot_determine",
+      "confidence": "3_sure",
+      "why": "candidate前可见右手把物件放入柜子、撤出后再进入取出；candidate后关键动作在画面外，因此两侧relation无法可靠确定。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "REVIEW (evidence missing)"
+    },
+    {
+      "event_id": "recording_000135_batch3_gt_boundary_t559.0",
+      "relation": "new_action",
+      "confidence": "3_sure",
+      "why": "双手先盘/整理充电线，随后拆开并把插头插入墙上插座；task-level goal从整理线缆转为连接/插电，中间虽连续但action改变。",
+      "stored": "?",
+      "shape": "UNKNOWN",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000137_batch3_raw_change_peak_t299.0",
+      "relation": "new_action",
+      "confidence": "2_lean",
+      "why": "先整理充电线，释放并idle后再开始缠好充电线；存在明确reset，且前后操作目标可视为不同task-level phase。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000140_batch3_raw_change_peak_t574.0",
+      "relation": "new_action",
+      "confidence": "3_sure",
+      "why": "前面完成充电器连接，随后释放idle，再把两端拔下并缠线；从连接/插入转为拆除/整理，task-level action明确改变。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000145_batch3_gt_boundary_t558.0",
+      "relation": "new_action",
+      "confidence": "2_lean",
+      "why": "把充电线缠好后转为放入柜子收纳，并最终进入idle；从整理线缆转为收纳，按task goal判断为新动作。",
+      "stored": "?",
+      "shape": "gap",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000156_batch3_gt_boundary_t254.0",
+      "relation": "new_action",
+      "confidence": "3_sure",
+      "why": "从inspect充电线转为插入/连接充电线；transition可以是gradual，但instance relation仍是不同task-level action。",
+      "stored": "INTERVAL_TRANSITION",
+      "shape": "gradual",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000157_batch3_raw_change_peak_t632.0",
+      "relation": "new_action",
+      "confidence": "3_sure",
+      "why": "从inspect手机转为inspect手表，active target/object改变；后面没有有效动作不影响candidate两侧已发生的新action判断。",
+      "stored": "?",
+      "shape": "UNKNOWN",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000160_exact_t575.6",
+      "relation": "same_action_new_instance",
+      "confidence": "2_lean",
+      "why": "一轮塞子冲洗并放回后有短暂停顿，随后再次取出塞子冲洗；物体已放回并重新拿取，支持instance reset，但手没有明显离开工作区。",
+      "stored": "?",
+      "shape": "UNKNOWN",
+      "policy": "UNRESOLVED (shape unknown)"
+    },
+    {
+      "event_id": "recording_000167_batch3_raw_change_peak_t689.0",
+      "relation": "cannot_determine",
+      "confidence": "3_sure",
+      "why": "画面没有可用动作信息，无法确定candidate两侧的instance relation。",
+      "stored": "?",
+      "shape": "UNKNOWN",
+      "policy": "REVIEW (evidence missing)"
+    },
+    {
+      "event_id": "recording_000169_batch3_gt_boundary_t350.0",
+      "relation": "same_action_new_instance",
+      "confidence": "3_sure",
+      "why": "一次塞子冲洗并放回完成后双手明显离开水槽并idle，随后重新取出塞子开始同一冲洗动作。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000170_batch3_gt_boundary_t659.4",
+      "relation": "same_action_new_instance",
+      "confidence": "3_sure",
+      "why": "一次塞子冲洗并放回完成后双手明显离开水槽并idle，随后重新取出塞子开始下一次同类冲洗实例。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000179_batch3_gt_boundary_t688.5",
+      "relation": "terminal_action_end",
+      "confidence": "3_sure",
+      "why": "双手完成塞子冲洗并放回后，画面中没有后续有效动作；前一动作结束并保持inactive。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "REVIEW (policy undefined)"
+    },
+    {
+      "event_id": "recording_000183_exact_t144.0",
+      "relation": "same_action_new_instance",
+      "confidence": "3_sure",
+      "why": "塞子放回后双手明显idle，随后再次取出塞子并开始冲洗；上一实例完成、disengage后重新开始同类实例。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000197_batch3_raw_change_peak_t32.0",
+      "relation": "new_action",
+      "confidence": "3_sure",
+      "why": "从inspect充电宝转为把充电宝放入盒子，task-level goal改变，中间即使没有idle也属于新动作。",
+      "stored": "INTERVAL_TRANSITION",
+      "shape": "gradual",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000201_batch3_raw_change_peak_t498.0",
+      "relation": "same_action_new_instance",
+      "confidence": "3_sure",
+      "why": "一次塞子冲洗并放回完成后双手明显离开水槽并idle，随后重新取出塞子开始下一次同类冲洗实例。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000202_batch3_raw_change_peak_t712.0",
+      "relation": "cannot_determine",
+      "confidence": "3_sure",
+      "why": "画面中没有有效动作信息，无法确定candidate两侧的instance relation。",
+      "stored": "?",
+      "shape": "UNKNOWN",
+      "policy": "REVIEW (evidence missing)"
+    },
+    {
+      "event_id": "recording_000209_batch3_gt_boundary_t257.0",
+      "relation": "same_action_new_instance",
+      "confidence": "3_sure",
+      "why": "一次下水道塞子冲洗并放回完成后，双手明显离开水槽并idle，随后重新取出塞子开始下一次同类冲洗实例。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000211_batch3_raw_change_peak_t36.0",
+      "relation": "cannot_determine",
+      "confidence": "3_sure",
+      "why": "画面中没有有效动作信息，无法确定candidate两侧的instance relation。",
+      "stored": "?",
+      "shape": "UNKNOWN",
+      "policy": "REVIEW (evidence missing)"
+    },
+    {
+      "event_id": "recording_000212_batch3_gt_boundary_t502.2",
+      "relation": "new_action",
+      "confidence": "3_sure",
+      "why": "先整理并把小包装放入大袋、合上袋口，随后把袋子倒转使小包装全部掉出并重新整理；task-level goal发生改变，虽连续但属于新动作。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000220_early_t143.8",
+      "relation": "same_instance",
+      "confidence": "3_sure",
+      "why": "双手持续拿着拖鞋做重复的90度摆动与归位，中间没有release、idle或reset，属于同一连续实例。",
+      "stored": "?",
+      "shape": "UNKNOWN",
+      "policy": "not a boundary"
+    },
+    {
+      "event_id": "recording_000242_false_near_edge_t29.5",
+      "relation": "same_instance",
+      "confidence": "2_lean",
+      "why": "从黑袋取出纸盒、叠好并用胶带封盒底，整个过程连续无disengagement；按当前task granularity视为同一纸盒处理实例。",
+      "stored": "?",
+      "shape": "UNKNOWN",
+      "policy": "not a boundary"
+    },
+    {
+      "event_id": "recording_000242_late_t143.5",
+      "relation": "same_action_new_instance",
+      "confidence": "2_lean",
+      "why": "取下盒底胶带、压扁纸盒并放回黑袋后，手明显撤开idle；随后再次准备取纸盒，支持一次完整纸盒处理实例结束后重新开始下一实例。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000242_missed_signal_present_not_top_t156.5",
+      "relation": "same_instance",
+      "confidence": "2_lean",
+      "why": "从黑袋取出纸盒、叠好并用胶带封盒底，中间没有release或idle；按当前task granularity视为同一连续纸盒处理实例。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "not a boundary"
+    },
+    {
+      "event_id": "recording_000250_exact_t590.0",
+      "relation": "terminal_action_end",
+      "confidence": "2_lean",
+      "why": "把胶带从盒底取下、压扁纸盒并放回黑袋后，描述中没有后续有效动作；暂按动作结束且无后续实例处理。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "REVIEW (policy undefined)"
+    },
+    {
+      "event_id": "recording_000325_late_t40.5",
+      "relation": "same_action_new_instance",
+      "confidence": "3_sure",
+      "why": "打开瓶子、倒液体并搅拌的一轮操作完成后手明显idle，随后再次打开瓶盖并倒液体，属于同一动作序列的新实例。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000327_duplicate_t11.5",
+      "relation": "same_action_new_instance",
+      "confidence": "3_sure",
+      "why": "一轮开瓶、倒液体并搅拌后手明显idle，随后再次打开瓶盖开始下一轮同类操作，存在清晰reset和re-engagement。",
+      "stored": "?",
+      "shape": "UNKNOWN",
+      "policy": "UNRESOLVED (shape unknown)"
+    },
+    {
+      "event_id": "recording_000406_duplicate_t571.0",
+      "relation": "same_instance",
+      "confidence": "3_sure",
+      "why": "撕下保鲜膜罩在碗上并继续整理碗上的保鲜膜，中间没有release/reset，属于同一连续wrapping实例。",
+      "stored": "POINT_TRANSITION",
+      "shape": "point",
+      "policy": "not a boundary"
+    },
+    {
+      "event_id": "recording_000431_missed_signal_present_not_top_t178.2",
+      "relation": "new_action",
+      "confidence": "3_sure",
+      "why": "把手中的保鲜膜团起并扔掉后，短暂扶手机，随后开始扯开新的保鲜膜；task-level action从丢弃旧膜转为准备新膜。",
+      "stored": "?",
+      "shape": "UNKNOWN",
+      "policy": "boundary"
+    },
+    {
+      "event_id": "recording_000438_missed_signal_present_not_top_t181.0",
+      "relation": "cannot_determine",
+      "confidence": "2_lean",
+      "why": "丢弃旧保鲜膜后视角移开，关键手部交互不在画面中；之后只看到手重新拿起保鲜膜杆，无法可靠确定中间relation。",
+      "stored": "?",
+      "shape": "UNKNOWN",
+      "policy": "REVIEW (evidence missing)"
+    }
+  ]
+}

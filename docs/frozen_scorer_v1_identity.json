@@ -1,6 +1,6 @@
 {
   "fit_base_rate": 0.5852842809364549,
-  "commit": "ee2feb4eb0e6ae03d2368148213d24345d447f7c",
+  "commit": "9d36bdadbc6fdb5b2715953918814344e71d5ee4",
   "pca_dim": 64,
   "reliability": {
     "column": "detect_coverage",
@@ -53,5 +53,10 @@
       "mtime": 1786006677,
       "sha256": "7181302841a62ad30ed862fda8d98fe742329db6e59159acc1cfca0009b6aeb5"
     }
+  ],
+  "scorers": [
+    "P1 (global) alone",
+    "P1 + local, feature-level",
+    "local alone"
   ]
 }

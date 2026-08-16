@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,internal_join,clause_a,clause_b,join_relation,boundary_time,boundary_interval_start,boundary_interval_end,auditor,notes
+recording_000221_SPAN1,recording_000221,43.0,53.5,48.0,Store cardboard box in plastic bag,Retrieve cardboard box from plastic bag,,,,,,
+recording_000221_SPAN2,recording_000221,153.6,165.1,162.6,Seal empty cardboard box with tape,Unseal and open cardboard box,,,,,,
+recording_000221_SPAN3,recording_000221,457.0,467.0,462.0,Store cardboard box in plastic bag,Retrieve cardboard box from plastic bag,,,,,,
+recording_000221_SPAN4,recording_000221,289.0,305.0,294.0,Unpack USB drive from cardboard box,Seal cardboard box with adhesive tape,,,,,,

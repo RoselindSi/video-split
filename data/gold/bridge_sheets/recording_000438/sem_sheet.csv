@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,candidate_label,claim_support,granularity,major_action_missing,action_presence,segment_structure,upstream_timing_issue,auditor,notes
+recording_000438_SEM1,recording_000438,229.0,239.9,Remove and crumple plastic wrap,,,,,,,,
+recording_000438_SEM2,recording_000438,250.0,308.0,Wrap a bowl with plastic wrap,,,,,,,,
+recording_000438_SEM3,recording_000438,308.0,322.5,Crumple and discard used plastic wrap,,,,,,,,
+recording_000438_SEM4,recording_000438,336.0,389.0,Apply and seal plastic wrap to bowl,,,,,,,,

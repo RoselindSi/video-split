@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,internal_join,clause_a,clause_b,join_relation,boundary_time,boundary_interval_start,boundary_interval_end,auditor,notes
+recording_000110_SPAN1,recording_000110,645.5,649.4,647.5,Wipe countertop,Disassemble cleaning tool,,,,,,
+recording_000110_SPAN2,recording_000110,647.5,654.4,649.4,Disassemble cleaning tool,Assemble cleaning tool,,,,,,
+recording_000110_SPAN3,recording_000110,649.4,655.4,654.4,Assemble cleaning tool,Wipe countertop,,,,,,
+recording_000110_SPAN4,recording_000110,654.4,657.5,655.4,Wipe countertop,Disassemble cleaning tool,,,,,,

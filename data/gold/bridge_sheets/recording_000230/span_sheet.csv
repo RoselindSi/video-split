@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,internal_join,clause_a,clause_b,join_relation,boundary_time,boundary_interval_start,boundary_interval_end,auditor,notes
+recording_000230_SPAN1,recording_000230,186.5,202.0,190.0,Remove cardboard box from black plastic bag,Seal empty cardboard box with transparent tape,,,,,,
+recording_000230_SPAN2,recording_000230,398.0,422.2,417.0,Retrieve and reassemble cardboard box,Repack USB drive into cardboard box,,,,,,
+recording_000230_SPAN3,recording_000230,38.0,62.5,57.0,"Retrieve, reassemble and reseal cardboard box",Open the cardboard box,,,,,,
+recording_000230_SPAN4,recording_000230,57.0,66.0,62.5,Open the cardboard box,Close top flaps of cardboard box,,,,,,

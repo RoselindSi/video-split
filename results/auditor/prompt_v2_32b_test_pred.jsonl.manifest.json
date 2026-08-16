@@ -1,0 +1,38 @@
+{
+  "git_commit": "26fa6ecd13c7be32956d7b03a58392314b1131a4",
+  "git_dirty_uncommitted_changes": false,
+  "argv": [
+    "/workspace/tr1/vs/src/auditor/run_visual_auditor.py",
+    "--backend",
+    "qwen",
+    "--model_id_a",
+    "/workspace/tr1/ckpts/Qwen3-VL-8B-Instruct",
+    "--model_id_bc",
+    "/workspace/tr1/ckpts/Qwen3-VL-32B-Instruct",
+    "--media_dir",
+    "/workspace/tr1/results/boundary/error_audit/media",
+    "--repeats",
+    "3",
+    "--limit",
+    "15",
+    "--out",
+    "/workspace/tr1/results/auditor/prompt_v2_32b_test_pred.jsonl"
+  ],
+  "timestamp": "2026-07-24 08:19:22 +0000",
+  "input_files": {
+    "/workspace/tr1/vs/data/gold/audit_72_gold_v2.jsonl": {
+      "sha256_16": "48942dbc22ededae"
+    },
+    "/workspace/tr1/vs/data/gold/audit_72_context.jsonl": {
+      "sha256_16": "be1a5d3ea04eed88"
+    }
+  },
+  "extra": {
+    "backend": "qwen",
+    "model_id_a": "/workspace/tr1/ckpts/Qwen3-VL-8B-Instruct",
+    "model_id_bc": "/workspace/tr1/ckpts/Qwen3-VL-32B-Instruct",
+    "model_id_bc2": null,
+    "repeats": 3,
+    "n_events": 15
+  }
+}

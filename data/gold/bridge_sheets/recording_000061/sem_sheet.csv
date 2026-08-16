@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,candidate_label,claim_support,granularity,major_action_missing,action_presence,segment_structure,upstream_timing_issue,auditor,notes
+recording_000061_SEM1,recording_000061,121.3,123.3,Extract tissue from pack,,,,,,,,
+recording_000061_SEM2,recording_000061,123.3,164.8,Wipe table surface with tissue,,,,,,,,
+recording_000061_SEM3,recording_000061,164.8,167.3,Extract tissue from pack,,,,,,,,
+recording_000061_SEM4,recording_000061,167.3,228.8,Wipe table surface with tissue,,,,,,,,

@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,candidate_label,claim_support,granularity,major_action_missing,action_presence,segment_structure,upstream_timing_issue,auditor,notes
+recording_000391_SEM1,recording_000391,241.5,250.5,Uncoil USB cable,,,,,,,,
+recording_000391_SEM2,recording_000391,264.0,268.5,Uncoil USB cable,,,,,,,,
+recording_000391_SEM3,recording_000391,281.0,284.5,Uncoil USB cable,,,,,,,,
+recording_000391_SEM4,recording_000391,296.0,299.0,Uncoil USB cable,,,,,,,,

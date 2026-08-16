@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,candidate_label,claim_support,granularity,major_action_missing,action_presence,segment_structure,upstream_timing_issue,auditor,notes
+recording_000031_SEM1,recording_000031,50.0,59.9,Tuck and secure rolled umbrella,,,,,,,,
+recording_000031_SEM2,recording_000031,129.0,145.0,Fold and align umbrella canopy panels,,,,,,,,
+recording_000031_SEM3,recording_000031,170.0,206.0,Adjust and secure folded umbrella,,,,,,,,
+recording_000031_SEM4,recording_000031,206.0,218.0,Adjusting the bag strap and buckle,,,,,,,,

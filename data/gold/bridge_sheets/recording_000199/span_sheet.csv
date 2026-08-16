@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,internal_join,clause_a,clause_b,join_relation,boundary_time,boundary_interval_start,boundary_interval_end,auditor,notes
+recording_000199_SPAN1,recording_000199,93.4,107.0,94.8,Remove sink strainer,Rinse sink strainer,,,,,,
+recording_000199_SPAN2,recording_000199,267.9,279.6,269.4,Remove sink strainer,Rinse sink strainer,,,,,,
+recording_000199_SPAN3,recording_000199,335.0,354.5,337.5,Remove sink strainer,Rinse sink strainer,,,,,,
+recording_000199_SPAN4,recording_000199,465.0,491.5,466.5,Remove sink strainer,Rinse sink strainer,,,,,,

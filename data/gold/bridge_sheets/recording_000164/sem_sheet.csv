@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,candidate_label,claim_support,granularity,major_action_missing,action_presence,segment_structure,upstream_timing_issue,auditor,notes
+recording_000164_SEM1,recording_000164,140.5,170.0,Clean and reinstall sink strainer,,,,,,,,
+recording_000164_SEM2,recording_000164,170.5,202.5,Clean and reinstall sink strainer,,,,,,,,
+recording_000164_SEM3,recording_000164,202.5,227.0,Clean and reinstall sink strainer,,,,,,,,
+recording_000164_SEM4,recording_000164,227.0,247.0,Clean and reinstall sink strainer,,,,,,,,

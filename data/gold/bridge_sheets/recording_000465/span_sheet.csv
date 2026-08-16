@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,internal_join,clause_a,clause_b,join_relation,boundary_time,boundary_interval_start,boundary_interval_end,auditor,notes
+recording_000465_SPAN1,recording_000465,32.0,47.0,35.5,Retrieve cable from drawer,Test charging cable with phone,,,,,,
+recording_000465_SPAN2,recording_000465,198.0,214.5,204.5,Store charging cable in drawer,Retrieve charging cable from drawer,,,,,,
+recording_000465_SPAN3,recording_000465,483.0,502.0,488.0,Retrieve cable from drawer,Test cable compatibility with phone,,,,,,
+recording_000465_SPAN4,recording_000465,599.0,612.0,604.0,Store recoil charging cable in drawer,Retrieve charging cable from drawer,,,,,,

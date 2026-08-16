@@ -1,0 +1,5 @@
+target_id,recording_id,start,end,internal_join,clause_a,clause_b,join_relation,boundary_time,boundary_interval_start,boundary_interval_end,auditor,notes
+recording_000242_SPAN1,recording_000242,93.0,118.0,106.0,Verify box contents and seal the top end with tape,Recheck box contents and reseal the top end,,,,,,
+recording_000242_SPAN2,recording_000242,143.5,151.5,147.5,Place cardboard box into plastic bag,Retrieve cardboard box from plastic bag,,,,,,
+recording_000242_SPAN3,recording_000242,164.0,167.0,164.5,Open box flaps for third inspection,Inspect box interior third time,,,,,,
+recording_000242_SPAN4,recording_000242,21.5,39.5,28.5,Relocate black plastic bag,Seal cardboard box with tape (first),,,,,,
