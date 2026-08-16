@@ -105,7 +105,10 @@ def main():
 
     blob = json.load(open(a.packets, encoding="utf-8"))
     packs = blob["packets"][:a.limit] if a.limit else blob["packets"]
-    recs = {r.get("recording_id"): r for r in load_recordings(a.recseg)}
+    # load_recordings ALREADY returns {recording_id: record}. Re-keying it
+    # iterated the dict, which yields its keys, and every "record" was a
+    # string.
+    recs = load_recordings(a.recseg)
     filters = have_filters(a.ffmpeg)
     print(f"{len(packs)} packets; ffmpeg filters available: {sorted(filters)}")
     if a.show_selection_reason:
