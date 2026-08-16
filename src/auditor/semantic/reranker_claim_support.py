@@ -176,7 +176,15 @@ def main():
         s = [e[f] for e in ev]
         au = auroc(s, y)
         lo, hi = grouped_boot(s, y, grp, a.n_boot, a.seed)
-        mark = "   > chance band" if au - bar > 0.02 and lo > 0.5 else ""
+        # THE LOWER BOUND HAS TO CLEAR THE BAR, NOT 0.5. `bar` is what a
+        # RANDOM scorer reaches at the 97.5th percentile with these class
+        # sizes, so an interval that still contains it has not separated the
+        # scorer from chance. Comparing against 0.5 printed "> chance band"
+        # for AUROC 0.750 [0.517, 0.912] against a bar of 0.664 -- an interval
+        # containing the chance band, marked as beating it.
+        mark = ("   > bar" if lo > bar else
+                "   interval contains the bar" if hi > bar else
+                "   below the bar")
         print(f"  {f:<12}{au:>8.3f}   [{lo:.3f}, {hi:.3f}]{au - bar:>+9.3f}"
               f"{mark}")
         res[f] = {"auroc": au, "lo": lo, "hi": hi, "bar": bar}
