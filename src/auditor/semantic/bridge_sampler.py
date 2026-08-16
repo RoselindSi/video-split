@@ -57,6 +57,7 @@ from src.auditor.semantic.claim_support_diagnostic import load_gold, norm_key
 from src.auditor.semantic.compose_supervision import resolve
 from src.auditor.semantic.paired_benchmark import SPLIT_CLAUSE
 from src.auditor.semantic.render_ontology_clips import get_segments
+from src.auditor.semantic.span_boundary_split import TIME_COLS
 
 
 def rid_of(row):
@@ -93,6 +94,10 @@ def main():
                     help="targets per packet. Three to five focused examples "
                          "in one recording beat one example in each of a "
                          "hundred")
+    ap.add_argument("--tol_s", type=float, default=0.5,
+                    help="how close a span's internal join must be to an "
+                         "audited boundary to inherit its status")
+    ap.add_argument("--time_col")
     ap.add_argument("--top", type=int, default=40)
     ap.add_argument("--out")
     a = ap.parse_args()
@@ -105,22 +110,34 @@ def main():
         if rid and cs in ("yes", "no", "partial", "uncertain"):
             sem[rid].add(cs)
 
-    bnd = defaultdict(set)
+    # BOUNDARY STATE MUST BE READ AT THE SPAN JOIN, NOT AT THE RECORDING.
+    # The boundary audits judged times the DETECTOR proposed; the span arm
+    # needs the internal join of its own pairs, and 118 confirmed boundaries
+    # matched only 25 of 385 spans. Counting at recording level said 32
+    # recordings were complete while the within-recording analysis found 11,
+    # and 11 is the number that can be used.
+    btimes = defaultdict(lambda: {"confirmed": [], "not_confirmed": []})
     for p in a.boundary_gold:
         for r in read_rows(p):
             rid = rid_of(r)
             rel = str(r.get("gt_boundary_relation") or "").strip().lower()
-            if not rid or not rel:
+            tc = a.time_col or next((c for c in TIME_COLS if r.get(c)), None)
+            if not rid or not rel or not tc:
                 continue
-            bnd[rid].add("confirmed" if rel == "correctly_annotated"
-                         else "not_confirmed")
+            try:
+                t = float(r[tc])
+            except (TypeError, ValueError):
+                continue
+            btimes[rid]["confirmed" if rel == "correctly_annotated"
+                        else "not_confirmed"].append(t)
+    print(f"       {sum(len(v['confirmed']) for v in btimes.values())} "
+          f"confirmed and "
+          f"{sum(len(v['not_confirmed']) for v in btimes.values())} "
+          f"not-confirmed boundary judgements over {len(btimes)} recordings")
 
     both_sem = {r for r, v in sem.items() if {"yes", "no"} <= v}
-    both_bnd = {r for r, v in bnd.items() if len(v) > 1}
     print(f"today: {len(sem)} recordings with semantic audits, "
           f"{len(both_sem)} carrying BOTH yes and no")
-    print(f"       {len(bnd)} recordings with boundary audits, "
-          f"{len(both_bnd)} carrying BOTH confirmed and not")
 
     claims = json.load(open(a.claims, encoding="utf-8"))["claims"]
     vcount = Counter(x["verb"] for d in claims.values()
@@ -179,9 +196,16 @@ def main():
             x, y = segs[i], segs[i + 1]
             if y[1] - x[2] > 2.0 or y[2] - x[1] > 30.0 or x[0] == y[0]:
                 continue
+            bt = btimes.get(rid, {"confirmed": [], "not_confirmed": []})
+            st = ("confirmed"
+                  if any(abs(x[2] - t) <= a.tol_s for t in bt["confirmed"])
+                  else "not_confirmed"
+                  if any(abs(x[2] - t) <= a.tol_s
+                         for t in bt["not_confirmed"])
+                  else "unaudited")
             span_cand[rid].append({
                 "start": x[1], "end": y[2], "internal_join": x[2],
-                "clause_a": x[0], "clause_b": y[0],
+                "clause_a": x[0], "clause_b": y[0], "join_status": st,
                 "already_scored": (rid, round(x[1], 3)) in scored_spans})
 
     # --- rank ------------------------------------------------------------
@@ -190,9 +214,23 @@ def main():
     # one holding neither needs two lucky outcomes; one holding exactly one
     # side needs a single audit to land the other way, which is why it ranks
     # above both.
+    # The span arm's usable state: which join statuses appear among the spans
+    # this recording ALREADY has scored. An unscored span's status is worth
+    # nothing until a GPU pass exists for it.
+    both_bnd = set()
+    bnd_state = {}
+    for rid, cands in span_cand.items():
+        sc_ = [c for c in cands if c["already_scored"]] or cands
+        st = {c["join_status"] for c in sc_} - {"unaudited"}
+        bnd_state[rid] = st
+        if len(st) > 1:
+            both_bnd.add(rid)
+    print(f"       {len(both_bnd)} recordings carry BOTH a confirmed and an "
+          f"unconfirmed join AMONG THEIR SCORED SPANS")
+
     rows = []
     for rid in sorted(per_rec):
-        s, b = sem.get(rid, set()), bnd.get(rid, set())
+        s, b = sem.get(rid, set()), bnd_state.get(rid, set())
         sem_gap = ("complete" if {"yes", "no"} <= s else
                    "needs NO" if "yes" in s else
                    "needs YES" if "no" in s else "unaudited")
@@ -223,7 +261,12 @@ def main():
                      "sem_gap": sem_gap, "bnd_gap": bnd_gap,
                      "n_sem_candidates": n_sem, "n_span_candidates": n_span,
                      "n_spans_already_scored": n_scored})
-    rows.sort(key=lambda r: (-r["tier"], -r["n_spans_already_scored"],
+    # PRIORITY IS 3 > 1 > 2, NOT NUMERIC. Tier 1 is one audit from a contrast
+    # and Tier 2 is an unaudited recording that might become one after two;
+    # sorting by -tier put Tier 2 above Tier 1 and --top then cut every Tier 1
+    # row out of the table entirely, which read as "there are none".
+    order = {3: 0, 1: 1, 2: 2, 0: 3}
+    rows.sort(key=lambda r: (order[r["tier"]], -r["n_spans_already_scored"],
                              -min(r["n_sem_candidates"], 4),
                              r["recording_id"]))
     rows = rows[:a.top]
