@@ -123,6 +123,13 @@ def main():
     ap.add_argument("--tol_s", type=float, default=0.5,
                     help="how close a span's internal boundary must be to a "
                          "confirmed one to count as the same boundary")
+    ap.add_argument("--within_audited", action="store_true",
+                    help="keep only recordings that contain BOTH a confirmed "
+                         "and an unconfirmed boundary. Without it the split "
+                         "compares audited recordings against unaudited ones "
+                         "rather than boundary quality -- the two halves' "
+                         "nulls already differ, and a null cannot see a "
+                         "boundary")
     ap.add_argument("--n_boot", type=int, default=2000)
     ap.add_argument("--seed", type=int, default=0)
     a = ap.parse_args()
@@ -184,6 +191,36 @@ def main():
     if lab.sum() == 0 or (~lab).sum() == 0:
         raise SystemExit("the split is degenerate; check --tol_s and the "
                          "columns above.")
+
+    # THE TWO HALVES MUST COME FROM THE SAME RECORDINGS, or the split is not
+    # about boundaries. Confirmed spans sit in the recordings that were
+    # selected into the boundary audit -- chosen for the detector's failure
+    # modes, not at random -- while the unconfirmed half is dominated by
+    # recordings that were never audited at all. The nulls already say the two
+    # halves differ in something other than boundary quality: 0.575 against
+    # 0.498, and the null cannot see a boundary.
+    #
+    # Restricting both halves to recordings that contain BOTH kinds makes the
+    # contrast within-recording, which is the only version that isolates the
+    # variable. It costs n, and if what is left is too small the honest
+    # answer is that this cannot be measured here.
+    if a.within_audited:
+        rid_ok = {r for r in {p["recording_id"] for p in bench}
+                  if any(lab[i] for i, q in enumerate(bench)
+                         if q["recording_id"] == r)
+                  and any(not lab[i] for i, q in enumerate(bench)
+                          if q["recording_id"] == r)}
+        keep = np.array([p["recording_id"] in rid_ok for p in bench])
+        print(f"  --within_audited: {len(rid_ok)} recordings carry both "
+              f"kinds; {int(keep.sum())} of {len(bench)} pairs kept "
+              f"({int((lab & keep).sum())} confirmed, "
+              f"{int((~lab & keep).sum())} not)")
+        if not keep.any() or not (lab & keep).any() or not (~lab & keep).any():
+            raise SystemExit("no recording contains both a confirmed and an "
+                             "unconfirmed boundary, so the within-recording "
+                             "contrast does not exist in this data.")
+        bench = [p for p, k in zip(bench, keep) if k]
+        lab = lab[keep]
 
     sc, _vid = load_extended(a.scores)
     pairings = sorted({k[0] for k in sc})
