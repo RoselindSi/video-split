@@ -1,0 +1,142 @@
+# Boundary evidence + semantic evidence -> one audit action. Deterministic.
+#
+# FROZEN. Two auditors run independently and this file is the only place their
+# outputs meet. Neither auditor decides an action, and the semantic side is not
+# a boundary truth source -- it contributes continuity EVIDENCE and nothing
+# more. If the left and right labels are both `wipe counter` but a release,
+# reset and restart is observed between them, the answer is still
+# same_action_new_instance -> BOUNDARY. Identical labels are not an argument
+# against a boundary.
+#
+# Editing this file changes what the system does. Retraining is not required.
+
+version: 1
+frozen: true
+
+# --- what each side may contribute -----------------------------------------
+
+boundary_auditor:
+  sees: [clip]                   # LABEL-BLIND, by construction
+  emits:
+    - morphology                 # POINT / INTERVAL / NO_TRANSITION / UNOBSERVABLE
+    - interaction_continuity     # continuous / interrupted / not_observable
+    - release_reset_restart      # TRI-STATE, see below
+    - observability              # hand_visibility, interaction_visibility
+    - nuisance_camera            # camera_dominant
+
+semantic_auditor:
+  sees: [clip, label_L, label_R]  # LABEL-AWARE
+  emits:
+    - support_L_labelL           # does label_L describe the left segment
+    - support_R_labelR
+    - support_L_labelR           # CROSS terms: the continuity evidence
+    - support_R_labelL
+    - atomic_claim_relation      # disjoint / overlapping / nested / identical
+  role: continuity_evidence_only
+  # It may never assert or deny a boundary. A high cross-support says the two
+  # segments are mutually describable, which is evidence about continuity; it
+  # is not a verdict, and the precedence block below says what beats it.
+
+# --- tri-state, and why it is not a boolean --------------------------------
+# `no reset was seen` and `it was seen that there was no reset` are different
+# claims, and collapsing them is the same failure as a safety gate that passes
+# when its input is missing. Only OBSERVED_ABSENT can satisfy a condition that
+# requires absence.
+tri_state:
+  OBSERVED_PRESENT: the evidence was looked for and found
+  OBSERVED_ABSENT: the evidence was looked for, the view was adequate, and it
+    is not there
+  NOT_OBSERVABLE: not assessable -- occluded, offscreen, camera-dominant, or
+    the head that would answer carries no gradient
+
+# --- precedence -------------------------------------------------------------
+# Evaluated in order. The first block that fires decides, and later blocks
+# cannot revisit it.
+precedence:
+  - name: release_reset_restart_forces_boundary
+    when: {release_reset_restart: OBSERVED_PRESENT}
+    instance_relation: same_action_new_instance
+    action: KEEP_BOUNDARY
+    note: >
+      Semantic continuity cannot override this. Two repetitions of one action
+      separated by a release are two instances, and 56% of the disputed events
+      in the double-audit sit on exactly this configuration.
+
+  - name: auto_reject_candidate
+    require_all:
+      - {morphology: NO_TRANSITION, strength: strong}
+      - {interaction_continuity: continuous}
+      - {release_reset_restart: OBSERVED_ABSENT}
+      - {observability: adequate}
+      - {semantic_evidence: compatible_with_continuity}
+    action: AUTO_REJECT_CANDIDATE
+
+  - name: default
+    action: REVIEW
+
+# --- hard rules: each forces REVIEW and names itself in the trace ----------
+# These are the four confusions that have each cost this project a result.
+hard_rules:
+  same_label_is_not_same_instance:
+    # identical label_L and label_R is not evidence of one instance
+    blocks: [AUTO_REJECT_CANDIDATE]
+    when_only_evidence_is: [label_identity]
+
+  direction_change_is_not_boundary:
+    # wiping left then wiping right is one instance of wiping
+    blocks: [KEEP_BOUNDARY]
+    when_only_evidence_is: [motion_direction_change]
+
+  unobservable_is_not_no_boundary:
+    # "the evidence is not visible" is not "there is no boundary"
+    blocks: [AUTO_REJECT_CANDIDATE]
+    when: {observability: inadequate}
+
+  unseen_reset_is_not_absent_reset:
+    # THE ONE MOST EASILY LOST. A missing observation is not a negative one.
+    blocks: [AUTO_REJECT_CANDIDATE]
+    when: {release_reset_restart: NOT_OBSERVABLE}
+
+# --- thresholds -------------------------------------------------------------
+thresholds:
+  # `compatible_with_continuity` requires BOTH cross terms to support. One
+  # direction is not symmetry: label_R may be generic enough to describe the
+  # left segment while label_L is specific and fails on the right.
+  cross_support_min: 0.5
+  morphology_strong_min: 0.95
+  # a POINT_TRANSITION anywhere in this window blocks an auto-reject, as in
+  # boundary_ontology_v1
+  no_nearby_point_transition_sec: 2.0
+
+# --- actions ----------------------------------------------------------------
+actions:
+  KEEP_BOUNDARY:
+    enabled: true
+    followup: none
+
+  AUTO_REJECT_CANDIDATE:
+    # NOT a deployment authorisation. It names a region of evidence space that
+    # a reject WOULD be defensible in, and it is measured, not executed. Risk
+    # calibration needs an independent gold that does not exist yet, and every
+    # previous operating point in this project that was authorised before that
+    # step was later withdrawn.
+    enabled: false
+    followup:
+      - merge_segments          # L + R -> one segment
+      - rerun_naming           # the merged span needs a new label
+      - semantic_audit_again   # and that label needs auditing
+    requires_before_enable:
+      - independent_gold_risk_calibration
+      - false_reject_rate_with_interval
+
+  REVIEW:
+    default: true
+    followup: human
+
+# --- what a decision must carry --------------------------------------------
+trace:
+  required: [action, precedence_block, reasons, blocked_by, evidence_used]
+  note: >
+    `blocked_by` is not optional. A REVIEW whose reason is unknown is
+    indistinguishable from a REVIEW produced by a gate that silently could not
+    evaluate itself, and this project has shipped that once.
