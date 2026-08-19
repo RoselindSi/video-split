@@ -120,9 +120,12 @@ def main():
     ap.add_argument("--keep", action="append", default=[],
                     help="values of --verdict_col that count as confirmed")
     ap.add_argument("--kind", default="reorder_span")
-    ap.add_argument("--tol_s", type=float, default=0.5,
+    ap.add_argument("--tol_s", type=float, default=1.0,
                     help="how close a span's internal boundary must be to a "
-                         "confirmed one to count as the same boundary")
+                         "confirmed one to count as the same boundary. 1.0s "
+                         "is the project tolerance from 2026-08-19; it was "
+                         "0.5s before, so a split rerun now matches more "
+                         "spans than the run that produced the frozen table")
     ap.add_argument("--within_audited", action="store_true",
                     help="keep only recordings that contain BOTH a confirmed "
                          "and an unconfirmed boundary. Without it the split "

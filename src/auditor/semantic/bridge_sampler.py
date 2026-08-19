@@ -94,9 +94,10 @@ def main():
                     help="targets per packet. Three to five focused examples "
                          "in one recording beat one example in each of a "
                          "hundred")
-    ap.add_argument("--tol_s", type=float, default=0.5,
+    ap.add_argument("--tol_s", type=float, default=1.0,
                     help="how close a span's internal join must be to an "
-                         "audited boundary to inherit its status")
+                         "audited boundary to inherit its status. 1.0s is the "
+                         "project tolerance from 2026-08-19, up from 0.5s")
     ap.add_argument("--time_col")
     ap.add_argument("--top", type=int, default=40)
     ap.add_argument("--out")

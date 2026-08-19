@@ -136,8 +136,25 @@ def main():
             txt = f"{t['label']}    [{t['start']:.1f}-{t['end']:.1f}s]"
             if a.show_selection_reason:
                 txt += f"    ({'; '.join(t.get('why_selected', []))})"
+            # THE LABEL SHOWS ONLY DURING THE LABELLED SPAN. A single banner
+            # over the whole clip covered the padding too, so a 20s segment
+            # rendered with 3s either side put the label on screen for all 26
+            # seconds with nothing marking where the segment actually starts.
+            # The frozen rule says claim_support is judged against the exact
+            # segment the naming model saw; an auditor judging the padded clip
+            # is judging a 6s-wider window, and the median segment is 9-10s.
+            # The span arm already switches banners at the join -- this is the
+            # same mechanism, and its absence here was an asymmetry, not a
+            # decision.
+            s0, s1 = float(t["start"]) - lo, float(t["end"]) - lo
+            bans = []
+            if s0 > 0.05:
+                bans.append((0.0, s0, "— context before —"))
+            bans.append((s0, s1, txt))
+            if hi - float(t["end"]) > 0.05:
+                bans.append((s1, hi - lo, "— context after —"))
             if not a.sheets_only:
-                cut(video, lo, hi, [(0.0, hi - lo, txt)],
+                cut(video, lo, hi, bans,
                     os.path.join(d, f"{tid}.mp4"), d, a.ffmpeg, filters)
                 made += 1
             sem_rows.append({"target_id": tid, "recording_id": rid,
