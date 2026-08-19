@@ -1,5 +1,11 @@
 # Bridge audit — protocol
 
+> **§1–4 describe the batch as designed. §5 amends it after packets
+> 176 / 242 / 250 came back: the semantic arm is STOPPED and the remaining
+> packets are span-only. The two numbers below are the state at design time,
+> not the state now — batch4 has since produced 31 both-class recordings, and
+> the span arm's "zero recordings" has become two of the first three.**
+
 This batch does not estimate an error rate. It builds the two within-recording
 contrasts that do not currently exist, and without which neither arm can be
 measured at all.
