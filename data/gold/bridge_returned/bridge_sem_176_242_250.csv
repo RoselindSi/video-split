@@ -1,0 +1,14 @@
+﻿Bridge Audit — SEM (176 / 242 / 250),,,,,,,,
+recording,sem_id,stored_label,segment_span_s,human_visible_action,temporal_truth,claim_support,coverage_granularity,notes
+176,sem1,Clean and reinstall sink strainer,307.0-327.0,Remove strainer → rinse → replace; hands disengage → next episode,action episode 307.0-327.0,yes,adequate,Clean + reinstall supported.
+176,sem2,Clean and reinstall sink strainer,327.0-347.0,Remove strainer → rinse → replace; hands disengage → next episode,action episode 327.0-347.0,yes,adequate,Main cycle supported.
+176,sem3,Clean and reinstall sink strainer,347.0-367.5,Remove strainer → rinse → replace; hands disengage → next episode,action episode 347.0-367.5,yes,adequate,Main cycle supported.
+176,sem4,Rinse and replace sink strainer,529.5-568.5,Remove strainer → rinse → replace; disengage → camera shift,human episode approx. 528.5-568.5,yes,adequate,Segment starts ~1s after human episode onset.
+242,sem1,Reopen and inspect cardboard box,39.5-44.0,After sealing: flip box → place items into open box,no internal task boundary,no,not_applicable,No reopen/inspect supported.
+242,sem2,Verify box contents and seal the top end with tape,93.0-106.0,Retrieve box from bag → assemble → close top → tape seal → continues,onset≈90; continuous after 106,partial,too_coarse / incomplete,Seal top supported; verify contents unsupported; retrieve/assemble omitted.
+242,sem3,Recheck box contents and reseal the top end,106.0-118.0,Flip box → load items → close top → tape seal,terminal≈119,partial,too_coarse / incomplete,Reseal supported; recheck unsupported; loading omitted.
+242,sem4,Open and reseal cardboard box (store in bag and retrieve),200.0-226.0,Disassemble → store in bag → withdraw → retrieve → assemble → close/seal,true task boundary≈209 inside segment,yes,temporally undersegmented,Semantics broadly supported but segment crosses reset/restart.
+250,sem1,Unseal and open cardboard box,319.5-330.0,Remove tape → open top → retrieve item,onset≈320; continuous after,yes,too_coarse / incomplete,Retrieve item omitted.
+250,sem2,Remove cardboard box from black plastic bag,116.0-149.5,Retrieve box → assemble → seal → flip → load item → reseal,continuous episode≈115.2-153,yes,too_coarse / major actions missing,Label covers only first phase.
+250,sem3,Seal bottom of cardboard box with tape,438.0-459.0,Retrieve/assemble box → close TOP → tape seal,onset≈435; continuous after,partial,too_coarse / incomplete,Seal+tape supported; 'bottom' conflicts with observed top.
+250,sem4,Unseal and open box,561.5-573.0,Remove tape → open top → retrieve item,onset=561.5; continuous after,yes,too_coarse / incomplete,Retrieve item omitted.

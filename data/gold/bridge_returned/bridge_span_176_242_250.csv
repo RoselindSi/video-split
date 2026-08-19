@@ -1,0 +1,14 @@
+﻿Bridge Audit — SPAN (176 / 242 / 250),,,,,,,,,,,
+recording,span_id,clause_a,clause_b,human_a,human_b,task_boundary,join_timing,a_semantic,b_semantic,semantic_phase_split,notes
+176,span1,Remove sink strainer,Rinse sink strainer,Remove strainer,Rinse strainer,NO,phase join accurate,yes,yes,valid,"Semantic split accurate, but one continuous task-level interaction."
+176,span2,Install sink strainer,Remove sink strainer,A includes remove→rinse→install→disengage,B includes next remove→rinse episode,YES,within ±1s,"yes, incomplete","yes, incomplete",valid,"Cycle completes, disengagement, then new same-action instance."
+176,span3,Remove sink strainer,Rinse sink strainer,Remove strainer,Rinse strainer → replace,NO,phase join accurate,yes,"yes, incomplete",valid,B omits replace; no task-level reset.
+176,span4,Rinse sink strainer,Install sink strainer into drain,Rinse strainer,Replace strainer,NO,phase join accurate,yes,yes,valid,Internal phase split only.
+242,span1,Verify box contents and seal the top end with tape,Recheck box contents and reseal the top end,Retrieve→assemble→close top→seal,Flip→load→close top→seal→put aside→withdraw,NO,phase split exists,partial,partial,valid but labels poor,One continuous box-handling episode; both clauses inaccurate/incomplete.
+242,span2,Place cardboard box into plastic bag,Retrieve cardboard box from plastic bag,Disassemble→place in bag→idle,Retrieve from bag→assemble,NO,phase join acceptable,"yes, incomplete","yes, incomplete",valid,At locked task granularity this remains one action episode.
+242,span3,Open box flaps for third inspection,Inspect box interior third time,Flip box,Load items→close top,NO,phase split exists,no,no,weak / incorrect,Continuous interaction; both semantic clauses wrong.
+242,span4,Relocate black plastic bag,Seal cardboard box with tape (first),Disassemble→bag→idle→retrieve,Assemble→close top→seal→flip,YES,internal join ≈1.5s late; outside ±1s,no,no,labels poor,"True boundary exists, but join is late and clauses are inaccurate."
+250,span1,Flatten empty box,Store box in plastic bag,Remove tape→disassemble,Place box in bag→idle,NO,phase join accurate,yes,yes,valid,Semantic split reasonable; no task-level reset.
+250,span2,Unseal box top,Remove keychain from box,Remove tape,Open top→retrieve item,NO,phase join accurate,yes,partial,valid,Item identity not confirmed as keychain by natural language.
+250,span3,Unseal and open cardboard box,Retrieve USB drive from the box,Remove tape→open top,Retrieve item,NO,phase join accurate,yes,partial,valid,Item identity not confirmed as USB drive by natural language.
+250,span4,Place keychain into box,Seal box top with tape,Tape/flip box→place item,Close top→tape seal,NO,phase join accurate,partial,yes,valid,Item identity not confirmed as keychain; no task-level reset.
