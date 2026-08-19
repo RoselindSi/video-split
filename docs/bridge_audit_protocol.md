@@ -79,7 +79,56 @@ Confirming one of those upgrades an existing measurement with no GPU;
 confirming a newly proposed boundary needs a scoring pass before it is worth
 anything. The packets put scored spans first.
 
-The auditor answers one question about the join between clause A and clause B:
+The auditor answers **four** questions about the join between clause A and
+clause B. They were one free-text question in the first three packets and every
+useful distinction had to be read back out of a notes column.
+
+`boundary_exists` is NOT one of them: it is derived from `join_relation` by
+`instance_relation_policy_v2`. Asking for the relation and its consequence in
+the same sheet puts the policy layer inside the annotation, and the two would
+disagree the first time the policy changed.
+
+```
+join_relation          new_action | same_action_new_instance
+                       same_instance | cannot_determine
+
+candidate_relation     exact | early | late | not_applicable
+                       asked SEPARATELY from existence. 242/span4 is a real
+                       boundary whose join is ~1.5s late, outside the 1.0s
+                       tolerance; collapsing that into one YES loses the only
+                       EARLY/LATE evidence in a class holding ten events.
+
+semantic_phase_split   valid | valid_but_labels_poor | weak_or_incorrect
+                       | not_applicable
+                       what makes a NO informative. Eight of the first twelve
+                       joins were not task boundaries WHILE the phase split was
+                       valid -- the annotation identified a real change that
+                       sits inside one action. "saw a real change in the wrong
+                       place" and "saw nothing" cannot share one label.
+
+release_reset_restart  observed_present | observed_absent
+                       | uncertain | not_observable
+                       the evidence joint_policy_v1's first precedence block
+                       turns on. Only observed_absent is an observation of
+                       absence. `uncertain` and `not_observable` both block and
+                       are kept apart because they are different information
+                       even where the policy treats them alike.
+```
+
+The contrast the first three packets produced, and the one the remaining
+recordings are there to confirm or break:
+
+| task truth | phase split | reset |
+|---|---|---|
+| NO | valid | absent |
+| YES | valid / possible | present |
+
+Both YES cases carried a disengagement and eight of the ten NOs carried a valid
+phase split with no reset. If that pattern holds across 20+ recordings it is
+real empirical support for the policy's first precedence block, produced by
+auditors who could not see the policy.
+
+The original single question, kept because the mapping is still this:
 
     new_action                 -> BOUNDARY
     same_action_new_instance   -> BOUNDARY
@@ -101,18 +150,58 @@ confirmed/unconfirmed classification, the expected class, or which failure
 bucket the example came from. Otherwise this gold is written by the hypothesis
 it is meant to test.
 
-## 5. Stop conditions — counted in usable contrasts
+## 5. Stop conditions — amended after packets 176 / 242 / 250
+
+### Semantic arm — STOPPED
+
+Not because it failed. Because the structure it existed to create now exists,
+produced independently by batch4:
 
 ```
-Semantic   >=25 recordings with BOTH yes and no
-           >=50 within-recording yes x no comparisons
-Span       >=20 recordings with BOTH a confirmed and a rejected internal join
-Quality    >=20% double-audited, or every decisive bridge case double-audited
+31 recordings containing both usable semantic classes
+361 within-recording YES x NO comparisons
 ```
 
-No target number of events. If it takes 80, it takes 80; if it takes 140, 140.
-An event count would let the batch finish without the contrasts existing, which
-is exactly the state this batch is fixing.
+Those samples are for **identifiability and paired evaluation, not population
+prevalence**. batch4 is not a representative sample and is not being treated as
+one; it happens to contain the within-recording comparison structure this arm
+was built to obtain, and that is the whole requirement.
+
+The first three bridge packets returned 1 of 3 on this arm — 176 needed a NO and
+returned four YES, 250 returned yes and partial. Continuing to spend half the
+human budget hunting SEM-NO has low research value once the contrast exists.
+
+### Span arm — CONTINUE, span only
+
+```
+Primary stopping condition
+    >= 20 recordings containing BOTH
+        at least one join whose relation implies a task boundary
+        at least one join judged NOT a task boundary
+
+Secondary evidence target
+    retain every decisive audited join needed to characterise
+        task boundary
+        semantic-phase-only split
+        timing misalignment
+
+Stop when the primary RECORDING-level condition is reached, or when the
+frozen bridge packet pool is exhausted.
+```
+
+The target is stated at recording level, not as a join count, because the
+problem being solved is within-recording identifiability. More NOs inside
+recordings that already have both buy nothing.
+
+**No re-sampling.** The remaining packets keep the frozen order in
+`data/gold/bridge_audit_targets.json`. `--arms span` changes only the evidence
+requested per packet; the sampling design and the packet sequence are untouched,
+so having seen the first three results introduces no adaptive selection.
+
+**2 of 3 is not an extrapolation.** Three recordings, all tier 3, is a planning
+note and not a statistical justification — the other tiers may behave
+differently and the interval on 2/3 is enormous. The stopping rule above is
+stated in outcomes, so it does not depend on a rate being right.
 
 ## 6. Three evaluation sets, never merged
 

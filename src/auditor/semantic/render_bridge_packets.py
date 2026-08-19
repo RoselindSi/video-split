@@ -46,13 +46,44 @@ SEM_COLUMNS = ["target_id", "recording_id", "start", "end", "candidate_label",
                "claim_support", "granularity", "major_action_missing",
                "action_presence", "segment_structure",
                "upstream_timing_issue", "auditor", "notes"]
+# SPAN sheet v2. The first three packets returned as free text and every
+# useful distinction in them had to be read out of a notes column, so the
+# distinctions are columns now.
+#
+# `boundary_exists` IS NOT HERE ON PURPOSE. It is derived from `join_relation`
+# by instance_relation_policy_v2. Asking an auditor for both the relation and
+# its consequence puts the policy layer back inside the annotation sheet, and
+# the two would disagree the first time the policy changed.
 SPAN_COLUMNS = ["target_id", "recording_id", "start", "end", "internal_join",
-                "clause_a", "clause_b", "join_relation", "boundary_time",
+                "clause_a", "clause_b",
+                # the frozen ontology; boundary existence follows from this
+                "join_relation",
+                # timing, kept SEPARATE from existence: 242/span4 is a real
+                # boundary whose join is 1.5s late, and collapsing it into one
+                # task_boundary=YES loses the only EARLY/LATE evidence in a
+                # class that has ten events in total
+                "candidate_relation", "boundary_time",
                 "boundary_interval_start", "boundary_interval_end",
+                # the distinction the first three packets exposed: 8 of 12
+                # joins were NOT task boundaries while the phase split itself
+                # was valid. "the annotation saw a real change, and the change
+                # is inside one action" is not the same finding as "the
+                # annotation saw nothing", and a single NO cannot carry both
+                "semantic_phase_split",
+                # the evidence joint_policy_v1's first precedence block turns
+                # on. Four values, not three: "looked but unsure" and "could
+                # not see" are different information for later analysis and
+                # identical for the policy, which licenses a reject only on
+                # observed_absent
+                "release_reset_restart",
                 "auditor", "notes"]
 
 JOIN_RELATIONS = ("new_action", "same_action_new_instance", "same_instance",
                   "cannot_determine")
+CANDIDATE_RELATIONS = ("exact", "early", "late", "not_applicable")
+PHASE_SPLIT = ("valid", "valid_but_labels_poor", "weak_or_incorrect",
+               "not_applicable")
+RESET = ("observed_present", "observed_absent", "uncertain", "not_observable")
 
 
 def cut(video, lo, hi, banners, out_path, tmp_dir, ffmpeg_bin, filters):
@@ -100,6 +131,14 @@ def main():
                     help="burn why_selected into the clip. OFF by default: it "
                          "says what this batch expects the answer to be, and "
                          "the auditor's job is to not know that")
+    ap.add_argument("--arms", default="both",
+                    choices=["both", "sem", "span"],
+                    help="which arm to render. `both` is the original "
+                         "behaviour and stays the default. `span` stops the "
+                         "semantic arm without touching the frozen packet "
+                         "selection -- the sampling design and the remaining "
+                         "packet order are unchanged, only the evidence "
+                         "requested per packet")
     ap.add_argument("--sheets_only", action="store_true")
     a = ap.parse_args()
 
@@ -110,7 +149,13 @@ def main():
     # string.
     recs = load_recordings(a.recseg)
     filters = have_filters(a.ffmpeg)
-    print(f"{len(packs)} packets; ffmpeg filters available: {sorted(filters)}")
+    print(f"{len(packs)} packets; arms={a.arms}; "
+          f"ffmpeg filters available: {sorted(filters)}")
+    if a.arms != "both":
+        print(f"  the packet SELECTION is untouched -- same frozen file, same "
+              f"order.\n  Only the evidence requested per packet changes, so "
+              f"no adaptive sampling\n  bias is introduced by having seen the "
+              f"first three results.")
     if a.show_selection_reason:
         print("  !! --show_selection_reason is ON. The clip will state why "
               "the target was\n     picked, which tells the auditor what this "
@@ -129,7 +174,8 @@ def main():
         os.makedirs(d, exist_ok=True)
         sem_rows, span_rows = [], []
 
-        for i, t in enumerate(pk.get("sem_targets", []), 1):
+        for i, t in enumerate(pk.get("sem_targets", []) if a.arms in
+                              ("both", "sem") else [], 1):
             tid = f"{rid}_SEM{i}"
             lo = max(0.0, float(t["start"]) - a.pad_s)
             hi = float(t["end"]) + a.pad_s
@@ -161,7 +207,8 @@ def main():
                              "start": t["start"], "end": t["end"],
                              "candidate_label": t["label"]})
 
-        for i, t in enumerate(pk.get("span_targets", []), 1):
+        for i, t in enumerate(pk.get("span_targets", []) if a.arms in
+                               ("both", "span") else [], 1):
             tid = f"{rid}_SPAN{i}"
             lo = max(0.0, float(t["start"]) - a.pad_s)
             hi = float(t["end"]) + a.pad_s
@@ -181,8 +228,12 @@ def main():
                               "clause_a": t["clause_a"],
                               "clause_b": t["clause_b"]})
 
-        for name, cols, rows in (("sem_sheet.csv", SEM_COLUMNS, sem_rows),
-                                 ("span_sheet.csv", SPAN_COLUMNS, span_rows)):
+        want = {"both": ("sem", "span"), "sem": ("sem",),
+                "span": ("span",)}[a.arms]
+        for name, cols, rows in [x for x in
+                                 (("sem_sheet.csv", SEM_COLUMNS, sem_rows),
+                                  ("span_sheet.csv", SPAN_COLUMNS, span_rows))
+                                 if x[0].split("_")[0] in want]:
             with open(os.path.join(d, name), "w", newline="",
                       encoding="utf-8") as f:
                 wri = csv.DictWriter(f, fieldnames=cols)
@@ -199,13 +250,34 @@ def main():
           f"uncertain.\n    Audit ALL FOUR even after a `no` appears -- one "
           f"yes and one no in a recording\n    is ONE pair, and the target is "
           f"50 within-recording pairs.")
-    print(f"  span_sheet.csv: fill `join_relation` with one of "
-          f"{'/'.join(JOIN_RELATIONS)}.\n    same_instance means NO boundary. "
-          f"A change of motion direction is not a\n    boundary -- wiping left "
-          f"then wiping right is one instance of wiping.")
-    print(f"  The scarce verdict is `same_instance`: zero recordings currently "
-          f"hold a join\n  judged not to be a boundary, and a confirmed one "
-          f"has no counterpart without it.")
+    print(f"  span_sheet.csv:")
+    print(f"    join_relation        {' / '.join(JOIN_RELATIONS)}")
+    print(f"    candidate_relation   {' / '.join(CANDIDATE_RELATIONS)}")
+    print(f"    semantic_phase_split {' / '.join(PHASE_SPLIT)}")
+    print(f"    release_reset_restart {' / '.join(RESET)}")
+    print(f"    same_instance means NO boundary. A change of motion direction "
+          f"is not a\n    boundary -- wiping left then wiping right is one "
+          f"instance of wiping.")
+    print(f"    `candidate_relation` is asked SEPARATELY from `join_relation`: "
+          f"a boundary can\n    exist and its join still be late, and that "
+          f"pair is the scarcest supervision\n    in the project.")
+    print(f"    `semantic_phase_split` is what makes a NO informative. Eight of "
+          f"the first\n    twelve joins were not task boundaries while the "
+          f"phase split was valid -- the\n    annotation saw a real change "
+          f"that sits inside one action.")
+    print(f"    `release_reset_restart`: only `observed_absent` is an "
+          f"observation of absence.\n    `uncertain` and `not_observable` both "
+          f"block, and are kept apart because they\n    are different "
+          f"information even though the policy treats them alike.")
+    # UPDATED AFTER THE FIRST THREE PACKETS. This used to say the verdict had
+    # never once been recorded; recordings 176/242/250 returned ten of them.
+    # Leaving the old sentence up would have told the next auditor they were
+    # hunting something already found.
+    print(f"  As of packets 176/242/250 the `same_instance` verdict is no "
+          f"longer missing: ten of\n  twelve joins came back NOT a task "
+          f"boundary and two of three recordings hold both\n  verdicts. The "
+          f"target is now RECORDINGS holding both -- 20 of them -- not more "
+          f"NOs.")
 
 
 if __name__ == "__main__":
