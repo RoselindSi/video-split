@@ -1,0 +1,59 @@
+# The conditions under which an automatic KEEP may be enabled. PRE-REGISTERED.
+#
+# This file exists so the go/no-go is written down BEFORE a curve is looked at.
+# Both operating points this project has withdrawn were chosen after seeing the
+# numbers they were justified by -- a hand-written rule (argmax POINT and
+# confidence >= 0.95) and a threshold picked on pooled out-of-fold scores. The
+# structure below is frozen; the three targets are deliberately null and must be
+# filled by a person deciding how much unreviewed error the product can carry.
+#
+# KEEP IS A HIGH-RISK ACTION, NOT THE SAFE HALF OF THE POLICY. The one automatic
+# keep this project shipped reached precision 0.767 [0.591, 0.882] on an
+# independent batch and 0.467 on the next, and was withdrawn. "Only keeping,
+# never rejecting" is not a safety argument; a kept wrong boundary enters the
+# output unreviewed exactly as a rejected right one leaves it.
+
+version: 1
+frozen: true
+enabled: false          # AUTO_KEEP is off until a certificate passes the gate
+
+# --- the three conditions, all required ------------------------------------
+gate:
+  # Read the LOWER BOUND, never the point estimate. The withdrawn operating
+  # point had a point estimate of 0.789 and a lower bound of 0.591, so any
+  # target set here is only meaningful above 0.591 -- that floor is evidence,
+  # not a preference.
+  precision_ci_lower_min: null    # e.g. 0.95
+
+  # An absolute count, not a rate. The question a person can actually answer is
+  # "how many wrong boundaries may enter the output unreviewed", and a rate
+  # hides that behind the size of the batch.
+  errors_kept_max: null           # e.g. 0
+
+  # Below this, automation removes no meaningful review work and the risk buys
+  # nothing. Stated so a technically-passing but useless threshold is refused.
+  coverage_min: null              # e.g. 0.10
+
+# --- how the number backing the gate must have been produced ---------------
+requires:
+  # The certificate's veto mode must equal the deployment's. A curve measured
+  # under `none` and deployed under `full` describes a different system.
+  deployment_matched_veto: true
+
+  # The calibration events may not be the events the threshold is applied to.
+  # Choosing on the same events it is scored on is how every earlier operating
+  # point here was picked and why they kept breaching afterwards.
+  independent_calibration_set: true
+
+  # A certificate is bound to one gold file and one veto mode. Re-running
+  # calibration after changing either invalidates it.
+  certificate_required: true
+
+# --- what is never automatic, at any threshold -----------------------------
+never_automatic:
+  # AUTO_REJECT is not disabled-by-default here; v1 has no deletion path at
+  # all. The rules live in joint_policy_v1.yaml and stay there until an
+  # independent gold has produced a false-reject rate with an interval.
+  - AUTO_REJECT
+  # SUGGEST_RETIME: 6 EARLY and 4 LATE over 8 recordings cannot support it.
+  - SUGGEST_RETIME

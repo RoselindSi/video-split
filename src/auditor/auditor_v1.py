@@ -67,15 +67,20 @@ TOLERANCE_S = 1.0  # 2026-08-19; see memory/tolerance-is-1s.md
 # --------------------------------------------------------------------------
 # routing
 # --------------------------------------------------------------------------
-def route_boundary(score, thr, veto=None):
+def route_boundary(score, thr, veto=None, uncertified=None):
     """score -> KEEP | REVIEW. A veto outranks any score.
 
-    `thr is None` means no operating point was chosen, and the honest
-    consequence is that nothing is automated."""
+    THREE INDEPENDENT WAYS TO STAY AT REVIEW, and they are kept apart because
+    they mean different things to whoever reads the output: the ontology
+    blocked automation, no operating point was chosen, or the operating point
+    is not backed by a passing certificate. Collapsing them into one "REVIEW"
+    loses the only information that says what would have to change."""
     if veto:
         return "REVIEW", f"blocked: {veto}"
     if thr is None:
         return "REVIEW", "no operating point chosen (--boundary_thr not given)"
+    if uncertified:
+        return "REVIEW", f"threshold not certified: {uncertified}"
     if score is None:
         return "REVIEW", "no boundary score for this candidate"
     return (("KEEP", f"score {score:.3f} >= {thr}") if score >= thr
@@ -169,7 +174,7 @@ def boot_precision(pairs, n=2000, seed=0):
     return out[int(0.025 * len(out))], out[int(0.975 * len(out)) - 1]
 
 
-def risk_coverage(items, thresholds=None):
+def risk_coverage(items, thresholds=None, gate=None):
     """items: (recording, score, truth). Prints what each threshold buys.
 
     COVERAGE IS OVER EVERYTHING, including items with no score. An item the
@@ -181,11 +186,17 @@ def risk_coverage(items, thresholds=None):
     print(f"\n  {total} candidates, {len(scored)} scored, "
           f"{total - len(scored)} unscored (each is a REVIEW)")
     print(f"  base rate: {base:.3f} of all candidates are true\n")
-    print(f"  {'thr':>6}{'automated':>11}{'coverage':>10}{'precision':>11}"
-          f"{'95% CI':>20}{'errors kept':>13}")
+    print(f"  {'thr':>8}{'automated':>11}{'coverage':>10}{'precision':>11}"
+          f"{'95% CI':>20}{'errors kept':>13}{'  gate':>8}")
     if thresholds is None:
         qs = sorted(s for _, s, _ in scored)
-        thresholds = sorted({qs[int(q * (len(qs) - 1))]
+        # ROUNDED BEFORE MEASUREMENT, NOT AFTER. The table prints four
+        # decimals and the certificate stores what was measured; if those were
+        # a full-precision float the printed number could never be typed back,
+        # and the number a person selects has to be the number that was
+        # actually evaluated. Rounding is upward so any residue admits fewer
+        # candidates than were measured, never more.
+        thresholds = sorted({math.ceil(qs[int(q * (len(qs) - 1))] * 1e4) / 1e4
                              for q in (0.5, 0.7, 0.8, 0.9, 0.95, 0.99)}) \
             if qs else []
     rows = []
@@ -198,16 +209,117 @@ def risk_coverage(items, thresholds=None):
         cov = len(auto) / total
         bad = sum(1 for _, t in auto if not t)
         ci = f"[{lo:.3f}, {hi:.3f}]" if lo is not None else "—"
-        print(f"  {thr:>6.3f}{len(auto):>11}{cov:>9.1%}{prec:>11.3f}"
-              f"{ci:>20}{bad:>13}")
-        rows.append({"threshold": thr, "n_automated": len(auto),
-                     "coverage": cov, "precision": prec,
-                     "ci_lo": lo, "ci_hi": hi, "errors_kept": bad})
+        row = {"threshold": thr, "n_automated": len(auto),
+               "coverage": cov, "precision": prec,
+               "ci_lo": lo, "ci_hi": hi, "errors_kept": bad}
+        mark = ""
+        if gate is not None:
+            ok, why = check_gate(row, gate)
+            row["gate_pass"], row["gate_reasons"] = ok, why
+            mark = "  PASS" if ok else "  fail"
+        print(f"  {thr:>8.4f}{len(auto):>11}{cov:>9.1%}{prec:>11.3f}"
+              f"{ci:>20}{bad:>13}{mark:>8}")
+        rows.append(row)
     print(f"\n  `errors kept` is the count that would enter the output "
           f"unreviewed.\n  Read the CI LOWER bound, not the point estimate: "
           f"the operating point that\n  failed on held-out data had a point "
           f"estimate of 0.789 and a lower bound of 0.591.")
+    if gate is not None and not any(r.get("gate_pass") for r in rows):
+        unset = sorted({w for r in rows for w in r.get("gate_reasons", [])
+                        if "unset" in w})
+        print(f"\n  NO THRESHOLD PASSES THE PRE-REGISTERED GATE, so AUTO_KEEP "
+              f"stays off.")
+        for w in unset:
+            print(f"    {w}")
+        if unset:
+            print(f"  Those are null on purpose. How much unreviewed error the "
+                  f"product can carry is\n  not a modelling question, and "
+                  f"filling them after reading this table is the\n  same move "
+                  f"that produced both withdrawn operating points.")
     return rows
+
+
+# --------------------------------------------------------------------------
+# the certificate -- what makes a threshold usable rather than merely typed
+# --------------------------------------------------------------------------
+GATE = "configs/auditor/auto_keep_gate_v1.yaml"
+
+
+def load_gate(path=GATE):
+    import yaml
+    with open(path, encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+
+def check_gate(row, gate):
+    """One calibration row against the pre-registered conditions.
+
+    Returns (passes, reasons). A null target is NOT a pass: an unset condition
+    means nobody has decided how much unreviewed error is acceptable, and
+    treating that as satisfied is how a gate becomes decorative."""
+    g = gate.get("gate") or {}
+    out, ok = [], True
+    lo = g.get("precision_ci_lower_min")
+    if lo is None:
+        ok = False
+        out.append("precision_ci_lower_min is unset in the gate config")
+    elif row.get("ci_lo") is None or row["ci_lo"] < lo:
+        ok = False
+        out.append(f"CI lower {row.get('ci_lo')} < {lo}")
+    mx = g.get("errors_kept_max")
+    if mx is None:
+        ok = False
+        out.append("errors_kept_max is unset in the gate config")
+    elif row["errors_kept"] > mx:
+        ok = False
+        out.append(f"errors_kept {row['errors_kept']} > {mx}")
+    cv = g.get("coverage_min")
+    if cv is None:
+        ok = False
+        out.append("coverage_min is unset in the gate config")
+    elif row["coverage"] < cv:
+        ok = False
+        out.append(f"coverage {row['coverage']:.3f} < {cv}")
+    return ok, out
+
+
+def event_fingerprint(ids):
+    """A stable digest of the events a certificate was measured on.
+
+    Stored so `--run` can tell whether it is applying a threshold to the very
+    events it was chosen on. That overlap is the specific mistake behind two
+    withdrawn operating points, and it is invisible unless something checks."""
+    import hashlib
+    h = hashlib.sha256()
+    for i in sorted(set(map(str, ids))):
+        h.update(i.encode() + b"\0")
+    return h.hexdigest()[:16], len(set(map(str, ids)))
+
+
+def verify_certificate(cert, thr, veto_mode, run_ids, allow_overlap=False):
+    """Why this threshold may NOT automate, or None if it may."""
+    if cert is None:
+        return "no --certificate supplied"
+    if cert.get("veto_mode") != veto_mode:
+        return (f"certificate was measured under veto={cert.get('veto_mode')!r}"
+                f" and deployment is {veto_mode!r}")
+    passing = [r for r in cert.get("rows", []) if r.get("gate_pass")]
+    if not passing:
+        return ("no threshold in the certificate passed the pre-registered "
+                "gate")
+    if not any(abs(r["threshold"] - thr) < 1e-9 for r in passing):
+        av = ", ".join(f"{r['threshold']:.3f}" for r in passing[:4])
+        return f"{thr} is not a gate-passing threshold (passing: {av})"
+    if run_ids and not allow_overlap:
+        cal = set(cert.get("event_ids") or [])
+        if cal:
+            ov = len(cal & set(map(str, run_ids)))
+            if ov:
+                return (f"{ov} events here were in the calibration set; a "
+                        f"threshold chosen on the events it scores is the "
+                        f"mistake behind two withdrawn operating points "
+                        f"(--allow_overlap to override)")
+    return None
 
 
 # --------------------------------------------------------------------------
@@ -260,13 +372,25 @@ def run(a):
     preds = {str(r.get("event_id") or r.get("id")): r
              for r in read_any(a.boundary_scores)} if a.boundary_scores else {}
 
+    # A THRESHOLD IS NOT AN OPERATING POINT UNTIL SOMETHING BACKS IT. Typing a
+    # number on the command line is exactly how the two withdrawn operating
+    # points were set, so the certificate is checked once, here, and its
+    # verdict travels into every routing decision below.
+    cert = json.load(open(a.certificate, encoding="utf-8")) \
+        if a.certificate else None
+    run_ids = [str(s.get("boundary_id") or s.get("event_id")
+                   or s.get("segment_id") or s.get("id")) for s in segs]
+    uncert = (verify_certificate(cert, a.boundary_thr, a.veto, run_ids,
+                                 a.allow_overlap)
+              if a.boundary_thr is not None else None)
+
     out, tab, vetoed = [], Counter(), Counter()
     for s in segs:
         sid = str(s.get("segment_id") or s.get("id") or len(out))
         bid = str(s.get("boundary_id") or s.get("event_id") or sid)
         bscore = bs.get(bid)
         veto = structural_veto(preds.get(bid), onto, a.veto)
-        b_act, b_why = route_boundary(bscore, a.boundary_thr, veto)
+        b_act, b_why = route_boundary(bscore, a.boundary_thr, veto, uncert)
         sscore = ss.get(sid)
         s_act, s_why = route_semantic(sscore, a.semantic_thr)
         assert b_act in ACTIONS["boundary"] and s_act in ACTIONS["semantic"]
@@ -314,6 +438,10 @@ def run(a):
                   f"expected: AUTO_KEEP needs relation and observability,\n"
                   f"     and neither head trains. --veto morphology_only is "
                   f"the named downgrade.")
+    if uncert:
+        print(f"\n  !! AUTO_KEEP REFUSED for every candidate: {uncert}.\n"
+              f"     --boundary_thr {a.boundary_thr} was supplied and did not "
+              f"take effect.")
     if a.boundary_thr is None or a.semantic_thr is None:
         print(f"\n  !! at least one threshold was not given, so that arm "
               f"automated nothing.\n     Run --calibrate and choose an "
@@ -322,6 +450,12 @@ def run(a):
         json.dump({"auditor_version": "v1", "tolerance_s": TOLERANCE_S,
                    "boundary_thr": a.boundary_thr,
                    "semantic_thr": a.semantic_thr,
+                   "veto_mode": a.veto,
+                   "certificate": a.certificate,
+                   "certificate_fingerprint": (cert or {}).get(
+                       "event_fingerprint"),
+                   "auto_keep_refused": uncert,
+                   "overlap_override_used": bool(a.allow_overlap),
                    "actions_available": {k: list(v)
                                          for k, v in ACTIONS.items()},
                    "segments": out},
@@ -342,7 +476,7 @@ def self_test():
         (0.99, None, None, "REVIEW"),
     ]
     for score, thr, veto, want in cases:
-        got, why = route_boundary(score, thr, veto)
+        got, why = route_boundary(score, thr, veto, None)
         assert got == want, (score, thr, veto, got, want)
         assert got in ACTIONS["boundary"]
         print(f"  boundary score={score} thr={thr} veto={bool(veto)} "
@@ -363,8 +497,45 @@ def self_test():
         for banned in ("REJECT", "DELETE", "DROP_"):
             assert banned not in body, \
                 f"{banned!r} appears in {fn.__name__}"
+    # THE CERTIFICATE CHECK, on the four ways a threshold fails to be one.
+    print()
+    ok_row = {"threshold": 0.9, "coverage": 0.3, "precision": 1.0,
+              "ci_lo": 0.97, "ci_hi": 1.0, "errors_kept": 0, "gate_pass": True}
+    cert = {"veto_mode": "morphology_only", "rows": [ok_row],
+            "event_ids": ["a", "b"], "event_fingerprint": "x"}
+    checks = [
+        (None, 0.9, "morphology_only", [], "no --certificate supplied"),
+        (cert, 0.9, "full", [], "veto"),
+        (cert, 0.5, "morphology_only", [], "not a gate-passing threshold"),
+        (cert, 0.9, "morphology_only", ["a"], "calibration set"),
+        (cert, 0.9, "morphology_only", ["z"], None),
+        ({"veto_mode": "morphology_only", "rows": [dict(ok_row,
+                                                        gate_pass=False)]},
+         0.9, "morphology_only", [], "passed the pre-registered gate"),
+    ]
+    for c, thr, mode, ids, want in checks:
+        got = verify_certificate(c, thr, mode, ids)
+        if want is None:
+            assert got is None, got
+            print(f"  certificate ok -> KEEP permitted at {thr}")
+        else:
+            assert got and want in got, (want, got)
+            act, _ = route_boundary(0.99, thr, None, got)
+            assert act == "REVIEW"
+            print(f"  refused ({want}): {got[:66]}")
+
+    # A gate with unset targets must not pass. It ships that way on purpose.
+    g = load_gate()
+    passes, why = check_gate({"ci_lo": 1.0, "coverage": 1.0,
+                              "errors_kept": 0}, g)
+    assert not passes and any("unset" in w for w in why), why
+    assert g.get("enabled") is False
+    print(f"  a perfect row still fails the shipped gate: "
+          f"{len(why)} target(s) unset")
+
     print("\n  no code path returns a reject; ACTIONS is the whole action set.")
-    print("  a veto beats any score; a missing threshold automates nothing.")
+    print("  a veto beats any score; an uncertified threshold automates "
+          "nothing.")
 
 
 def main():
@@ -386,6 +557,16 @@ def main():
                     help="NO DEFAULT. Without it every candidate is REVIEW.")
     ap.add_argument("--semantic_thr", type=float, default=None,
                     help="NO DEFAULT. Without it every label is REVIEW.")
+    ap.add_argument("--gate", default=GATE,
+                    help="pre-registered AUTO_KEEP conditions")
+    ap.add_argument("--emit_certificate",
+                    help="--calibrate: write the certificate a --run threshold "
+                         "must be backed by")
+    ap.add_argument("--certificate",
+                    help="--run: without it no threshold automates anything")
+    ap.add_argument("--allow_overlap", action="store_true",
+                    help="permit applying a threshold to the events it was "
+                         "chosen on. Recorded in the output when used.")
     ap.add_argument("--veto", choices=("full", "morphology_only", "none"),
                     default="full",
                     help="full = the ontology as written, correct and "
@@ -432,7 +613,31 @@ def main():
               f"{nveto} of {len(items)} candidates vetoed before scoring")
         if not items:
             raise SystemExit(f"no gold row carried {a.truth_field!r}")
-        risk_coverage(items)
+        gate = load_gate(a.gate) if os.path.exists(a.gate) else None
+        rows = risk_coverage(items, gate=gate)
+        ids = [str(g.get("event_id") or g.get("candidate_id") or g.get("id"))
+               for g in gold]
+        fp, nid = event_fingerprint(ids)
+        if a.emit_certificate:
+            json.dump({
+                "auditor_version": "v1",
+                "veto_mode": a.veto,
+                "tolerance_s": TOLERANCE_S,
+                "gold": os.path.abspath(a.gold),
+                "scores": os.path.abspath(a.scores),
+                "gate_config": os.path.abspath(a.gate),
+                "gate": (gate or {}).get("gate"),
+                "n_events": nid, "event_fingerprint": fp,
+                "event_ids": sorted(set(ids)),
+                "rows": rows,
+            }, open(a.emit_certificate, "w", encoding="utf-8"),
+                ensure_ascii=False, indent=1)
+            npass = sum(1 for r in rows if r.get("gate_pass"))
+            print(f"\nwrote {a.emit_certificate}  ({npass} gate-passing "
+                  f"threshold(s), veto={a.veto}, {nid} events, fp={fp})")
+            print(f"  --run refuses a threshold this certificate does not "
+                  f"back, refuses a different\n  veto mode, and refuses events "
+                  f"that were in the calibration set.")
         return
     if a.run:
         if not a.recseg:
