@@ -458,17 +458,52 @@ def read_any(path):
     return [v for v in b.values() if isinstance(v, dict)]
 
 
-def index_scores(rows, key_fields, score_field):
-    out = {}
-    for r in rows:
-        k = next((str(r[f]) for f in key_fields if r.get(f) is not None), None)
-        if k is None:
-            continue
-        v = r.get(score_field)
-        if isinstance(v, dict):  # a probability dict -> P(POINT)
-            v = v.get("POINT_TRANSITION", v.get("POINT"))
-        if v is not None:
-            out[k] = float(v)
+SCORE_FALLBACKS = ("score", "prob", "probability", "confidence", "support",
+                   "morphology")
+
+
+def index_scores(rows, key_fields, score_field, what=""):
+    """Join scores onto candidates, and REFUSE to do it silently badly.
+
+    A FAIL-CLOSED SYSTEM MAKES BROKEN PLUMBING LOOK LIKE CORRECT CAUTION. With
+    the wrong field name every lookup returns None, every candidate routes to
+    REVIEW, and the output is indistinguishable from an auditor working exactly
+    as designed. That is the most dangerous shape a bug can take here, because
+    nothing about it looks wrong -- it was found by running end to end on real
+    data, never by the fixture.
+
+    So: the named field is tried, then a short list of the names score files in
+    this repo actually use, and which one was used is printed. Producing a
+    score for NOTHING is a hard error, not a warning."""
+    out, used = {}, None
+    for field in (score_field,) + tuple(f for f in SCORE_FALLBACKS
+                                        if f != score_field):
+        for r in rows:
+            k = next((str(r[f]) for f in key_fields if r.get(f) is not None),
+                     None)
+            if k is None:
+                continue
+            v = r.get(field)
+            if isinstance(v, dict):   # a probability dict -> P(POINT)
+                v = v.get("POINT_TRANSITION", v.get("POINT"))
+            if v is not None:
+                out[k] = float(v)
+        if out:
+            used = field
+            break
+    if not out and rows:
+        keys = sorted({k for r in rows[:20] for k in r})
+        raise SystemExit(
+            f"{what or 'scores'}: {len(rows)} rows carried no usable value. "
+            f"Tried {score_field!r} then {SCORE_FALLBACKS}.\n"
+            f"  fields present: {keys}\n"
+            f"  This is a hard error rather than empty scores on purpose: "
+            f"empty scores route\n  everything to REVIEW, which is exactly "
+            f"what a correctly cautious auditor looks\n  like, so a broken "
+            f"join would ship looking right.")
+    if used and used != score_field:
+        print(f"  {what}: {score_field!r} not present; read {used!r} instead "
+              f"({len(out)} scored)")
     return out
 
 
@@ -481,11 +516,11 @@ def run(a):
 
     segs = read_any(a.recseg)
     bs = index_scores(read_any(a.boundary_scores),
-                      ("event_id", "candidate_id", "id"), a.boundary_field) \
-        if a.boundary_scores else {}
+                      ("event_id", "candidate_id", "id"), a.boundary_field,
+                      "--boundary_scores") if a.boundary_scores else {}
     ss = index_scores(read_any(a.semantic_scores),
-                      ("segment_id", "event_id", "id"), a.semantic_field) \
-        if a.semantic_scores else {}
+                      ("segment_id", "event_id", "id"), a.semantic_field,
+                      "--semantic_scores") if a.semantic_scores else {}
     preds = {str(r.get("event_id") or r.get("id")): r
              for r in read_any(a.boundary_scores)} if a.boundary_scores else {}
 
@@ -551,7 +586,43 @@ def run(a):
             "tolerance_s": TOLERANCE_S,
         })
 
+    # THE QUEUE. Everything routed to REVIEW is ordered worst-score-first so
+    # the output is directly workable rather than a pile with scores attached.
+    # Ordering skips nothing, so it needs no threshold and no certificate --
+    # and it only pays if the reviewer stops early, which is a person spending
+    # a budget rather than a model deciding an item is fine.
+    #
+    # A CANDIDATE WITH NO SCORE SORTS FIRST, not last. No score means nothing
+    # examined it, and "unexamined" belongs at the front of a review queue for
+    # the same reason NOT_OBSERVABLE never satisfies a safety condition.
+    pending = [o for o in out if o["boundary_audit"] == "REVIEW"
+               or o["semantic_audit"] == "REVIEW"]
+    pending.sort(key=lambda o: (
+        o["boundary_score"] if o["boundary_score"] is not None else -1e9,
+        o["semantic_score"] if o["semantic_score"] is not None else -1e9))
+    for i, o in enumerate(pending):
+        o["review_priority"] = i + 1
+    for o in out:
+        o.setdefault("review_priority", None)
+
     n = len(out)
+    # THE OTHER HALF OF THE SAME PROBLEM. The scores can parse perfectly and
+    # still join onto nothing, if the ids do not correspond. Same failure
+    # shape: everything REVIEW, nothing visibly wrong.
+    for tag, scored, given in (("boundary", sum(1 for o in out if o[
+            "boundary_score"] is not None), a.boundary_scores),
+            ("semantic", sum(1 for o in out if o[
+                "semantic_score"] is not None), a.semantic_scores)):
+        if given and not scored:
+            raise SystemExit(
+                f"{tag}: a scores file was given and not one of {n} segments "
+                f"matched an id in it.\n  Everything would route to REVIEW, "
+                f"which is what a working auditor also looks like, so this "
+                f"is\n  an error rather than a quiet pass.")
+        if given:
+            print(f"  {tag} scores joined onto {scored}/{n} "
+                  f"({scored / n:.1%})")
+
     print(f"\n{n} segments routed\n")
     print(f"  {'boundary':<10}{'semantic':<10}{'n':>6}{'share':>9}")
     for (b, s), v in sorted(tab.items(), key=lambda x: -x[1]):
