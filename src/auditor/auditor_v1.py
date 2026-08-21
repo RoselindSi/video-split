@@ -87,16 +87,24 @@ def route_boundary(score, thr, veto=None, uncertified=None):
             else ("REVIEW", f"score {score:.3f} < {thr}"))
 
 
-def route_semantic(score, thr):
-    """score -> ACCEPT | REVIEW.
+def route_semantic(score, thr, uncertified=None):
+    """score -> ACCEPT | REVIEW. Symmetric with route_boundary, deliberately.
 
     The score is the DIAGONAL term: this segment against ITS OWN label. That is
     what every audit sheet in this project has collected and what the 8B
     verifier was measured on. The CROSS terms -- each segment against the
     other's label -- were only ever needed for the auto-reject conjunction, so
-    dropping that conjunction drops the dependency entirely."""
+    dropping that conjunction drops the dependency entirely.
+
+    AN ACCEPT SHIPS A LABEL UNREVIEWED, which is the same kind of automatic
+    decision a KEEP is. The first version of this function checked only
+    `thr is None`, so a --semantic_thr typed on the command line automated
+    immediately while the boundary side refused the same move -- two different
+    safety rules for two arms doing the same thing."""
     if thr is None:
         return "REVIEW", "no operating point chosen (--semantic_thr not given)"
+    if uncertified:
+        return "REVIEW", f"threshold not certified: {uncertified}"
     if score is None:
         return "REVIEW", "no semantic score for this segment"
     return (("ACCEPT", f"support {score:.3f} >= {thr}") if score >= thr
@@ -323,6 +331,74 @@ def verify_certificate(cert, thr, veto_mode, run_ids, allow_overlap=False):
 
 
 # --------------------------------------------------------------------------
+# the semantic certificate -- and the two levels it must never confuse
+# --------------------------------------------------------------------------
+# A CAPABILITY RESULT IS NOT A DEPLOYMENT CERTIFICATE, and keeping them in one
+# field is how the confusion would happen. Driver A answers "does this scorer
+# order a real YES above a real NO inside one recording" -- a paired,
+# threshold-free question. It says nothing about whether `score >= 0.8` is safe
+# to ship, because a paired ranking can be perfect while every absolute score
+# sits on the wrong side of any fixed cut. The two are separate `kind`s and
+# only one of them may back a --semantic_thr.
+CERT_CAPABILITY = "capability"
+CERT_AUTOMATION = "semantic_automation"
+
+
+def code_fingerprint(paths):
+    """Digest of the code that produced a measurement.
+
+    A certificate that survives an edit to the evaluator is a certificate for
+    a number nothing can reproduce. Cheap to record, and the only thing that
+    catches "we changed how ties are scored" six weeks later."""
+    import hashlib
+    h = hashlib.sha256()
+    for p in sorted(paths):
+        h.update(p.encode() + b"\0")
+        if os.path.exists(p):
+            with open(p, "rb") as f:
+                h.update(f.read())
+    return h.hexdigest()[:16]
+
+
+SEMANTIC_BINDINGS = ("scorer", "window", "gold_fingerprint", "gate_version",
+                     "code_fingerprint")
+
+
+def verify_semantic_certificate(cert, thr, deployment):
+    """Why this --semantic_thr may NOT automate, or None if it may.
+
+    `deployment` carries the same five bindings the certificate does. Each is
+    a way the measured number stops describing the running system: a different
+    scorer, a different window (a 3s sub-window and a full segment are not the
+    same measurement -- G0 already showed a short window can lose the signal),
+    a different gold, a different gate, a different evaluator."""
+    if cert is None:
+        return "no --semantic_certificate supplied"
+    kind = cert.get("kind")
+    if kind == CERT_CAPABILITY:
+        return ("this is a CAPABILITY certificate (driver A pairwise), which "
+                "shows the scorer ranks YES above NO but says nothing about "
+                "any absolute cut; it may not back a threshold")
+    if kind != CERT_AUTOMATION:
+        return f"certificate kind is {kind!r}, expected {CERT_AUTOMATION!r}"
+    for k in SEMANTIC_BINDINGS:
+        want, got = cert.get(k), deployment.get(k)
+        if want is None:
+            return f"certificate does not record {k}"
+        if got is None:
+            return f"deployment does not state {k}; pass it so it can be checked"
+        if str(want) != str(got):
+            return f"{k} differs: certificate {want!r}, deployment {got!r}"
+    passing = [r for r in cert.get("rows", []) if r.get("gate_pass")]
+    if not passing:
+        return "no threshold in the certificate passed the pre-registered gate"
+    if not any(abs(r["threshold"] - thr) < 1e-9 for r in passing):
+        av = ", ".join(f"{r['threshold']:.4f}" for r in passing[:4])
+        return f"{thr} is not a gate-passing threshold (passing: {av})"
+    return None
+
+
+# --------------------------------------------------------------------------
 # io
 # --------------------------------------------------------------------------
 def read_any(path):
@@ -384,6 +460,24 @@ def run(a):
                                  a.allow_overlap)
               if a.boundary_thr is not None else None)
 
+    scert = json.load(open(a.semantic_certificate, encoding="utf-8")) \
+        if a.semantic_certificate else None
+    deployment = {
+        "scorer": a.semantic_model,
+        "window": a.semantic_window,
+        "gold_fingerprint": (scert or {}).get("gold_fingerprint"),
+        "gate_version": (load_gate(a.gate) or {}).get("version")
+        if os.path.exists(a.gate) else None,
+        "code_fingerprint": code_fingerprint([
+            __file__,
+            "src/auditor/semantic/batch4_within_recording.py"]),
+    }
+    # The gold binding is the certificate's own -- the deployment does not
+    # re-derive it, because the run is on NEW segments and has no gold. What
+    # this check enforces is that the certificate RECORDED one.
+    s_uncert = (verify_semantic_certificate(scert, a.semantic_thr, deployment)
+                if a.semantic_thr is not None else None)
+
     out, tab, vetoed = [], Counter(), Counter()
     for s in segs:
         sid = str(s.get("segment_id") or s.get("id") or len(out))
@@ -392,7 +486,7 @@ def run(a):
         veto = structural_veto(preds.get(bid), onto, a.veto)
         b_act, b_why = route_boundary(bscore, a.boundary_thr, veto, uncert)
         sscore = ss.get(sid)
-        s_act, s_why = route_semantic(sscore, a.semantic_thr)
+        s_act, s_why = route_semantic(sscore, a.semantic_thr, s_uncert)
         assert b_act in ACTIONS["boundary"] and s_act in ACTIONS["semantic"]
         tab[(b_act, s_act)] += 1
         if veto:
@@ -442,6 +536,10 @@ def run(a):
         print(f"\n  !! AUTO_KEEP REFUSED for every candidate: {uncert}.\n"
               f"     --boundary_thr {a.boundary_thr} was supplied and did not "
               f"take effect.")
+    if s_uncert:
+        print(f"\n  !! AUTO_ACCEPT REFUSED for every segment: {s_uncert}.\n"
+              f"     --semantic_thr {a.semantic_thr} was supplied and did not "
+              f"take effect.")
     if a.boundary_thr is None or a.semantic_thr is None:
         print(f"\n  !! at least one threshold was not given, so that arm "
               f"automated nothing.\n     Run --calibrate and choose an "
@@ -455,6 +553,10 @@ def run(a):
                    "certificate_fingerprint": (cert or {}).get(
                        "event_fingerprint"),
                    "auto_keep_refused": uncert,
+                   "auto_accept_refused": s_uncert,
+                   "semantic_certificate": a.semantic_certificate,
+                   "semantic_scorer": a.semantic_model,
+                   "semantic_window": a.semantic_window,
                    "overlap_override_used": bool(a.allow_overlap),
                    "actions_available": {k: list(v)
                                          for k, v in ACTIONS.items()},
@@ -524,6 +626,38 @@ def self_test():
             assert act == "REVIEW"
             print(f"  refused ({want}): {got[:66]}")
 
+    # THE SEMANTIC SIDE, symmetric with the boundary side. The first case is
+    # the one that matters most: driver A's pairwise result is a CAPABILITY
+    # answer and must not be usable as a deployment certificate, however good
+    # the number is.
+    print()
+    dep = {"scorer": "reranker-8b", "window": "full_segment",
+           "gold_fingerprint": "g1", "gate_version": 1, "code_fingerprint": "c1"}
+    good = dict(dep, kind=CERT_AUTOMATION,
+                rows=[{"threshold": 0.8, "gate_pass": True}])
+    s_checks = [
+        (None, "no --semantic_certificate supplied"),
+        (dict(good, kind=CERT_CAPABILITY), "CAPABILITY certificate"),
+        (dict(good, window="candidate_6s_half"), "window differs"),
+        (dict(good, scorer="reranker-2b"), "scorer differs"),
+        (dict(good, code_fingerprint="c2"), "code_fingerprint differs"),
+        (dict(good, rows=[{"threshold": 0.8, "gate_pass": False}]),
+         "passed the pre-registered gate"),
+        (good, None),
+    ]
+    for c, want in s_checks:
+        got = verify_semantic_certificate(c, 0.8, dep)
+        if want is None:
+            assert got is None, got
+            act, _ = route_semantic(0.9, 0.8, got)
+            assert act == "ACCEPT"
+            print(f"  semantic certificate ok -> ACCEPT permitted at 0.8")
+        else:
+            assert got and want in got, (want, got)
+            act, _ = route_semantic(0.99, 0.8, got)
+            assert act == "REVIEW"
+            print(f"  semantic refused ({want}): {got[:60]}")
+
     # A gate with unset targets must not pass. It ships that way on purpose.
     g = load_gate()
     passes, why = check_gate({"ci_lo": 1.0, "coverage": 1.0,
@@ -563,7 +697,17 @@ def main():
                     help="--calibrate: write the certificate a --run threshold "
                          "must be backed by")
     ap.add_argument("--certificate",
-                    help="--run: without it no threshold automates anything")
+                    help="--run: without it no boundary threshold automates")
+    ap.add_argument("--semantic_certificate",
+                    help="--run: without it no --semantic_thr automates. A "
+                         "driver-A CAPABILITY certificate is refused here on "
+                         "purpose -- it is a different question.")
+    ap.add_argument("--semantic_model",
+                    help="--run: scorer identity, checked against the "
+                         "certificate")
+    ap.add_argument("--semantic_window",
+                    help="--run: window configuration (e.g. candidate_6s_half "
+                         "or full_segment), checked against the certificate")
     ap.add_argument("--allow_overlap", action="store_true",
                     help="permit applying a threshold to the events it was "
                          "chosen on. Recorded in the output when used.")
