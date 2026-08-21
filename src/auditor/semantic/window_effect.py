@@ -57,6 +57,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import glob
 import json
 import os
 import re
@@ -81,6 +82,15 @@ def duration(video):
 
 def emit(a):
     ev = json.load(open(a.events, encoding="utf-8"))
+    if a.media_root:
+        for d in ev.values():
+            hit = glob.glob(os.path.join(a.media_root, "**",
+                                         os.path.basename(d["video"])),
+                            recursive=True)
+            if not hit:
+                raise SystemExit(f"{os.path.basename(d['video'])} not under "
+                                 f"{a.media_root}")
+            d["video"] = hit[0]
     obs, skip = [], 0
     for eid, d in sorted(ev.items()):
         dur = duration(d["video"])
@@ -304,7 +314,11 @@ def main():
                     help="simulate this design's false positive rate before "
                          "any GPU is spent")
     ap.add_argument("--n_sim", type=int, default=200)
-    ap.add_argument("--events")
+    ap.add_argument("--events",
+                    default="data/gold/window_effect_events_35.json")
+    ap.add_argument("--media_root",
+                    help="rewrite each event's video path to this directory, "
+                         "for running where the media was copied to")
     ap.add_argument("--observations")
     ap.add_argument("--scores")
     ap.add_argument("--model")

@@ -1,0 +1,177 @@
+{
+ "recording_000022_missed_weak_signal_t466.8": {
+  "support": "yes",
+  "label": "Scrub interior / Rinse / Place washed mug",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000022_missed_weak_signal_t466.8_span.mp4"
+ },
+ "recording_000030_false_gap_t556.0": {
+  "support": "yes",
+  "label": "Repeated 'Reposition water bottle on table'",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000030_false_gap_t556.0_span.mp4"
+ },
+ "recording_000037_early_t156.0": {
+  "support": "yes",
+  "label": "Scrub mug interior / Rinse mug / Rinse mug",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000037_early_t156.0_span.mp4"
+ },
+ "recording_000061_exact_t590.0": {
+  "support": "no",
+  "label": "Bottle manipulation / Bottle manipulation / Place tissue pack",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000061_exact_t590.0_span.mp4"
+ },
+ "recording_000102_duplicate_t164.5": {
+  "support": "no",
+  "label": "Fold and crease sheet edge x3",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000102_duplicate_t164.5_span.mp4"
+ },
+ "recording_000102_false_mid_segment_t484.0": {
+  "support": "no",
+  "label": "Fold and unfold tissue x3",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000102_false_mid_segment_t484.0_span.mp4"
+ },
+ "recording_000102_missed_weak_signal_t95.0": {
+  "support": "no",
+  "label": "Fold and unfold paper sheet x3",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000102_missed_weak_signal_t95.0_span.mp4"
+ },
+ "recording_000110_false_near_edge_t504.0": {
+  "support": "yes",
+  "label": "Fine-grained wipe regions / hand rinsing / second squeegee session",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000110_false_near_edge_t504.0_span.mp4"
+ },
+ "recording_000134_false_near_edge_t562.5": {
+  "support": "yes",
+  "label": "Fold one tissue sheet and stack it x3",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000134_false_near_edge_t562.5_span.mp4"
+ },
+ "recording_000176_false_mid_segment_t90.5": {
+  "support": "yes",
+  "label": "Remove strainer / Rinse / Install strainer",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000176_false_mid_segment_t90.5_span.mp4"
+ },
+ "recording_000181_late_t73.5": {
+  "support": "yes",
+  "label": "Clean strainer / Rinse and reseat / Rinse and reseat",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000181_late_t73.5_span.mp4"
+ },
+ "recording_000181_late_t233.0": {
+  "support": "yes",
+  "label": "Clean sink drain strainer x3",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000181_late_t233.0_span.mp4"
+ },
+ "recording_000188_false_gap_t456.0": {
+  "support": "no",
+  "label": "Unbox/inspect first charger; inspect first charger; repack first box",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000188_false_gap_t456.0_span.mp4"
+ },
+ "recording_000213_duplicate_t230.5": {
+  "support": "yes",
+  "label": "Rinse and seat sink strainer x4",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000213_duplicate_t230.5_span.mp4"
+ },
+ "recording_000220_early_t137.8": {
+  "support": "yes",
+  "label": "Slipper pair flip cycle x2",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000220_early_t137.8_span.mp4"
+ },
+ "recording_000220_missed_weak_signal_t289.5": {
+  "support": "no",
+  "label": "Display upper side / footbed / upper / footbed",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000220_missed_weak_signal_t289.5_span.mp4"
+ },
+ "recording_000230_false_mid_segment_t404.5": {
+  "support": "yes",
+  "label": "Unbox USB / Disassemble-store box / Retrieve-reassemble / Repack USB",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000230_false_mid_segment_t404.5_span.mp4"
+ },
+ "recording_000230_missed_signal_present_not_top_t397.0": {
+  "support": "yes",
+  "label": "Unbox USB / Disassemble-store box / Retrieve-reassemble",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000230_missed_signal_present_not_top_t397.0_span.mp4"
+ },
+ "recording_000250_exact_t629.5": {
+  "support": "yes",
+  "label": "Seal bottom / Place keychain / Seal top",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000250_exact_t629.5_span.mp4"
+ },
+ "recording_000272_false_mid_segment_t618.5": {
+  "support": "yes",
+  "label": "Remove tape / Store box in bag / Retrieve box",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000272_false_mid_segment_t618.5_span.mp4"
+ },
+ "recording_000282_exact_t544.5": {
+  "support": "yes",
+  "label": "Reassemble for sealing / Flip-open flaps / Place USB",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000282_exact_t544.5_span.mp4"
+ },
+ "recording_000327_false_near_edge_t386.5": {
+  "support": "yes",
+  "label": "Pour liquid / Apply-spread / Apply-spread",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000327_false_near_edge_t386.5_span.mp4"
+ },
+ "recording_000343_false_mid_segment_t547.0": {
+  "support": "yes",
+  "label": "Apply liquid with brush and bottle x2 / application cycle",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000343_false_mid_segment_t547.0_span.mp4"
+ },
+ "recording_000343_false_near_edge_t222.5": {
+  "support": "yes",
+  "label": "Apply liquid to pan with brush x3",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000343_false_near_edge_t222.5_span.mp4"
+ },
+ "recording_000388_false_mid_segment_t67.5": {
+  "support": "yes",
+  "label": "Cover bowl / Remove and discard wrap",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000388_false_mid_segment_t67.5_span.mp4"
+ },
+ "recording_000388_missed_signal_present_not_top_t601.8": {
+  "support": "yes",
+  "label": "Unroll/apply wrap / Secure wrap / downstream label as stored",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000388_missed_signal_present_not_top_t601.8_span.mp4"
+ },
+ "recording_000391_false_near_edge_t242.5": {
+  "support": "yes",
+  "label": "Fold/place cable / Uncoil cable / Recoil cable",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000391_false_near_edge_t242.5_span.mp4"
+ },
+ "recording_000406_exact_t490.3": {
+  "support": "yes",
+  "label": "Handle roll / Position wrap / Secure rim",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000406_exact_t490.3_span.mp4"
+ },
+ "recording_000406_false_mid_segment_t29.5": {
+  "support": "yes",
+  "label": "Prepare roll / Drape wrap / Seal rim",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000406_false_mid_segment_t29.5_span.mp4"
+ },
+ "recording_000406_missed_weak_signal_t556.6": {
+  "support": "yes",
+  "label": "Secure rim / Pick up roll / Unroll sheet",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000406_missed_weak_signal_t556.6_span.mp4"
+ },
+ "recording_000419_missed_weak_signal_t688.9": {
+  "support": "yes",
+  "label": "Wrap bowl / Crumple discarded wrap / Discard in bin",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000419_missed_weak_signal_t688.9_span.mp4"
+ },
+ "recording_000422_false_mid_segment_t381.0": {
+  "support": "yes",
+  "label": "Unroll/lay wrap / Adjust bowl-wrap / Seal rim",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000422_false_mid_segment_t381.0_span.mp4"
+ },
+ "recording_000438_false_mid_segment_t224.0": {
+  "support": "yes",
+  "label": "Retrieve roll / Unroll-tear sheet / Secure wrap",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000438_false_mid_segment_t224.0_span.mp4"
+ },
+ "recording_000465_false_gap_t247.0": {
+  "support": "yes",
+  "label": "Store charging cable / Test cable with phone",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000465_false_gap_t247.0_span.mp4"
+ },
+ "recording_000471_missed_weak_signal_t485.4": {
+  "support": "yes",
+  "label": "Wipe lid/top / upper body / lower body/handle",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000471_missed_weak_signal_t485.4_span.mp4"
+ }
+}
