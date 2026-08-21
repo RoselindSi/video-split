@@ -1,0 +1,147 @@
+{
+ "recording_000388_false_mid_segment_t124.5": {
+  "support": "yes",
+  "label": "Unroll plastic wrap from roll",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_enrichment_media/recording_000388_false_mid_segment_t124.5_span.mp4"
+ },
+ "recording_000220_false_mid_segment_t153.0": {
+  "support": "yes",
+  "label": "Slipper pair flip cycle",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_enrichment_media/recording_000220_false_mid_segment_t153.0_span.mp4"
+ },
+ "recording_000419_false_mid_segment_t618.0": {
+  "support": "yes",
+  "label": "Apply new plastic wrap to bowl",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_enrichment_media/recording_000419_false_mid_segment_t618.0_span.mp4"
+ },
+ "recording_000343_false_mid_segment_t400.5": {
+  "support": "yes",
+  "label": "Apply liquid coating to pan with brush",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_enrichment_media/recording_000343_false_mid_segment_t400.5_span.mp4"
+ },
+ "recording_000272_false_mid_segment_t320.0": {
+  "support": "yes",
+  "label": "Flatten empty box and stow in plastic bag",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_enrichment_media/recording_000272_false_mid_segment_t320.0_span.mp4"
+ },
+ "recording_000102_false_mid_segment_t439.0": {
+  "support": "no",
+  "label": "fold and unfold tissue",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_enrichment_media/recording_000102_false_mid_segment_t439.0_span.mp4"
+ },
+ "recording_000419_false_mid_segment_t605.5": {
+  "support": "yes",
+  "label": "Apply new plastic wrap to bowl",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_enrichment_media/recording_000419_false_mid_segment_t605.5_span.mp4"
+ },
+ "recording_000343_false_mid_segment_t274.5": {
+  "support": "yes",
+  "label": "Coat pan with liquid using spatula",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_enrichment_media/recording_000343_false_mid_segment_t274.5_span.mp4"
+ },
+ "recording_000150_duplicate_t234.5": {
+  "support": "yes",
+  "label": "Flip black rectangular object to opposite side",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_enrichment_media/recording_000150_duplicate_t234.5_span.mp4"
+ },
+ "recording_000102_duplicate_t471.5": {
+  "support": "no",
+  "label": "fold and unfold tissue",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_enrichment_media/recording_000102_duplicate_t471.5_span.mp4"
+ },
+ "recording_000385_false_mid_segment_t209.0": {
+  "support": "yes",
+  "label": "Fold and seal plastic wrap around the bowl rim",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_enrichment_media/recording_000385_false_mid_segment_t209.0_span.mp4"
+ },
+ "recording_000465_false_mid_segment_t166.5": {
+  "support": "yes",
+  "label": "Store charging cable in drawer",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_enrichment_media/recording_000465_false_mid_segment_t166.5_span.mp4"
+ },
+ "recording_000086_duplicate_t530.5": {
+  "support": "no",
+  "label": "Fold a disposable mask",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_enrichment_media/recording_000086_duplicate_t530.5_span.mp4"
+ },
+ "recording_000343_false_mid_segment_t547.0": {
+  "support": "yes",
+  "label": "Pan liquid application cycle",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000343_false_mid_segment_t547.0_span.mp4"
+ },
+ "recording_000230_false_mid_segment_t404.5": {
+  "support": "yes",
+  "label": "Retrieve and reassemble cardboard box",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000230_false_mid_segment_t404.5_span.mp4"
+ },
+ "recording_000422_false_mid_segment_t381.0": {
+  "support": "yes",
+  "label": "Adjusting bowl and plastic wrap position",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000422_false_mid_segment_t381.0_span.mp4"
+ },
+ "recording_000272_false_mid_segment_t618.5": {
+  "support": "yes",
+  "label": "Store cardboard box in plastic bag",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000272_false_mid_segment_t618.5_span.mp4"
+ },
+ "recording_000327_false_near_edge_t386.5": {
+  "support": "yes",
+  "label": "Apply liquid to pan and spread with brush",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000327_false_near_edge_t386.5_span.mp4"
+ },
+ "recording_000110_false_near_edge_t504.0": {
+  "support": "yes",
+  "label": "Hand rinsing under faucet",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000110_false_near_edge_t504.0_span.mp4"
+ },
+ "recording_000102_false_mid_segment_t484.0": {
+  "support": "no",
+  "label": "fold and unfold tissue",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000102_false_mid_segment_t484.0_span.mp4"
+ },
+ "recording_000176_false_mid_segment_t90.5": {
+  "support": "yes",
+  "label": "Install sink strainer",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000176_false_mid_segment_t90.5_span.mp4"
+ },
+ "recording_000343_false_near_edge_t222.5": {
+  "support": "yes",
+  "label": "Apply liquid to pan with brush",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000343_false_near_edge_t222.5_span.mp4"
+ },
+ "recording_000406_false_mid_segment_t29.5": {
+  "support": "yes",
+  "label": "Drape plastic wrap over the bowl",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000406_false_mid_segment_t29.5_span.mp4"
+ },
+ "recording_000391_false_near_edge_t242.5": {
+  "support": "yes",
+  "label": "Uncoil USB cable",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000391_false_near_edge_t242.5_span.mp4"
+ },
+ "recording_000134_false_near_edge_t562.5": {
+  "support": "yes",
+  "label": "Fold one tissue sheet and stack it",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000134_false_near_edge_t562.5_span.mp4"
+ },
+ "recording_000388_false_mid_segment_t67.5": {
+  "support": "yes",
+  "label": "Cover bowl with plastic wrap",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000388_false_mid_segment_t67.5_span.mp4"
+ },
+ "recording_000213_duplicate_t230.5": {
+  "support": "yes",
+  "label": "Rinse and seat sink strainer",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000213_duplicate_t230.5_span.mp4"
+ },
+ "recording_000102_duplicate_t164.5": {
+  "support": "no",
+  "label": "Fold and crease sheet edge",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000102_duplicate_t164.5_span.mp4"
+ },
+ "recording_000438_false_mid_segment_t224.0": {
+  "support": "yes",
+  "label": "Secure plastic wrap around bowl",
+  "video": "/Users/roselindsi/Downloads/tr1_audits/semantic_ontology_media/recording_000438_false_mid_segment_t224.0_span.mp4"
+ }
+}
