@@ -155,3 +155,62 @@ label side     positional -- prev_segment_label = left, next_segment_label =
                across C==P, C==N and both.
 scorer         Qwen3-VL-Reranker-8B, 32 frames
 ```
+
+---
+
+# 7. VERDICT — 2026-08-21, after the run
+
+```
+WITHIN-RECORDING PAIRED ACCURACY   0.641  [0.550, 0.726]
+449 observations | 361 pairs | 31 recordings
+global (all pairs, CONFOUNDED)     0.562
+```
+
+**The capability gate is NOT met.** The exact lower bound is 0.549858, and it
+is not a razor edge: eight further bootstrap seeds put it at 0.541, 0.545,
+0.546, 0.542, 0.544, 0.538, 0.542, 0.540. The shipped seed produced the
+**highest** of the nine. Every one is below 0.55.
+
+**The signal is real.** The interval excludes 0.50 at every seed, so the scorer
+does order a real YES above a real NO inside a recording. It is not strong
+enough for the bar this document set for beginning threshold calibration.
+
+## The gap in §3, recorded rather than smoothed over
+
+The three branches do not tile the space. This result cleared neither "lower
+bound above 0.55" nor "interval contains 0.50", and §3 named no case for it.
+
+The consequence is forced regardless, and that is why the gap does not become a
+judgement call. The PRIMARY GATE was stated as a single inequality — lower
+bound `> 0.55` — and it was not met. Everything that is not a pass takes the
+conservative action:
+
+```
+NO semantic automation certificate may be issued on 3s sub-window data
+The full-segment run is REQUIRED before any semantic automation claim
+```
+
+Which is branch 2's action, reached through the gate rather than through
+branch 2's condition.
+
+**0.55 was not changed, before or after seeing this.** A gate moved to admit
+the number that just missed it is not a gate.
+
+## What this does NOT say
+
+It does not say the scorer cannot do this. This is the sub-window variant — 3s
+halves of a 6s clip — and G0 already showed a short window can lose a signal
+that is present, with the wrong sign. 0.641 is a **lower bound on what the
+representation can do**, measured under a handicap of known direction.
+
+## What ships anyway
+
+Ordering. `review_lift()` measures what the score is worth to a person working
+a queue, and ordering skips nothing, so it needs no threshold and no
+certificate. The boundary arm gives 1.25x — the worst-scoring half meets 62% of
+the errors rather than 50%.
+
+Ordering only pays if the reviewer stops early, and stopping early is skipping.
+The distinction is who decides: a model saying "this one is fine" is automation
+and needs a certificate; a person saying "I have two hours" is spending a
+budget, with the residual risk explicit and owned.
