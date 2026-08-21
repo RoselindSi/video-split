@@ -44,6 +44,7 @@ import csv
 import glob
 import json
 import os
+import time
 import re
 import subprocess
 from collections import Counter, defaultdict
@@ -346,6 +347,7 @@ def score(a):
     # keeps its 400. Truncating here is what makes --resume a lie.
     fout = open(a.out, "a" if (a.resume and done) else "w", encoding="utf-8")
     out = []
+    t0 = time.time()
     for i, o in enumerate(obs):
         if not o.get("video"):
             print(f"  !! {o['obs_id']} has no video; skipped")
@@ -372,8 +374,19 @@ def score(a):
         fout.flush()
         for q in frames:
             os.remove(q)
-        if (i + 1) % 25 == 0:
-            print(f"    {i + 1}/{len(obs)} scored", flush=True)
+        # PROGRESS WITH A RATE, not just a count. This run is ~225 forward
+        # passes per shard and the only question a watcher has is whether to
+        # wait or to come back later; a bare counter cannot answer it. The
+        # first item prints on its own so a stall before any output is
+        # distinguishable from a slow start.
+        n_done = i + 1
+        if n_done == 1 or n_done % 25 == 0 or n_done == len(obs):
+            el = time.time() - t0
+            rate = el / n_done
+            left = rate * (len(obs) - n_done)
+            print(f"    {n_done}/{len(obs)} scored  "
+                  f"{rate:.1f}s/obs  elapsed {el / 60:.1f}m  "
+                  f"eta {left / 60:.1f}m", flush=True)
 
     fout.close()
     import src.auditor.semantic.cosine_baseline as _cb
