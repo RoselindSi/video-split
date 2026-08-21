@@ -109,15 +109,56 @@ def embed(model, video_inputs, texts, prompt=None, meta=None):
             np.asarray(model.encode(texts, **kw)))
 
 
+EXTRACTOR = None   # set by write_frames; recorded so a run says how it decoded
+
+
+def _frames_ffmpeg(video, times, out_dir, uid):
+    """One accurate seek per timestamp. Slower than decord, always available.
+
+    `-ss` BEFORE `-i` so the seek is not decoded from the start of the file --
+    on a ten-minute recording the difference is seconds versus minutes per
+    frame. Modern ffmpeg makes that seek accurate rather than
+    snapping to the previous keyframe, which would silently move a frame by up
+    to the GOP length and put it in the neighbouring segment."""
+    import subprocess
+    paths = []
+    for i, t in enumerate(times):
+        p = os.path.join(out_dir, f"{uid}_{i:02d}.jpg")
+        r = subprocess.run(
+            ["ffmpeg", "-nostdin", "-loglevel", "error", "-accurate_seek",
+             "-ss", f"{max(0.0, float(t)):.3f}", "-i", video,
+             "-frames:v", "1", "-q:v", "2", "-y", p],
+            capture_output=True)
+        if not os.path.exists(p):
+            raise RuntimeError(
+                f"ffmpeg produced no frame at {t:.3f}s of {video}: "
+                f"{r.stderr.decode()[:200]}")
+        paths.append(p)
+    return paths
+
+
 def write_frames(video, times, out_dir, uid):
     """Segment frames as JPEGs, because the video input is a list of frames.
 
     qwen-vl-utils accepts a video as a list of frame paths, which is what lets
     an arbitrary [start, end] window be encoded at all -- handing it the whole
     file would encode the recording, not the segment, and the segment is the
-    unit the audit judged."""
-    from decord import VideoReader
+    unit the audit judged.
+
+    DECORD FIRST, FFMPEG AS THE FALLBACK, and the order is not a preference.
+    Every earlier number in this project was produced through decord, so
+    keeping it first is what keeps those runs reproducible where it installs.
+    It has no wheel for Python 3.12, which is where the fallback earns its
+    place. The two do not necessarily pick byte-identical frames, so the
+    extractor actually used is recorded rather than assumed."""
+    global EXTRACTOR
     from PIL import Image
+    try:
+        from decord import VideoReader
+    except ImportError:
+        EXTRACTOR = "ffmpeg"
+        return _frames_ffmpeg(video, times, out_dir, uid)
+    EXTRACTOR = "decord"
     vr = VideoReader(video)
     fps = vr.get_avg_fps()
     idx = [max(0, min(len(vr) - 1, int(t * fps))) for t in times]

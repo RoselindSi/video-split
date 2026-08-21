@@ -470,7 +470,8 @@ def run(a):
         if os.path.exists(a.gate) else None,
         "code_fingerprint": code_fingerprint([
             __file__,
-            "src/auditor/semantic/batch4_within_recording.py"]),
+            "src/auditor/semantic/batch4_within_recording.py",
+            "src/auditor/semantic/cosine_baseline.py"]),
     }
     # The gold binding is the certificate's own -- the deployment does not
     # re-derive it, because the run is on NEW segments and has no gold. What

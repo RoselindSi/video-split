@@ -360,7 +360,13 @@ def score(a):
                 "frames_indices": np.arange(nf)}
         s = score_batch(model, proc, "sentence_transformers", frames,
                         [o["label"]], a.total_pixels, None, meta)[0]
-        rec = {"obs_id": o["obs_id"], "score": float(s)}
+        # The extractor is part of the provenance, not a detail: decord and
+        # ffmpeg do not necessarily land on the same frame, and a certificate
+        # that does not record which one decoded the video certifies a number
+        # the next environment may not reproduce.
+        import src.auditor.semantic.cosine_baseline as _cb
+        rec = {"obs_id": o["obs_id"], "score": float(s),
+               "frame_extractor": _cb.EXTRACTOR}
         out.append(rec)
         fout.write(json.dumps(rec) + "\n")
         fout.flush()
@@ -370,6 +376,8 @@ def score(a):
             print(f"    {i + 1}/{len(obs)} scored", flush=True)
 
     fout.close()
+    import src.auditor.semantic.cosine_baseline as _cb
+    print(f"  frames decoded by: {_cb.EXTRACTOR}")
     print(f"\nwrote {len(out)} scores -> {a.out}"
           + (f"  (+{len(done)} kept from a previous run)" if done else ""))
     if a.shard:
