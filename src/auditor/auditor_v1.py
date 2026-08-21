@@ -460,9 +460,11 @@ def read_any(path):
 
 SCORE_FALLBACKS = ("score", "prob", "probability", "confidence", "support",
                    "morphology")
+BOUNDARY_FIELD_DEFAULT = "morphology"
+SEMANTIC_FIELD_DEFAULT = "support"
 
 
-def index_scores(rows, key_fields, score_field, what=""):
+def index_scores(rows, key_fields, score_field, what="", explicit=False):
     """Join scores onto candidates, and REFUSE to do it silently badly.
 
     A FAIL-CLOSED SYSTEM MAKES BROKEN PLUMBING LOOK LIKE CORRECT CAUTION. With
@@ -502,9 +504,116 @@ def index_scores(rows, key_fields, score_field, what=""):
             f"what a correctly cautious auditor looks\n  like, so a broken "
             f"join would ship looking right.")
     if used and used != score_field:
-        print(f"  {what}: {score_field!r} not present; read {used!r} instead "
-              f"({len(out)} scored)")
+        # AN EXPLICIT ARGUMENT THAT DOES NOT MATCH IS A TYPO, NOT A DEFAULT TO
+        # BE RESCUED. The fallback list exists so the DEFAULT works across the
+        # score files this repo produces; silently substituting a different
+        # field than the caller named would hide `--boundary_field scoer` and
+        # report a clean run.
+        if explicit:
+            keys = sorted({k for r in rows[:20] for k in r})
+            raise SystemExit(
+                f"{what}: you asked for {score_field!r} and no row has it.\n"
+                f"  fields present: {keys}\n"
+                f"  ({used!r} would have worked, but substituting a field you "
+                f"did not name is\n  how a typo ships as a clean run. Pass it "
+                f"explicitly if that is what you meant.)")
+        print(f"  {what}: default {score_field!r} not present; read {used!r} "
+              f"instead ({len(out)} scored)")
     return out
+
+
+def audit_output(out, a, cert, scert, n_bs_rows, n_ss_rows):
+    """Every invariant the end-to-end path must hold, checked out loud.
+
+    THE FAILURE THIS EXISTS FOR looks exactly like success. A fail-closed
+    auditor routes everything to REVIEW when it is working carefully AND when
+    its score join is broken, so the safe-looking output is the one that hides
+    a wiring error. The `--boundary_field` default not matching a real scores
+    file produced 1496 silent Nones and a report that read as correct caution.
+
+    Returns a list of problems. `--regression` turns any of them into a
+    non-zero exit, because a check that prints and continues is a check that
+    ships broken wiring."""
+    n = len(out)
+    bs_ok = sum(1 for o in out if o["boundary_score"] is not None)
+    ss_ok = sum(1 for o in out if o["semantic_score"] is not None)
+    rev = sum(1 for o in out if o["boundary_audit"] == "REVIEW"
+              or o["semantic_audit"] == "REVIEW")
+    miss = sum(1 for o in out if o["boundary_score"] is None
+               and o["semantic_score"] is None)
+    prob = []
+
+    print(f"\n{'=' * 66}\nEND-TO-END CHECK\n{'=' * 66}")
+    print(f"  segments                        {n}")
+    print(f"  boundary scores joined          {bs_ok}/{n}"
+          + (f"   (file had {n_bs_rows} rows)" if a.boundary_scores
+             else "   (no --boundary_scores given)"))
+    print(f"  semantic scores joined          {ss_ok}/{n}"
+          + (f"   (file had {n_ss_rows} rows)" if a.semantic_scores
+             else "   (no --semantic_scores given)"))
+    print(f"  routed to REVIEW                {rev}/{n}")
+    print(f"  no score on either arm          {miss}/{n}")
+    print(f"  boundary certificate            "
+          f"{'none' if cert is None else cert.get('event_fingerprint', '?')}"
+          f"{'  (independent: false)' if cert and cert.get('independent') is False else ''}")
+    print(f"  semantic certificate            "
+          f"{'none' if scert is None else scert.get('kind', '?')}")
+
+    # 1. every action is in the declared set, and no reject exists anywhere
+    bad = [o for o in out if o["boundary_audit"] not in ACTIONS["boundary"]
+           or o["semantic_audit"] not in ACTIONS["semantic"]]
+    if bad:
+        prob.append(f"{len(bad)} segments carry an action outside ACTIONS")
+
+    # 2. a scores file that joined onto nothing is a wiring error, not caution
+    if a.boundary_scores and bs_ok == 0:
+        prob.append("--boundary_scores given and joined onto 0 segments")
+    if a.semantic_scores and ss_ok == 0:
+        prob.append("--semantic_scores given and joined onto 0 segments")
+
+    # 3. review_priority is a permutation of 1..k over exactly the REVIEW set
+    q = [o for o in out if o.get("review_priority") is not None]
+    if len(q) != rev:
+        prob.append(f"review_priority on {len(q)} items but {rev} need review")
+    ranks = sorted(o["review_priority"] for o in q)
+    if ranks != list(range(1, len(q) + 1)):
+        prob.append("review_priority is not a permutation of 1..k "
+                    "(gaps or duplicates)")
+
+    # 4. and it is ordered: unscored first, then ascending score
+    def key(o):
+        return (0, 0.0) if o["boundary_score"] is None \
+            else (1, o["boundary_score"])
+    seq = [key(o) for o in sorted(q, key=lambda o: o["review_priority"])]
+    if seq != sorted(seq):
+        prob.append("review_priority is not worst-score-first")
+    lead = [o for o in sorted(q, key=lambda o: o["review_priority"])
+            if o["boundary_score"] is None]
+    if lead and max(o["review_priority"] for o in lead) != len(lead):
+        prob.append("unscored items do not lead the queue")
+
+    # 5. a threshold that was supplied and did not take effect must say so
+    for thr, refused, name in ((a.boundary_thr, a.__dict__.get("_uncert"),
+                                "--boundary_thr"),
+                               (a.semantic_thr, a.__dict__.get("_s_uncert"),
+                                "--semantic_thr")):
+        if thr is not None and refused:
+            print(f"  {name} {thr} REFUSED: {str(refused)[:44]}")
+
+    print(f"\n  top of the review queue:")
+    for o in sorted(q, key=lambda o: o["review_priority"])[:3]:
+        sc = o["boundary_score"]
+        shown = "none" if sc is None else f"{sc:.3f}"
+        print(f"    #{o['review_priority']:<5} score={shown:<6} "
+              f"{o['segment_id']}  {o['boundary_reason'][:40]}")
+
+    if prob:
+        print(f"\n  {len(prob)} PROBLEM(S):")
+        for p in prob:
+            print(f"    !! {p}")
+    else:
+        print(f"\n  all invariants hold.")
+    return prob
 
 
 # --------------------------------------------------------------------------
@@ -515,12 +624,18 @@ def run(a):
         onto = load_ontology(a.ontology)
 
     segs = read_any(a.recseg)
+    n_bs_rows = len(read_any(a.boundary_scores)) if a.boundary_scores else 0
+    n_ss_rows = len(read_any(a.semantic_scores)) if a.semantic_scores else 0
     bs = index_scores(read_any(a.boundary_scores),
                       ("event_id", "candidate_id", "id"), a.boundary_field,
-                      "--boundary_scores") if a.boundary_scores else {}
+                      "--boundary_scores",
+                      a.boundary_field != BOUNDARY_FIELD_DEFAULT) \
+        if a.boundary_scores else {}
     ss = index_scores(read_any(a.semantic_scores),
                       ("segment_id", "event_id", "id"), a.semantic_field,
-                      "--semantic_scores") if a.semantic_scores else {}
+                      "--semantic_scores",
+                      a.semantic_field != SEMANTIC_FIELD_DEFAULT) \
+        if a.semantic_scores else {}
     preds = {str(r.get("event_id") or r.get("id")): r
              for r in read_any(a.boundary_scores)} if a.boundary_scores else {}
 
@@ -554,6 +669,7 @@ def run(a):
     # this check enforces is that the certificate RECORDED one.
     s_uncert = (verify_semantic_certificate(scert, a.semantic_thr, deployment)
                 if a.semantic_thr is not None else None)
+    a._uncert, a._s_uncert = uncert, s_uncert
 
     out, tab, vetoed = [], Counter(), Counter()
     for s in segs:
@@ -657,6 +773,8 @@ def run(a):
         print(f"\n  !! at least one threshold was not given, so that arm "
               f"automated nothing.\n     Run --calibrate and choose an "
               f"operating point from its lower bounds.")
+    problems = audit_output(out, a, cert, scert, n_bs_rows, n_ss_rows)
+
     if a.out:
         json.dump({"auditor_version": "v1", "tolerance_s": TOLERANCE_S,
                    "boundary_thr": a.boundary_thr,
@@ -673,7 +791,7 @@ def run(a):
                    "overlap_override_used": bool(a.allow_overlap),
                    "actions_available": {k: list(v)
                                          for k, v in ACTIONS.items()},
-                   "segments": out},
+                   "problems": problems, "segments": out},
                   open(a.out, "w", encoding="utf-8"),
                   ensure_ascii=False, indent=1)
         print(f"\nwrote {a.out}")
@@ -797,8 +915,8 @@ def main():
     ap.add_argument("--scores")
     ap.add_argument("--boundary_scores")
     ap.add_argument("--semantic_scores")
-    ap.add_argument("--boundary_field", default="morphology")
-    ap.add_argument("--semantic_field", default="support")
+    ap.add_argument("--boundary_field", default=BOUNDARY_FIELD_DEFAULT)
+    ap.add_argument("--semantic_field", default=SEMANTIC_FIELD_DEFAULT)
     ap.add_argument("--truth_field", default="is_boundary")
     ap.add_argument("--boundary_thr", type=float, default=None,
                     help="NO DEFAULT. Without it every candidate is REVIEW.")
@@ -821,6 +939,10 @@ def main():
     ap.add_argument("--semantic_window",
                     help="--run: window configuration (e.g. candidate_6s_half "
                          "or full_segment), checked against the certificate")
+    ap.add_argument("--regression", action="store_true",
+                    help="kept for symmetry; the invariant checks always run "
+                         "and always exit non-zero, because a check that can "
+                         "be switched off is one that will be")
     ap.add_argument("--allow_overlap", action="store_true",
                     help="permit applying a threshold to the events it was "
                          "chosen on. Recorded in the output when used.")
