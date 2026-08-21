@@ -41,8 +41,11 @@ from __future__ import annotations
 
 import argparse
 import csv
+import glob
 import json
 import os
+import re
+import subprocess
 from collections import Counter, defaultdict
 
 import numpy as np
@@ -55,6 +58,127 @@ TOL = 1.0   # project tolerance from 2026-08-19; see memory tolerance-is-1s
 
 def rid_full(x):
     return f"recording_{int(x):06d}"
+
+
+def emit_local(a):
+    """The same observations from the 6-second audit clips, no recseg.
+
+    WHY THIS EXISTS. The machine holding recseg and the full recordings is
+    gone, and the cloud replacement carries someone else's raw databags. What
+    survived is 240 six-second clips on a laptop -- the ones the human auditors
+    were shown -- and the gold that was written from them.
+
+    IT IS NOT THE SAME MEASUREMENT AND THE OUTPUT SAYS SO. The designed
+    observation is a FULL annotated segment against its label, often twenty
+    seconds or more. Here each side is the ~3 seconds adjacent to the
+    candidate. Every record carries `window: candidate_6s` so a later reader
+    cannot mistake one number for the other.
+
+    AND THE SUB-WINDOW CONFIGURATION HAS ALREADY FAILED ONCE. G0, the
+    sub-window gate, asked whether a short window around the evidence carries
+    the signal, and it came back with the wrong sign. So the result here is
+    ASYMMETRIC and that is the whole reason it is still worth running:
+
+        above chance   real, and a LOWER bound -- full segments hold strictly
+                       more evidence, so the designed measurement can only be
+                       better
+        near chance    says nothing. The model may be unable to do this, or
+                       three seconds may simply be too little, and this design
+                       cannot separate those
+
+    LEFT AND RIGHT COME FROM prev/next, NEVER FROM containing. batch3_sample
+    defines prev as the last segment ENDING at or before t and next as the
+    first STARTING at or after t, so both are well defined. `containing` is
+    whichever segment satisfies s[1] <= t <= s[2] first, and at a junction both
+    neighbours do -- which is why it equals prev on 65 gt_boundary rows and
+    next on 20 of them. A field whose value depends on iteration order is not
+    evidence."""
+    rows = [r for r in csv.DictReader(open(a.audit, newline="",
+                                           encoding="utf-8-sig"))
+            if (r.get("candidate_key") or "").strip()]
+    blind = {}
+    for r in csv.DictReader(open(a.blind_csv, newline="",
+                                 encoding="utf-8-sig")):
+        rid = str(int(str(r["recording_id"]).replace("recording_", "")))
+        blind[(rid, float(r["t"]))] = r
+    clips = {}
+    for p in glob.glob(os.path.join(a.local_clips, "*.mp4")):
+        m = re.search(r"recording_0*(\d+)_.*_t([\d.]+)\.mp4$",
+                      os.path.basename(p))
+        if m:
+            clips[(m.group(1), float(m.group(2)))] = p
+    print(f"{len(rows)} candidates | {len(blind)} blind rows | "
+          f"{len(clips)} local clips")
+
+    # WHICH LABEL EACH SIDE WAS JUDGED AGAINST is not recoverable from any file
+    # in this repo -- the batch4 sheet was filled outside it -- so it is an
+    # explicit argument with no default rather than a guess baked into the
+    # emitted gold.
+    side_cols = {"prev_next": ("prev_segment_label", "next_segment_label"),
+                 "containing": ("containing_segment_label",
+                                "containing_segment_label")}[a.label_side]
+
+    obs, skip = [], Counter()
+    for r in rows:
+        key = (str(int(r["recording_id"])), float(r["candidate_time_s"]))
+        x, clip = blind.get(key), clips.get(key)
+        if not x:
+            skip["no blind-review row"] += 1
+            continue
+        if not clip:
+            skip["no local clip"] += 1
+            continue
+        dur = clip_duration(clip)
+        mid = dur / 2.0          # the clip is centred on the candidate
+        for side, col, lcol, s, e in (
+                ("L", "left_segment_naming_support", side_cols[0], 0.0, mid),
+                ("R", "right_segment_naming_support", side_cols[1], mid, dur)):
+            v = (r.get(col) or "").strip().lower()
+            lab = (x.get(lcol) or "").strip()
+            if not v:
+                skip[f"{col} blank"] += 1
+                continue
+            if not lab:
+                skip[f"{lcol} blank"] += 1
+                continue
+            obs.append({
+                "obs_id": f"{r['candidate_key']}#{side}",
+                "candidate_key": r["candidate_key"],
+                "recording_id": rid_full(r["recording_id"]),
+                "video": clip, "side": side,
+                "start": s, "end": e, "label": lab, "support": v,
+                "window": "candidate_6s", "label_side": a.label_side,
+                "interaction_relation": r.get("interaction_relation"),
+                "temporal_event_type": r.get("temporal_event_type")})
+
+    print(f"\n  {len(obs)} (window, label, verdict) observations "
+          f"[window=candidate_6s, label_side={a.label_side}]")
+    for k, v in skip.most_common():
+        print(f"  skipped, {k}: {v}")
+    for k, v in Counter(o["support"] for o in obs).most_common():
+        print(f"    support={k:<12}{v:>4}")
+    report_pairs(obs)
+    print(f"\n  THIS IS THE SUB-WINDOW VARIANT. Above chance is a real lower "
+          f"bound; near chance\n  is uninterpretable, because G0 already showed "
+          f"a short window can lose the signal.")
+    if a.out:
+        with open(a.out, "w", encoding="utf-8") as f:
+            for o in obs:
+                f.write(json.dumps(o, ensure_ascii=False) + "\n")
+        print(f"\nwrote {a.out}")
+    return obs
+
+
+def clip_duration(path):
+    """ffprobe, falling back to the nominal 6s these clips were rendered at."""
+    try:
+        out = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "csv=p=0", path], capture_output=True, text=True,
+            timeout=20).stdout.strip()
+        return float(out) if out else 6.0
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return 6.0
 
 
 def emit(a):
@@ -289,6 +413,20 @@ def main():
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--emit", action="store_true")
+    ap.add_argument("--local_clips",
+                    help="directory of the 6s audit clips. Switches --emit to "
+                         "the sub-window variant: no recseg, each side is the "
+                         "~3s adjacent to the candidate, and every record is "
+                         "stamped window=candidate_6s.")
+    ap.add_argument("--blind_csv",
+                    help="batch3_blind_review.csv -- carries the segment "
+                         "labels the clips were rendered with")
+    ap.add_argument("--label_side", choices=("prev_next", "containing"),
+                    help="which label each side was judged against. REQUIRED "
+                         "with --local_clips and deliberately without a "
+                         "default: the batch4 sheet was filled outside this "
+                         "repo, so no file here records the answer and a "
+                         "guess would silently decide what the number means.")
     ap.add_argument("--score", action="store_true")
     ap.add_argument("--evaluate", action="store_true")
     ap.add_argument("--audit", default="data/gold/batch4_joint_audit.csv")
@@ -314,6 +452,16 @@ def main():
     ap.add_argument("--out")
     a = ap.parse_args()
 
+    if a.emit and a.local_clips:
+        if not a.blind_csv:
+            raise SystemExit("--local_clips needs --blind_csv")
+        if not a.label_side:
+            raise SystemExit(
+                "--local_clips needs --label_side prev_next|containing. "
+                "Which label\neach side was judged against decides what the "
+                "number means, and nothing\nin this repo records it.")
+        emit_local(a)
+        return
     if a.emit:
         if not a.recseg:
             raise SystemExit("--emit needs --recseg")
