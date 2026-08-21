@@ -112,6 +112,18 @@ def embed(model, video_inputs, texts, prompt=None, meta=None):
 EXTRACTOR = None   # set by write_frames; recorded so a run says how it decoded
 
 
+def _probe_duration(video):
+    """Seconds, or None if ffprobe cannot say."""
+    import subprocess
+    r = subprocess.run(
+        ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+         "-of", "default=nw=1:nk=1", video], capture_output=True)
+    try:
+        return float(r.stdout.decode().strip())
+    except ValueError:
+        return None
+
+
 def _frames_ffmpeg(video, times, out_dir, uid):
     """One accurate seek per timestamp. Slower than decord, always available.
 
@@ -119,20 +131,44 @@ def _frames_ffmpeg(video, times, out_dir, uid):
     on a ten-minute recording the difference is seconds versus minutes per
     frame. Modern ffmpeg makes that seek accurate rather than
     snapping to the previous keyframe, which would silently move a frame by up
-    to the GOP length and put it in the neighbouring segment."""
+    to the GOP length and put it in the neighbouring segment.
+
+    THE LAST REQUESTED TIME IS USUALLY THE END OF THE WINDOW, which is at or
+    past the final frame, and ffmpeg answers that with no output at all. decord
+    never had to say so because `min(len(vr) - 1, ...)` clamped it; this is the
+    same clamp, and it is what the fallback was missing. Where the duration
+    cannot be probed the seek is retried a little earlier rather than failing,
+    because losing one frame of a window is a smaller error than losing the
+    observation."""
     import subprocess
+    dur = _probe_duration(video)
+    last = (dur - 0.04) if dur else None
     paths = []
     for i, t in enumerate(times):
+        want = max(0.0, float(t))
+        if last is not None:
+            want = min(want, max(0.0, last))
         p = os.path.join(out_dir, f"{uid}_{i:02d}.jpg")
-        r = subprocess.run(
-            ["ffmpeg", "-nostdin", "-loglevel", "error", "-accurate_seek",
-             "-ss", f"{max(0.0, float(t)):.3f}", "-i", video,
-             "-frames:v", "1", "-q:v", "2", "-y", p],
-            capture_output=True)
-        if not os.path.exists(p):
+        # Cleared first. The success test is "a non-empty file is there", so a
+        # leftover from an earlier run at the same path would pass it without
+        # ffmpeg having written anything -- silently feeding a frame from a
+        # different observation.
+        if os.path.exists(p):
+            os.remove(p)
+        err = ""
+        for back in (0.0, 0.05, 0.15, 0.4):
+            r = subprocess.run(
+                ["ffmpeg", "-nostdin", "-loglevel", "error", "-accurate_seek",
+                 "-ss", f"{max(0.0, want - back):.3f}", "-i", video,
+                 "-frames:v", "1", "-q:v", "2", "-y", p],
+                capture_output=True)
+            if os.path.exists(p) and os.path.getsize(p) > 0:
+                break
+            err = r.stderr.decode()[:200]
+        else:
             raise RuntimeError(
-                f"ffmpeg produced no frame at {t:.3f}s of {video}: "
-                f"{r.stderr.decode()[:200]}")
+                f"ffmpeg produced no frame near {t:.3f}s of {video} "
+                f"(duration {dur}): {err}")
         paths.append(p)
     return paths
 
@@ -152,12 +188,15 @@ def write_frames(video, times, out_dir, uid):
     place. The two do not necessarily pick byte-identical frames, so the
     extractor actually used is recorded rather than assumed."""
     global EXTRACTOR
-    from PIL import Image
     try:
         from decord import VideoReader
     except ImportError:
+        # Pillow is imported only on the decord path. The fallback writes its
+        # JPEGs with ffmpeg and must not require a second imaging library to
+        # be installed in an environment decord already refused.
         EXTRACTOR = "ffmpeg"
         return _frames_ffmpeg(video, times, out_dir, uid)
+    from PIL import Image
     EXTRACTOR = "decord"
     vr = VideoReader(video)
     fps = vr.get_avg_fps()
