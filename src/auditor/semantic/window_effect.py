@@ -315,7 +315,7 @@ def main():
                          "any GPU is spent")
     ap.add_argument("--n_sim", type=int, default=200)
     ap.add_argument("--events",
-                    default="data/gold/window_effect_events_35.json")
+                    default="data/gold/window_effect_events.json")
     ap.add_argument("--media_root",
                     help="rewrite each event's video path to this directory, "
                          "for running where the media was copied to")
