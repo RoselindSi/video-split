@@ -214,3 +214,49 @@ Ordering only pays if the reviewer stops early, and stopping early is skipping.
 The distinction is who decides: a model saying "this one is fine" is automation
 and needs a certificate; a person saying "I have two hours" is spending a
 budget, with the residual risk explicit and owned.
+
+---
+
+# 8. WINDOW DIAGNOSTIC — 2026-08-21, INCONCLUSIVE
+
+Run on the 62 events (46 YES / 16 NO over 32 recordings) where a span video, a
+stored label and a YES/NO verdict all exist. One event was dropped for a span
+shorter than the 3s short arm.
+
+```
+delta = score(long span) - score(short 3.0s window)
+  YES  n=46  mean delta  +0.3899
+  NO   n=16  mean delta  +0.2891
+
+D = +0.1009  [-1.2240, +0.5060]
+```
+
+**INCONCLUSIVE, per §3's second branch.** Nothing unlocks. AUTO_KEEP stays
+off, AUTO_ACCEPT stays off, and a formal full-segment driver A is still
+required once full recordings exist.
+
+## Three things worth carrying forward
+
+**The achieved interval was wider than the design predicted** — 1.73 against a
+simulated median of 1.15. The simulation assumed a per-event delta sd of 1.0
+and the real one is larger, so actual sensitivity was worse than the 86% power
+quoted at D=1.0. The interval is also strongly asymmetric (−1.22 below, +0.51
+above a point estimate of +0.10), which is what a handful of NO recordings
+dominating the resample looks like.
+
+**Both classes shifted UP** by about +0.3. A uniform shift cancels in a
+difference of differences, so it does not threaten the reading — but it points
+at a design flaw §7's proxy discussion did not anticipate. The label is
+`prev / containing / next` joined, and the long arm is a video of exactly those
+three segments while the short arm shows only the middle. **The long arm has a
+constructional advantage at matching this label, independent of YES/NO.**
+
+That is the opposite of the bias direction predicted before the run, where
+neighbour contamination was expected to penalise the long arm. Both effects are
+real and they oppose each other, which is a further reason this proxy
+extrapolates weakly.
+
+**So even a significant result here would have transferred poorly.** In a real
+full-segment driver A the label is one segment's and the video is one segment's;
+neither side matches this setup. The diagnostic is retired rather than repeated
+at larger n.
