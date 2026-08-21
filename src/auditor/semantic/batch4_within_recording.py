@@ -451,10 +451,21 @@ def evaluate(a):
           f" of them within a recording. This is the\n    number the old arm "
           f"reported and could not read; it is here for contrast only.")
 
+    # THE QUEUE NUMBER, which is a different question from the gate. Pairwise
+    # accuracy says the scorer orders a YES above a NO; this says what that
+    # ordering is worth to a person working through the list. Ordering skips
+    # nothing by itself, so it needs no threshold -- but it only PAYS if the
+    # reviewer stops early, and stopping early is the reviewer spending a
+    # budget, not the model deciding an item is fine.
+    from src.auditor.auditor_v1 import review_lift
+    lift = review_lift([(o["recording_id"], sc[o["obs_id"]],
+                         o["support"] == "yes")
+                        for o in obs if o["support"] in ("yes", "no")])
+
     if a.out:
         json.dump({"within_accuracy": acc, "lo": float(lo), "hi": float(hi),
                    "n_pairs": len(pairs), "n_recordings": len(recs),
-                   "global_confounded": glob},
+                   "global_confounded": glob, "review_lift": lift},
                   open(a.out, "w", encoding="utf-8"), indent=2)
         print(f"\nwrote {a.out}")
 

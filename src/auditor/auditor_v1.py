@@ -182,6 +182,47 @@ def boot_precision(pairs, n=2000, seed=0):
     return out[int(0.025 * len(out))], out[int(0.975 * len(out)) - 1]
 
 
+def review_lift(items):
+    """If a person reviews worst-score-first, how fast do they meet the errors?
+
+    THIS NEEDS NO GATE AND NO CERTIFICATE, and the reason is the whole point:
+    ordering a queue skips nothing. Every candidate is still seen by a person,
+    so a bad ordering costs time and cannot put a wrong boundary into the
+    output. Automation is what needs a threshold; ranking does not.
+
+    Which makes it the part of v1 that ships today. The boundary curve says no
+    threshold earns an automatic keep, and driver A's 0.641 does not clear the
+    capability gate for automatic accept -- but 0.641 is already enough to put
+    the errors near the front of a queue, and that is real time saved with no
+    risk taken at all."""
+    scored = [(r, s, bool(t)) for r, s, t in items if s is not None]
+    if not scored:
+        return []
+    order = sorted(scored, key=lambda x: x[1])          # worst first
+    bad = [not t for _, _, t in order]
+    total_bad = sum(bad)
+    if not total_bad:
+        return []
+    print(f"\n  REVIEW ORDER -- worst score first, nothing skipped\n"
+          f"  {len(order)} candidates, {total_bad} of them wrong\n")
+    print(f"  {'review':>8}{'errors found':>15}{'of all errors':>16}"
+          f"{'lift':>8}")
+    rows, seen = [], 0
+    marks = [0.1, 0.2, 0.3, 0.4, 0.5]
+    for frac in marks:
+        k = max(1, int(round(frac * len(order))))
+        found = sum(bad[:k])
+        rows.append({"review_fraction": frac, "errors_found": found,
+                     "recall": found / total_bad, "lift": (found / k) / (
+                         total_bad / len(order))})
+        print(f"  {frac:>7.0%}{found:>15}{found / total_bad:>15.1%}"
+              f"{rows[-1]['lift']:>8.2f}x")
+    print(f"\n  lift 1.00x is what reviewing in a random order gives. Anything "
+          f"above it is\n  time saved with no decision automated -- the person "
+          f"still sees every candidate.")
+    return rows
+
+
 def risk_coverage(items, thresholds=None, gate=None):
     """items: (recording, score, truth). Prints what each threshold buys.
 
@@ -760,6 +801,7 @@ def main():
             raise SystemExit(f"no gold row carried {a.truth_field!r}")
         gate = load_gate(a.gate) if os.path.exists(a.gate) else None
         rows = risk_coverage(items, gate=gate)
+        lift = review_lift(items)
         ids = [str(g.get("event_id") or g.get("candidate_id") or g.get("id"))
                for g in gold]
         fp, nid = event_fingerprint(ids)

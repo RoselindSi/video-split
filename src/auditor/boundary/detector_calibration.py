@@ -93,7 +93,7 @@ def main():
     a = ap.parse_args()
 
     import torch
-    from src.auditor.auditor_v1 import load_gate, risk_coverage
+    from src.auditor.auditor_v1 import load_gate, review_lift, risk_coverage
 
     recs = torch.load(a.logits, map_location="cpu", weights_only=False)
     print(f"{len(recs)} recordings from {os.path.basename(a.logits)}")
@@ -120,6 +120,7 @@ def main():
 
     gate = load_gate(a.gate) if os.path.exists(a.gate) else None
     rows = risk_coverage(items, gate=gate)
+    lift = review_lift(items)
 
     if a.emit_certificate:
         from src.auditor.auditor_v1 import event_fingerprint
@@ -135,6 +136,7 @@ def main():
             "gate": (gate or {}).get("gate"),
             "n_events": n, "event_fingerprint": fp,
             "event_ids": sorted(set(ids)), "rows": rows,
+            "review_lift": lift,
         }, open(a.emit_certificate, "w", encoding="utf-8"),
             ensure_ascii=False, indent=1)
         print(f"\nwrote {a.emit_certificate}  (independent: false)")
