@@ -153,6 +153,28 @@ def score(a):
     obs = [json.loads(l) for l in open(a.observations, encoding="utf-8")
            if l.strip()]
     print(f"{len(obs)} observations to score")
+
+    # SHARDING IS BY OBSERVATION, which is sound only because each forward is
+    # independent -- one clip against one label, no shared state. Sorting by
+    # obs_id first makes the split deterministic, so a shard can be re-run and
+    # produce the same subset.
+    if a.shard:
+        i, n = (int(x) for x in a.shard.split("/"))
+        obs = sorted(obs, key=lambda o: o["obs_id"])[i::n]
+        print(f"  shard {i}/{n}: {len(obs)} of them")
+
+    # RESUME, because this runs for hours on a machine that may not be there
+    # tomorrow. Scores already written are read back and skipped rather than
+    # recomputed; the file is appended, not truncated.
+    done = set()
+    if a.resume and os.path.exists(a.out):
+        done = {json.loads(l)["obs_id"] for l in open(a.out, encoding="utf-8")
+                if l.strip()}
+        obs = [o for o in obs if o["obs_id"] not in done]
+        print(f"  resuming: {len(done)} already scored, {len(obs)} to go")
+    if not obs:
+        print("  nothing left to score")
+        return
     if not a.model or not os.path.exists(a.model):
         raise SystemExit(f"--model {a.model} does not exist")
     import torch  # noqa: F401
@@ -166,6 +188,9 @@ def score(a):
     proc = AutoProcessor.from_pretrained(a.model)
     os.makedirs(a.frame_dir, exist_ok=True)
 
+    # Opened in append mode and flushed per score: a shard killed at 400/472
+    # keeps its 400. Truncating here is what makes --resume a lie.
+    fout = open(a.out, "a" if (a.resume and done) else "w", encoding="utf-8")
     out = []
     for i, o in enumerate(obs):
         if not o.get("video"):
@@ -181,16 +206,21 @@ def score(a):
                 "frames_indices": np.arange(nf)}
         s = score_batch(model, proc, "sentence_transformers", frames,
                         [o["label"]], a.total_pixels, None, meta)[0]
-        out.append({"obs_id": o["obs_id"], "score": float(s)})
+        rec = {"obs_id": o["obs_id"], "score": float(s)}
+        out.append(rec)
+        fout.write(json.dumps(rec) + "\n")
+        fout.flush()
         for q in frames:
             os.remove(q)
         if (i + 1) % 25 == 0:
             print(f"    {i + 1}/{len(obs)} scored", flush=True)
 
-    with open(a.out, "w", encoding="utf-8") as f:
-        for r in out:
-            f.write(json.dumps(r) + "\n")
-    print(f"\nwrote {len(out)} scores -> {a.out}")
+    fout.close()
+    print(f"\nwrote {len(out)} scores -> {a.out}"
+          + (f"  (+{len(done)} kept from a previous run)" if done else ""))
+    if a.shard:
+        print(f"  this is shard {a.shard}; --evaluate needs every shard's "
+              f"file concatenated")
 
 
 def evaluate(a):
@@ -267,6 +297,13 @@ def main():
     ap.add_argument("--scores")
     ap.add_argument("--model")
     ap.add_argument("--n_frames", type=int, default=32)
+    ap.add_argument("--shard", help="i/n -- score only observation i, i+n, ... "
+                                    "so one process can own one GPU. Each "
+                                    "shard writes its own --out.")
+    ap.add_argument("--resume", action="store_true",
+                    help="skip obs_ids already in --out and append. Without "
+                         "it --out is truncated and hours are lost to a "
+                         "restart.")
     ap.add_argument("--total_pixels", type=int, default=3584 * 28 * 28)
     ap.add_argument("--frame_dir", default="/tmp/batch4_frames")
     ap.add_argument("--tol_s", type=float, default=TOL,
