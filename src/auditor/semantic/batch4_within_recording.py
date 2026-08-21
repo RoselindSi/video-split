@@ -114,9 +114,38 @@ def emit_local(a):
     # in this repo -- the batch4 sheet was filled outside it -- so it is an
     # explicit argument with no default rather than a guess baked into the
     # emitted gold.
-    side_cols = {"prev_next": ("prev_segment_label", "next_segment_label"),
-                 "containing": ("containing_segment_label",
-                                "containing_segment_label")}[a.label_side]
+    def sides(x):
+        """Which label describes the time just before t, and just after.
+
+        `positional` derives it per candidate instead of applying one rule to
+        every row, because the two candidate kinds are geometrically
+        different. At a junction the segment before t is `prev` and the one
+        after is `next`. Inside a segment there is no junction -- the left
+        side and the right side are the SAME segment -- and `containing` names
+        it, while prev/next name the neighbours the human never saw. Applying
+        prev/next there asks whether a neighbouring label describes three
+        seconds of a different segment, which has a knowable answer nobody was
+        asked for.
+
+        The test for "inside a segment" is that containing differs from both
+        neighbours. At a junction both neighbours satisfy the containing
+        predicate, so containing collapses onto one of them and the branch
+        correctly does not fire."""
+        P = (x.get("prev_segment_label") or "").strip()
+        C = (x.get("containing_segment_label") or "").strip()
+        N = (x.get("next_segment_label") or "").strip()
+        # GEOMETRY IS THE CONTAINING TEST, NOT LABEL EQUALITY. A junction whose
+        # two sides carry the SAME label -- 35 gt_boundary rows do -- would
+        # look "inside a segment" to an equality check, and those are exactly
+        # the repeated-instance events that make up most of the disputed set.
+        # Calling them inside-segment would hide the class anyone would most
+        # want to condition on.
+        inside = bool(C and C != P and C != N)
+        if a.label_side == "containing":
+            return C, C, inside
+        if a.label_side == "prev_next":
+            return P, N, inside
+        return ((C, C, inside) if inside else (P, N, inside))
 
     obs, skip = [], Counter()
     for r in rows:
@@ -130,16 +159,16 @@ def emit_local(a):
             continue
         dur = clip_duration(clip)
         mid = dur / 2.0          # the clip is centred on the candidate
-        for side, col, lcol, s, e in (
-                ("L", "left_segment_naming_support", side_cols[0], 0.0, mid),
-                ("R", "right_segment_naming_support", side_cols[1], mid, dur)):
+        labL, labR, inside = sides(x)
+        for side, col, lab, s, e in (
+                ("L", "left_segment_naming_support", labL, 0.0, mid),
+                ("R", "right_segment_naming_support", labR, mid, dur)):
             v = (r.get(col) or "").strip().lower()
-            lab = (x.get(lcol) or "").strip()
             if not v:
                 skip[f"{col} blank"] += 1
                 continue
             if not lab:
-                skip[f"{lcol} blank"] += 1
+                skip[f"{side}-side label blank"] += 1
                 continue
             obs.append({
                 "obs_id": f"{r['candidate_key']}#{side}",
@@ -148,6 +177,7 @@ def emit_local(a):
                 "video": clip, "side": side,
                 "start": s, "end": e, "label": lab, "support": v,
                 "window": "candidate_6s", "label_side": a.label_side,
+                "geometry": "inside_segment" if inside else "junction",
                 "interaction_relation": r.get("interaction_relation"),
                 "temporal_event_type": r.get("temporal_event_type")})
 
@@ -421,7 +451,8 @@ def main():
     ap.add_argument("--blind_csv",
                     help="batch3_blind_review.csv -- carries the segment "
                          "labels the clips were rendered with")
-    ap.add_argument("--label_side", choices=("prev_next", "containing"),
+    ap.add_argument("--label_side",
+                    choices=("positional", "prev_next", "containing"),
                     help="which label each side was judged against. REQUIRED "
                          "with --local_clips and deliberately without a "
                          "default: the batch4 sheet was filled outside this "
