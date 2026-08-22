@@ -111,6 +111,57 @@ def route_semantic(score, thr, uncertified=None):
             else ("REVIEW", f"support {score:.3f} < {thr}"))
 
 
+# --------------------------------------------------------------------------
+# observability -- "am I entitled to judge this at all"
+# --------------------------------------------------------------------------
+# A DIFFERENT QUESTION FROM THE SCORE, and the one the auditor could not ask.
+# `morphology` answers "was there a real change"; this answers "could a change
+# have been seen". They are confused constantly and their consequences are
+# opposite: a continuous interaction is a reason to say NO BOUNDARY, hands
+# outside the frame are a reason to say NOTHING.
+#
+# THREE STATES, AND `unknown` IS THE DEFAULT. No head in this project emits
+# observability -- it has never had supervision -- so every field arrives
+# `unknown` until one does. Forcing a guess would manufacture the evidence the
+# tri-state exists to protect.
+OBSERVABILITY_FIELDS = ("hand_visible", "object_visible",
+                        "interaction_visible", "camera_stable")
+OBS_STATES = ("present", "absent", "unknown")
+
+# WHY THIS DOES NOT REJECT ANYTHING. `absent` -- seen clearly, no hands, no
+# interaction -- would be safe to drop, and `unknown` would not: dropping an
+# unobservable region silently decides there is no boundary in it, which is the
+# defect `joint_policy`'s `unobservable_is_not_no_boundary` rule exists to
+# block. Until a sample says how false_gap candidates split across the three,
+# every one of them routes to REVIEW and only the REASON changes.
+REVIEW_UNCERTAIN = "REVIEW_UNCERTAIN"
+REVIEW_UNOBSERVABLE = "REVIEW_UNOBSERVABLE"
+
+
+def observability_state(obs):
+    """(class, reason) for one candidate's observability block.
+
+    THE TWO REVIEW CLASSES ARE NOT THE SAME WORK. An uncertain candidate is one
+    a person can settle by watching it. An unobservable one is a person
+    watching hands that are not in frame, and no amount of attention fixes it --
+    that is a capture problem, and it belongs in a different queue and out of
+    the denominator a recall is computed over."""
+    if not obs:
+        return REVIEW_UNOBSERVABLE, "observability was not collected"
+    bad = {k: obs.get(k) for k in OBSERVABILITY_FIELDS
+           if obs.get(k) not in (None, "present")}
+    if not bad:
+        return REVIEW_UNCERTAIN, None
+    unk = [k for k, v in bad.items() if v in (None, "unknown")]
+    ab = [k for k, v in bad.items() if v == "absent"]
+    parts = []
+    if ab:
+        parts.append("observed absent: " + ", ".join(sorted(ab)))
+    if unk:
+        parts.append("not assessed: " + ", ".join(sorted(unk)))
+    return REVIEW_UNOBSERVABLE, "; ".join(parts)
+
+
 # Morphology classes that may never be automated whatever the score says. This
 # is the part of the ontology backed by a head that actually trains.
 NEVER_AUTOMATIC = ("INTERVAL_TRANSITION", "UNOBSERVABLE")
@@ -543,6 +594,18 @@ def audit_output(out, a, cert, scert, n_bs_rows, n_ss_rows):
                and o["semantic_score"] is None)
     prob = []
 
+    cls = Counter(o.get("review_class") for o in out
+                  if o.get("review_class"))
+    if cls:
+        print(f"\n  review splits into two kinds of work:")
+        for k in (REVIEW_UNCERTAIN, REVIEW_UNOBSERVABLE):
+            v = cls.get(k, 0)
+            print(f"    {k:<22}{v:>6}  {v / len(out):>6.1%}")
+        if cls.get(REVIEW_UNOBSERVABLE):
+            print(f"    a person cannot settle {REVIEW_UNOBSERVABLE} by "
+                  f"watching harder -- those are a\n    capture problem, and "
+                  f"they belong out of any recall denominator.")
+
     print(f"\n{'=' * 66}\nEND-TO-END CHECK\n{'=' * 66}")
     print(f"  segments                        {n}")
     print(f"  boundary scores joined          {bs_ok}/{n}"
@@ -624,6 +687,12 @@ def run(a):
         onto = load_ontology(a.ontology)
 
     segs = read_any(a.recseg)
+    obs_in = {}
+    if a.observability:
+        for r in read_any(a.observability):
+            k = str(r.get("event_id") or r.get("segment_id") or r.get("id"))
+            obs_in[k] = {f: r.get(f) for f in OBSERVABILITY_FIELDS}
+        print(f"  observability for {len(obs_in)} candidates")
     n_bs_rows = len(read_any(a.boundary_scores)) if a.boundary_scores else 0
     n_ss_rows = len(read_any(a.semantic_scores)) if a.semantic_scores else 0
     bs = index_scores(read_any(a.boundary_scores),
@@ -680,6 +749,8 @@ def run(a):
         b_act, b_why = route_boundary(bscore, a.boundary_thr, veto, uncert)
         sscore = ss.get(sid)
         s_act, s_why = route_semantic(sscore, a.semantic_thr, s_uncert)
+        obs = obs_in.get(bid) or obs_in.get(sid)
+        rev_class, obs_why = observability_state(obs)
         assert b_act in ACTIONS["boundary"] and s_act in ACTIONS["semantic"]
         tab[(b_act, s_act)] += 1
         if veto:
@@ -700,6 +771,13 @@ def run(a):
             "semantic_reason": s_why,
             "auditor_version": "v1",
             "tolerance_s": TOLERANCE_S,
+            "observability": obs or {f: "unknown" for f in
+                                     OBSERVABILITY_FIELDS},
+            # WHAT KIND OF REVIEW, which is not the same as how urgent. An
+            # unobservable candidate cannot be settled by looking harder.
+            "review_class": rev_class if (b_act == "REVIEW"
+                                          or s_act == "REVIEW") else None,
+            "observability_reason": obs_why,
         })
 
     # THE QUEUE. Everything routed to REVIEW is ordered worst-score-first so
@@ -889,6 +967,32 @@ def self_test():
             assert act == "REVIEW"
             print(f"  semantic refused ({want}): {got[:60]}")
 
+    # OBSERVABILITY. `absent` and `unknown` both block and are different
+    # information -- the first is a finding, the second is a gap -- so the
+    # reason distinguishes them even though the class does not.
+    print()
+    ok = {f: "present" for f in OBSERVABILITY_FIELDS}
+    for obs, want_cls, want_in in (
+            (None, REVIEW_UNOBSERVABLE, "was not collected"),
+            ({}, REVIEW_UNOBSERVABLE, "was not collected"),
+            (ok, REVIEW_UNCERTAIN, None),
+            (dict(ok, hand_visible="absent"), REVIEW_UNOBSERVABLE,
+             "observed absent: hand_visible"),
+            (dict(ok, hand_visible="unknown"), REVIEW_UNOBSERVABLE,
+             "not assessed: hand_visible"),
+            (dict(ok, hand_visible="absent", camera_stable="unknown"),
+             REVIEW_UNOBSERVABLE, "observed absent"),
+    ):
+        cls, why = observability_state(obs)
+        assert cls == want_cls, (obs, cls)
+        if want_in:
+            assert want_in in why, (why, want_in)
+        print(f"  observability {str(obs)[:44]:<46} -> {cls}")
+    cls, why = observability_state(dict(ok, hand_visible="absent",
+                                        camera_stable="unknown"))
+    assert "observed absent" in why and "not assessed" in why, why
+    print(f"  absent and unknown stay apart in the reason: {why}")
+
     # A gate with unset targets must not pass. It ships that way on purpose.
     g = load_gate()
     passes, why = check_gate({"ci_lo": 1.0, "coverage": 1.0,
@@ -922,6 +1026,12 @@ def main():
                     help="NO DEFAULT. Without it every candidate is REVIEW.")
     ap.add_argument("--semantic_thr", type=float, default=None,
                     help="NO DEFAULT. Without it every label is REVIEW.")
+    ap.add_argument("--observability",
+                    help="per-candidate hand_visible / object_visible / "
+                         "interaction_visible / camera_stable, each "
+                         "present|absent|unknown. Absent file means every "
+                         "field is unknown, which is the honest state: no head "
+                         "emits observability yet.")
     ap.add_argument("--gate", default=GATE,
                     help="pre-registered AUTO_KEEP conditions")
     ap.add_argument("--emit_certificate",
