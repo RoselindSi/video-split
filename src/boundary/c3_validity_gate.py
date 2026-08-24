@@ -154,6 +154,21 @@ def main():
     ap.add_argument("--clean145", action="store_true")
     ap.add_argument("--batch3_manifest", action="append", default=[])
     ap.add_argument("--batch3_pair_labels", action="append", default=[])
+    ap.add_argument("--hand_traj",
+                    help="hand_trajectory_features.csv. THE FEATURE FAMILY "
+                         "THIS GATE WAS NEVER GIVEN. It ran on frozen ViT "
+                         "global+local only, one day after the trajectories "
+                         "existed. On the same events the trajectory probe "
+                         "separates visibility_or_offscreen at AUROC 0.900 "
+                         "with every fold in [0.853, 0.946]; this gate's "
+                         "abstain arm reached 0.729 without it.")
+    ap.add_argument("--per_class", action="store_true",
+                    help="report each nuisance subtype on its own as well as "
+                         "pooled. annotation_convention has no visual "
+                         "signature BY DEFINITION -- the GT cut where nothing "
+                         "happens -- so pooling it with camera scores a "
+                         "detectable class together with an undetectable one "
+                         "and then reports that no operating point exists.")
     ap.add_argument("--feat_cache", action="append", required=True)
     ap.add_argument("--local_cache", action="append", required=True)
     ap.add_argument("--pca_dim", type=int, default=64)
@@ -184,13 +199,50 @@ def main():
     extra = np.array([[detect_coverage(loc_rid[e["recording_id"]], e["t"]),
                        detect_longest_gap_s(loc_rid[e["recording_id"]], e["t"])]
                       for e in ev])
+
+    # HAND TRAJECTORIES, APPENDED RATHER THAN SUBSTITUTED. The ViT branches
+    # stay so the comparison is with-versus-without on identical folds; a run
+    # that swapped the features would confound the family with everything else
+    # that changed.
+    if a.hand_traj:
+        import csv as _csv
+        rows = list(_csv.DictReader(open(a.hand_traj, newline="",
+                                         encoding="utf-8-sig")))
+        cols = [c for c in (rows[0] if rows else {})
+                if c not in ("event_id", "recording_id", "t", "subtype")]
+        tab = {}
+        for r in rows:
+            v = []
+            for c in cols:
+                try:
+                    v.append(float(r[c]))
+                except (TypeError, ValueError):
+                    v.append(np.nan)
+            tab[r.get("event_id", "")] = v
+        hit = sum(1 for e in ev if e["event_id"] in tab)
+        if not hit:
+            raise SystemExit(
+                f"--hand_traj matched 0 of {len(ev)} events by event_id. "
+                f"An unmatched join here would silently add a column of NaN "
+                f"and report the ViT-only result as if the trajectories had "
+                f"been used.\n  csv has {len(rows)} rows, first id "
+                f"{rows[0].get('event_id') if rows else None!r}")
+        print(f"  hand trajectories: {len(cols)} features, joined onto "
+              f"{hit}/{len(ev)} events ({hit / len(ev):.1%})")
+        H = np.array([tab.get(e["event_id"], [np.nan] * len(cols))
+                      for e in ev], float)
+        extra = np.concatenate([extra, H], 1)
     groups = [e["recording_id"] for e in ev]
     is_sharp = np.array([s == SHARP for s in sub])
     src = np.array([cand_source(e["event_id"]) for e in ev])
     out = {"n": len(ev), "by_subtype": dict(Counter(sub))}
 
-    for tag, pos in (("REJECTABLE (annotation_convention + camera)", REJECT),
-                     ("ABSTAIN-ONLY (offscreen + ambiguous)", ABSTAIN)):
+    arms = [("REJECTABLE (annotation_convention + camera)", REJECT),
+            ("ABSTAIN-ONLY (offscreen + ambiguous)", ABSTAIN)]
+    if a.per_class:
+        arms += [(f"per-class: {c}", (c,))
+                 for c in sorted(set(REJECT + ABSTAIN))]
+    for tag, pos in arms:
         keep = np.array([s in pos or s in DECIDABLE for s in sub])
         y = np.array([s in pos for s in sub], float)[keep]
         if y.sum() < 15:
