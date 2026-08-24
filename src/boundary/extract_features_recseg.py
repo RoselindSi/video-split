@@ -93,6 +93,13 @@ def main():
     ap.add_argument("--recordings_from", action="append", default=[],
                     help="restrict to recording_ids listed in a CSV column or a "
                          "manifest jsonl")
+    ap.add_argument("--video_remap", action="append", default=[],
+                    help="OLD=NEW prefix rewrite for the video paths stored in "
+                         "the recseg json. REPEATABLE, applied in order. The "
+                         "stored paths were absolute on a machine that no "
+                         "longer exists; rewriting here keeps the gold "
+                         "unedited, so a later reader still sees where the "
+                         "features came from.")
     ap.add_argument("--out", required=True)
     ap.add_argument("--fps", type=float, default=2.0)
     ap.add_argument("--crop", choices=["none", "left", "right"], default="none",
@@ -123,6 +130,37 @@ def main():
     rows = []
     for p_ in a.data:
         rows.extend(json.load(open(p_)))
+
+    if a.video_remap:
+        pairs = []
+        for m in a.video_remap:
+            if "=" not in m:
+                raise SystemExit(f"--video_remap needs OLD=NEW, got {m!r}")
+            pairs.append(tuple(m.split("=", 1)))
+        n = 0
+        for r in rows:
+            v = r.get("video") or ""
+            for old, new in pairs:
+                if v.startswith(old):
+                    r["video"] = new + v[len(old):]
+                    n += 1
+                    break
+        print(f"  --video_remap rewrote {n}/{len(rows)} paths")
+        # A REMAP THAT MATCHES NOTHING IS A TYPO, and the failure it causes is
+        # a decoder error a hundred recordings later, after the model has
+        # already been loaded for twenty minutes.
+        if not n:
+            raise SystemExit(
+                f"no stored path starts with any of "
+                f"{[o for o, _ in pairs]}\n  first stored path: "
+                f"{rows[0].get('video')!r}")
+        missing = [r for r in rows[:40] if not os.path.exists(r.get("video", ""))]
+        if missing:
+            raise SystemExit(
+                f"{len(missing)} of the first 40 remapped paths do not exist, "
+                f"e.g.\n  {missing[0]['video']}\n  Checked before loading the "
+                f"model, which takes twenty minutes to discover this "
+                f"otherwise.")
     print(f"{len(rows)} recordings across {len(a.data)} --data file(s)")
     if a.recordings_from:
         want = set()
