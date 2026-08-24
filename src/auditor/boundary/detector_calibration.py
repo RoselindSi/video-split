@@ -162,11 +162,28 @@ def main():
             items.append((r["recording_id"], sc, ok))
             ids.append(f"{r['recording_id']}@{tt:.1f}")
 
+    # THE PROPERTY INDEPENDENCE DOES NOT GIVE YOU. Two calibration sets from
+    # this project share no recordings and differ 5.15 vs 8.31 annotated
+    # boundaries per hundred frames; precision at any coverage rises with that
+    # density mechanically, because a denser GT makes any candidate likelier to
+    # land near one. A threshold calibrated on the dense set and deployed on
+    # the sparse one would underperform, and nothing about `independent: true`
+    # warns of it. Recorded so a reader can compare rather than assume.
+    n_frames = sum(len(r["times"]) for r in recs)
+    gt_density = tot / n_frames * 100 if n_frames else float("nan")
     ntp = sum(1 for _, _, ok in items if ok)
     print(f"\n  {len(items)} candidate peaks, {ntp} on a boundary "
           f"({ntp / len(items):.1%} precision at the pool threshold)")
     print(f"  {hit} of {tot} annotated boundaries recovered "
           f"({hit / tot:.1%} recall)")
+    print(f"\n  POPULATION, which independence does not fix:")
+    print(f"    {len(recs)} recordings, {tot} annotated boundaries, "
+          f"{n_frames} frames")
+    print(f"    GT density        {gt_density:.2f} per 100 frames")
+    print(f"    candidate base rate {ntp / len(items):.3f}")
+    print(f"    Precision at every coverage below scales with these. Compare "
+          f"them against the\n    deployment population before reading any "
+          f"row as a deployable operating point.")
     print(f"\n  !! val split -- the head was SELECTED on these recordings, so "
           f"every number\n     below is optimistic. It bounds what held-out "
           f"data can do; it does not\n     estimate it.")
@@ -190,6 +207,14 @@ def main():
             "gold": os.path.abspath(a.logits),
             "gate_config": os.path.abspath(a.gate),
             "gate": (gate or {}).get("gate"),
+            "population": {
+                "n_recordings": len(recs), "n_gt_boundaries": tot,
+                "n_frames": n_frames, "gt_density_per_100_frames": gt_density,
+                "candidate_base_rate": ntp / len(items),
+                "note": "precision at any coverage scales with these; "
+                        "independence does not make a calibration set "
+                        "representative",
+            },
             "n_events": n, "event_fingerprint": fp,
             "event_ids": sorted(set(ids)), "rows": rows,
             "review_lift": lift,
