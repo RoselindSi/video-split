@@ -127,6 +127,102 @@ def match(idx, p, t, gt, tol):
     return sorted(rows), len(taken), len(gt)
 
 
+VETO_SWEEP = (0.50, 0.60, 0.70, 0.80, 0.90)
+RELEASE_BUDGETS = (0.01, 0.03, 0.05)
+
+
+def review_budget_table(cands, morph, target, sweep=VETO_SWEEP):
+    """The three numbers a review budget actually costs, per veto threshold.
+
+    NOT precision, and not AUROC. At a fixed review budget the question is
+    what the budget BUYS and what it destroys, and precision answers neither:
+    a system that hits 10% review by rejecting half the real boundaries has an
+    excellent precision on what it kept.
+
+        human_review_rate          share of candidates a person still sees
+        true_boundary_loss_rate    annotated boundaries thrown away
+        false_boundaries_released  wrong candidates admitted unreviewed
+
+    THE OPERATING POINT IS CHOSEN BY A STATED RULE, not by looking. Among
+    every (t_lo, t_hi) whose review rate fits the budget, take the one with
+    the lowest true-boundary loss, breaking ties on fewer false releases. The
+    same rule runs on every arm, so the comparison is between arms rather than
+    between two searches.
+
+    MORPHOLOGY ENTERS ONLY AS NEGATIVE EVIDENCE. A confident NO_TRANSITION
+    removes a candidate whatever its score; a confident POINT never admits
+    one. Admission needs relation EXACT and an adequate view, and those heads
+    have 10 and 0 usable events -- letting P(POINT) admit would be automating
+    on a head with no supervision behind it."""
+    sc = np.array([c["detector_score"] for c in cands], float)
+    ok = np.array([c["is_true_boundary"] for c in cands], bool)
+    N, T = len(cands), int(ok.sum())
+    los = np.quantile(sc, np.linspace(0.0, 0.95, 40))
+    his = np.quantile(sc, np.linspace(0.05, 1.0, 40))
+
+    # THE SAME RELEASE BUDGETS ON EVERY ARM. Minimising a single scalar
+    # collapses immediately: rank on true-boundary loss alone and the search
+    # returns "reject nothing", which loses 0% and releases 845 wrong
+    # candidates. It is a two-objective problem, so the honest presentation
+    # fixes one objective at levels a person can choose between and reports
+    # the other. Identical levels on every arm is what makes the arms
+    # comparable rather than two separate searches.
+    def one(vetoed, tag):
+        rows = []
+        for cap_frac in RELEASE_BUDGETS:
+            cap = int(cap_frac * N)
+            best = None
+            for lo in los:
+                for hi in his:
+                    if hi <= lo:
+                        continue
+                    rej = vetoed | (sc < lo)
+                    keep = (~vetoed) & (sc >= hi)
+                    rev = ~rej & ~keep
+                    if rev.mean() > target:
+                        continue
+                    rel = int((keep & ~ok).sum())
+                    if rel > cap:
+                        continue
+                    lost = int((rej & ok).sum())
+                    if best is None or lost < best[0]:
+                        best = (lost, rel, float(rev.mean()), float(lo),
+                                float(hi), int(keep.sum()))
+            if best is None:
+                rows.append({"release_budget": cap_frac, "feasible": False})
+                print(f"  {tag:<24}{cap_frac:>8.0%}{'infeasible':>28}")
+                continue
+            lost, rel, rev, lo, hi, nkeep = best
+            rows.append({"release_budget": cap_frac, "feasible": True,
+                         "review_rate": rev,
+                         "true_boundary_loss_rate": lost / T,
+                         "false_boundaries_released": rel,
+                         "n_kept": nkeep, "t_lo": lo, "t_hi": hi})
+            print(f"  {tag:<24}{cap_frac:>8.0%}{rev:>10.1%}"
+                  f"{lost / T:>14.1%}{rel:>11}{nkeep:>8}")
+        return {"veto": tag, "points": rows}
+
+    print(f"\n{'=' * 82}\nAT A REVIEW BUDGET OF {target:.0%}\n{'=' * 82}")
+    print(f"  {'arm':<24}{'release':>8}{'REVIEW':>10}{'true lost':>14}"
+          f"{'released':>11}{'kept':>8}")
+    out = [one(np.zeros(N, bool), "score only")]
+    if morph:
+        pnt = np.array([morph.get(c["candidate_id"], {}).get(
+            "p_no_transition", np.nan) for c in cands], float)
+        miss = int(np.isnan(pnt).sum())
+        if miss:
+            print(f"  ({miss} candidates carry no morphology prediction; "
+                  f"they are never vetoed)")
+        for thr in sweep:
+            out.append(one(np.nan_to_num(pnt, nan=0.0) >= thr,
+                           f"+morph p_nt>={thr:.2f}"))
+    print(f"\n  {T} annotated boundaries are recoverable in this pool of {N}. "
+          f"`release` caps the\n  wrong candidates admitted unreviewed; "
+          f"`true lost` is what that cap costs in real\n  boundaries. Read "
+          f"the arms DOWN a release column, never across rows.")
+    return [o for o in out if o]
+
+
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__,
@@ -136,6 +232,22 @@ def main():
     ap.add_argument("--base_thr", type=float, default=BASE_THR)
     ap.add_argument("--min_gap_s", type=float, default=MIN_GAP_S)
     ap.add_argument("--gate", default="configs/auditor/auto_keep_gate_v1.yaml")
+    ap.add_argument("--emit_candidates",
+                    help="write the candidate pool as JSONL. THE ONLY "
+                         "authoritative pool: any experiment that re-derives "
+                         "peaks is comparing two different populations, and "
+                         "the whole point of a veto experiment is that the "
+                         "candidates are identical on both arms.")
+    ap.add_argument("--morphology_predictions",
+                    help="JSONL from morphology_external, keyed by "
+                         "candidate_id. Used ONLY as negative evidence: a "
+                         "confident NO_TRANSITION removes a candidate. "
+                         "P(POINT) never admits one -- an admission needs the "
+                         "relation and observability heads, which have 10 and "
+                         "0 usable events.")
+    ap.add_argument("--veto", choices=("none", "morphology_only"),
+                    default="none")
+    ap.add_argument("--review_target", type=float, default=0.10)
     ap.add_argument("--emit_certificate")
     ap.add_argument("--independent_because",
                     help="mark the certificate independent, and say WHY in one "
@@ -153,7 +265,7 @@ def main():
     print(f"  tolerance {a.tol_s}s | candidate pool = peaks >= {a.base_thr} "
           f"thinned at {a.min_gap_s}s")
 
-    items, hit, tot, ids = [], 0, 0, []
+    items, hit, tot, ids, cands = [], 0, 0, [], []
     for r in recs:
         idx, p, t = peaks(r["prob"], r["times"], a.base_thr, a.min_gap_s)
         rows, h, g = match(idx, p, t, r["gt"], a.tol_s)
@@ -161,6 +273,20 @@ def main():
         for tt, sc, ok in rows:
             items.append((r["recording_id"], sc, ok))
             ids.append(f"{r['recording_id']}@{tt:.1f}")
+            cands.append({"candidate_id": f"{r['recording_id']}@{tt:.3f}",
+                          "recording_id": r["recording_id"],
+                          "candidate_time": tt, "detector_score": sc,
+                          "is_true_boundary": bool(ok)})
+
+    if a.emit_candidates:
+        with open(a.emit_candidates, "w", encoding="utf-8") as f:
+            for c in cands:
+                f.write(json.dumps(c) + "\n")
+        print(f"\nwrote {a.emit_candidates}  ({len(cands)} candidates over "
+              f"{len({c['recording_id'] for c in cands})} recordings)")
+        print(f"  Every later arm must consume THIS file. Re-deriving peaks "
+              f"elsewhere would compare\n  two candidate pools and call the "
+              f"difference an effect of the veto.")
 
     # THE PROPERTY INDEPENDENCE DOES NOT GIVE YOU. Two calibration sets from
     # this project share no recordings and differ 5.15 vs 8.31 annotated
@@ -187,6 +313,24 @@ def main():
     print(f"\n  !! val split -- the head was SELECTED on these recordings, so "
           f"every number\n     below is optimistic. It bounds what held-out "
           f"data can do; it does not\n     estimate it.")
+
+    morph = None
+    if a.morphology_predictions:
+        morph = {}
+        for l in open(a.morphology_predictions, encoding="utf-8"):
+            if l.strip():
+                r = json.loads(l)
+                morph[r["candidate_id"]] = r
+        hit = sum(1 for c in cands if c["candidate_id"] in morph)
+        if not hit:
+            raise SystemExit(
+                f"--morphology_predictions matched 0 of {len(cands)} "
+                f"candidate_ids. Both files must come from the same "
+                f"--emit_candidates run.")
+        print(f"\n  morphology predictions joined onto {hit}/{len(cands)} "
+              f"candidates ({hit / len(cands):.1%})")
+    budget = review_budget_table(cands, morph, a.review_target) \
+        if (morph or a.veto == "none") else None
 
     gate = load_gate(a.gate) if os.path.exists(a.gate) else None
     rows = risk_coverage(items, gate=gate)
@@ -233,6 +377,7 @@ def main():
             "n_events": n, "event_fingerprint": fp,
             "event_ids": sorted(set(ids)), "rows": rows,
             "review_lift": lift,
+            "review_budget": budget,
         }, open(a.emit_certificate, "w", encoding="utf-8"),
             ensure_ascii=False, indent=1)
         print(f"\nwrote {a.emit_certificate}")
