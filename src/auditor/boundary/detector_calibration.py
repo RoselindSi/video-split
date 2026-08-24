@@ -131,7 +131,8 @@ VETO_SWEEP = (0.50, 0.60, 0.70, 0.80, 0.90)
 RELEASE_BUDGETS = (0.01, 0.03, 0.05)
 
 
-def review_budget_table(cands, morph, target, sweep=VETO_SWEEP):
+def review_budget_table(cands, morph, target, sweep=VETO_SWEEP,
+                        oracle=None):
     """The three numbers a review budget actually costs, per veto threshold.
 
     NOT precision, and not AUROC. At a fixed review budget the question is
@@ -206,6 +207,8 @@ def review_budget_table(cands, morph, target, sweep=VETO_SWEEP):
     print(f"  {'arm':<24}{'release':>8}{'REVIEW':>10}{'true lost':>14}"
           f"{'released':>11}{'kept':>8}")
     out = [one(np.zeros(N, bool), "score only")]
+    if oracle is not None:
+        out.append(one(oracle, "ORACLE no_transition"))
     if morph:
         pnt = np.array([morph.get(c["candidate_id"], {}).get(
             "p_no_transition", np.nan) for c in cands], float)
@@ -245,6 +248,14 @@ def main():
                          "P(POINT) never admits one -- an admission needs the "
                          "relation and observability heads, which have 10 and "
                          "0 usable events.")
+    ap.add_argument("--oracle_audit",
+                    help="the error-audit predictions.jsonl for THESE "
+                         "recordings. Adds an ORACLE arm that vetoes exactly "
+                         "the false_mid_segment candidates -- a perfect "
+                         "NO_TRANSITION head. It is the ceiling the learned "
+                         "head is measured against, and putting it in the same "
+                         "harness is what makes `fraction of oracle gain` a "
+                         "quantity rather than a ratio of two tables.")
     ap.add_argument("--veto", choices=("none", "morphology_only"),
                     default="none")
     ap.add_argument("--review_target", type=float, default=0.10)
@@ -329,8 +340,29 @@ def main():
                 f"--emit_candidates run.")
         print(f"\n  morphology predictions joined onto {hit}/{len(cands)} "
               f"candidates ({hit / len(cands):.1%})")
-    budget = review_budget_table(cands, morph, a.review_target) \
-        if (morph or a.veto == "none") else None
+    oracle = None
+    if a.oracle_audit:
+        bad = set()
+        for l in open(a.oracle_audit, encoding="utf-8"):
+            if not l.strip():
+                continue
+            e = json.loads(l)
+            for x in e.get("predicted_peaks", []):
+                if x.get("status") == "false_mid_segment":
+                    bad.add((e["recording_id"], round(x["pred_time"], 1)))
+        oracle = np.array([(c["recording_id"],
+                            round(c["candidate_time"], 1)) in bad
+                           for c in cands])
+        print(f"\n  oracle audit: {len(bad)} false_mid_segment in the audit, "
+              f"{int(oracle.sum())} matched onto the {len(cands)} candidates")
+        if not oracle.sum():
+            raise SystemExit(
+                "--oracle_audit matched 0 candidates. The audit and the "
+                "candidate pool must come from the same recordings and the "
+                "same peak picking.")
+    budget = review_budget_table(cands, morph, a.review_target,
+                                 oracle=oracle) \
+        if (morph or oracle is not None or a.veto == "none") else None
 
     gate = load_gate(a.gate) if os.path.exists(a.gate) else None
     rows = risk_coverage(items, gate=gate)

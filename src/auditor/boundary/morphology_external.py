@@ -116,11 +116,45 @@ def main():
 
     print(f"\ntraining events:")
     train_ev = build_events(train_gold, gc, lc, a.half_s, a.n_frames)
-    if len(train_ev) < len(train_gold):
-        print(f"  {len(train_gold)} eligible labels -> {len(train_ev)} with "
-              f"usable sequences. The shortfall is\n  reported rather than "
-              f"padded: substituting a neighbouring frame for a missing one "
-              f"is\n  a morphology answer.")
+
+    # WHICH CLASSES THE CACHE FILTER TOOK, because a shortfall spread evenly
+    # over four classes and a shortfall that gutted one of them are different
+    # experiments. The class this run depends on is NO_TRANSITION -- it is the
+    # only one with enough supervision to license a veto -- so its survival
+    # rate decides whether the result means anything about the architecture or
+    # only about which recordings had features cached.
+    kept = {e["event_id"] for e in train_ev}
+    def comp(rows):
+        c = Counter(e["morphology"] for e in rows)
+        r = {k: len({e["recording_id"] for e in rows if e["morphology"] == k})
+             for k in c}
+        return c, r
+    print(f"\n  {'class':<22}{'labels':>8}{'recs':>6}   "
+          f"{'trained':>8}{'recs':>6}   {'dropped':>8}{'recs':>6}")
+    cb, rb = comp(train_gold)
+    ck, rk = comp([e for e in train_gold if e["event_id"] in kept])
+    cd, rd = comp([e for e in train_gold if e["event_id"] not in kept])
+    for k in MORPHOLOGY:
+        print(f"  {k:<22}{cb.get(k,0):>8}{rb.get(k,0):>6}   "
+              f"{ck.get(k,0):>8}{rk.get(k,0):>6}   "
+              f"{cd.get(k,0):>8}{rd.get(k,0):>6}")
+    print(f"  {'TOTAL':<22}{len(train_gold):>8}"
+          f"{len({e['recording_id'] for e in train_gold}):>6}   "
+          f"{len(train_ev):>8}{len({e['recording_id'] for e in train_ev}):>6}   "
+          f"{len(train_gold)-len(train_ev):>8}"
+          f"{len({e['recording_id'] for e in train_gold if e['event_id'] not in kept}):>6}")
+    if ck.get("NO_TRANSITION", 0) < 0.7 * cb.get("NO_TRANSITION", 1):
+        print(f"\n  !! NO_TRANSITION lost more than 30% of its supervision to "
+              f"missing caches. This run\n     measures a subset, not the "
+              f"288-event design, and cannot support a STOP verdict.")
+    miss_rec = sorted({e["recording_id"] for e in train_gold
+                       if e["event_id"] not in kept})
+    if miss_rec:
+        print(f"\n  {len(miss_rec)} recordings have labels but no cached "
+              f"features, e.g. {miss_rec[:4]}")
+        print(f"     Find a cache covering them before reading this run as a "
+              f"result -- do NOT re-extract\n     features until the existing "
+              f"caches have been searched.")
     if not train_ev:
         raise SystemExit("no training event has sequences; check cache paths")
 
