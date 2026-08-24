@@ -44,6 +44,52 @@ import os
 
 import numpy as np
 
+def load_logits(path):
+    """Read a torch.save'd list of dicts, WITHOUT requiring torch.
+
+    Everything this file needs -- prob, times, gt, segments, valid_mask -- was
+    saved as a plain Python list, so the pickle inside the archive can be read
+    directly. torch is tried first so the normal path is unchanged; the
+    fallback exists because installing a CUDA torch to read four lists is
+    several gigabytes for nothing, and on a slow link that is the difference
+    between a result today and a result tomorrow.
+
+    Anything under `torch.` unpickles to None rather than raising. A tensor
+    would arrive as None and be visible as such at the call site, which is the
+    honest failure -- silently substituting an empty array would produce a
+    curve out of nothing."""
+    try:
+        import torch
+        return torch.load(path, map_location="cpu", weights_only=False)
+    except ImportError:
+        pass
+    import io
+    import pickle
+    import zipfile
+
+    class _NoTorch(pickle.Unpickler):
+        def find_class(self, mod, name):
+            if mod.startswith("torch"):
+                return lambda *a, **k: None
+            return super().find_class(mod, name)
+
+        def persistent_load(self, pid):
+            return None
+
+    z = zipfile.ZipFile(path)
+    pk = [n for n in z.namelist() if n.endswith("data.pkl")][0]
+    d = _NoTorch(io.BytesIO(z.read(pk))).load()
+    need = ("prob", "times", "gt")
+    bad = [k for k in need if not isinstance((d[0] if d else {}).get(k), list)]
+    if bad:
+        raise SystemExit(
+            f"read {path} without torch, but {bad} did not come back as plain "
+            f"lists -- they were probably tensors and are now None. Install "
+            f"torch (CPU is enough) rather than trusting this.")
+    print(f"  read without torch ({len(d)} recordings)")
+    return d
+
+
 TOL_S = 1.0        # 2026-08-19; see memory/tolerance-is-1s.md
 MIN_GAP_S = 1.0    # as deployed in the July error audit
 BASE_THR = 0.45    # the candidate pool: what the detector would propose at all
@@ -100,10 +146,9 @@ def main():
                          "to automate from it.")
     a = ap.parse_args()
 
-    import torch
     from src.auditor.auditor_v1 import load_gate, review_lift, risk_coverage
 
-    recs = torch.load(a.logits, map_location="cpu", weights_only=False)
+    recs = load_logits(a.logits)
     print(f"{len(recs)} recordings from {os.path.basename(a.logits)}")
     print(f"  tolerance {a.tol_s}s | candidate pool = peaks >= {a.base_thr} "
           f"thinned at {a.min_gap_s}s")
