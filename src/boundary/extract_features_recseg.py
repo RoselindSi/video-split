@@ -22,7 +22,7 @@ Usage (server):
         --data /workspace/tr1/data_recseg/recseg_val.json \
         --out /workspace/tr1/data_recseg/feat_val.pt --fps 2
 """
-import argparse, json, os
+import argparse, json, os, sys
 import numpy as np
 import torch
 from PIL import Image
@@ -244,7 +244,37 @@ def main():
             torch.save(cache, a.out)
             print(f"  [checkpoint] saved {len(cache)}/{len(rows)} -> {a.out}", flush=True)
 
+    # A MANIFEST, because its absence is what cost today. The caches under
+    # data_recseg carry none, so when a new backbone had to be extracted under
+    # identical settings there was no record of what those settings were --
+    # and the defaults were provably NOT what the originals used, since they
+    # kept 100% of frames while --th_blur 100 drops two thirds. The frame
+    # counts could be checked against the data; --max_pixels could not be
+    # checked at all, because pooling erases it.
+    import subprocess as _sp
+    try:
+        commit = _sp.run(["git", "rev-parse", "HEAD"], capture_output=True,
+                         cwd=os.path.dirname(os.path.abspath(__file__))
+                         ).stdout.decode().strip()
+    except Exception:
+        commit = None
+    man = {
+        "argv": sys.argv,
+        "git_commit": commit,
+        "n_recordings": len(cache),
+        "feature_dim": int(cache[0]["feats"].shape[1]) if cache else None,
+        "frames_per_recording": {r["recording_id"]: int(r["feats"].shape[0])
+                                 for r in cache},
+        "settings": {k: getattr(a, k) for k in
+                     ("model_base", "fps", "pool", "crop", "max_pixels",
+                      "th_black", "th_blur", "filter_static", "th_static",
+                      "enc_batch", "video_remap")},
+    }
+    json.dump(man, open(a.out + ".manifest.json", "w", encoding="utf-8"),
+              ensure_ascii=False, indent=1)
     print(f"\nwrote {len(cache)} recordings -> {a.out}")
+    print(f"wrote {a.out}.manifest.json  "
+          f"(settings recorded so the next backbone swap can match them)")
 
 
 if __name__ == "__main__":
