@@ -85,3 +85,48 @@ B   does it help the production detector?
 
 A asks about the auditor's representation, B about the detector's. Running
 them together produces a number that answers neither.
+
+---
+
+## Appendix — how the Qwen3.5 extraction settings were validated
+
+The caches carry no manifest, so the settings the originals were extracted
+with had to be recovered rather than read. Two of them came out of the data:
+
+```
+frames        100% retention at a uniform 0.50s spacing, so nothing was
+              filtered -- which also proves the originals did NOT use the
+              defaults, since --th_blur 100 discards two thirds
+fps           2.0, from the spacing
+```
+
+`--max_pixels` leaves no trace: the patch grid is pooled away, so a different
+resolution produces a same-shaped feature. It could not be recovered and it
+decides what the ViT actually saw.
+
+**The check that closed it: extract one recording with the OLD backbone under
+the NEW settings and compare to its cached features.** If the settings match,
+the two differ only by numerical noise.
+
+```
+recording_000005, (1303, 5760) both
+
+relative error   0.002941
+cosine           0.99999568
+per frame        median 0.999999, min 0.999925, none below 0.99
+
+per block        global 0.0017 | left 0.0020 | right 0.0022
+                 center 0.0027 | spatial_max 0.0032
+```
+
+Every block agrees to within 0.3%, and `spatial_max` is the largest — the
+signature of numerical noise amplified by a max, where a tiny difference flips
+which patch wins. That is also where the max absolute difference of 384 comes
+from, against a feature whose largest magnitude is 15616.
+
+So the settings are verified rather than assumed, and the Qwen3.5 features
+differ from the current ones only by the ViT weights.
+
+**Generalisable: when a cache has no manifest, re-extract one item with the
+known-good model under the candidate settings and compare. It converts an
+assumption into a measurement for the cost of a single recording.**
