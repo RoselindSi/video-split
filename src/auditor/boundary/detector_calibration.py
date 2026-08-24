@@ -7,7 +7,8 @@ match them at the current tolerance and ask what an automatic KEEP would buy.
 
 TWO LIMITS, STATED BEFORE THE NUMBERS RATHER THAN UNDER THEM:
 
-  THIS IS THE SPLIT THE HEAD WAS SELECTED ON. b2_logits.pt comes from
+  THE DEFAULT ASSUMPTION IS NOT INDEPENDENT, and `--independent_because`
+  overturns it only by making someone write a sentence. b2_logits.pt comes from
   `train_head_multi --val feat_val_full_noblur_multi.pt`, and that split drove
   early stopping. A threshold chosen here is chosen on data the model was tuned
   against, which is the exact overlap `auditor_v1`'s certificate refuses. So
@@ -90,6 +91,13 @@ def main():
     ap.add_argument("--min_gap_s", type=float, default=MIN_GAP_S)
     ap.add_argument("--gate", default="configs/auditor/auto_keep_gate_v1.yaml")
     ap.add_argument("--emit_certificate")
+    ap.add_argument("--independent_because",
+                    help="mark the certificate independent, and say WHY in one "
+                         "sentence that goes into it. A boolean flag would let "
+                         "the claim be made by habit; a sentence has to be "
+                         "written by someone who checked. Without it the "
+                         "certificate is independent:false and --run refuses "
+                         "to automate from it.")
     a = ap.parse_args()
 
     import torch
@@ -127,9 +135,12 @@ def main():
         fp, n = event_fingerprint(ids)
         json.dump({
             "auditor_version": "v1", "veto_mode": "none",
-            "tolerance_s": a.tol_s, "independent": False,
-            "not_independent_because":
-                "b2_logits.pt is the val split train_head_multi selected on",
+            "tolerance_s": a.tol_s,
+            "independent": bool(a.independent_because),
+            "independent_because": a.independent_because,
+            "not_independent_because": None if a.independent_because else
+                "no --independent_because was given; the default assumption is "
+                "that the scores come from a split the model was selected on",
             "score_is": "detector peak probability, not a morphology judgement",
             "gold": os.path.abspath(a.logits),
             "gate_config": os.path.abspath(a.gate),
@@ -139,10 +150,17 @@ def main():
             "review_lift": lift,
         }, open(a.emit_certificate, "w", encoding="utf-8"),
             ensure_ascii=False, indent=1)
-        print(f"\nwrote {a.emit_certificate}  (independent: false)")
-        print(f"  Recorded so a later reader cannot mistake this for a "
-              f"deployable operating\n  point. It is the shape of the curve, "
-              f"measured where the model had an advantage.")
+        print(f"\nwrote {a.emit_certificate}  "
+              f"(independent: {str(bool(a.independent_because)).lower()})")
+        if a.independent_because:
+            print(f"  claimed independent because: {a.independent_because}")
+            print(f"  --run will accept this as backing for a threshold IF a "
+                  f"row also passes the\n  pre-registered gate, which ships "
+                  f"with its three targets null.")
+        else:
+            print(f"  Recorded so a later reader cannot mistake this for a "
+                  f"deployable operating\n  point. It is the shape of the "
+                  f"curve, measured where the model had an advantage.")
 
 
 if __name__ == "__main__":
