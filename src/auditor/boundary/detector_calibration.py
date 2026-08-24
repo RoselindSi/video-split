@@ -198,11 +198,26 @@ def main():
         json.dump({
             "auditor_version": "v1", "veto_mode": "none",
             "tolerance_s": a.tol_s,
-            "independent": bool(a.independent_because),
-            "independent_because": a.independent_because,
+            # TWO INDEPENDENCES, AND ONLY ONE OF THEM IS EVER TRUE HERE.
+            # A single `independent: true` reads as "independent test of the
+            # operating point", and this curve cannot be that: the moment a
+            # threshold is chosen from these rows, the rows become its
+            # selection set. Keeping the fields apart is what stops a later
+            # reader from citing a calibration curve as its own validation --
+            # which is how the pooled out-of-fold threshold that breached got
+            # justified.
+            "model_training_independent": bool(a.independent_because),
+            "model_training_independent_because": a.independent_because,
             "not_independent_because": None if a.independent_because else
                 "no --independent_because was given; the default assumption is "
                 "that the scores come from a split the model was selected on",
+            "operating_point_independent_test": "not_run",
+            "operating_point_note":
+                "a threshold selected from these rows is calibrated, not "
+                "validated. Its independent test needs a further set that was "
+                "not used to choose it.",
+            # kept for older readers; means training independence only
+            "independent": bool(a.independent_because),
             "score_is": "detector peak probability, not a morphology judgement",
             "gold": os.path.abspath(a.logits),
             "gate_config": os.path.abspath(a.gate),
@@ -220,13 +235,20 @@ def main():
             "review_lift": lift,
         }, open(a.emit_certificate, "w", encoding="utf-8"),
             ensure_ascii=False, indent=1)
-        print(f"\nwrote {a.emit_certificate}  "
-              f"(independent: {str(bool(a.independent_because)).lower()})")
+        print(f"\nwrote {a.emit_certificate}")
+        print(f"  model_training_independent      "
+              f"{str(bool(a.independent_because)).lower()}")
+        print(f"  operating_point_independent_test not_run")
         if a.independent_because:
-            print(f"  claimed independent because: {a.independent_because}")
-            print(f"  --run will accept this as backing for a threshold IF a "
-                  f"row also passes the\n  pre-registered gate, which ships "
-                  f"with its three targets null.")
+            print(f"    because: {a.independent_because}")
+            print(f"\n  THOSE ARE DIFFERENT CLAIMS. Every prediction here "
+                  f"comes from a model that never\n  saw its recording. A "
+                  f"threshold CHOSEN from these rows is calibrated on them, "
+                  f"so\n  this curve is not that threshold's independent "
+                  f"test -- that needs a further set.")
+            print(f"  --run accepts this as backing IF a row also passes the "
+                  f"pre-registered gate,\n  which ships with its three "
+                  f"targets null.")
         else:
             print(f"  Recorded so a later reader cannot mistake this for a "
                   f"deployable operating\n  point. It is the shape of the "
