@@ -77,10 +77,16 @@ pool. That reframes three earlier results:
   candidate is an internal motion*; the head appears to know *this recording
   looks like such-and-such a regime*.
 
-The detector's own .5400 belongs in the same sentence. On the within-recording
-discrimination the auditor needs, **nothing currently in the system is far from
-chance**, and its pooled AUROC of .6763 is therefore also substantially a
-between-recording effect.
+The detector's own .5400 was, briefly, read the same way — and that reading was
+wrong. A pair-weighted mean is dominated by whichever recordings are large, and
+`recording_000157` and `recording_000218` hold 48% of the 81416 pairs between
+them at .482 and .398. Weighted by recording instead, the detector is at
+**.6630 [.612, .712]**, with 13 of 34 recordings significantly above chance
+against 1 below. **The detector's within-recording discrimination is
+established; morphology's is not** (.5309 [.471, .590], interval containing
+.5). Its pooled AUROC still carries a large between-recording component, but
+the claim that nothing in the system beats chance came from reading micro
+alone and does not survive.
 
 ## Two things this result forbids
 
