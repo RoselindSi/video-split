@@ -37,9 +37,13 @@ predictions.jsonl predates the segment-label fields):
 import argparse, csv, json, os, random, shutil, subprocess
 from collections import Counter, defaultdict
 
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
+# matplotlib is imported inside make_score_plot, not here. It is the only
+# function that needs it, and render_batch3_media deliberately never calls it
+# -- a probability curve would show the frozen artifact's confidence and where
+# it crosses threshold, which is exactly the anchoring blind review forbids. A
+# module-level import made a plotting library a hard requirement of the one
+# path defined by not plotting, and blocked a blind render on a machine that
+# had lost network.
 import torch
 from decord import VideoReader
 from PIL import Image, ImageDraw
@@ -107,6 +111,9 @@ def make_score_plot(times, prob, center, window_s, gt_in_window, pred_in_window,
     idx = [i for i, t in enumerate(times) if lo <= t <= hi]
     if not idx:
         return False
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
     t = [times[i] for i in idx]; p = [prob[i] for i in idx]
     fig, ax = plt.subplots(figsize=(6, 3.3))
     ax.plot(t, p, color="steelblue", lw=1.5)
