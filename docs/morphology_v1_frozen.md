@@ -216,3 +216,107 @@ within-recording ranking loss on exactly the pairs that fail.
 **Frozen. Do not tune the Qwen3.5 morphology head** — no threshold sweep, no
 hidden size, no dropout. Continuing would be architecture fishing on the
 evaluation set that every arm above shares.
+
+---
+
+# Experiment B — the backbone made the detector worse
+
+Same 36 recordings, the frozen fold assignment reused rather than re-derived,
+the head config read out of the b2 manifest rather than retyped, the same 30
+val recordings re-extracted for early stopping, and the same decode
+(`base_thr 0.45`, `min_gap 1.0s`, `tol 1.0s`).
+
+| | old backbone | Qwen3.5 | Δ |
+|---|---:|---:|---:|
+| candidates | 3707 | 3188 | −519 (−14.0%) |
+| on a boundary | 2124 | 1801 | −323 |
+| precision | 0.573 | 0.565 | −0.008 |
+| recall | 0.544 | 0.461 | **−0.083** |
+| F1@1.0 | 0.558 | 0.508 | **−0.050** |
+
+The shape of that is what makes it readable. A backbone that discriminated
+better would propose fewer candidates AND raise precision AND hold recall.
+This one proposes 14% fewer, leaves precision where it was, and drops recall by
+8.3 points — it weakened the proposal signal rather than sharpening it.
+
+## The failure mode did not change
+
+```
+1595 misses
+  signal_present_not_top   1278   80.1%
+  weak_signal               317   19.9%
+
+1407 false positives
+  false_mid_segment         882   62.7%
+  false_gap                 202   14.4%
+  false_near_edge           175   12.4%
+  duplicate                 148   10.5%
+```
+
+Four fifths of misses still have a response that failed to become the top
+candidate, and the largest false-positive family is still a peak in the middle
+of a segment.
+
+**The FP percentages are not comparable to the old pool's.** 1316 of 1583 wrong
+candidates were false_mid_segment there, but that is a share of all wrong
+candidates in a differently-composed pool of 3707, against a share of the four
+audited FP classes here. Both are true of their own pool and neither belongs
+next to the other.
+
+## A correction to how the rescue diagnostic was read
+
+```
+rescued at tol 1.5s   28.5%
+             2.0s     42.5%
+             3.0s     55.2%
+```
+
+The audit prints a conditional — *if* the rescue rate stays low at 2–3s, the
+misses have no nearby prediction at all. **It does not stay low, so that
+conditional does not fire.** Temporal localisation error is real and
+substantial: two seconds of slack recovers 42.5% of misses.
+
+What it does not do is explain the majority. At three seconds, 44.8% are still
+unrecoverable. So the honest statement is that mistiming is a genuine
+component and ranking is the larger one — not that timing is irrelevant, which
+is what an earlier reading of mine implied.
+
+**And none of this licenses widening the tolerance.** The ontology is frozen at
+±1s; reaching a better number by loosening it changes the standard rather than
+the system.
+
+# Both backbone experiments, together
+
+```
+A   Qwen3.5 -> morphology    44.6% -> 44.6% true lost at 5% release.  Flat.
+B   Qwen3.5 -> detector      F1@1.0 0.558 -> 0.508.  Worse.
+```
+
+So "the learned representation is insufficient, therefore use a stronger ViT"
+is now tested and false. A frozen visual-backbone intervention improved neither
+the auditor's morphology discrimination nor the detector's ranking, and cost
+recall in the second.
+
+**The bottleneck is not frame-level visual backbone quality.** What is left
+between the frames and the decision is how temporal evidence is represented,
+what it is supervised on, and where the ontology enters — and the evidence for
+that is specific rather than residual:
+
+```
+threshold / min_gap tuning     cannot fix it (risk-coverage curve)
+a wider tolerance              changes the standard, not the system
+oracle count                   not the limit -- the oracle is worth 30.2 pp
+morphology as a post-hoc veto  captures a third of that
+a stronger frozen ViT          changes nothing (A) or hurts (B)
+false_mid_segment              still the largest FP family
+signal_present_not_top         still ~80% of misses
+```
+
+Every one of those says the same thing: the system is not failing to see, it is
+failing to ORDER. `E(true interaction reset)` sits below `E(same-action
+internal motion)`, a cross-entropy on a class never optimises that comparison,
+and a veto applied after ranking cannot repair it because a veto only removes.
+
+**Backbone swaps are frozen. Do not try another set of weights.** The next
+intervention is the objective: level C, morphology inside the score, trained by
+a within-recording ranking loss on exactly the pairs that fail.
