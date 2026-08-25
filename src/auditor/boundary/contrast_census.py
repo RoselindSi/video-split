@@ -56,36 +56,59 @@ CONTESTED_RELATION = {"same_action_new_instance"}
 NEAR_GAPS = (60.0, 30.0, 10.0)
 
 
+POLICIES = (
+    ("strict (shipped)", {}),
+    ("+ mislocalised as positive", {"loose_tolerance": True}),
+    ("+ repeated instance as negative", {"contested_negative": True}),
+    ("+ no-action as negative", {"no_action_negative": True}),
+    ("everything admitted", {"loose_tolerance": True,
+                             "contested_negative": True,
+                             "no_action_negative": True}),
+)
+
+
 def _clean(row):
     return {k.lstrip("﻿").strip(): (v or "").strip()
             for k, v in row.items()}
 
 
-def classify(r):
-    """-> ('pos' | 'neg' | 'edge' | 'excluded', reason)."""
+def classify(r, loose_tolerance=False, contested_negative=False,
+             no_action_negative=False):
+    """-> ('pos' | 'neg' | 'edge' | 'excluded', reason).
+
+    The keyword arguments exist only so `--sensitivity` can price each
+    exclusion. They are not an interface for choosing a looser policy at
+    training time: the shipped defaults are the strict ones, and a relaxation
+    has to be argued for and written down, not passed as a flag."""
     ev = r.get("temporal_event_type", "")
     tol = r.get("within_1s_tolerance", "")
     rel = r.get("interaction_relation", "")
     if ev in POSITIVE_EVENT:
-        if tol == "yes":
+        if tol == "yes" or loose_tolerance:
             return "pos", "task_boundary within 1s"
         return "excluded", f"task_boundary but within_1s_tolerance={tol!r}"
     if ev in NEGATIVE_EVENT:
         if rel in CONTESTED_RELATION:
+            if contested_negative:
+                return "neg", "no_boundary, same_action_new_instance"
             return "excluded", "no_boundary but same_action_new_instance"
         if rel in CLEAN_NEGATIVE_RELATION:
             return "neg", "no_boundary, same_instance"
+        if rel == "not_applicable_no_action":
+            if no_action_negative:
+                return "neg", "no_boundary, no action at all"
+            return "excluded", "no_boundary, relation='not_applicable_no_action'"
         return "excluded", f"no_boundary, relation={rel!r}"
     if ev in EDGE_EVENT:
         return "edge", ev
     return "excluded", f"event={ev!r}"
 
 
-def census(rows, label=""):
+def census(rows, label="", quiet=False, **policy):
     by = defaultdict(lambda: {"pos": [], "neg": [], "edge": 0, "excluded": 0})
     reasons = Counter()
     for r in rows:
-        kind, why = classify(r)
+        kind, why = classify(r, **policy)
         rid = r.get("recording_id", "")
         t = r.get("candidate_time_s", "")
         try:
@@ -100,11 +123,12 @@ def census(rows, label=""):
         else:
             by[rid]["excluded"] += 1
 
-    print("=" * 78)
-    print(f"HOW EVERY ROW WAS CLASSIFIED{'  -- ' + label if label else ''}")
-    print("=" * 78)
-    for k, n in reasons.most_common():
-        print(f"  {n:>5}  {k}")
+    if not quiet:
+        print("=" * 78)
+        print(f"HOW EVERY ROW WAS CLASSIFIED{'  -- ' + label if label else ''}")
+        print("=" * 78)
+        for k, n in reasons.most_common():
+            print(f"  {n:>5}  {k}")
 
     rec = []
     for rid, d in sorted(by.items()):
@@ -217,11 +241,39 @@ def main():
     rec, by = census(rows)
     both = report(rec, "candidate contrast availability")
 
+    print(f"\n{'=' * 78}\nWHAT EACH EXCLUSION COSTS\n{'=' * 78}")
+    print(f"  {'policy':<34}{'recs both':>11}{'<=60s':>8}{'pairs':>8}"
+          f"{'pos':>6}{'neg':>6}")
+    sens = {}
+    for name, pol in POLICIES:
+        r2, _ = census(rows, quiet=True, **pol)
+        b2 = [x for x in r2 if x["has_both"]]
+        sens[name] = {"recordings_with_both": len(b2),
+                      "recordings_with_60s_pair":
+                          sum(1 for x in b2 if x["pairs_60s"] > 0),
+                      "pairs": sum(x["pairs_all"] for x in r2),
+                      "n_pos": sum(x["n_pos"] for x in r2),
+                      "n_neg": sum(x["n_neg"] for x in r2), "policy": pol}
+        s = sens[name]
+        print(f"  {name:<34}{s['recordings_with_both']:>11}"
+              f"{s['recordings_with_60s_pair']:>8}{s['pairs']:>8}"
+              f"{s['n_pos']:>6}{s['n_neg']:>6}")
+    print(f"\n  This table prices the exclusions; it does not license them. "
+          f"Admitting\n  `same_action_new_instance` buys recordings by "
+          f"training on the one\n  configuration the annotators disagreed "
+          f"about five ways, and admitting\n  mislocalised positives teaches "
+          f"the model that a candidate more than a\n  second from the "
+          f"boundary is the boundary -- which is the tolerance the\n  whole "
+          f"evaluation is defined by. `no-action` negatives are honest but "
+          f"EASY:\n  they are not the internal-motion confusion the failure "
+          f"is made of, so\n  they raise a score without touching it.")
+
     if a.emit_pairs:
         emit(by, a.emit_pairs)
     if a.out:
         json.dump({"per_recording": rec,
                    "n_recordings_with_both": len(both),
+                   "sensitivity": sens,
                    "definitions": {
                        "positive": sorted(POSITIVE_EVENT),
                        "positive_requires": "within_1s_tolerance == yes",
