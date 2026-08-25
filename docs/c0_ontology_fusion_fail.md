@@ -119,3 +119,59 @@ by side.
   problem).
 - **C.** What the recording-level offset tracks. `true_boundary_density` is
   the one to read first: a strong correlation there is the mechanism itself.
+
+---
+
+## Addendum 2026-08-25 — why the reranker was not written
+
+The next step after C0 was a residual pairwise scorer trained on
+within-recording contrasts. It was not written, and the reason is supply.
+
+batch4 is disjoint from the evaluation pool (61 audit recordings and 62
+manifest recordings against the 36, after normalising `4` and
+`recording_000004` to the same spelling). But it is **117 injected
+`gt_boundary` points and 115 `raw_change_peak`**. A reranker only ever sees
+detector peaks at inference, so an injected annotation time is an
+out-of-distribution positive: training on it produces a model that recognises
+annotated instants, scores well in development, and does nothing in
+production — a mismatch no development metric reveals.
+
+Restricted to detector peaks on both sides:
+
+| | recordings with both | ≤60s | pairs | pos | neg |
+|---|---|---|---|---|---|
+| strict | **6** | 1 | 12 | 20 | 48 |
+| + mislocalised positives | 8 | 2 | 17 | 32 | 48 |
+| + no-action negatives | 8 | 2 | 14 | 20 | 59 |
+| everything admitted | 10 | 3 | 19 | 32 | 59 |
+
+Six recordings is not a gate that was narrowly missed. It is an order of
+magnitude short of the 40–50 the ranking hypothesis would need, and no
+relaxation of the label policy reaches it.
+
+## The number that redirects the work
+
+**52 of 117 injected stored-GT boundaries were audited as NOT boundaries**
+(q = 0.444). `initial_action_start` and `terminal_action_end`, 19 rows, are
+excluded from q: they are real events at the ends of a recording, outside the
+inter-episode definition but not the label being wrong. Folding them in gives
+q = 0.617, which is the more flattering error to make.
+
+The evaluation pool's `is_true_boundary` comes from the same stored ground
+truth and was never audited, while its `false_mid_segment` negatives were. The
+two sides of every pairwise comparison therefore do not have the same label
+quality. Positives that are not boundaries are indistinguishable from
+negatives, which pulls an observed accuracy toward .5:
+
+    true ≈ (observed − q/2) / (1 − q)
+    detector macro    .663 → ≈ .79
+    morphology macro  .531 → ≈ .55
+
+An estimate carried from batch4 to the 36, not a measurement on them. It does
+not reorder the arms. It changes what is left to win: **a ranker has less room
+than it appeared, and the labels are holding more of the gap than any model
+change measured so far.** That agrees with three earlier independent results —
+relabelling 2.6% of events moved all-clean by +0.025 (p = 0.000), model and
+human both score 0.74 against the stored labels while scoring 0.85 against
+each other, and the double audit found the outlier was the stored label rather
+than the annotator.
