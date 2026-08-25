@@ -74,16 +74,36 @@ def load_timelines(patterns):
             eps = d.get("episodes") or []
             dur = float(d.get("recording_duration_s") or 0.0)
             rid = d.get("recording_id") or _rid_from_path(p, d)
-            cuts = set()
+            # A BOUNDARY IS THE GAP, NOT ITS TWO EDGES. The pipeline brackets
+            # each episode and puts an `idle` interval between consecutive
+            # ones, so one real transition arrives as an end AND a following
+            # start. Counting both makes every correct boundary look like two
+            # cuts -- it halves precision and doubles the cuts-per-minute
+            # rate, entirely as an artefact of the output format.
+            #
+            # On recording_000004's first minute the difference is not
+            # cosmetic: the raw edges 22.6 and 24.2 are 0.8s either side of
+            # the annotated 23.4, while their midpoint 23.35 is 0.05s from it.
+            span = []
             for e in eps:
-                for k in ("start_s", "end_s"):
-                    try:
-                        t = round(float(e[k]), 3)
-                    except (KeyError, TypeError, ValueError):
-                        continue
-                    if t <= TOL_S or (dur and t >= dur - TOL_S):
-                        continue
-                    cuts.add(t)
+                try:
+                    span.append((round(float(e["start_s"]), 3),
+                                 round(float(e["end_s"]), 3)))
+                except (KeyError, TypeError, ValueError):
+                    continue
+            # Only the gaps BETWEEN episodes. The first episode's start is the
+            # onset of activity and the last one's end is where it stops --
+            # `initial_action_start` and `terminal_action_end` in the audit,
+            # a separate class that is not probed here. Counting them would
+            # add a claim at a place nobody is asking about, and it can only
+            # cost precision at a negative probe.
+            span.sort()
+            cuts = set()
+            for (_, s1), (nxt, _) in zip(span, span[1:]):
+                t = round((s1 + nxt) / 2 if nxt >= s1 else s1, 3)
+                if t <= TOL_S or (dur and t >= dur - TOL_S):
+                    continue
+                cuts.add(t)
             out[_norm_rid(rid)] = {"cuts": sorted(cuts), "duration_s": dur,
                                    "n_episodes": len(eps), "path": p}
     return out
