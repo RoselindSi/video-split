@@ -1,0 +1,160 @@
+# The eight rules, as machine-readable constraints rather than prose.
+#
+# Every one of them was written because the project already broke it once. A
+# README says what should happen; this file is read by ontology_constitution.py
+# and each rule raises rather than warns, because the failures it guards
+# against are silent by construction -- a leaked answer field, an ontology
+# coefficient that learned the wrong sign, a review rate reported alone.
+#
+# Editing this file changes what the system is allowed to do. It is not a
+# tuning surface.
+
+version: 1
+frozen: true
+
+# --- 1. what a boundary IS ------------------------------------------------
+# A verb change is not a boundary. `retrieve -> fold -> wipe` with no
+# disengagement is one instance, and 56% of the disputed events in the double
+# audit sit on exactly that configuration.
+boundary_definition:
+  positive: "meaningful disengagement / release / reset / restart between
+             interaction episodes"
+  negative: "the same hand-object interaction continues, even across a verb
+             change, a motion-direction change, a manipulation-phase change,
+             or a gradual object-state change"
+  tolerance_s: 1.0        # since 2026-08-19; 0.5 is retired
+  forbidden_derivations:
+    - "action-name change alone"
+    - "motion-direction change alone"
+
+# --- 2. the candidate pool is frozen --------------------------------------
+# Any arm that re-derives peaks is compared on a different population, and the
+# difference gets attributed to the method.
+candidate_pool:
+  manifest: results/auditor/oof_candidates.jsonl
+  n_candidates: 3707
+  n_recordings: 36
+  base_thr: 0.45
+  min_gap_s: 1.0
+  may_add_candidates: false
+  may_change_base_thr: false
+  may_change_min_gap: false
+
+# --- 3. the detector is a proposal generator ------------------------------
+# p_detector answers "how strong is the temporal change here", not "is this a
+# boundary". Three layers, three jobs, and the names must not blur.
+naming:
+  p_detector: "change/proposal score"
+  forbidden_names_for_p_detector:
+    - "boundary probability"
+  layers:
+    detector: "proposal generator"
+    ontology_scorer: "candidate discriminator"
+    decoder: "global selection"
+
+# --- 4. train and eval recordings are disjoint ----------------------------
+# And nothing fitted may see the evaluation recordings, which is a longer list
+# than people remember.
+data_isolation:
+  train_eval_recording_overlap_max: 0
+  eval_recordings_may_not_contribute_to:
+    - pca
+    - feature_scaler
+    - class_weighting
+    - early_stopping
+    - threshold_selection
+    - duration_prior
+    - hyperparameter_selection
+    - loss_weight_tuning
+
+# --- 5. which evidence may license an automatic action --------------------
+morphology:
+  mapping:
+    sharp_visible_transition: POINT_TRANSITION
+    gradual_phase_transition: INTERVAL_TRANSITION
+    same_action_internal_motion: NO_TRANSITION
+    visibility_or_offscreen: UNOBSERVABLE
+    camera_or_viewpoint_shift: MASKED
+    annotation_convention: MASKED
+    ambiguous: MASKED
+  # 101 external training events. The only class with enough behind it.
+  may_license_action: [NO_TRANSITION]
+  # 25 and 17. Predicted and analysed, never acted on.
+  predicted_but_may_not_license: [INTERVAL_TRANSITION, UNOBSERVABLE]
+
+# --- 6. unobservable is not absent ----------------------------------------
+# "No boundary was seen" and "it was seen that there is no boundary" are
+# different claims, and only the second licenses a suppression.
+abstention:
+  unobservable_implies_no_boundary: false
+  false_gap_implies_no_action: false
+  unobservable_action: REVIEW
+
+# --- 7. the ontology's signs are architecture, not something learned ------
+# A generic MLP is free to learn that NO_TRANSITION supports a boundary. It
+# must not be free to.
+energy_signs:
+  # eta = softplus(raw), so the coefficient cannot change sign
+  non_negative_coefficients: true
+  supports_boundary: [POINT_TRANSITION, RESET, RELEASE, DISENGAGE]
+  suppresses_boundary: [NO_TRANSITION, CONTINUITY]
+  # heads with no supervision yet; listed so adding one is a deliberate act
+  not_yet_supervised: [RESET, RELEASE, DISENGAGE, CONTINUITY]
+
+# --- 8. what may never enter a runtime feature ---------------------------
+# These are ANSWERS. A model that reads them is scoring its own target.
+feature_leakage:
+  forbidden_runtime_features:
+    - gt_action_label
+    - corrected_action_name
+    - verb_changed_across_candidate
+    - semantic_audit_outcome
+    - instance_relation
+    - temporal_pair_subtype
+    - morphology_true
+    - is_true_boundary
+  allowed_runtime_features:
+    - detector_score
+    - temporal_visual_features
+    - morphology_evidence
+    - visibility_mask
+    - duration_context
+
+# --- reporting ------------------------------------------------------------
+# A review rate alone is satisfiable by automating everything in either
+# direction. It is never reported by itself.
+reporting:
+  review_rate_requires:
+    - true_boundary_loss_rate
+    - false_boundaries_released
+  compare_arms: "down a release column, never across rows"
+
+# --- the three actions, which are three different risks -------------------
+actions:
+  KEEP_MODEL_CANDIDATE:
+    risk: "a false boundary enters the output unreviewed"
+    enabled: false
+  SUPPRESS_MODEL_CANDIDATE:
+    risk: "a true boundary is lost"
+    enabled: false
+  DELETE_EXISTING_ANNOTATION:
+    risk: "human-made data is destroyed"
+    note: "not the same action as suppressing a detector proposal, and it has
+           never been enabled"
+    enabled: false
+
+# --- ablation order -------------------------------------------------------
+# Each level enters only after the previous one showed an incremental gain.
+ablation:
+  order: [A_score_only, B_morphology_veto, C_ontology_rerank,
+          D_segment_dp, E_structured_loss, F_posterior_feedback]
+  implemented_through: C_ontology_rerank
+  gate: "the arm must reach >= 50% of the same-harness oracle gain at the
+         frozen release column to justify the next level"
+
+# --- oracle ---------------------------------------------------------------
+oracle:
+  may_train: false
+  may_select_thresholds: false
+  may_select_architecture: false
+  use: "headroom only"
