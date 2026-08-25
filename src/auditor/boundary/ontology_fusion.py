@@ -64,6 +64,55 @@ def ontology_energy(det_score, p_point, p_no_transition, eps=EPS):
                                          + eps))
 
 
+def morphology_logratio(p_point, p_no_transition, eps=EPS):
+    """The ontology term on its own, as an ordering.
+
+    Reported as a THIRD ARM because a fusion that has been taken over by one
+    of its terms is indistinguishable from a fusion that works, if you only
+    look at the fused column. If this column matches E_onto, the detector is
+    not contributing and the number is morphology's, not the fusion's."""
+    return (np.log(np.asarray(p_point, float) + eps)
+            - np.log(np.asarray(p_no_transition, float) + eps))
+
+
+def term_scales(det_score, p_point, p_no_transition, rec, eps=EPS):
+    """How much each term can move the sum, overall and within a recording.
+
+    Adding two terms only fuses them if they are on comparable scales. With
+    eps=1e-8 the ontology term spans about +/-18 while a detector logit over
+    a peak-thresholded pool spans very little, so `eta=1` is not a neutral
+    default -- it is a strong claim about relative scale, and it was made
+    before anyone measured what the scales were."""
+    d = np.asarray(det_score, float).clip(1e-4, 1 - 1e-4)
+    logit = np.log(d / (1 - d))
+    lr = morphology_logratio(p_point, p_no_transition, eps)
+
+    def within(v):
+        by = defaultdict(list)
+        for i, r in enumerate(rec):
+            by[r].append(v[i])
+        return float(np.mean([np.std(x) for x in by.values() if len(x) > 1]))
+
+    print("=" * 78)
+    print("THE TWO TERMS, ON THEIR OWN SCALES")
+    print("=" * 78)
+    print(f"  {'':<28}{'detector logit':>16}{'ontology term':>16}")
+    print(f"  {'std over the pool':<28}{np.std(logit):>16.3f}{np.std(lr):>16.3f}")
+    print(f"  {'mean std within a recording':<28}{within(logit):>16.3f}"
+          f"{within(lr):>16.3f}")
+    print(f"  {'range':<28}"
+          f"{f'{logit.min():.2f} .. {logit.max():.2f}':>16}"
+          f"{f'{lr.min():.2f} .. {lr.max():.2f}':>16}")
+    dom = float(np.mean(np.abs(lr) > np.abs(logit)))
+    print(f"\n  the ontology term is larger in magnitude than the detector "
+          f"term on {dom:.1%} of candidates")
+    print(f"  a sum is a fusion only if neither term can overwhelm the other; "
+          f"eta=1 asserted\n  that without measuring it")
+    return {"logit_std": float(np.std(logit)), "ontology_std": float(np.std(lr)),
+            "logit_within_std": within(logit), "ontology_within_std": within(lr),
+            "ontology_dominates_frac": dom}
+
+
 def _auroc(sc, pos, neg):
     a, b = sc[pos], sc[neg]
     if not len(a) or not len(b):
@@ -107,7 +156,7 @@ def _pctile(sc, mask, rec):
     return float(np.mean(out)) if out else float("nan")
 
 
-def ranking_diagnostics(cands, new_score, fm_mask, label="E_onto"):
+def ranking_diagnostics(cands, new_score, fm_mask, label="E_onto", extra=None):
     """Ordering, reported before any policy.
 
     A policy compares two systems at an operating point; this compares them as
@@ -119,10 +168,13 @@ def ranking_diagnostics(cands, new_score, fm_mask, label="E_onto"):
     fm = np.asarray(fm_mask, bool)
     new = np.asarray(new_score, float)
 
+    cols = [("detector", det)] + list(extra or []) + [(label, new)]
+
     print("=" * 78)
     print("RANKING, BEFORE ANY POLICY")
     print("=" * 78)
-    print(f"  {'':<34}{'detector':>12}{label:>12}{'delta':>10}")
+    head = "".join(f"{c:>12}" for c, _ in cols)
+    print(f"  {'':<34}{head}{'delta':>10}")
     out = {}
     checks = (
         ("AUROC true vs false_mid", lambda s: _auroc(s, ok, fm)),
@@ -131,28 +183,41 @@ def ranking_diagnostics(cands, new_score, fm_mask, label="E_onto"):
         ("mean pctile of false_mid", lambda s: _pctile(s, fm, rec)),
     )
     for name, fn in checks:
-        a, b = fn(det), fn(new)
-        out[name] = {"detector": a, "fused": b, "delta": b - a}
-        print(f"  {name:<34}{a:>12.4f}{b:>12.4f}{b - a:>+10.4f}")
+        vals = [fn(np.asarray(s, float)) for _, s in cols]
+        out[name] = {c: v for (c, _), v in zip(cols, vals)}
+        out[name]["delta"] = vals[-1] - vals[0]
+        row = "".join(f"{v:>12.4f}" for v in vals)
+        print(f"  {name:<34}{row}{vals[-1] - vals[0]:>+10.4f}")
     _, npair = _pair_acc(det, ok, fm, rec)
     print(f"    {npair} within-recording true x false_mid pairs, "
           f"{int(ok.sum())} true and {int(fm.sum())} audited false_mid")
 
     print()
     print("  true boundaries among the top of the ordering:")
-    print(f"  {'top':>6}{'detector':>12}{label:>12}{'delta':>10}")
+    print(f"  {'top':>6}{head}{'delta':>10}")
     for frac in (0.05, 0.10, 0.20):
         k = max(1, int(frac * len(cands)))
-        a = float(ok[np.argsort(-det)[:k]].mean())
-        b = float(ok[np.argsort(-new)[:k]].mean())
-        out[f"top_{int(frac * 100)}"] = {"detector": a, "fused": b,
-                                         "delta": b - a}
-        print(f"  {frac:>5.0%}{a:>12.3f}{b:>12.3f}{b - a:>+10.3f}")
+        vals = [float(ok[np.argsort(-np.asarray(s, float))[:k]].mean())
+                for _, s in cols]
+        out[f"top_{int(frac * 100)}"] = {c: v for (c, _), v in zip(cols, vals)}
+        out[f"top_{int(frac * 100)}"]["delta"] = vals[-1] - vals[0]
+        row = "".join(f"{v:>12.3f}" for v in vals)
+        print(f"  {frac:>5.0%}{row}{vals[-1] - vals[0]:>+10.3f}")
     print(f"    pool base rate {ok.mean():.3f}")
     print()
     print("  An ordering gain here is about ordering only. A boundary that")
     print("  never became a candidate cannot be reranked into existence, so a")
     print("  small recall change beside a large ordering change is consistent.")
+    print()
+    print("  READ THE POOLED AND THE WITHIN-RECORDING ROWS AS SEPARATE")
+    print("  ANSWERS. AUROC and top-k pool all 36 recordings, so an ordering")
+    print("  that merely sorts RECORDINGS by how many real boundaries they")
+    print("  contain improves both while telling a person nothing about which")
+    print("  candidate in front of them to look at. The pairwise row is the")
+    print("  one holding recording fixed, and it is the failure being")
+    print("  attacked: a real boundary ranked below an internal motion in the")
+    print("  SAME video. When the two disagree, the pooled pair is the one")
+    print("  that has an easier explanation available to it.")
     return out
 
 
@@ -173,7 +238,7 @@ def load_fusion(cand_path, morph_path):
     pp = np.array([morph[c["candidate_id"]]["p_point"] for c in cands])
     pn = np.array([morph[c["candidate_id"]]["p_no_transition"] for c in cands])
     det = np.array([c["detector_score"] for c in cands])
-    return cands, ontology_energy(det, pp, pn)
+    return cands, ontology_energy(det, pp, pn), pp, pn
 
 
 def main():
@@ -196,7 +261,7 @@ def main():
                           "eta_no_transition": ETA_NO_TRANSITION})
     C.check_oracle_use("headroom")
 
-    cands, energy = load_fusion(a.candidates, a.morphology)
+    cands, energy, pp, pn = load_fusion(a.candidates, a.morphology)
     C.check_candidate_pool(cands, a.candidates)
     print(f"{len(cands)} candidates over "
           f"{len({c['recording_id'] for c in cands})} recordings")
@@ -218,10 +283,15 @@ def main():
     if not fm.sum():
         raise SystemExit("the audit matched no candidate; the pools differ")
 
-    diag = ranking_diagnostics(cands, energy, fm)
+    rec = [c["recording_id"] for c in cands]
+    scales = term_scales([c["detector_score"] for c in cands], pp, pn, rec)
+    print()
+    lr = morphology_logratio(pp, pn)
+    diag = ranking_diagnostics(cands, energy, fm,
+                               extra=[("morph only", lr)])
 
     if a.out:
-        json.dump({"eta_point": ETA_POINT,
+        json.dump({"eta_point": ETA_POINT, "term_scales": scales,
                    "eta_no_transition": ETA_NO_TRANSITION, "eps": EPS,
                    "fitted": False,
                    "name": "pre-registered parameter-free monotonic fusion",
