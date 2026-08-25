@@ -79,6 +79,14 @@ def main():
                          "on")
     ap.add_argument("--gold_json",
                     default="data/gold/alignment_timing_gold_45.json")
+    ap.add_argument("--fold_assignment",
+                    help="reuse a FROZEN fold_assignment.json instead of "
+                         "deriving one. A backbone swap must land every "
+                         "recording in the fold it was in before: fold_of() "
+                         "shuffles a sorted list, so one recording more or "
+                         "less reshuffles all five and the comparison becomes "
+                         "two different splits. The recording sets are "
+                         "asserted equal.")
     ap.add_argument("--n_folds", type=int, default=5)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out_dir", required=True)
@@ -104,7 +112,27 @@ def main():
     os.makedirs(a.out_dir, exist_ok=True)
     audit = sorted({e["recording_id"] for e in
                     json.load(open(a.gold_json, encoding="utf-8"))["events"]})
-    assign = fold_of(audit, a.n_folds, a.seed)
+    if a.fold_assignment:
+        assign = json.load(open(a.fold_assignment, encoding="utf-8"))
+        frozen = sorted(assign)
+        if frozen != audit:
+            only_f, only_a = set(frozen) - set(audit), set(audit) - set(frozen)
+            raise SystemExit(
+                f"frozen fold assignment covers {len(frozen)} recordings, this "
+                f"gold gives {len(audit)}.\n"
+                f"  only in frozen: {sorted(only_f)[:5]}\n"
+                f"  only in gold:   {sorted(only_a)[:5]}\n"
+                f"  Reusing folds requires the same recordings. A different "
+                f"set is a different split,\n  and the arms would no longer "
+                f"be comparable.")
+        nf = len(set(assign.values()))
+        if nf != a.n_folds:
+            raise SystemExit(f"frozen assignment has {nf} folds, --n_folds "
+                             f"is {a.n_folds}")
+        print(f"  reusing frozen folds from {a.fold_assignment} "
+              f"({len(assign)} recordings, {nf} folds)")
+    else:
+        assign = fold_of(audit, a.n_folds, a.seed)
     json.dump(assign, open(os.path.join(a.out_dir, "fold_assignment.json"),
                            "w"), indent=2)
 
