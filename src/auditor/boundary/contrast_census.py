@@ -67,6 +67,102 @@ POLICIES = (
 )
 
 
+def _norm_rid(x):
+    """`4` and `recording_000004` are the same recording in different files.
+
+    An intersection test across the two spellings returns zero for every pair
+    of sets, which is indistinguishable from a genuinely disjoint split and
+    was briefly believed to be one."""
+    import re
+    m = re.search(r"(\d+)$", str(x).strip())
+    return f"recording_{int(m.group(1)):06d}" if m else str(x).strip()
+
+
+def attach_candidate_type(rows, manifest_path):
+    """Join the audit onto the manifest that says where each candidate CAME
+    FROM, because half of them did not come from the detector.
+
+    batch4 is 120 injected `gt_boundary` points and 120 `raw_change_peak`. At
+    inference a reranker only ever sees peaks, so a positive that is an
+    injected annotation time is out of distribution: the model would learn to
+    recognise annotated instants, score beautifully in development, and do
+    nothing in production. That mismatch is invisible in every development
+    metric, which is why the join happens before the census rather than
+    after."""
+    mf = {}
+    for l in open(manifest_path, encoding="utf-8"):
+        if not l.strip():
+            continue
+        d = json.loads(l)
+        mf[(_norm_rid(d["recording_id"]), round(float(d["t"]), 1))] = \
+            d.get("candidate_type", "")
+    miss = 0
+    for r in rows:
+        try:
+            k = (_norm_rid(r.get("recording_id", "")),
+                 round(float(r.get("candidate_time_s", "nan")), 1))
+        except ValueError:
+            k = None
+        ct = mf.get(k) if k else None
+        if ct is None:
+            miss += 1
+        r["_candidate_type"] = ct or "UNJOINED"
+    print(f"  candidate_type joined onto {len(rows) - miss}/{len(rows)} rows "
+          f"({miss} unjoined)")
+    return rows
+
+
+def stored_gt_report(rows):
+    """How often an injected stored-GT boundary survived the audit.
+
+    This is not a step towards the pair census; it is the more consequential
+    number on the page. The evaluation pool's positives come from the same
+    stored ground truth and were never audited, while its negatives were --
+    so if stored GT is wrong this often, every pairwise accuracy measured
+    against it is attenuated toward chance and the ranking looks worse than
+    it is."""
+    gt = [r for r in rows if r.get("_candidate_type") == "gt_boundary"]
+    if not gt:
+        return {}
+    ev = Counter(r.get("temporal_event_type", "") for r in gt)
+    kept = ev.get("task_boundary", 0)
+    rejected = ev.get("no_boundary", 0)
+    print(f"\n{'=' * 78}\nWHAT THE AUDIT DID TO THE STORED GROUND TRUTH"
+          f"\n{'=' * 78}")
+    for k, n in ev.most_common():
+        print(f"  {n:>5}  {k}")
+    # q is the share AUDITED AS NOT A BOUNDARY, not one minus the share
+    # audited as an inter-episode boundary. `initial_action_start` and
+    # `terminal_action_end` are real events at the ends of a recording; they
+    # are outside the inter-episode definition but they are not the stored
+    # ground truth being WRONG, and counting them as errors would overstate
+    # the noise by a third.
+    edge = sum(ev.get(k, 0) for k in EDGE_EVENT)
+    q = rejected / len(gt)
+    p = 1 - q
+    print(f"\n  {rejected} of {len(gt)} injected stored-GT boundaries were "
+          f"audited as NOT boundaries  ->  q = {q:.3f}")
+    print(f"  ({kept} inter-episode boundaries, {edge} recording-edge events "
+          f"which are\n   outside the definition but are not the label being "
+          f"wrong, {len(gt) - kept - edge - rejected} other)")
+    print(f"  stored-GT precision on this batch: {p:.3f}")
+    print(f"\n  THE EVALUATION POOL INHERITS THIS. Its `is_true_boundary` "
+          f"comes from the\n  same stored ground truth and was never audited, "
+          f"while its false_mid\n  negatives were. With a fraction q of "
+          f"positives not actually boundaries\n  and therefore "
+          f"indistinguishable from negatives, an observed pairwise\n  "
+          f"accuracy a implies a true accuracy of about (a - q/2) / (1 - q):")
+    for a, name in ((0.6630, "detector macro"), (0.5309, "morphology macro")):
+        print(f"    {name:<18}{a:.4f}  ->  {(a - q / 2) / (1 - q):.4f}"
+              f"   at q = {q:.3f}")
+    print(f"\n  That is an ESTIMATE carried across batches, not a measurement "
+          f"on the 36.\n  It does not change which arm is above the other. It "
+          f"changes how much\n  room a better ranker has left, and how much "
+          f"the labels are holding.")
+    return {"n_gt": len(gt), "kept": kept, "rejected": rejected,
+            "stored_gt_precision": p, "by_event": dict(ev)}
+
+
 def _clean(row):
     return {k.lstrip("﻿").strip(): (v or "").strip()
             for k, v in row.items()}
@@ -218,6 +314,17 @@ def main():
                          "contains is REMOVED from the census, because a "
                          "development set that overlaps the only unfitted "
                          "test set stops being a test set quietly.")
+    ap.add_argument("--manifest",
+                    help="batch4_manifest.jsonl -- says whether each "
+                         "candidate is a detector peak or an injected "
+                         "stored-GT point. Without it the census cannot tell "
+                         "a production candidate from an annotation time.")
+    ap.add_argument("--candidate_types", default="",
+                    help="comma list to KEEP, e.g. raw_change_peak. Default "
+                         "keeps everything. A reranker only ever sees "
+                         "detector peaks at inference, so training positives "
+                         "that are injected annotation times learn a "
+                         "distinction that does not exist in production.")
     ap.add_argument("--emit_pairs")
     ap.add_argument("--out")
     a = ap.parse_args()
@@ -238,8 +345,24 @@ def main():
         print(f"  {before - after} of {before} recordings dropped for "
               f"overlapping the frozen evaluation pool ({len(ev)} recordings)")
 
+    gtr = {}
+    if a.manifest:
+        rows = attach_candidate_type(rows, a.manifest)
+        gtr = stored_gt_report(rows)
+        ct = Counter(r["_candidate_type"] for r in rows)
+        print(f"\n  candidate types present: "
+              + ", ".join(f"{k}={n}" for k, n in ct.most_common()))
+    keep = [s for s in a.candidate_types.split(",") if s.strip()]
+    if keep:
+        if not a.manifest:
+            raise SystemExit("--candidate_types needs --manifest")
+        before = len(rows)
+        rows = [r for r in rows if r["_candidate_type"] in keep]
+        print(f"  keeping {keep}: {len(rows)} of {before} rows")
+
     rec, by = census(rows)
-    both = report(rec, "candidate contrast availability")
+    both = report(rec, "candidate contrast availability"
+                       + (f"  [{','.join(keep)}]" if keep else ""))
 
     print(f"\n{'=' * 78}\nWHAT EACH EXCLUSION COSTS\n{'=' * 78}")
     print(f"  {'policy':<34}{'recs both':>11}{'<=60s':>8}{'pairs':>8}"
@@ -273,7 +396,8 @@ def main():
     if a.out:
         json.dump({"per_recording": rec,
                    "n_recordings_with_both": len(both),
-                   "sensitivity": sens,
+                   "sensitivity": sens, "stored_gt": gtr,
+                   "candidate_types_kept": keep,
                    "definitions": {
                        "positive": sorted(POSITIVE_EVENT),
                        "positive_requires": "within_1s_tolerance == yes",
