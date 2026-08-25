@@ -217,6 +217,37 @@ class Constitution:
                 f"within-recording ordering moved by "
                 f"{float(within_recording_delta):+.4f}.\n  {a['pre_gate']}")
 
+    # --- datasets ----------------------------------------------------------
+    def check_dataset_use(self, dataset, purpose):
+        """Every module that reads a gold set must say what it is doing.
+
+        batch4 became a development set on 2026-08-25. A development set is
+        only different from a test set if the difference is enforced, because
+        the failure has no symptom: tune on it, quote it, and the number looks
+        exactly like a valid held-out result. The declaration is a positional
+        argument rather than a default so that adding a new consumer requires
+        someone to answer the question."""
+        ds = (self.c.get("datasets") or {}).get(dataset)
+        if ds is None:
+            raise ConstitutionViolation(
+                f"{dataset} has no declared role. Add it to `datasets` in the "
+                f"constitution before reading it; a gold set with no recorded "
+                f"role is one nobody can say has been spent.")
+        if purpose in (ds.get("may_not") or []):
+            raise ConstitutionViolation(
+                f"{dataset} is a {ds['role']} set and may not be used to "
+                f"{purpose}.\n  It may: {', '.join(ds.get('may') or [])}\n"
+                f"  {ds.get('note') or ds.get('caveat') or ''}")
+        if purpose not in (ds.get("may") or []):
+            raise ConstitutionViolation(
+                f"{purpose!r} is not a declared use of {dataset}. Declared: "
+                f"{ds.get('may')}\n  Naming a new use is a deliberate act, "
+                f"not a default.")
+        cav = ds.get("caveat")
+        if cav:
+            print(f"  CAVEAT on {dataset}: {cav}")
+        return ds
+
     # --- oracle ------------------------------------------------------------
     def check_oracle_use(self, purpose):
         o = self.c["oracle"]
@@ -291,6 +322,21 @@ def _self_test():
     must_raise(lambda: C.check_pre_gate(-0.0301), "within-recording ordering")
     must_raise(lambda: C.check_pre_gate(None), "no within-recording delta")
     must_raise(lambda: C.check_level("E_structured_loss"), "comes after")
+
+    C.check_dataset_use("batch4_joint_audit", "mine_pairs")
+    C.check_dataset_use("batch4_joint_audit", "measure_dev")
+    must_raise(lambda: C.check_dataset_use("batch4_joint_audit",
+                                           "deployment_threshold"),
+               "may not be used to")
+    must_raise(lambda: C.check_dataset_use("batch4_joint_audit",
+                                           "report_population_performance"),
+               "may not be used to")
+    must_raise(lambda: C.check_dataset_use("frozen_eval_36", "mine_pairs"),
+               "may not be used to")
+    must_raise(lambda: C.check_dataset_use("no_such_gold", "measure"),
+               "no declared role")
+    must_raise(lambda: C.check_dataset_use("batch4_joint_audit", "vibes"),
+               "not a declared use")
 
     must_raise(lambda: C.check_oracle_use("train"), "may not be used")
     must_raise(lambda: C.check_oracle_use("select_thresholds"),

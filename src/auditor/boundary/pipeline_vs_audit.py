@@ -254,6 +254,12 @@ def main():
              for k, v in r.items()}
             for r in csv.DictReader(open(a.audit, encoding="utf-8-sig"))]
     check_answer_key(a.audit, rows)
+    from src.auditor.boundary.ontology_constitution import Constitution
+    Constitution().check_dataset_use("batch4_joint_audit", "measure_dev")
+    print(f"    GRADE: DEVELOPMENT. batch4 was demoted from independent "
+          f"measurement set\n           on 2026-08-25, so every number below "
+          f"decides whether a direction is\n           worth pursuing and "
+          f"none of them may be reported as performance.")
     mf = {}
     if a.manifest:
         for l in open(a.manifest, encoding="utf-8"):
@@ -321,7 +327,11 @@ def main():
           f"the detector's .5400 was misread once already.")
 
     if a.out:
-        json.dump({"tolerance_s": a.tol_s, "results": res,
+        json.dump({"grade": "development",
+                   "grade_note": "batch4 is a development set since "
+                                 "2026-08-25; these numbers select directions "
+                                 "and are not population performance",
+                   "tolerance_s": a.tol_s, "results": res,
                    "cuts_per_min": tot_cuts / tot_min if tot_min else None,
                    "n_timelines": len(tls),
                    "recordings_scored": sorted(covered),

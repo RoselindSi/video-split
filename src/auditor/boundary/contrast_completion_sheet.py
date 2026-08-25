@@ -166,6 +166,9 @@ def main():
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
 
+    from src.auditor.boundary.ontology_constitution import Constitution
+    Constitution().check_dataset_use("batch4_joint_audit", "mine_pairs")
+
     rows = [{k.lstrip("﻿").strip(): (v or "").strip()
              for k, v in r.items()}
             for r in csv.DictReader(open(a.audit, encoding="utf-8-sig"))]

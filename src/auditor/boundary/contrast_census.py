@@ -329,6 +329,9 @@ def main():
     ap.add_argument("--out")
     a = ap.parse_args()
 
+    from src.auditor.boundary.ontology_constitution import Constitution
+    Constitution().check_dataset_use("batch4_joint_audit", "mine_pairs")
+
     rows = []
     for p in a.audit:
         with open(p, encoding="utf-8-sig") as f:

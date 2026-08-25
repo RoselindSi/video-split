@@ -177,3 +177,46 @@ oracle:
   may_select_thresholds: false
   may_select_architecture: false
   use: "headroom only"
+
+# --- datasets and what each one may be used for ---------------------------
+# ADDED 2026-08-25. batch4 was demoted from independent measurement set to
+# development set with the mentor's agreement. The demotion is only safe if
+# the boundary between "choose designs" and "report performance" is enforced,
+# because the tempting move under time pressure is to tune on it and then
+# quote it -- which is exactly the sequence that makes a held-out number
+# meaningless while looking identical to a valid one.
+datasets:
+  batch4_joint_audit:
+    role: development
+    path: data/gold/batch4_joint_audit.csv
+    n_rows: 236
+    n_recordings: 61
+    disjoint_from: [frozen_eval_36, semantic_48, enrichment_41, audit_72,
+                    audit_188]
+    may:
+      - mine_pairs
+      - choose_design
+      - inspect_failures
+      - exploratory_ablation
+      - measure_dev          # a development-grade number, labelled as such
+    may_not:
+      - deployment_threshold
+      - emit_certificate
+      - report_population_performance
+      - final_test_after_tuning
+    note: "Both label sides are human-audited, which is why it is the only
+           clean surface for a within-recording comparison -- and why using
+           it to fit spends the only clean ruler on lumber."
+
+  frozen_eval_36:
+    role: benchmark
+    path: results/auditor/oof_candidates.jsonl
+    n_candidates: 3707
+    n_recordings: 36
+    may: [measure, report_with_caveat]
+    may_not: [train, select_thresholds, mine_pairs, contribute_to_any_fit]
+    caveat: "is_true_boundary comes from stored ground truth and was never
+             audited, while the false_mid negatives were. batch4 measured
+             stored GT at 44.4% wrong, so positives and negatives here do not
+             carry the same label quality and every pairwise accuracy against
+             it is attenuated toward chance by an unknown amount."
