@@ -79,9 +79,22 @@ A   does a stronger visual representation fix the morphology head?
 
 B   does it help the production detector?
     same temporal head, same grouped 5-fold, new logits.
-    -> F1@0.5, candidate ranking, GT-boundary percentile, and above all
+    -> F1@1.0, candidate ranking, GT-boundary percentile, and above all
        signal_present_not_top, which is 86.0% of the current misses
 ```
+
+**F1@1.0, not F1@0.5.** The tolerance has been 1.0s since 2026-08-19 and every
+measurement in this document already uses it — the candidate matching, the
+oracle audit join, the review-budget table. Writing F1@0.5 for experiment B
+was a slip, and it is the kind that does not announce itself: the number would
+have looked like a detector metric and silently answered a question about a
+different tolerance than everything it sits next to.
+
+The historical baseline it invites comparison with — global f1@0.5 0.299 — was
+measured at the old tolerance and **cannot be compared to an F1@1.0**. If a
+bridge to it is wanted, report both and label which is which; do not quietly
+adopt 0.5 to make the comparison work.
+
 
 A asks about the auditor's representation, B about the detector's. Running
 them together produces a number that answers neither.
