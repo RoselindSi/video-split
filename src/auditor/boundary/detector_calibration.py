@@ -311,8 +311,22 @@ def main():
     ntp = sum(1 for _, _, ok in items if ok)
     print(f"\n  {len(items)} candidate peaks, {ntp} on a boundary "
           f"({ntp / len(items):.1%} precision at the pool threshold)")
+    prec, rec = ntp / len(items), hit / tot
+    f1 = 2 * prec * rec / (prec + rec) if (prec + rec) else 0.0
     print(f"  {hit} of {tot} annotated boundaries recovered "
-          f"({hit / tot:.1%} recall)")
+          f"({rec:.1%} recall)")
+    # F1 AT THE CURRENT TOLERANCE, AND ONLY THAT. The frozen historical
+    # baseline `global f1@0.5 = 0.299` was measured at a tolerance retired on
+    # 2026-08-19, so it is not comparable to this number and the label says
+    # which one this is. Reporting an F1@0.5 here to make the comparison work
+    # would be a new measurement at a dead standard.
+    print(f"\n  END-TO-END at this decode "
+          f"(base_thr {a.base_thr}, min_gap {a.min_gap_s}s):")
+    print(f"    precision  {prec:.3f}   recall  {rec:.3f}   "
+          f"F1@{a.tol_s:.1f}  {f1:.3f}")
+    print(f"    Not comparable to the frozen f1@0.5 0.299 -- different "
+          f"tolerance, and this pool\n    is one decode configuration rather "
+          f"than a swept operating point.")
     print(f"\n  POPULATION, which independence does not fix:")
     print(f"    {len(recs)} recordings, {tot} annotated boundaries, "
           f"{n_frames} frames")
