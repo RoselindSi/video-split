@@ -99,6 +99,33 @@ def load_peaks(path):
     return {k: sorted(set(round(x, 1) for x in v)) for k, v in by.items()}
 
 
+def candidates_from_cache(cache_paths, rids):
+    """Generate candidates the SAME WAY batch4 did, in the same recordings.
+
+    batch3_sample's two generators need only the feature cache: segment edges
+    from `rec["segments"]`, and local maxima of `context_change`. Neither
+    involves a trained model, which is a disclosed limitation of the batch --
+    these are not the production detector's peaks -- but it is the generator
+    batch4's own candidates came from, so completing a recording with it adds
+    points from the SAME process rather than mixing two.
+
+    -> {recording_id: {"gt": [t...], "peak": [t...], "bounds": [t...]}}"""
+    from src.boundary.batch3_sample import gt_boundary_times, naive_change_peaks
+    from src.boundary.hal_features import load_feature_caches
+    caches = load_feature_caches(cache_paths)
+    out = {}
+    for rid in rids:
+        rec = caches.get(rid)
+        if rec is None:
+            continue
+        gt = gt_boundary_times(rec)
+        peak = naive_change_peaks(rec)
+        out[rid] = {"gt": [round(t, 1) for t in gt],
+                    "peak": [round(t, 1) for t in peak],
+                    "bounds": [round(t, 1) for t in gt]}
+    return out
+
+
 def load_segment_boundaries(root, rid):
     """Interior boundaries from stored segments.json. SAMPLER ONLY.
 
@@ -123,8 +150,23 @@ def load_segment_boundaries(root, rid):
     return bnd, segs
 
 
-def sides(audit_rows, manifest):
-    """Which side each recording already has, on detector peaks only."""
+def sides(audit_rows, manifest, keep_types=None):
+    """Which side each recording already has.
+
+    keep_types RESTRICTS which candidate types count, and by default nothing
+    is restricted. An earlier version hard-coded raw_change_peak on the theory
+    that a reranker only meets detector peaks at inference -- but
+    batch3_sample's docstring says raw_change_peak is local maxima of
+    context_change with no trained model in it, so it is not the production
+    generator either. The restriction was discarding half the data to align
+    with a distribution it did not align with.
+
+    The shortcut it was guarding against is separately checkable and absent
+    here: both candidate types appear in BOTH classes (positives 38 gt / 20
+    peak, negatives 37 gt / 48 peak), so type does not determine label. What
+    remains is a mix difference, and since raw_change_peak sits on a
+    context_change maximum by construction, a trainer should stratify by type
+    rather than trust that it cannot be read off the video."""
     have = defaultdict(lambda: {"pos": 0, "neg": 0, "seen": set()})
     for r in audit_rows:
         rid = _norm_rid(r.get("recording_id", ""))
@@ -133,7 +175,7 @@ def sides(audit_rows, manifest):
         except (TypeError, ValueError):
             continue
         have[rid]["seen"].add(t)
-        if manifest.get((rid, t)) != "raw_change_peak":
+        if keep_types and manifest.get((rid, t)) not in keep_types:
             continue
         if (r.get("temporal_event_type") == "task_boundary"
                 and r.get("within_1s_tolerance") == "yes"):
@@ -149,11 +191,21 @@ def main():
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--audit", required=True)
-    ap.add_argument("--manifest", required=True)
-    ap.add_argument("--peaks", required=True,
-                    help="detector peaks for the development recordings, "
-                         "JSONL with recording_id and a time field")
-    ap.add_argument("--segments_root", required=True,
+    ap.add_argument("--manifest", default=None,
+                    help="candidate_type per timestamp. Only needed with "
+                         "--candidate_types.")
+    ap.add_argument("--candidate_types", default="",
+                    help="comma list restricting which existing rows COUNT as "
+                         "having a side. Default counts all of them.")
+    ap.add_argument("--peaks",
+                    help="candidate times as JSONL. Use this OR --feat_cache.")
+    ap.add_argument("--feat_cache", action="append", default=[],
+                    help="generate candidates in-process with batch3_sample's "
+                         "own generators, which need only the cache. APPEND "
+                         "one flag per file -- a non-append flag would keep "
+                         "only the last, which has silently shrunk a run "
+                         "before.")
+    ap.add_argument("--segments_root",
                     help="the dataset's recordings/ directory, holding "
                          "<recording_id>/segments.json. SAMPLER ONLY -- "
                          "stored GT was 44%% wrong on this batch and supplies "
@@ -172,21 +224,34 @@ def main():
     rows = [{k.lstrip("﻿").strip(): (v or "").strip()
              for k, v in r.items()}
             for r in csv.DictReader(open(a.audit, encoding="utf-8-sig"))]
+    keep = tuple(x for x in a.candidate_types.split(",") if x.strip())
+    if keep and not a.manifest:
+        raise SystemExit("--candidate_types needs --manifest")
     mf = {}
-    for l in open(a.manifest, encoding="utf-8"):
+    for l in (open(a.manifest, encoding="utf-8") if a.manifest else []):
         if l.strip():
             d = json.loads(l)
             mf[(_norm_rid(d["recording_id"]), round(float(d["t"]), 1))] = \
                 d.get("candidate_type", "")
-    peaks = load_peaks(a.peaks)
-    have = sides(rows, mf)
+    have = sides(rows, mf, keep)
+
+    both = sorted(r for r, v in have.items() if v["pos"] and v["neg"])
 
     need_pos = sorted(r for r, v in have.items() if v["neg"] and not v["pos"])
     need_neg = sorted(r for r, v in have.items() if v["pos"] and not v["neg"])
-    both = sorted(r for r, v in have.items() if v["pos"] and v["neg"])
     print(f"{len(both)} recordings already have both, "
           f"{len(need_pos)} need a positive, {len(need_neg)} need a negative")
-    print(f"peaks available for {len(peaks)} recordings")
+    gen = None
+    if a.feat_cache:
+        print(f"generating candidates from {len(a.feat_cache)} caches ...")
+        gen = candidates_from_cache(a.feat_cache, need_pos + need_neg)
+        peaks = {r: sorted(set(v["gt"] + v["peak"])) for r, v in gen.items()}
+        print(f"  candidates for {len(peaks)} of "
+              f"{len(need_pos) + len(need_neg)} one-sided recordings")
+    elif a.peaks:
+        peaks = load_peaks(a.peaks)
+    else:
+        raise SystemExit("need --peaks or --feat_cache")
 
     rng = np.random.default_rng(a.seed)
     out, misses = [], defaultdict(int)
@@ -196,7 +261,10 @@ def main():
         if not pk:
             misses["no detector peaks for this recording"] += 1
             continue
-        bnd, _ = load_segment_boundaries(a.segments_root, rid)
+        if gen is not None:
+            bnd = gen.get(rid, {}).get("bounds")
+        else:
+            bnd, _ = load_segment_boundaries(a.segments_root, rid)
         if not bnd:
             misses["no stored segments.json to sample against"] += 1
             continue
@@ -220,10 +288,13 @@ def main():
         idx = rng.permutation(len(pool))[:a.per_recording]
         for i in sorted(idx):
             t, d = pool[i]
+            ctype = "raw_change_peak"
+            if gen is not None and t in set(gen[rid]["gt"]):
+                ctype = "gt_boundary"
             out.append({
                 "recording_id": rid,
                 "candidate_time_s": f"{t:.1f}",
-                "candidate_type": "raw_change_peak",
+                "candidate_type": ctype,
                 "needed_side": want,
                 "sampled_because": (f"within {a.tol_s}s of a stored boundary "
                                     f"(gap {d:.2f}s)" if want == "positive"
