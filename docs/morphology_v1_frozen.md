@@ -143,3 +143,76 @@ differ from the current ones only by the ViT weights.
 **Generalisable: when a cache has no manifest, re-extract one item with the
 known-good model under the candidate settings and compare. It converts an
 assumption into a measurement for the cost of a single recording.**
+
+---
+
+# Experiment A — result, 2026-08-24. The backbone swap did not move morphology.
+
+Same 3707 candidates, same detector scores, same oracle, same 287 labels, same
+window, grid, encoder, optimizer and class weighting. Only the frozen visual
+features changed, and only the global stream — the local hand-crop cache is
+still the 8B one, so this is a partial swap and the reading below was fixed
+before the numbers arrived.
+
+| release | score only | old morph | Qwen3.5 morph | oracle | old / oracle gain | Qwen3.5 / oracle gain |
+|---:|---:|---:|---:|---:|---:|---:|
+| 1% | 79.0% | 72.7% | 74.4% | 63.4% | 40.4% | 29.5% |
+| 3% | 66.5% | 58.4% | 58.2% | 36.3% | 26.8% | 27.5% |
+| 5% | 56.8% | 44.6% | 44.6% | 24.8% | 38.1% | 38.1% |
+
+Identical at 5%, 0.2 points apart at 3%, 1.7 points worse at 1%. Not a gain
+too small to clear a bar — flat.
+
+The confidence distribution DID change:
+
+```
+             median P(NO_TRANSITION)   >=0.5   >=0.9
+old                          0.036      1253     879
+Qwen3.5                      0.013      1022     694
+```
+
+The new features make the head markedly less willing to call NO_TRANSITION, and
+the usable discrimination between a true boundary and a false_mid_segment is
+unchanged. So the problem is not calibration either.
+
+## What this closes and what it does not
+
+It does not close experiment B. `F1@1.0 = 0.558` printed in that run comes
+from `oof_logits.pt` — the OLD detector — and morphology predictions do not
+enter it. Whether a Qwen3.5 backbone improves the DETECTOR's own ranking needs
+its features put through the same temporal head and the same grouped folds, and
+that has not been run.
+
+It also is not comparable to the 0.381 reported for the val split. Both are the
+old detector; the pools differ, and the OOF recordings carry 8.31 annotated
+boundaries per 100 frames against the val split's 5.15. Precision and recall
+rise with density mechanically.
+
+## The bottleneck statement, narrowed
+
+Before: "the learned representation is insufficient." That was too coarse. A
+frozen visual-backbone intervention has now been run and morphology did not
+move, so the evidence no longer points at frame-level visual features.
+
+What remains between the frame features and the decision:
+
+```
+Qwen frame features
+    -> +/-6s, 25-frame grid
+    -> 120k TemporalEncoder
+    -> 4-class cross-entropy on morphology
+```
+
+And what the system actually fails at is not classification accuracy. It is
+that `E(true reset) < E(internal motion)` for the candidates that matter — 86%
+of misses are `signal_present_not_top`. A cross-entropy on the class never
+optimises that ordering, and a veto applied after ranking cannot repair it,
+because a veto can only remove and the failure is a promotion failure.
+
+**So the next intervention is the objective and where the ontology enters, not
+the backbone.** That is level C: morphology inside the score, trained by a
+within-recording ranking loss on exactly the pairs that fail.
+
+**Frozen. Do not tune the Qwen3.5 morphology head** — no threshold sweep, no
+hidden size, no dropout. Continuing would be architecture fishing on the
+evaluation set that every arm above shares.
