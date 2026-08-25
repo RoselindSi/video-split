@@ -132,7 +132,7 @@ RELEASE_BUDGETS = (0.01, 0.03, 0.05)
 
 
 def review_budget_table(cands, morph, target, sweep=VETO_SWEEP,
-                        oracle=None):
+                        oracle=None, fused=None, fused_label="E_onto"):
     """The three numbers a review budget actually costs, per veto threshold.
 
     NOT precision, and not AUROC. At a fixed review budget the question is
@@ -154,12 +154,17 @@ def review_budget_table(cands, morph, target, sweep=VETO_SWEEP,
     removes a candidate whatever its score; a confident POINT never admits
     one. Admission needs relation EXACT and an adequate view, and those heads
     have 10 and 0 usable events -- letting P(POINT) admit would be automating
-    on a head with no supervision behind it."""
+    on a head with no supervision behind it.
+
+    `fused` REPLACES THE SCORE ON ITS OWN ARM rather than vetoing on top of
+    it. A veto arm and a rescoring arm are different interventions: the first
+    removes candidates the ordering already ranked, the second changes which
+    candidates get ranked highly at all. E_onto already carries the morphology
+    inside it, so stacking the morphology veto on the fused arm would count
+    the same evidence twice, and that combination is not offered."""
     sc = np.array([c["detector_score"] for c in cands], float)
     ok = np.array([c["is_true_boundary"] for c in cands], bool)
     N, T = len(cands), int(ok.sum())
-    los = np.quantile(sc, np.linspace(0.0, 0.95, 40))
-    his = np.quantile(sc, np.linspace(0.05, 1.0, 40))
 
     # THE SAME RELEASE BUDGETS ON EVERY ARM. Minimising a single scalar
     # collapses immediately: rank on true-boundary loss alone and the search
@@ -168,7 +173,15 @@ def review_budget_table(cands, morph, target, sweep=VETO_SWEEP,
     # fixes one objective at levels a person can choose between and reports
     # the other. Identical levels on every arm is what makes the arms
     # comparable rather than two separate searches.
-    def one(vetoed, tag):
+    def one(vetoed, tag, score=None):
+        # The grid is quantiles OF THIS ARM'S OWN SCORE. E_onto is a log-odds
+        # sum and the detector score is a probability, so a threshold carries
+        # no meaning across the two; quantiles put both searches over the same
+        # RANGE OF OPERATING POINTS, which is the thing that has to match for
+        # the release budgets to be comparable.
+        s = sc if score is None else np.asarray(score, float)
+        los = np.quantile(s, np.linspace(0.0, 0.95, 40))
+        his = np.quantile(s, np.linspace(0.05, 1.0, 40))
         rows = []
         for cap_frac in RELEASE_BUDGETS:
             cap = int(cap_frac * N)
@@ -177,8 +190,8 @@ def review_budget_table(cands, morph, target, sweep=VETO_SWEEP,
                 for hi in his:
                     if hi <= lo:
                         continue
-                    rej = vetoed | (sc < lo)
-                    keep = (~vetoed) & (sc >= hi)
+                    rej = vetoed | (s < lo)
+                    keep = (~vetoed) & (s >= hi)
                     rev = ~rej & ~keep
                     if rev.mean() > target:
                         continue
@@ -207,8 +220,16 @@ def review_budget_table(cands, morph, target, sweep=VETO_SWEEP,
     print(f"  {'arm':<24}{'release':>8}{'REVIEW':>10}{'true lost':>14}"
           f"{'released':>11}{'kept':>8}")
     out = [one(np.zeros(N, bool), "score only")]
+    if fused is not None:
+        out.append(one(np.zeros(N, bool), fused_label, score=fused))
     if oracle is not None:
         out.append(one(oracle, "ORACLE no_transition"))
+        if fused is not None:
+            # The oracle on the fused ordering is a DIFFERENT ceiling from the
+            # oracle on the detector ordering: it says how much is still left
+            # after the rescoring, which is what decides whether the next step
+            # is more evidence or a better ranker.
+            out.append(one(oracle, f"{fused_label} + ORACLE", score=fused))
     if morph:
         pnt = np.array([morph.get(c["candidate_id"], {}).get(
             "p_no_transition", np.nan) for c in cands], float)
@@ -256,6 +277,13 @@ def main():
                          "head is measured against, and putting it in the same "
                          "harness is what makes `fraction of oracle gain` a "
                          "quantity rather than a ratio of two tables.")
+    ap.add_argument("--fuse_ontology", action="store_true",
+                    help="add an arm that RESCORES with the parameter-free "
+                         "ontology energy instead of vetoing after the score. "
+                         "A veto can only remove, so it cannot repair the "
+                         "80-86%% of misses that are signal_present_not_top; "
+                         "rescoring is the smallest change that could. "
+                         "Nothing is fitted -- both coefficients are 1.")
     ap.add_argument("--veto", choices=("none", "morphology_only"),
                     default="none")
     ap.add_argument("--review_target", type=float, default=0.10)
@@ -374,8 +402,32 @@ def main():
                 "--oracle_audit matched 0 candidates. The audit and the "
                 "candidate pool must come from the same recordings and the "
                 "same peak picking.")
+    fused = None
+    if a.fuse_ontology:
+        if not morph:
+            raise SystemExit(
+                "--fuse_ontology needs --morphology_predictions; the fused "
+                "arm is the detector logit plus the morphology evidence.")
+        from src.auditor.boundary.ontology_fusion import ontology_energy
+        miss = [c["candidate_id"] for c in cands
+                if c["candidate_id"] not in morph]
+        if miss:
+            raise SystemExit(
+                f"morphology covers {len(cands) - len(miss)} of {len(cands)} "
+                f"candidates, so the fused arm would score a SUBSET while "
+                f"`score only` scores the pool. That difference is a "
+                f"population difference, not a method difference, and it "
+                f"would read as a gain. Re-run morphology_external over the "
+                f"whole emitted pool.")
+        fused = ontology_energy(
+            [c["detector_score"] for c in cands],
+            [morph[c["candidate_id"]]["p_point"] for c in cands],
+            [morph[c["candidate_id"]]["p_no_transition"] for c in cands])
+        print(f"\n  fused arm: parameter-free monotonic ontology energy over "
+              f"all {len(cands)} candidates (nothing fitted)")
+
     budget = review_budget_table(cands, morph, a.review_target,
-                                 oracle=oracle) \
+                                 oracle=oracle, fused=fused) \
         if (morph or oracle is not None or a.veto == "none") else None
 
     gate = load_gate(a.gate) if os.path.exists(a.gate) else None
