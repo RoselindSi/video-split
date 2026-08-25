@@ -114,6 +114,188 @@ def cluster_ci(counts, boot=BOOT, seed=SEED):
         float(np.quantile(draws, 0.975))
 
 
+def _chi2_sf(x, df):
+    """Upper tail of chi-square. Regularised incomplete gamma, no scipy."""
+    import math
+    a, x2 = df / 2.0, x / 2.0
+    if x2 <= 0:
+        return 1.0
+    if x2 < a + 1:                                   # series for P(a, x)
+        term = 1.0 / a
+        s, n = term, 0
+        while abs(term) > abs(s) * 1e-14 and n < 10000:
+            n += 1
+            term *= x2 / (a + n)
+            s += term
+        return 1.0 - s * math.exp(-x2 + a * math.log(x2) - math.lgamma(a))
+    tiny = 1e-300                                    # Lentz for Q(a, x)
+    b, c, d = x2 + 1 - a, 1 / tiny, 1 / (x2 + 1 - a)
+    h, i = d, 0
+    while i < 10000:
+        i += 1
+        an = -i * (i - a)
+        b += 2
+        d = an * d + b
+        if abs(d) < tiny:
+            d = tiny
+        c = b + an / c
+        if abs(c) < tiny:
+            c = tiny
+        d = 1 / d
+        delta = d * c
+        h *= delta
+        if abs(delta - 1) < 1e-14:
+            break
+    return h * math.exp(-x2 + a * math.log(x2) - math.lgamma(a))
+
+
+def null_var(m, n):
+    """Variance of a pair accuracy under "no ordering ability at all".
+
+    Hanley-McNeil at A = 0.5. Not m*n: the comparisons share m + n items, so
+    the count of pairs badly overstates how much independent evidence a
+    recording carries, which is what makes a small-negative recording look
+    like a discovery."""
+    return (0.25 + (m - 1) / 12.0 + (n - 1) / 12.0) / (m * n)
+
+
+def heterogeneity(counts, label):
+    """Is the spread across recordings more than sampling noise?
+
+    THE WHOLE FORK RUNS THROUGH THIS. `morph only` at .4992 pooled with
+    recordings at .87 and at .21 has two readings: a head with real local
+    signal whose sign does not transfer, or 34 draws around chance that
+    happen to spread. The first is repairable and the second closes the
+    representation branch, and the per-recording table alone cannot tell
+    them apart."""
+    keys = list(counts)
+    acc = np.array([counts[k][0] / counts[k][1] for k in keys])
+    var = np.array([null_var(counts[k][2], counts[k][3]) for k in keys])
+    w = 1.0 / var
+    mu = float((w * acc).sum() / w.sum())
+    q = float((w * (acc - mu) ** 2).sum())
+    df = len(keys) - 1
+    p = _chi2_sf(q, df)
+    i2 = max(0.0, (q - df) / q) if q > 0 else 0.0
+    z = (acc - 0.5) / np.sqrt(var)
+    return {"label": label, "inverse_var_mean": mu, "Q": q, "df": df,
+            "p": float(p), "I2": float(i2),
+            "z": {k: float(v) for k, v in zip(keys, z)},
+            "acc": {k: float(v) for k, v in zip(keys, acc)}}
+
+
+def micro_macro(counts, boot=BOOT, seed=SEED):
+    """Two averages that answer two different questions.
+
+    MICRO weights by pairs, so it describes a pair drawn from the pool -- and
+    it is dominated by whichever recordings are large. MACRO weights each
+    recording equally, describing a typical recording. Reporting only one of
+    them is how a number gets attributed to a system when it belongs to two
+    videos."""
+    keys = list(counts)
+    rng = np.random.default_rng(seed)
+    w = np.array([counts[k][0] for k in keys])
+    n = np.array([counts[k][1] for k in keys], float)
+    acc = np.array([counts[k][0] / counts[k][1] for k in keys])
+    idx = rng.integers(0, len(keys), size=(boot, len(keys)))
+    mi = w[idx].sum(1) / np.maximum(n[idx].sum(1), 1)
+    ma = acc[idx].mean(1)
+    return {"micro": float(w.sum() / n.sum()),
+            "micro_lo": float(np.quantile(mi, .025)),
+            "micro_hi": float(np.quantile(mi, .975)),
+            "macro": float(acc.mean()),
+            "macro_lo": float(np.quantile(ma, .025)),
+            "macro_hi": float(np.quantile(ma, .975))}
+
+
+def concentration_and_heterogeneity(cols, ok, fm, rec):
+    counts = {name: pair_counts(np.asarray(s, float), ok, fm, rec)
+              for name, s in cols}
+    base = counts[cols[0][0]]
+    keys = sorted(base, key=lambda r: -base[r][1])
+    tot = sum(base[k][1] for k in keys)
+
+    print("=" * 78)
+    print("D. IS THE SPREAD REAL, AND WHOSE NUMBER IS THE POOLED ONE?")
+    print("=" * 78)
+    print(f"  {'':<14}{'micro (pair-wt)':>26}{'macro (rec-wt)':>26}")
+    mm = {}
+    for c, _ in cols:
+        d = micro_macro(counts[c])
+        mm[c] = d
+        mic = "%.4f" % d["micro"]
+        mic_ci = "[%.3f, %.3f]" % (d["micro_lo"], d["micro_hi"])
+        mac = "%.4f" % d["macro"]
+        mac_ci = "[%.3f, %.3f]" % (d["macro_lo"], d["macro_hi"])
+        print(f"  {c:<14}{mic:>10}{mic_ci:>16}{mac:>10}{mac_ci:>16}")
+    print(f"\n  MICRO describes a pair drawn from the pool and is dominated by\n"
+          f"  the largest recordings; MACRO describes a typical recording.\n"
+          f"  When they disagree, the pooled number belongs to a few videos.")
+
+    print(f"\n  pair mass: the {len(keys)} recordings, largest first")
+    run = 0
+    for k in keys[:4]:
+        run += base[k][1]
+        vals = "".join(f"{counts[c][k][0] / counts[c][k][1]:>10.3f}"
+                       for c, _ in cols)
+        print(f"    {str(k)[:22]:<24}{base[k][1]:>7} pairs "
+              f"({base[k][1] / tot:>5.1%}, cum {run / tot:>5.1%}){vals}")
+
+    print(f"\n  heterogeneity across recordings (Cochran's Q against the "
+          f"chance null)")
+    print(f"  {'':<14}{'Q':>10}{'df':>5}{'p':>10}{'I^2':>8}"
+          f"{'|z|>2':>8}{'z>2':>6}{'z<-2':>7}")
+    het = {}
+    for c, _ in cols:
+        h = heterogeneity(counts[c], c)
+        het[c] = h
+        z = np.array(list(h["z"].values()))
+        print(f"  {c:<14}{h['Q']:>10.1f}{h['df']:>5}{h['p']:>10.3g}"
+              f"{h['I2']:>8.1%}{int((abs(z) > 2).sum()):>8}"
+              f"{int((z > 2).sum()):>6}{int((z < -2).sum()):>7}")
+    print(f"\n  I^2 is the share of the between-recording spread that is NOT\n"
+          f"  sampling noise. Near 0 with a large p means 34 draws around\n"
+          f"  chance, and the representation branch closes: there is no local\n"
+          f"  signal to stabilise. Large I^2 with a small p means the head\n"
+          f"  does discriminate inside SOME recordings and not others, which\n"
+          f"  is an unstable-transfer problem and a different repair.")
+
+    print(f"\n  recordings beyond +/-2 SD of chance, by {cols[-1][0]}'s "
+          f"first column")
+    hz = het[cols[1][0] if len(cols) > 1 else cols[0][0]]
+    flagged = sorted(hz["z"], key=lambda k: hz["z"][k])
+    shown = [k for k in flagged if abs(hz["z"][k]) > 2]
+    if not shown:
+        print("    none")
+    if len(shown) > 24:
+        print(f"    ({len(shown)} of {len(flagged)} recordings are beyond "
+              f"2 SD; showing the 12 most extreme each way)")
+        shown = shown[:12] + shown[-12:]
+    for k in shown:
+        vals = "".join(f"{counts[c][k][0] / counts[c][k][1]:>10.3f}"
+                       for c, _ in cols)
+        print(f"    {str(k)[:22]:<24}{base[k][2]:>5}t{base[k][3]:>5}f"
+              f"{hz['z'][k]:>+8.2f}{vals}")
+
+    print(f"\n  what a recording's accuracy tracks (Spearman over "
+          f"{len(keys)} recordings)")
+    fmshare = np.array([base[k][3] / (base[k][2] + base[k][3]) for k in keys])
+    npair = np.array([float(base[k][1]) for k in keys])
+    print(f"  {'':<26}" + "".join(f"{c:>12}" for c, _ in cols))
+    corr = {}
+    for nm, x in (("false_mid share", fmshare), ("n_pairs", npair)):
+        v = [_spearman(x, np.array([counts[c][k][0] / counts[c][k][1]
+                                    for k in keys])) for c, _ in cols]
+        corr[nm] = {c: s for (c, _), s in zip(cols, v)}
+        print(f"  {nm:<26}" + "".join(f"{s:>+12.3f}" for s in v))
+    print(f"\n  A strong NEGATIVE against false_mid share says the ordering\n"
+          f"  fails precisely in the recordings that generate the false\n"
+          f"  positives -- which is the only place an auditor earns anything.")
+    return {"micro_macro": mm, "heterogeneity": het, "spearman": corr,
+            "pair_mass_top": [{"recording_id": k, "n_pairs": base[k][1],
+                               "share": base[k][1] / tot} for k in keys[:4]]}
+
+
 def per_recording_table(cols, ok, fm, rec, top=40):
     counts = {name: pair_counts(np.asarray(s, float), ok, fm, rec)
               for name, s in cols}
@@ -338,6 +520,8 @@ def main():
     cols = [("detector", logit), ("morph only", m), ("E_onto", energy)]
     rows, ci = per_recording_table(cols, ok, fm, rec, top=a.top)
     print()
+    hetero = concentration_and_heterogeneity(cols, ok, fm, rec)
+    print()
     inv = transform_invariance(m, ok, fm, rec)
     print()
     cov = None
@@ -347,7 +531,8 @@ def main():
 
     if a.out:
         json.dump({"variance_decomposition": vd, "per_recording": rows,
-                   "pooled_ci": ci, "transform_invariance": inv,
+                   "pooled_ci": ci, "concentration": hetero,
+                   "transform_invariance": inv,
                    "nuisance": nui, "eps": EPS},
                   open(a.out, "w", encoding="utf-8"), indent=2)
         print(f"\nwrote {a.out}")
