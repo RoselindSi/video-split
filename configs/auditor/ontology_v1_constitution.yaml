@@ -152,6 +152,25 @@ ablation:
   gate: "the arm must reach >= 50% of the same-harness oracle gain at the
          frozen release column to justify the next level"
 
+  # ADDED 2026-08-25, and it makes the gate STRICTER rather than movable.
+  # C0 raised pooled AUROC .676 -> .723 and top-10% .841 -> .903 while
+  # same-recording pair accuracy FELL .540 -> .510. Both true boundaries and
+  # audited false_mid are unevenly spread over the 36 recordings, so a score
+  # that only knows which RECORDINGS are boundary-rich improves every pooled
+  # metric while separating nothing a person is choosing between. The old
+  # gate would have been reached by that score.
+  pre_gate: "within-recording (same-recording) ordering must improve before
+             any pooled metric or release-budget table is read as evidence"
+  pooled_metrics_alone_are_not_evidence: true
+
+  verdicts:
+    C_ontology_rerank: "FAIL 2026-08-25. Pooled up, within-recording down
+                        (.5400 -> .5099); morphology alone is .4992, which is
+                        chance. See docs/c0_ontology_fusion_fail.md. D is
+                        gated: DP optimises the energy it is given, and this
+                        energy does not separate a true reset from an internal
+                        motion within a recording."
+
 # --- oracle ---------------------------------------------------------------
 oracle:
   may_train: false

@@ -190,9 +190,32 @@ class Constitution:
         if level not in order:
             raise ConstitutionViolation(f"{level} is not in {order}")
         if order.index(level) > order.index(done):
+            v = (self.c["ablation"].get("verdicts") or {}).get(done)
             raise ConstitutionViolation(
                 f"{level} comes after {done}, which is the last level with a "
-                f"measured incremental gain.\n  {self.c['ablation']['gate']}")
+                f"measured incremental gain.\n  {self.c['ablation']['gate']}"
+                + (f"\n  {done}: {v}" if v else ""))
+
+    def check_pre_gate(self, within_recording_delta):
+        """The pooled columns are not evidence until this one moves.
+
+        Added after C0, which raised pooled AUROC .676 -> .723 and top-10%
+        .841 -> .903 while same-recording pair accuracy FELL .540 -> .510. A
+        score that only knows which recordings are boundary-rich improves
+        every pooled metric and separates nothing a person is choosing
+        between, so pooled-only evidence would have promoted it."""
+        a = self.c["ablation"]
+        if not a.get("pooled_metrics_alone_are_not_evidence"):
+            return
+        if within_recording_delta is None:
+            raise ConstitutionViolation(
+                f"no within-recording delta was supplied.\n  "
+                f"{a['pre_gate']}\n  Reporting only pooled AUROC and top-k is "
+                f"how C0 nearly passed.")
+        if float(within_recording_delta) <= 0:
+            raise ConstitutionViolation(
+                f"within-recording ordering moved by "
+                f"{float(within_recording_delta):+.4f}.\n  {a['pre_gate']}")
 
     # --- oracle ------------------------------------------------------------
     def check_oracle_use(self, purpose):
@@ -262,6 +285,11 @@ def _self_test():
 
     C.check_level("C_ontology_rerank")
     must_raise(lambda: C.check_level("D_segment_dp"), "comes after")
+    must_raise(lambda: C.check_level("D_segment_dp"), "FAIL 2026-08-25")
+
+    C.check_pre_gate(0.02)
+    must_raise(lambda: C.check_pre_gate(-0.0301), "within-recording ordering")
+    must_raise(lambda: C.check_pre_gate(None), "no within-recording delta")
     must_raise(lambda: C.check_level("E_structured_loss"), "comes after")
 
     must_raise(lambda: C.check_oracle_use("train"), "may not be used")
