@@ -95,6 +95,58 @@ def _rid_from_path(p, d):
     return m.group(1) if m else p
 
 
+REQUIRED_AUDIT_COLUMNS = ("recording_id", "candidate_time_s",
+                          "temporal_event_type", "true_boundary_start_s")
+
+# Files that hold stored ground truth rather than an audit. Named so that
+# pointing --audit at one of them fails immediately instead of scoring the
+# pipeline against the labels this whole measurement exists to bypass.
+STORED_GT_MARKERS = ("segments.json", "global_segment_index",
+                     "boundary_v1_labels", "strict_nonoverlap_segment")
+
+
+def check_answer_key(path, rows):
+    """The answer key is the HUMAN AUDIT. Refuse anything else, loudly.
+
+    Stored ground truth is 44% wrong on the batch that was checked, and it is
+    also the most convenient thing lying next to every recording --
+    `segments.json` sits in the same directory as `mid.mp4`. A silent
+    substitution here would produce a complete, plausible score sheet
+    measured against the labels the pipeline is being asked to beat, and
+    nothing downstream would look wrong."""
+    low = str(path).lower()
+    for m in STORED_GT_MARKERS:
+        if m in low:
+            raise SystemExit(
+                f"--audit points at {path}, which is STORED GROUND TRUTH, not "
+                f"a human audit.\n"
+                f"  The answer key for this comparison is the audit and only "
+                f"the audit:\n"
+                f"    positives  <- true_boundary_start_s on rows the auditor "
+                f"called task_boundary\n"
+                f"    negatives  <- candidate_time_s on rows the auditor "
+                f"called no_boundary\n"
+                f"  Stored GT was measured at 44% wrong on batch4, which is "
+                f"why it is not used here.")
+    missing = [c for c in REQUIRED_AUDIT_COLUMNS
+               if rows and c not in rows[0]]
+    if missing:
+        raise SystemExit(
+            f"--audit is missing the audit columns {missing}.\n"
+            f"  Present: {sorted(rows[0])[:12] if rows else '(empty file)'}\n"
+            f"  This must be a joint-audit CSV carrying a person's verdict "
+            f"per timestamp.\n  A blind-review sheet does not qualify: "
+            f"batch4_blind_review_labels.csv has\n  temporal_truth empty on "
+            f"all 240 rows, because the verdicts live in the\n  other file.")
+    print(f"\n  ANSWER KEY: {path}")
+    print(f"    positives  <- true_boundary_start_s  (auditor's corrected "
+          f"time, on rows\n                  the auditor called "
+          f"task_boundary)")
+    print(f"    negatives  <- candidate_time_s       (instants the auditor "
+          f"looked at and\n                  called no_boundary)")
+    print(f"    stored ground truth is NOT consulted anywhere in this module.")
+
+
 def probes(audit_rows, manifest):
     """The two probe sets, both from the human audit."""
     pos, neg = [], []
@@ -201,6 +253,7 @@ def main():
     rows = [{k.lstrip("﻿").strip(): (v or "").strip()
              for k, v in r.items()}
             for r in csv.DictReader(open(a.audit, encoding="utf-8-sig"))]
+    check_answer_key(a.audit, rows)
     mf = {}
     if a.manifest:
         for l in open(a.manifest, encoding="utf-8"):
