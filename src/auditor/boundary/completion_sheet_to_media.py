@@ -97,8 +97,12 @@ def main():
 
     nm = nb = 0
     missing = 0
+    # PLAIN utf-8, no BOM. render_batch3_media reads this file as utf-8, and
+    # a BOM turns the first column name into "\ufeffevent_id" so that
+    # row["event_id"] raises KeyError on the first row. The last run escaped
+    # that only because the file was empty.
     with open(man, "w", encoding="utf-8") as fm, \
-            open(blind, "w", encoding="utf-8-sig", newline="") as fb, \
+            open(blind, "w", encoding="utf-8", newline="") as fb, \
             open(prov, "w", encoding="utf-8") as fp:
         w = csv.DictWriter(fb, fieldnames=cols)
         w.writeheader()
@@ -128,9 +132,20 @@ def main():
                 "sampled_because": r.get("sampled_because", ""),
             }, ensure_ascii=False) + "\n")
 
-    print(f"\nwrote {nm} -> {man}")
-    print(f"wrote {nb} -> {blind}")
-    print(f"wrote {nb} -> {prov}   (NOT for the reviewer)")
+    # A truncated-but-present output is worse than a missing one: it flows
+    # downstream and surfaces as an unrelated error. The last run left a
+    # 0-byte manifest and a 0-byte sheet next to a full provenance file, and
+    # the symptom four steps later was `fieldnames is None` in the renderer.
+    for path, n in ((man, nm), (blind, nb), (prov, nb)):
+        size = os.path.getsize(path)
+        if n and size == 0:
+            raise SystemExit(
+                f"{path} is 0 bytes after writing {n} rows. Nothing "
+                f"downstream would say so -- the renderer fails several steps "
+                f"later on an unrelated line. Re-run; if it repeats, the "
+                f"process is dying before the buffers flush.")
+        print(f"wrote {n} rows / {size} bytes -> {path}")
+    print(f"  ({os.path.basename(prov)} is NOT for the reviewer)")
     if missing:
         print(f"  {missing} rows dropped: recording absent from the caches")
     print(f"\n  The reviewer gets the blind CSV and the media. needed_side and")
