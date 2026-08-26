@@ -166,7 +166,7 @@ def seam_shift(a, b, mask, patch=96):
                 continue
             (dx, dy), resp = cv2.phaseCorrelate(pa - pa.mean(), pb - pb.mean())
             if resp > 0.05 and abs(dx) < patch / 2 and abs(dy) < patch / 2:
-                out.append((dx, dy, resp))
+                out.append((dx, dy, resp, cx, cy))
     if not out:
         return None
     o = np.array(out)
@@ -176,9 +176,25 @@ def seam_shift(a, b, mask, patch=96):
     # The magnitude median mixes that with scatter, and scatter here means the
     # correlation is guessing on weak texture rather than that the seam is
     # 20 px off. `aligned` is the share of patches that actually agree.
+    # IS THE FIELD SMOOTH? Parallax varies with the scene surface, so patches
+    # on the same table agree with their neighbours; measurement noise does
+    # not. This is what separates "the seam really is 15 px out because the
+    # content spans many depths" from "phase correlation is guessing". The
+    # statistic is the median distance between a patch's shift and the mean of
+    # its neighbours', relative to the overall spread.
+    coh = float("nan")
+    if len(o) > 12:
+        xy = o[:, 3:5]
+        resid = []
+        for k in range(len(o)):
+            d2 = ((xy - xy[k]) ** 2).sum(1)
+            nb = np.argsort(d2)[1:5]
+            resid.append(np.hypot(*(o[k, :2] - o[nb, :2].mean(0))))
+        coh = float(np.median(resid) / max(np.median(mag), 1e-6))
     return {"dx": float(np.median(o[:, 0])), "dy": float(np.median(o[:, 1])),
             "mag_median": float(np.median(mag)),
-            "aligned": float((mag <= 2.0).mean()), "n": len(out)}
+            "aligned": float((mag <= 2.0).mean()), "n": len(out),
+            "incoherence": coh, "field": o}
 
 
 def render(rig, vcam, sources, depth_m, mid_authority_deg=MID_AUTHORITY_DEG,
@@ -202,12 +218,14 @@ def render(rig, vcam, sources, depth_m, mid_authority_deg=MID_AUTHORITY_DEG,
     # and this holds across every frame measured. A single value splits the
     # difference and satisfies neither.
     depth_by_module = depth_by_module or {}
+    used_depth = {}
     warped, valid, cost = {}, {}, {}
     for i, m in enumerate(mods):
         name = m.left.name
         if name not in sources:
             continue
         z = float(depth_by_module.get(m.name, depth_m))
+        used_depth[m.name] = z
         mx, my, ok = source_maps(rig, name, vcam, z)
         warped[i] = cv2.remap(sources[name], mx, my, cv2.INTER_LINEAR,
                               borderMode=cv2.BORDER_CONSTANT,
@@ -275,7 +293,7 @@ def render(rig, vcam, sources, depth_m, mid_authority_deg=MID_AUTHORITY_DEG,
         band = cv2.dilate(edges, np.ones((3, feather_px), np.uint8)) > 0
         blur = cv2.GaussianBlur(rgb, (0, 0), feather_px / 3.0)
         rgb = np.where(band[..., None] & (owner[..., None] >= 0), blur, rgb)
-    return rgb, owner, seam_stats
+    return rgb, owner, seam_stats, used_depth
 
 
 def main():
@@ -344,7 +362,7 @@ def main():
     if not sources:
         raise SystemExit("no module had a video")
 
-    rgb, owner, seam_stats = render(rig, vcam, sources, a.depth_m,
+    rgb, owner, seam_stats, used_depth = render(rig, vcam, sources, a.depth_m,
                                     mid_authority_deg=a.mid_authority_deg,
                                     feather_px=a.feather_px,
                                     colour_match=not a.no_colour_match,
@@ -374,17 +392,20 @@ def main():
         az = np.degrees((seam_cols / w - 0.5) * vcam.hfov)
         print(f"  seams at azimuth {', '.join(f'{x:+.0f}' for x in az[:8])} deg"
               + ("" if len(az) <= 8 else f"  (+{len(az)-8} more)"))
+    print("  assumed depth per module: "
+          + ", ".join(f"{k}={v:g}m" for k, v in sorted(used_depth.items())))
     if seam_stats:
         tot = sum(n for _, n, _ in seam_stats.values())
         wavg = sum(d * n for d, n, _ in seam_stats.values()) / max(tot, 1)
         print(f"  seam:")
         for name, (d, n, sh) in sorted(seam_stats.items()):
             if sh:
-                print(f"    {name}  |diff| {d:5.2f} over {n:6d} px   "
-                      f"systematic shift ({sh['dx']:+5.2f},{sh['dy']:+5.2f}) px"
-                      f"   aligned within 2px: {sh['aligned']:5.1%}"
-                      f"   (|shift| med {sh['mag_median']:4.1f}, "
-                      f"{sh['n']} patches)")
+                print(f"    {name}  |diff| {d:5.2f}  shift "
+                      f"({sh['dx']:+5.2f},{sh['dy']:+5.2f})  "
+                      f"|shift| med {sh['mag_median']:4.1f}  "
+                      f"aligned<2px {sh['aligned']:5.1%}  "
+                      f"incoherence {sh['incoherence']:4.2f}  "
+                      f"({sh['n']} patches)")
             else:
                 print(f"    {name}  |diff| {d:5.2f} over {n:6d} px   "
                       f"shift: too little texture to measure")
