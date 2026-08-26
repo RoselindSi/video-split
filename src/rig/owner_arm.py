@@ -54,12 +54,25 @@ bench into the mask:
                                      depth step to stop at, and SGBM's own
                                      noise is already several centimetres.
 
-The last one is the real obstacle and it is not a tuning problem: contact
-means no discontinuity, and no continuity-based method can cut where the
-surfaces touch. What would: the bench is a PLANE, and a plane fitted to the
-workspace lets every pixel consistent with it be removed regardless of what
-touches it. That is the next thing to try, and it is a different kind of
-model -- a scene assumption rather than a local rule.
+The three are ONE failure wearing three costumes, and measuring the mask says
+which. Across frames 6000 / 1000 / 12000 it spans 90.0% / 90.0% / 87.5% of
+image COLUMNS at a mean column fill of 26% / 34% / 19%. A forearm is a compact
+blob; nothing shaped like an arm reaches nine columns in ten. The mask is a
+strip running the full width, which is the bench's front edge.
+
+And the edge is not separable by distance. The bottom band's far RIGHT corner
+-- bench, never arm -- measures 0.25 / 0.23 / 0.21 m, against a mask median of
+0.26 / 0.30 / 0.23 m. THE BENCH EDGE IS AT THE SAME DEPTH AS THE FOREARM. No
+threshold, no relative margin and no seed can separate two things the sensor
+places at the same distance; every formulation above was asking depth for a
+distinction depth does not carry.
+
+What does carry it is depth's STRUCTURE rather than its value. The bench is a
+plane and an arm is not, at any distance. A plane fitted to the workspace
+removes every pixel consistent with it regardless of what touches it or how
+near it is -- which is a scene assumption, not a local rule, and is the next
+thing to try. Its own risk is stated in advance: a flat part lying on the
+bench goes with the plane, and a forearm laid flat ALONG the bench may too.
 
 Everything below the segmentation is sound and tested: the three conditions,
 the hysteresis, the two-component cap, the refusal to own a component with no
