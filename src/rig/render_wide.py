@@ -137,8 +137,45 @@ def match_gain(src, ref, mask):
     return np.clip(g, 0.5, 2.0).astype(np.float32)
 
 
+def seam_shift(a, b, mask, patch=96):
+    """Median (dx, dy) taking `a` onto `b` over the shared region, in pixels.
+
+    Mean |difference| conflates three things -- geometry, exposure and sensor
+    noise -- and the exposure and noise floor here is around 40 out of 255, so
+    a difference of 45 says almost nothing about alignment. A displacement
+    does: two views of the same edge either land on top of each other or they
+    do not, and phase correlation reports that in pixels regardless of how
+    the two cameras metered the scene."""
+    import cv2
+    ys, xs = np.where(mask)
+    if len(ys) < patch * patch:
+        return None
+    ga = cv2.cvtColor(a, cv2.COLOR_BGR2GRAY).astype(np.float32)
+    gb = cv2.cvtColor(b, cv2.COLOR_BGR2GRAY).astype(np.float32)
+    h, w = ga.shape
+    out = []
+    step = patch // 2
+    for cy in range(patch, h - patch, step):
+        for cx in range(patch, w - patch, step):
+            sl = (slice(cy - patch // 2, cy + patch // 2),
+                  slice(cx - patch // 2, cx + patch // 2))
+            if mask[sl].mean() < 0.95:
+                continue
+            pa, pb = ga[sl], gb[sl]
+            if pa.std() < 8 or pb.std() < 8:      # featureless, no opinion
+                continue
+            (dx, dy), resp = cv2.phaseCorrelate(pa - pa.mean(), pb - pb.mean())
+            if resp > 0.05 and abs(dx) < patch / 2 and abs(dy) < patch / 2:
+                out.append((dx, dy, resp))
+    if not out:
+        return None
+    o = np.array(out)
+    return (float(np.median(o[:, 0])), float(np.median(o[:, 1])),
+            float(np.median(np.hypot(o[:, 0], o[:, 1]))), len(out))
+
+
 def render(rig, vcam, sources, depth_m, mid_authority_deg=MID_AUTHORITY_DEG,
-           feather_px=FEATHER_PX, colour_match=True):
+           feather_px=FEATHER_PX, colour_match=True, depth_by_module=None):
     """sources: {camera_name: image}. -> (rgb, owner).
 
     Selection, not blending. The middle module owns every pixel it sees within
@@ -152,12 +189,19 @@ def render(rig, vcam, sources, depth_m, mid_authority_deg=MID_AUTHORITY_DEG,
     mods = rig.modules
     mid_i = len(mods) // 2
 
+    # PER-MODULE DEPTH. One global constant cannot serve both joins: the left
+    # one looks at floor and distant benches and wants 8 m or more, the right
+    # one looks at the neighbouring workstation's bins and wants under a metre,
+    # and this holds across every frame measured. A single value splits the
+    # difference and satisfies neither.
+    depth_by_module = depth_by_module or {}
     warped, valid, cost = {}, {}, {}
     for i, m in enumerate(mods):
         name = m.left.name
         if name not in sources:
             continue
-        mx, my, ok = source_maps(rig, name, vcam, depth_m)
+        z = float(depth_by_module.get(m.name, depth_m))
+        mx, my, ok = source_maps(rig, name, vcam, z)
         warped[i] = cv2.remap(sources[name], mx, my, cv2.INTER_LINEAR,
                               borderMode=cv2.BORDER_CONSTANT,
                               borderValue=(0, 0, 0))
@@ -211,7 +255,8 @@ def render(rig, vcam, sources, depth_m, mid_authority_deg=MID_AUTHORITY_DEG,
             continue
         d = np.abs(warped[i][both].astype(np.float32)
                    - warped[mid_i][both].astype(np.float32)).mean()
-        seam_stats[mods[i].name] = (float(d), int(both.sum()))
+        sh = seam_shift(warped[i], warped[mid_i], valid[i] & valid[mid_i])
+        seam_stats[mods[i].name] = (float(d), int(both.sum()), sh)
 
     if feather_px > 0 and len(keys) > 1:
         # Feather ONLY across boundaries, and only where both sides exist.
@@ -247,6 +292,12 @@ def main():
                          "angle of its own axis. Raise it to push the seams "
                          "further out; the first version's azimuth rule put "
                          "one through the operator's hand.")
+    ap.add_argument("--depth_module", action="append", default=[],
+                    metavar="NAME=METRES",
+                    help="per-module assumed depth, e.g. module_A=8 "
+                         "module_C=0.8. APPEND. Overrides --depth_m for that "
+                         "module; the two joins look at content at very "
+                         "different distances.")
     ap.add_argument("--feather_px", type=int, default=FEATHER_PX)
     ap.add_argument("--no_colour_match", action="store_true")
     ap.add_argument("--out", required=True)
@@ -289,7 +340,11 @@ def main():
     rgb, owner, seam_stats = render(rig, vcam, sources, a.depth_m,
                                     mid_authority_deg=a.mid_authority_deg,
                                     feather_px=a.feather_px,
-                                    colour_match=not a.no_colour_match)
+                                    colour_match=not a.no_colour_match,
+                                    depth_by_module={
+                                        k: float(v) for k, v in
+                                        (x.split("=", 1)
+                                         for x in a.depth_module)})
     cv2.imwrite(a.out, rgb)
     cov = (owner >= 0).mean()
     print(f"wrote {a.out}  {w}x{h}  hfov {a.hfov_deg:.0f} deg  "
@@ -313,13 +368,21 @@ def main():
         print(f"  seams at azimuth {', '.join(f'{x:+.0f}' for x in az[:8])} deg"
               + ("" if len(az) <= 8 else f"  (+{len(az)-8} more)"))
     if seam_stats:
-        tot = sum(n for _, n in seam_stats.values())
-        wavg = sum(d * n for d, n in seam_stats.values()) / max(tot, 1)
-        print(f"  seam disagreement (mean |diff| where an outer module owns a "
-              f"pixel the middle can also see):")
-        for name, (d, n) in sorted(seam_stats.items()):
-            print(f"    {name}  {d:5.2f} over {n} px")
-        print(f"    weighted mean {wavg:5.2f}   <- LOWER IS BETTER ALIGNED")
+        tot = sum(n for _, n, _ in seam_stats.values())
+        wavg = sum(d * n for d, n, _ in seam_stats.values()) / max(tot, 1)
+        print(f"  seam:")
+        for name, (d, n, sh) in sorted(seam_stats.items()):
+            if sh:
+                dx, dy, mag, k = sh
+                print(f"    {name}  |diff| {d:5.2f} over {n:6d} px   "
+                      f"shift ({dx:+5.2f},{dy:+5.2f}) px  median |shift| "
+                      f"{mag:4.2f} over {k} patches")
+            else:
+                print(f"    {name}  |diff| {d:5.2f} over {n:6d} px   "
+                      f"shift: too little texture to measure")
+        print(f"    weighted |diff| {wavg:5.2f}")
+        print(f"    |diff| carries an exposure and noise floor near 40; the "
+              f"SHIFT is the alignment.")
     print(f"\n  This is the CONSTANT-DEPTH baseline. Misalignment in the "
           f"overlaps is\n  expected and is what the depth pass has to remove; "
           f"look at the joins\n  between modules, especially on anything close "
