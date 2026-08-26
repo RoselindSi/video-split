@@ -198,13 +198,24 @@ def seam_shift(a, b, mask, patch=96):
 
 
 def render(rig, vcam, sources, depth_m, mid_authority_deg=MID_AUTHORITY_DEG,
-           feather_px=FEATHER_PX, colour_match=True, depth_by_module=None):
+           feather_px=FEATHER_PX, colour_match=True, depth_by_module=None,
+           map_cache=None):
     """sources: {camera_name: image}. -> (rgb, owner).
 
     Selection, not blending. The middle module owns every pixel it sees within
-    `mid_authority_deg` of its own axis; elsewhere the least off-axis valid
-    module wins. Seams therefore sit at the outer edges of the field, where
-    the content is far and the parallax small, instead of across the hands."""
+    `mid_authority_deg` of its own axis; elsewhere the least off-axis module
+    wins. Seams therefore sit at the outer edges of the field, where the
+    content is far and the parallax small, instead of across the hands.
+
+    PASS A `map_cache` WHEN RENDERING MORE THAN ONE FRAME. The sampling tables
+    are a fisheye projection of every output pixel and cost about 370 ms per
+    module against 2 ms for the remap that uses them -- 79% of a render. They
+    depend only on the camera, the virtual camera and the assumed depth, all
+    of which are constant across a clip, so recomputing them per frame is pure
+    waste: 543 rebuilds of the same three tables per six-second sample, four
+    hours across the 76-anchor job. The cache is a plain dict owned by the
+    caller rather than a module global, because the tables are large and their
+    lifetime should end with the clip that needed them."""
     import cv2
     from src.rig.geometry import source_maps
 
@@ -226,7 +237,19 @@ def render(rig, vcam, sources, depth_m, mid_authority_deg=MID_AUTHORITY_DEG,
             continue
         z = float(depth_by_module.get(m.name, depth_m))
         used_depth[m.name] = z
-        mx, my, ok = source_maps(rig, name, vcam, z)
+        # Keyed on everything the tables actually depend on. `vcam` is frozen
+        # and its fields are the whole of its geometry, so a key built from
+        # them cannot go stale the way an id() would.
+        key = (name, round(z, 9), vcam.width, vcam.height,
+               round(vcam.hfov, 12), round(vcam.vfov, 12),
+               vcam.R.tobytes(), vcam.eye.tobytes())
+        if map_cache is None or key not in map_cache:
+            got = source_maps(rig, name, vcam, z)
+            if map_cache is not None:
+                map_cache[key] = got
+        else:
+            got = map_cache[key]
+        mx, my, ok = got
         warped[i] = cv2.remap(sources[name], mx, my, cv2.INTER_LINEAR,
                               borderMode=cv2.BORDER_CONSTANT,
                               borderValue=(0, 0, 0))

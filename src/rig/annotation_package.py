@@ -145,6 +145,9 @@ def build_sample(rig, vcam, views, anchor, out_dir, rid, label="",
 
     os.makedirs(out_dir, exist_ok=True)
     os.makedirs(os.path.join(out_dir, "range"), exist_ok=True)
+    # One cache for the whole clip. The sampling tables are 79% of a render
+    # and are identical for all 181 frames of it.
+    map_cache = {}
     for c in caps.values():
         c.set(cv2.CAP_PROP_POS_FRAMES, f0)
 
@@ -164,7 +167,7 @@ def build_sample(rig, vcam, views, anchor, out_dir, rid, label="",
             srcs[mod.left.name], srcs[mod.right.name] = l, r
         if not got:
             break
-        rgb, _, _, _ = render(rig, vcam, srcs, 0.6)
+        rgb, _, _, _ = render(rig, vcam, srcs, 0.6, map_cache=map_cache)
         if writer is None:
             h, w = rgb.shape[:2]
             writer = cv2.VideoWriter(os.path.join(out_dir, "clip_rgb.mp4"),
@@ -238,6 +241,13 @@ def _one(job):
         vcam = VirtualWideCamera.from_rig(rig)
         rc = {m.name: rectify_maps(rig, m) for m in rig.modules}
         d = os.path.join(out_root, f"sample_{rid}_f{anchor:06d}")
+        # meta.json is written last, so its presence means this sample
+        # finished. Resuming an interrupted run must not redo six minutes of
+        # work per already-complete anchor.
+        done = os.path.join(d, "meta.json")
+        if os.path.exists(done):
+            import json as _j
+            return _j.load(open(done))
         m = build_sample(rig, vcam, views, anchor, d, rid, label,
                          half_sec=half, range_every=every, rect_cache=rc)
         return m or {"recording_id": rid, "keyframe_frame": anchor,
