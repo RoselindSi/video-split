@@ -101,8 +101,12 @@ def find_calibration(databag_dir, cache=None):
         try:
             got = RigCalibration(str(p))
             break
-        except (CalibrationError, Exception):
-            continue
+        except CalibrationError:
+            continue                 # a yaml that is not a rig calibration
+        except (OSError, ValueError, KeyError, TypeError):
+            continue                 # malformed, truncated, or not yaml
+        # Anything else -- an ImportError, a typo in RigCalibration -- is a
+        # bug and must not be swallowed as "this databag has no calibration".
     cache[databag_dir] = got
     return got
 
