@@ -83,6 +83,45 @@ def find_recordings(root):
     return out
 
 
+def frame_count(views):
+    """Frames in the longest module of a recording. Metadata only, no decode."""
+    import cv2
+    n = 0
+    for v in VIEWS:
+        if v in views:
+            cap = cv2.VideoCapture(views[v])
+            n = max(n, int(cap.get(cv2.CAP_PROP_FRAME_COUNT)))
+            cap.release()
+    return n
+
+
+def allocate(lengths, total):
+    """Instants per recording, proportional to length. -> [int], summing to
+    `total` (or to the number of frames, if that is smaller).
+
+    THE CORPUS IS NOT A LIST OF EQUAL RECORDINGS. These 40 databags span three
+    orders of magnitude, from a few seconds to over an hour, and about a dozen
+    of them together are under half a percent of the footage. Giving each
+    recording the same number of instants would spend a third of the budget on
+    material that is a rounding error in deployment, and would report a
+    prevalence for a corpus nobody has.
+
+    The question is what fraction of the FRAMES a colleague appears in, so the
+    frames are what gets sampled: a recording holding 18% of the footage draws
+    18% of the instants and one holding 0.03% draws none. Largest-remainder
+    apportionment, so the parts sum to the whole instead of drifting by the
+    rounding."""
+    tot = float(sum(lengths))
+    if tot <= 0:
+        return [0] * len(lengths)
+    exact = [total * n / tot for n in lengths]
+    base = [int(np.floor(e)) for e in exact]
+    left = total - sum(base)
+    for i in np.argsort([-(e - b) for e, b in zip(exact, base)])[:max(left, 0)]:
+        base[int(i)] += 1
+    return [min(b, n) for b, n in zip(base, lengths)]
+
+
 def sample_frames(n_frames, k, rec_id):
     """Stratified random: one frame from each of k equal blocks.
 
@@ -176,46 +215,68 @@ def main():
     ap.add_argument("--out", help="output directory. On the dev container the "
                     "SAN is /workspace (also /storage), 64T; / is the shared "
                     "host disk and is not for outputs.")
-    ap.add_argument("--n_recordings", type=int, default=20)
-    ap.add_argument("--n_frames", type=int, default=12,
-                    help="sampled instants per recording")
+    ap.add_argument("--instants", type=int, default=180,
+                    help="total blind instants across the whole corpus, "
+                         "apportioned by recording length")
+    ap.add_argument("--equal", action="store_true",
+                    help="give every recording the same number of instants "
+                         "instead. Answers a different question -- the rate "
+                         "in a typical recording rather than in the footage "
+                         "-- and here spends a third of the budget on "
+                         "databags that are 0.4%% of it.")
     a = ap.parse_args()
 
     recs = find_recordings(a.root)
     if not recs:
         raise SystemExit(f"no cam*.mp4 found under {a.root}")
 
+    full = [r for r in recs if len(r[1]) == len(VIEWS)]
+    if not full:
+        raise SystemExit("no recording has all three modules")
+    lengths = [frame_count(v) for _, v, _ in full]
+    share = [n / max(sum(lengths), 1) for n in lengths]
+
     if a.mode == "survey":
-        print(f"{len(recs)} recordings under {a.root}\n")
-        full = [r for r in recs if len(r[1]) == len(VIEWS)]
+        print(f"{len(recs)} recordings under {a.root}")
         print(f"  with all three modules  {len(full)}")
-        print(f"  partial                 {len(recs) - len(full)}\n")
-        for rid, views, d in recs[:40]:
-            have = "".join("+" if v in views else "-" for v in VIEWS)
-            sz = sum(os.path.getsize(p) for p in views.values()) / 1e9
-            print(f"    {have}  {sz:6.1f} GB  {rid}")
-        if len(recs) > 40:
-            print(f"    ... and {len(recs) - 40} more")
-        print(f"\n  '+++' means cam12/cam34/cam56 all present, which is what "
-              f"the sheets need\n  to show the full 176 degree field at each "
-              f"instant.")
+        print(f"  partial                 {len(recs) - len(full)}")
+        print(f"  total footage           {sum(lengths)/30/3600:.1f} h "
+              f"at 30 fps\n")
+        alloc = allocate(lengths, a.instants)
+        print(f"    {'minutes':>8}{'share':>8}{'instants':>9}  recording")
+        for (rid, _, _), n, s, k in sorted(
+                zip(full, lengths, share, alloc), key=lambda r: -r[1]):
+            print(f"    {n/30/60:8.1f}{s:7.1%}{k:9d}  {rid}")
+        zero = sum(1 for k in alloc if k == 0)
+        print(f"\n  {a.instants} instants apportioned by length; {zero} "
+              f"recordings draw none because\n  together they are "
+              f"{sum(s for s, k in zip(share, alloc) if k == 0):.1%} of the "
+              f"footage. Equal-per-recording would\n  have spent a third of "
+              f"the budget on them.")
         return
 
     if not a.out:
         ap.error("--out is required for sheets, and it belongs on the SAN")
     free = _check_space(a.out)
-    full = [r for r in recs if len(r[1]) == len(VIEWS)][:a.n_recordings]
-    if not full:
-        raise SystemExit("no recording has all three modules")
+    if a.equal:
+        per = max(a.instants // len(full), 1)
+        alloc = [per] * len(full)
+        print(f"EQUAL allocation: {len(full)} recordings x {per} instants. "
+              f"This measures the\n  rate in a typical recording, NOT in the "
+              f"footage.\n")
+    else:
+        alloc = allocate(lengths, a.instants)
+    todo = [(r, k) for r, k in zip(full, alloc) if k > 0]
 
-    print(f"{len(full)} recordings x {a.n_frames} instants, "
-          f"stratified random, blind\n  -> {a.out}  ({free:.0f} GB free)\n")
+    print(f"{sum(k for _, k in todo)} instants over "
+          f"{len(todo)} recordings, stratified random, blind\n"
+          f"  -> {a.out}  ({free:.0f} GB free)\n")
     manifest, sheets = [], []
-    for i, (rid, views, d) in enumerate(full, 1):
-        p, m = build_sheets(rid, views, a.out, a.n_frames)
+    for i, ((rid, views, d), k) in enumerate(todo, 1):
+        p, m = build_sheets(rid, views, a.out, k)
         sheets += p
         manifest += m
-        print(f"  [{i}/{len(full)}] {rid}: {len(m)} instants, "
+        print(f"  [{i}/{len(todo)}] {rid}: {len(m)} instants, "
               f"{len(p)} sheet(s)")
 
     csv_path = os.path.join(a.out, "class2_census.csv")
