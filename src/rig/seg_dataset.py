@@ -64,8 +64,11 @@ SPLITS = ("eval", "train")
 
 def encode_range(range_m):
     """metres float (NaN where unmeasured) -> uint16 millimetres, 0 = unmeasured."""
-    mm = np.nan_to_num(range_m, nan=0.0) * 1000.0
-    mm[~np.isfinite(range_m)] = 0.0
+    # Mask BEFORE scaling. nan_to_num turns an inf into a huge finite value,
+    # which then overflows on the multiply -- the clip below would still land
+    # on the right answer, but by accident rather than by construction.
+    ok = np.isfinite(range_m)
+    mm = np.where(ok, range_m, 0.0).astype(np.float64) * 1000.0
     return np.clip(mm, 0, MM_MAX).astype(np.uint16)
 
 
