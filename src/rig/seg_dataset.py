@@ -135,7 +135,11 @@ def survey_calibration(root):
                 why = "OK"
                 break
             except CalibrationError as e:
-                why = str(e).split("\n")[0].split(": ")[-1][:60]
+                # The message opens with the file's absolute path, which under
+                # a truncation is all that survives -- and a column of
+                # identical paths says nothing about why anything failed.
+                why = (str(e).split("\n")[0]
+                       .replace(str(p), p.name).strip())[:70]
             except Exception as e:
                 why = f"{type(e).__name__}: {e}"[:60]
         out.append((rid, why))
