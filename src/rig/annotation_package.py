@@ -271,16 +271,34 @@ def main():
     if a.limit:
         want = want[:a.limit]
 
-    jobs = []
+    # Calibration is checked ONCE per recording, here, rather than inside a
+    # worker per anchor. On this corpus 104 of the 180 census instants sit in
+    # databags whose calibration file says `uncalibrated`, and letting each
+    # spawn a process to rediscover that would cost 104 process starts and
+    # print a wall of identical errors over the real ones.
+    from src.rig.seg_dataset import find_calibration
+    cal, jobs, skipped = {}, [], {}
     for w in want:
         rid = w["recording"]
         if rid not in by_id:
+            skipped[rid] = "not under --root"
             continue
         views, d = by_id[rid]
+        if rid not in cal:
+            cal[rid] = find_calibration(d) is not None
+        if not cal[rid]:
+            skipped[rid] = "no usable calibration"
+            continue
         jobs.append((rid, views, d, int(w["frame"]), w.get("label", ""),
                      a.out, a.half_sec, a.range_every))
+    if skipped:
+        n = sum(1 for w in want if w["recording"] in skipped)
+        print(f"  skipping {n} anchors in {len(skipped)} recordings:")
+        for rid, why in sorted(skipped.items()):
+            print(f"    {rid}  {why}")
+        print()
     if not jobs:
-        raise SystemExit("no requested recording was found under --root")
+        raise SystemExit("no requested recording has a usable calibration")
 
     nw = a.workers or max(1, (os.cpu_count() or 8) - 4)
     span = int(round(2 * a.half_sec * FPS)) + 1
