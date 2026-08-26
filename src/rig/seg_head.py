@@ -331,6 +331,20 @@ def iou_from_confusion(cm):
     return np.where(union > 0, inter / np.maximum(union, 1), np.nan)
 
 
+def fp_from_confusion(cm):
+    """Fraction of ALL pixels wrongly predicted as each class.
+
+    IoU goes to NaN where a class is absent from the ground truth, which is
+    exactly the regime that matters most here: 52% of frames contain nobody
+    else, and the failure that would corrupt the downstream signal is calling
+    the wearer's own arm somebody else's. That failure has no IoU to report --
+    it needs a false-positive rate, and this is defined in every regime rather
+    than only where the class happens to appear."""
+    tot = max(cm.sum(), 1)
+    fp = cm.sum(0) - np.diag(cm)
+    return (fp.astype(np.float64) / tot)
+
+
 def evaluate(model, ds, device, batch=2):
     """-> {"overall": iou[3], "by_regime": {label: iou[3]}, "support": {...}}
 
@@ -356,25 +370,38 @@ def evaluate(model, ds, device, batch=2):
                     lab, np.zeros_like(c)) + c
                 sup[lab] = sup.get(lab, 0) + 1
     return {"overall": iou_from_confusion(cm_all).tolist(),
+            "overall_fp": fp_from_confusion(cm_all).tolist(),
             "by_regime": {k: iou_from_confusion(v).tolist()
                           for k, v in sorted(cm_reg.items())},
+            "fp_by_regime": {k: fp_from_confusion(v).tolist()
+                             for k, v in sorted(cm_reg.items())},
             "support": sup}
 
 
+def _cells(v, fmt="{:>13.3f}"):
+    return "".join(fmt.format(x) if np.isfinite(x) else f"{'-':>13}"
+                   for x in v)
+
+
 def print_eval(res):
-    print(f"    {'regime':<14}{'n':>4}" +
-          "".join(f"{c:>13}" for c in CLASSES))
-    for k, v in res["by_regime"].items():
-        print(f"    {k or '(none)':<14}{res['support'].get(k,0):>4}" +
-              "".join(f"{x:>13.3f}" if np.isfinite(x) else f"{'-':>13}"
-                      for x in v))
-    print(f"    {'-'*(18+13*len(CLASSES))}")
-    print(f"    {'ALL (do not':<14}{sum(res['support'].values()):>4}" +
-          "".join(f"{x:>13.3f}" if np.isfinite(x) else f"{'-':>13}"
-                  for x in res["overall"]))
-    print("     quote alone)")
-    print("\n  The aggregate row is dominated by the easy regime. The number "
-          "that matters\n  is other_arm on the 'other_near' row.")
+    for title, key, okey in (("IoU", "by_regime", "overall"),
+                             ("false positives, share of all pixels",
+                              "fp_by_regime", "overall_fp")):
+        print(f"\n    {title}")
+        print(f"    {'regime':<14}{'n':>4}" +
+              "".join(f"{c:>13}" for c in CLASSES))
+        for k, v in res[key].items():
+            print(f"    {k or '(none)':<14}{res['support'].get(k,0):>4}"
+                  + _cells(v))
+        print(f"    {'-'*(18+13*len(CLASSES))}")
+        print(f"    {'ALL':<14}{sum(res['support'].values()):>4}"
+              + _cells(res[okey]))
+    print("\n  Read the 'other_near' row of the IoU table and the "
+          "'owner_only' row of the\n  false-positive table. The first is the "
+          "case that is hard; the second is\n  hallucinating a colleague onto "
+          "a frame that has none, which is the failure\n  that would corrupt "
+          "the downstream signal on 52% of the corpus. Neither is\n  visible "
+          "in the ALL row.")
 
 
 # --------------------------------------------------------------------------
@@ -433,7 +460,7 @@ def train(train_root, eval_root, out, encoder="resnet18", path=None,
             loss = lossf(model(x, d), y)
             loss.backward()
             opt.step()
-            tot += float(loss) * len(idx); n += len(idx)
+            tot += loss.detach().item() * len(idx); n += len(idx)
         line = {"epoch": ep, "loss": tot / max(n, 1)}
         if ev_rows and (ep % 5 == 0 or ep == epochs):
             res = evaluate(model, ev, device)
@@ -546,6 +573,11 @@ def smoke(tmp, encoder="resnet18", epochs=12):
             f"owner_arm IoU {res['overall'][1]:.3f}")
         chk(set(res["by_regime"]) >= {"other_near", "owner_only"},
             "regimes are reported separately, never as one figure")
+        fp = res["fp_by_regime"].get("owner_only")
+        chk(fp is not None and fp[2] < 0.02,
+            f"on frames with nobody else, other_arm is hallucinated onto "
+            f"{fp[2]:.1%}\n       of pixels -- the failure IoU cannot show "
+            f"because the class is absent")
     print(f"\n  {sum(ok)}/{len(ok)} checks pass.")
     return all(ok)
 
