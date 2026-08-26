@@ -194,6 +194,25 @@ def render(rig, vcam, sources, depth_m, mid_authority_deg=MID_AUTHORITY_DEG,
         sel = reach & (pick == j)
         rgb[sel] = warped[i][sel]
 
+    # SEAM DISAGREEMENT, the objective version of "look at the join".
+    # Where two modules both reach a pixel, how different are the two views of
+    # it? At a well-aligned seam they agree; at a misaligned one the same edge
+    # lands in two places and the difference spikes. This is the number the
+    # depth pass has to reduce, and eyeballing four renders cannot rank them --
+    # 88% of the frame is owned outright by the middle module and is
+    # pixel-identical across every depth assumption, so the only thing that
+    # differs is two narrow bands.
+    seam_stats = {}
+    for j, i in enumerate(keys):
+        if i == mid_i or mid_i not in warped:
+            continue
+        both = valid[i] & valid[mid_i] & (owner == i)
+        if both.sum() < 200:
+            continue
+        d = np.abs(warped[i][both].astype(np.float32)
+                   - warped[mid_i][both].astype(np.float32)).mean()
+        seam_stats[mods[i].name] = (float(d), int(both.sum()))
+
     if feather_px > 0 and len(keys) > 1:
         # Feather ONLY across boundaries, and only where both sides exist.
         # Near the hands this never fires, because the middle module owns an
@@ -204,7 +223,7 @@ def render(rig, vcam, sources, depth_m, mid_authority_deg=MID_AUTHORITY_DEG,
         band = cv2.dilate(edges, np.ones((3, feather_px), np.uint8)) > 0
         blur = cv2.GaussianBlur(rgb, (0, 0), feather_px / 3.0)
         rgb = np.where(band[..., None] & (owner[..., None] >= 0), blur, rgb)
-    return rgb, owner
+    return rgb, owner, seam_stats
 
 
 def main():
@@ -267,10 +286,10 @@ def main():
     if not sources:
         raise SystemExit("no module had a video")
 
-    rgb, owner = render(rig, vcam, sources, a.depth_m,
-                        mid_authority_deg=a.mid_authority_deg,
-                        feather_px=a.feather_px,
-                        colour_match=not a.no_colour_match)
+    rgb, owner, seam_stats = render(rig, vcam, sources, a.depth_m,
+                                    mid_authority_deg=a.mid_authority_deg,
+                                    feather_px=a.feather_px,
+                                    colour_match=not a.no_colour_match)
     cv2.imwrite(a.out, rgb)
     cov = (owner >= 0).mean()
     print(f"wrote {a.out}  {w}x{h}  hfov {a.hfov_deg:.0f} deg  "
@@ -293,6 +312,14 @@ def main():
         az = np.degrees((seam_cols / w - 0.5) * vcam.hfov)
         print(f"  seams at azimuth {', '.join(f'{x:+.0f}' for x in az[:8])} deg"
               + ("" if len(az) <= 8 else f"  (+{len(az)-8} more)"))
+    if seam_stats:
+        tot = sum(n for _, n in seam_stats.values())
+        wavg = sum(d * n for d, n in seam_stats.values()) / max(tot, 1)
+        print(f"  seam disagreement (mean |diff| where an outer module owns a "
+              f"pixel the middle can also see):")
+        for name, (d, n) in sorted(seam_stats.items()):
+            print(f"    {name}  {d:5.2f} over {n} px")
+        print(f"    weighted mean {wavg:5.2f}   <- LOWER IS BETTER ALIGNED")
     print(f"\n  This is the CONSTANT-DEPTH baseline. Misalignment in the "
           f"overlaps is\n  expected and is what the depth pass has to remove; "
           f"look at the joins\n  between modules, especially on anything close "
