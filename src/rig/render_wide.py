@@ -66,13 +66,15 @@ import numpy as np
 # AZIMUTH, which gave each module a third of the frame and put a seam at +30
 # degrees -- straight through the operator's right hand. Seam placement is not
 # a cosmetic choice when the seam lands on the thing being understood.
-MID_AUTHORITY_DEG = 62.0
+MID_AUTHORITY_DEG = 72.0
 
-# Blending is off by default. Averaging two views of a near object makes two
-# half-transparent copies of it, which is the failure mode this whole design
-# avoids. A narrow feather is allowed only at the outer joins, where the
-# content is far away and the parallax is small.
-FEATHER_PX = 24
+# OFF. The feather was a mistake worth recording: it blurs along the owner
+# boundary, and that boundary is not a short straight seam but a long curved
+# arc following the middle module's fisheye edge, so it painted a soft band
+# down both sides of the frame. Once exposure is matched there is very little
+# left for it to hide, and what it does instead is destroy real detail along
+# an arc hundreds of pixels long.
+FEATHER_PX = 0
 
 
 def read_frame(path, index):
@@ -279,6 +281,13 @@ def main():
     mid = rig.modules[len(rig.modules) // 2]
     print(f"  {mid.name} keeps everything within {a.mid_authority_deg:.0f} "
           f"deg of its own axis")
+    # How much would the middle module cover on its own? If the outer modules
+    # only add a few percent, they are buying that at the price of two seams,
+    # and the seams are the thing that damages a hand crossing them.
+    from src.rig.geometry import source_maps
+    _, _, mid_ok = source_maps(rig, mid.left.name, vcam, a.depth_m)
+    print(f"  {mid.name} alone would cover {mid_ok.mean():6.1%}; the outer "
+          f"modules add {(owner >= 0).mean() - mid_ok.mean():+.1%}")
     seam_cols = np.where(np.any(owner[:, 1:] != owner[:, :-1], 0))[0]
     if len(seam_cols):
         az = np.degrees((seam_cols / w - 0.5) * vcam.hfov)
