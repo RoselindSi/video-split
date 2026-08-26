@@ -260,7 +260,10 @@ def main():
     ap.add_argument("--half_sec", type=float, default=HALF_WINDOW_SEC)
     ap.add_argument("--range_every", type=int, default=RANGE_EVERY)
     ap.add_argument("--workers", type=int, default=0,
-                    help="0 picks cpu_count-4")
+                    help="0 picks a conservative default. Each worker is a "
+                         "spawned interpreter importing numpy and cv2, so "
+                         "cpu_count is the wrong bound -- a container's "
+                         "process limit is reached long before its cores are.")
     ap.add_argument("--limit", type=int, default=0)
     a = ap.parse_args()
 
@@ -300,7 +303,12 @@ def main():
     if not jobs:
         raise SystemExit("no requested recording has a usable calibration")
 
-    nw = a.workers or max(1, (os.cpu_count() or 8) - 4)
+    # DEFAULT_WORKERS is capped well under the core count on purpose. Asking
+    # for 124 spawned interpreters on a 128-core container hit
+    # BlockingIOError: the limit reached first is the process (or pids-cgroup)
+    # limit, not the CPU. This work is also IO- and decode-bound per worker,
+    # so the last dozen workers buy little even where they are allowed.
+    nw = a.workers or max(1, min(12, (os.cpu_count() or 8) - 4))
     span = int(round(2 * a.half_sec * FPS)) + 1
     print(f"{len(jobs)} anchors x {span} frames "
           f"(+/-{a.half_sec:g}s), range every {a.range_every}\n"
@@ -311,7 +319,15 @@ def main():
     t0 = time.time()
     metas, errs = [], []
     import multiprocessing as mp
-    with mp.get_context("spawn").Pool(nw) as pool:
+    try:
+        pool_ctx = mp.get_context("spawn").Pool(nw, maxtasksperchild=8)
+    except (BlockingIOError, OSError) as e:
+        raise SystemExit(
+            f"could not start {nw} workers ({type(e).__name__}: {e}).\n"
+            f"  This is a process limit, not a memory or CPU one. Rerun with "
+            f"a smaller\n  --workers (try 4) -- the job is the same length, "
+            f"it just takes longer.")
+    with pool_ctx as pool:
         for i, m in enumerate(pool.imap_unordered(_one, jobs), 1):
             if m.get("error"):
                 errs.append(m)
