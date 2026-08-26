@@ -170,8 +170,15 @@ def seam_shift(a, b, mask, patch=96):
     if not out:
         return None
     o = np.array(out)
-    return (float(np.median(o[:, 0])), float(np.median(o[:, 1])),
-            float(np.median(np.hypot(o[:, 0], o[:, 1]))), len(out))
+    mag = np.hypot(o[:, 0], o[:, 1])
+    # The component medians are the SYSTEMATIC misalignment -- what a wrong
+    # depth assumption produces, since it displaces everything the same way.
+    # The magnitude median mixes that with scatter, and scatter here means the
+    # correlation is guessing on weak texture rather than that the seam is
+    # 20 px off. `aligned` is the share of patches that actually agree.
+    return {"dx": float(np.median(o[:, 0])), "dy": float(np.median(o[:, 1])),
+            "mag_median": float(np.median(mag)),
+            "aligned": float((mag <= 2.0).mean()), "n": len(out)}
 
 
 def render(rig, vcam, sources, depth_m, mid_authority_deg=MID_AUTHORITY_DEG,
@@ -373,10 +380,11 @@ def main():
         print(f"  seam:")
         for name, (d, n, sh) in sorted(seam_stats.items()):
             if sh:
-                dx, dy, mag, k = sh
                 print(f"    {name}  |diff| {d:5.2f} over {n:6d} px   "
-                      f"shift ({dx:+5.2f},{dy:+5.2f}) px  median |shift| "
-                      f"{mag:4.2f} over {k} patches")
+                      f"systematic shift ({sh['dx']:+5.2f},{sh['dy']:+5.2f}) px"
+                      f"   aligned within 2px: {sh['aligned']:5.1%}"
+                      f"   (|shift| med {sh['mag_median']:4.1f}, "
+                      f"{sh['n']} patches)")
             else:
                 print(f"    {name}  |diff| {d:5.2f} over {n:6d} px   "
                       f"shift: too little texture to measure")
