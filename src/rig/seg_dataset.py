@@ -146,8 +146,13 @@ def survey_calibration(root):
     return out
 
 
-def export_instant(rig, vcam, views, frame, out_dir, rid, rect_cache=None):
-    """One instant -> (rgb path, range path). Range is None without depth."""
+def export_instant(rig, vcam, views, frame, out_dir, rid, rect_cache=None,
+                   map_cache=None):
+    """One instant -> (rgb path, range path). Range is None without depth.
+
+    `map_cache` is the same constant sampling tables `render_wide` caches: they
+    cost 370 ms per module against 2 ms for the remap that uses them, and they
+    are identical for every frame of a recording."""
     import cv2
     from src.rig.render_wide import read_frame, split_halves, render
     from src.rig.wide_depth import wide_depth
@@ -162,7 +167,8 @@ def export_instant(rig, vcam, views, frame, out_dir, rid, rect_cache=None):
     if not sources:
         return None, None
 
-    rgb, _, _, _ = render(rig, vcam, sources, 0.6)
+    rgb, _, _, _ = render(rig, vcam, sources, 0.6,
+                          map_cache=map_cache)
     os.makedirs(os.path.join(out_dir, "images"), exist_ok=True)
     os.makedirs(os.path.join(out_dir, "range"), exist_ok=True)
     stem = f"{rid}_f{frame:06d}"
@@ -258,10 +264,11 @@ def main():
             continue
         key = id(rig)
         if key not in rect_cache:
-            rect_cache[key] = ({}, VirtualWideCamera.from_rig(rig))
-        rc, vcam = rect_cache[key]
+            rect_cache[key] = ({}, VirtualWideCamera.from_rig(rig), {})
+        rc, vcam, mc = rect_cache[key]
         p_rgb, p_rng = export_instant(rig, vcam, views, int(w["frame"]),
-                                      a.out, rid, rect_cache=rc)
+                                      a.out, rid, rect_cache=rc,
+                                      map_cache=mc)
         if p_rgb is None:
             n_skip += 1
             continue
