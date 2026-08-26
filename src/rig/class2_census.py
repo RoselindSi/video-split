@@ -173,7 +173,9 @@ def main():
     ap.add_argument("mode", choices=("survey", "sheets"))
     ap.add_argument("--root", required=True,
                     help="directory searched recursively for cam*.mp4")
-    ap.add_argument("--out", help="output directory. PUT THIS ON THE SAN.")
+    ap.add_argument("--out", help="output directory. On the dev container the "
+                    "SAN is /workspace (also /storage), 64T; / is the shared "
+                    "host disk and is not for outputs.")
     ap.add_argument("--n_recordings", type=int, default=20)
     ap.add_argument("--n_frames", type=int, default=12,
                     help="sampled instants per recording")
