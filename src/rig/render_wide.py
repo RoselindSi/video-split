@@ -14,13 +14,29 @@ at the seams, then compare.
 COMPOSITING IS A CHOICE, NOT AN AVERAGE. Each output pixel takes its colour
 from ONE camera:
 
-    inside the central ROI      the middle module, always
-    elsewhere                   whichever module's axis is angularly closest
+    the middle module          everywhere it sees within MID_AUTHORITY_DEG
+                               of its own optical axis
+    elsewhere                  the valid camera with the smallest off-axis
+                               angle
 
 Blending two views of the same near hand produces two half-transparent hands.
-The central ROI exists because that is where the hand-object interaction lives
-and where a compositing artefact costs the most, so it is served by real pixels
-from one physical camera with nothing done to them.
+The middle module holds an unbroken region across the whole working area, so
+the hands are served by real pixels from one physical camera with nothing done
+to them, and no boundary passes through them.
+
+THE FIRST VERSION GOT THIS WRONG in a way worth keeping written down. It gave
+each output column to whichever module was nearest in AZIMUTH, which split the
+frame into equal thirds and put a seam at +30 degrees -- through the operator's
+right hand, fingers on one side and forearm on the other, not lining up. But
+cam3 alone spans 144 degrees and sees that direction at only 20 degrees off
+axis, perfectly well. The seam was not forced by the optics; it was created by
+the rule.
+
+EXPOSURE IS MATCHED BEFORE SELECTION. The three modules disagree about
+brightness and white balance -- the left strip of the first render is visibly
+darker and bluer -- and that difference is about half of why a seam reads as a
+seam. It is separable from geometry and costs one gain per module, estimated in
+the overlap against the middle.
 
 WHICH EYE. One eye per module, the left, chosen for consistency rather than
 quality -- the modules are 60 mm pairs, so the choice shifts the virtual centre
@@ -41,11 +57,22 @@ import os
 
 import numpy as np
 
-# Half-width of the region the middle module owns outright, in degrees of
-# azimuth. Wide enough to contain the work surface and both hands at a normal
-# working distance; narrow enough that the outer modules still supply the
-# field of view they were added for.
-CENTRAL_ROI_DEG = 22.0
+# The middle module keeps every pixel it can see at less than this angle off
+# its own optical axis. It is deliberately large: cam3 alone spans about 144
+# degrees, so it covers the whole default output, and the outer modules are
+# only needed where its samples fall into the extreme fisheye periphery.
+#
+# The first version handed territory to whichever module was closest in
+# AZIMUTH, which gave each module a third of the frame and put a seam at +30
+# degrees -- straight through the operator's right hand. Seam placement is not
+# a cosmetic choice when the seam lands on the thing being understood.
+MID_AUTHORITY_DEG = 62.0
+
+# Blending is off by default. Averaging two views of a near object makes two
+# half-transparent copies of it, which is the failure mode this whole design
+# avoids. A narrow feather is allowed only at the outer joins, where the
+# content is far away and the parallax is small.
+FEATHER_PX = 24
 
 
 def read_frame(path, index):
@@ -75,26 +102,55 @@ def split_halves(frame):
     return frame[:, :w], frame[:, w:]
 
 
-def render(rig, vcam, sources, depth_m, central_roi_deg=CENTRAL_ROI_DEG):
-    """sources: {camera_name: image}. -> (rgb, owner) with owner as an index
-    into the module list, -1 where nothing reaches."""
+def off_axis_deg(rig, camera, vcam):
+    """Angle between each output ray and `camera`'s optical axis, in degrees.
+
+    This is the right cost for choosing a source: it says how far into the
+    fisheye periphery the sample sits, where resolution falls off and the
+    calibration is least constrained. Azimuth distance to a module's centre --
+    what the first version used -- ignores that a camera spanning 144 degrees
+    is perfectly comfortable 20 degrees off its own axis."""
+    cam = rig.cameras[camera]
+    d = vcam.directions().reshape(-1, 3)
+    cosang = np.clip(d @ cam.axis, -1, 1)
+    return np.degrees(np.arccos(cosang)).reshape(vcam.height, vcam.width)
+
+
+def match_gain(src, ref, mask):
+    """Per-channel gain taking `src` onto `ref` over their shared pixels.
+
+    The three modules do not agree on exposure -- the left strip of the first
+    render is visibly darker and bluer than the middle -- and that difference
+    is half of why a seam is visible. It is also entirely separable from
+    geometry, so it is fixed here rather than waited on."""
+    if mask.sum() < 500:
+        return np.ones(3, np.float32)
+    a = src[mask].reshape(-1, 3).astype(np.float32)
+    b = ref[mask].reshape(-1, 3).astype(np.float32)
+    keep = (a.mean(1) > 8) & (a.mean(1) < 247) & (b.mean(1) > 8) \
+        & (b.mean(1) < 247)
+    if keep.sum() < 500:
+        return np.ones(3, np.float32)
+    g = b[keep].mean(0) / np.maximum(a[keep].mean(0), 1e-3)
+    return np.clip(g, 0.5, 2.0).astype(np.float32)
+
+
+def render(rig, vcam, sources, depth_m, mid_authority_deg=MID_AUTHORITY_DEG,
+           feather_px=FEATHER_PX, colour_match=True):
+    """sources: {camera_name: image}. -> (rgb, owner).
+
+    Selection, not blending. The middle module owns every pixel it sees within
+    `mid_authority_deg` of its own axis; elsewhere the least off-axis valid
+    module wins. Seams therefore sit at the outer edges of the field, where
+    the content is far and the parallax small, instead of across the hands."""
     import cv2
     from src.rig.geometry import source_maps
 
     H, W = vcam.height, vcam.width
-    xx = np.arange(W)
-    az = np.degrees((xx / W - 0.5) * vcam.hfov)          # per-column azimuth
     mods = rig.modules
     mid_i = len(mods) // 2
 
-    # angular distance from each module's own axis, per column
-    mod_az = np.array([vcam.angles_of(m.left.axis + m.right.axis)[0]
-                       for m in mods])
-    dist = np.abs(az[None, :] - mod_az[:, None])          # [M, W]
-
-    rgb = np.zeros((H, W, 3), np.uint8)
-    owner = np.full((H, W), -1, np.int8)
-    warped, valid = {}, {}
+    warped, valid, cost = {}, {}, {}
     for i, m in enumerate(mods):
         name = m.left.name
         if name not in sources:
@@ -104,26 +160,48 @@ def render(rig, vcam, sources, depth_m, central_roi_deg=CENTRAL_ROI_DEG):
                               borderMode=cv2.BORDER_CONSTANT,
                               borderValue=(0, 0, 0))
         valid[i] = ok
+        cost[i] = off_axis_deg(rig, name, vcam)
 
-    central = np.abs(az) <= central_roi_deg               # [W]
-    # priority order per column: the middle module first inside the ROI, then
-    # by angular proximity. A pixel is written once, by the first module that
-    # actually reaches it.
-    for x in range(W):
-        order = ([mid_i] if central[x] else []) + \
-            [i for i in np.argsort(dist[:, x]) if not (central[x] and i == mid_i)]
-        col_done = np.zeros(H, bool)
-        for i in order:
-            if i not in warped:
+    if colour_match and mid_i in warped:
+        for i in list(warped):
+            if i == mid_i:
                 continue
-            take = valid[i][:, x] & ~col_done
-            if not take.any():
-                continue
-            rgb[take, x] = warped[i][take, x]
-            owner[take, x] = i
-            col_done |= take
-            if col_done.all():
-                break
+            g = match_gain(warped[i], warped[mid_i],
+                           valid[i] & valid[mid_i])
+            warped[i] = np.clip(warped[i].astype(np.float32) * g,
+                                0, 255).astype(np.uint8)
+
+    # priority: the middle module first where it is comfortably on-axis, then
+    # everything else by how far off-axis the sample is.
+    big = np.full((H, W), 1e6, np.float32)
+    score = {}
+    for i in warped:
+        s = np.where(valid[i], cost[i], big)
+        if i == mid_i:
+            s = np.where(valid[i] & (cost[i] <= mid_authority_deg),
+                         -1000.0 + cost[i], s)
+        score[i] = s
+    keys = sorted(warped)
+    stack = np.stack([score[i] for i in keys], 0)
+    pick = stack.argmin(0)
+    reach = stack.min(0) < 1e5
+    owner = np.where(reach, np.array(keys, np.int8)[pick], -1).astype(np.int8)
+
+    rgb = np.zeros((H, W, 3), np.uint8)
+    for j, i in enumerate(keys):
+        sel = reach & (pick == j)
+        rgb[sel] = warped[i][sel]
+
+    if feather_px > 0 and len(keys) > 1:
+        # Feather ONLY across boundaries, and only where both sides exist.
+        # Near the hands this never fires, because the middle module owns an
+        # unbroken region there and there is no boundary to soften.
+        edges = np.zeros((H, W), np.uint8)
+        edges[:, 1:][owner[:, 1:] != owner[:, :-1]] = 255
+        edges[1:, :][owner[1:, :] != owner[:-1, :]] = 255
+        band = cv2.dilate(edges, np.ones((3, feather_px), np.uint8)) > 0
+        blur = cv2.GaussianBlur(rgb, (0, 0), feather_px / 3.0)
+        rgb = np.where(band[..., None] & (owner[..., None] >= 0), blur, rgb)
     return rgb, owner
 
 
@@ -142,7 +220,14 @@ def main():
                          "correct there and progressively wrong elsewhere.")
     ap.add_argument("--hfov_deg", type=float, default=150.0)
     ap.add_argument("--size", default="1600x900")
-    ap.add_argument("--central_roi_deg", type=float, default=CENTRAL_ROI_DEG)
+    ap.add_argument("--mid_authority_deg", type=float,
+                    default=MID_AUTHORITY_DEG,
+                    help="the middle module keeps everything within this "
+                         "angle of its own axis. Raise it to push the seams "
+                         "further out; the first version's azimuth rule put "
+                         "one through the operator's hand.")
+    ap.add_argument("--feather_px", type=int, default=FEATHER_PX)
+    ap.add_argument("--no_colour_match", action="store_true")
     ap.add_argument("--out", required=True)
     ap.add_argument("--owner_map", help="also write which module owns each "
                                         "pixel, as a colour map")
@@ -180,7 +265,10 @@ def main():
     if not sources:
         raise SystemExit("no module had a video")
 
-    rgb, owner = render(rig, vcam, sources, a.depth_m, a.central_roi_deg)
+    rgb, owner = render(rig, vcam, sources, a.depth_m,
+                        mid_authority_deg=a.mid_authority_deg,
+                        feather_px=a.feather_px,
+                        colour_match=not a.no_colour_match)
     cv2.imwrite(a.out, rgb)
     cov = (owner >= 0).mean()
     print(f"wrote {a.out}  {w}x{h}  hfov {a.hfov_deg:.0f} deg  "
@@ -188,8 +276,14 @@ def main():
     print(f"  filled {cov:.1%} of the frame")
     for i, m in enumerate(rig.modules):
         print(f"    {m.name} ({m.left.name}) owns {(owner == i).mean():6.1%}")
-    print(f"  central ROI is +/-{a.central_roi_deg:.0f} deg of azimuth, owned "
-          f"outright by {rig.modules[len(rig.modules)//2].name}")
+    mid = rig.modules[len(rig.modules) // 2]
+    print(f"  {mid.name} keeps everything within {a.mid_authority_deg:.0f} "
+          f"deg of its own axis")
+    seam_cols = np.where(np.any(owner[:, 1:] != owner[:, :-1], 0))[0]
+    if len(seam_cols):
+        az = np.degrees((seam_cols / w - 0.5) * vcam.hfov)
+        print(f"  seams at azimuth {', '.join(f'{x:+.0f}' for x in az[:8])} deg"
+              + ("" if len(az) <= 8 else f"  (+{len(az)-8} more)"))
     print(f"\n  This is the CONSTANT-DEPTH baseline. Misalignment in the "
           f"overlaps is\n  expected and is what the depth pass has to remove; "
           f"look at the joins\n  between modules, especially on anything close "
