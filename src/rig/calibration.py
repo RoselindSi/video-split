@@ -107,11 +107,40 @@ class Module:
 
 
 def _parse_yaml(path):
+    """The rig schema, whatever the file also happens to contain.
+
+    The databag files carry OpenCV FileStorage blocks further down, tagged
+    `!!opencv-matrix`, which stop pyyaml dead. That failure used to surface as
+    a ConstructorError from inside a render worker -- a databag that is simply
+    UNCALIBRATED, and would have been refused two lines later with a sentence
+    saying so, instead read as a crash. A tag is an encoding detail; it must
+    not decide whether this module can see `calibration_status`."""
     try:
         import yaml
-        with open(path, encoding="utf-8") as f:
-            return yaml.safe_load(f)
     except ImportError:
+        return _parse_manual(path)
+
+    class _Loader(yaml.SafeLoader):
+        pass
+
+    def _cvmat(loader, node):
+        d = loader.construct_mapping(node, deep=True)
+        return d.get("data", d)
+
+    _Loader.add_constructor("tag:yaml.org,2002:opencv-matrix", _cvmat)
+    # An unknown tag anywhere else is data too, not a reason to fail.
+    _Loader.add_multi_constructor(
+        "", lambda loader, suffix, node: loader.construct_mapping(node)
+        if isinstance(node, yaml.MappingNode)
+        else (loader.construct_sequence(node)
+              if isinstance(node, yaml.SequenceNode)
+              else loader.construct_scalar(node)))
+    try:
+        with open(path, encoding="utf-8") as f:
+            return yaml.load(f, Loader=_Loader)
+    except yaml.YAMLError:
+        # Still unreadable as yaml: the manual scanner only needs the rig
+        # keys and does not care what the rest of the file is.
         return _parse_manual(path)
 
 

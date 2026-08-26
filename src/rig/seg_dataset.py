@@ -111,6 +111,37 @@ def find_calibration(databag_dir, cache=None):
     return got
 
 
+def survey_calibration(root):
+    """Which databags can produce a wide render at all. -> [(rid, status)]
+
+    This is the number that bounds everything downstream: the wide frame is
+    the production frame and the cheap one to annotate, and it needs
+    calibration. A databag whose file says `uncalibrated` with zeroed
+    intrinsics is not a parsing problem to be worked around -- there is no
+    calibration in it."""
+    from pathlib import Path
+    from src.rig.calibration import RigCalibration, CalibrationError
+    from src.rig.class2_census import find_recordings
+    out = []
+    for rid, views, d in find_recordings(root):
+        ys = sorted(Path(d).rglob("*.yaml"))[:40]
+        if not ys:
+            out.append((rid, "no yaml"))
+            continue
+        why = "no rig yaml"
+        for p in ys:
+            try:
+                RigCalibration(str(p))
+                why = "OK"
+                break
+            except CalibrationError as e:
+                why = str(e).split("\n")[0].split(": ")[-1][:60]
+            except Exception as e:
+                why = f"{type(e).__name__}: {e}"[:60]
+        out.append((rid, why))
+    return out
+
+
 def export_instant(rig, vcam, views, frame, out_dir, rid, rect_cache=None):
     """One instant -> (rgb path, range path). Range is None without depth."""
     import cv2
@@ -146,16 +177,39 @@ def main():
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--root", required=True)
-    ap.add_argument("--frames", required=True,
+    ap.add_argument("--survey_calib", action="store_true",
+                    help="report which databags carry a usable calibration "
+                         "and stop. This bounds everything downstream.")
+    ap.add_argument("--frames",
                     help="CSV with recording,frame columns -- the labelled "
                          "census for eval, the mined candidates for train")
-    ap.add_argument("--split", required=True, choices=SPLITS,
+    ap.add_argument("--split", choices=SPLITS,
                     help="stamped on every row and on the directory. The "
                          "census is eval; anything mined is train.")
-    ap.add_argument("--out", required=True,
-                    help="output directory. The SAN is /workspace.")
+    ap.add_argument("--out", help="output directory. The SAN is /workspace.")
     ap.add_argument("--limit", type=int, default=0)
     a = ap.parse_args()
+
+    if a.survey_calib:
+        res = survey_calibration(a.root)
+        ok = [r for r in res if r[1] == "OK"]
+        print(f"{len(ok)}/{len(res)} databags carry a usable calibration\n")
+        from collections import Counter
+        for why, n in Counter(w for _, w in res).most_common():
+            print(f"  {n:3d}  {why}")
+        print()
+        for rid, why in sorted(res, key=lambda r: (r[1] != "OK", r[0])):
+            print(f"    {'OK ' if why == 'OK' else '-- '} {rid}"
+                  + ("" if why == "OK" else f"   {why}"))
+        print("\n  Only 'OK' databags can produce a wide render, which is the "
+              "production\n  frame and the one that is cheap to annotate. The "
+              "rest can still supply\n  raw per-module RGB with an all-zero "
+              "range plane -- three times the\n  annotation cost per instant, "
+              "and no depth.")
+        return
+    if not a.frames or not a.split or not a.out:
+        ap.error("--frames, --split and --out are required "
+                 "unless --survey_calib")
 
     from src.rig.class2_census import find_recordings, _check_space
     from src.rig.geometry import VirtualWideCamera
