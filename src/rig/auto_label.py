@@ -260,14 +260,108 @@ def overlay(rgb, mask):
     return cv2.addWeighted(rgb, 0.62, col, 0.38, 0)
 
 
+def _from_dataset(a, cv2):
+    """Label a seg_dataset export: images/ + range/ + manifest.csv.
+
+    Same prompts, same suppression, same split-by-recording. The only
+    difference from --packages is where the keyframe came from."""
+    import time
+    man = os.path.join(a.dataset, "manifest.csv")
+    rows_in = [r for r in csv.DictReader(open(man, encoding="utf-8-sig"))
+               if r.get("rgb")]
+    if a.limit:
+        rows_in = rows_in[:a.limit]
+    if not rows_in:
+        raise SystemExit(f"{man} has no rendered rows")
+    recs = sorted({r["recording"] for r in rows_in})
+    if len(recs) < a.eval_recordings + 1:
+        raise SystemExit(
+            f"only {len(recs)} recordings; holding out {a.eval_recordings} "
+            f"leaves {len(recs)-a.eval_recordings} to train on.")
+    held = set(recs[-a.eval_recordings:]) if a.eval_recordings else set()
+    print(f"{len(rows_in)} keyframes, {len(recs)} recordings, "
+          f"{len(held)} held out: {sorted(held)}\n")
+
+    seg = Segmenter(a.model)
+    print(f"  {seg.name}\n")
+    for split in ("train", "eval"):
+        for sub in ("images", "range", "masks", "overlays"):
+            os.makedirs(os.path.join(a.out, split, sub), exist_ok=True)
+        open(os.path.join(a.out, split, "SPLIT"), "w").write(split)
+
+    rows = {"train": [], "eval": []}
+    t0 = time.time()
+    n_empty = 0
+    for i, r in enumerate(rows_in, 1):
+        rgb = cv2.imread(os.path.join(a.dataset, r["rgb"]))
+        if rgb is None:
+            continue
+        split = "eval" if r["recording"] in held else "train"
+        stem = f"{r['recording']}_f{int(r['frame']):06d}.png"
+        mask, picks = label_frame(seg, rgb, r.get("census_label", ""))
+        if not picks:
+            n_empty += 1
+        cv2.imwrite(os.path.join(a.out, split, "images", stem), rgb)
+        cv2.imwrite(os.path.join(a.out, split, "masks", stem), mask)
+        has_d = 0
+        if r.get("range"):
+            src = os.path.join(a.dataset, r["range"])
+            if os.path.exists(src):
+                shutil.copyfile(src, os.path.join(a.out, split, "range", stem))
+                has_d = 1
+        cv2.imwrite(os.path.join(a.out, split, "overlays",
+                                 stem.replace(".png", ".jpg")),
+                    overlay(rgb, mask), [cv2.IMWRITE_JPEG_QUALITY, 85])
+        rows[split].append({
+            "recording": r["recording"], "frame": int(r["frame"]),
+            "split": split, "has_depth": has_d,
+            "census_label": r.get("census_label", ""), "label_source": "auto",
+            "n_owner": sum(1 for c, _ in picks if c == 1),
+            "n_other": sum(1 for c, _ in picks if c == 2),
+            "owner_px": int((mask == 1).sum()),
+            "other_px": int((mask == 2).sum())})
+        if i % 10 == 0 or i == len(rows_in):
+            el = time.time() - t0
+            print(f"  [{i}/{len(rows_in)}] {el:.0f}s")
+    _write(a, rows, n_empty)
+
+
+def _write(a, rows, n_empty):
+    for split, rs in rows.items():
+        if not rs:
+            continue
+        with open(os.path.join(a.out, split, "manifest.csv"), "w",
+                  newline="", encoding="utf-8") as f:
+            w = csv.DictWriter(f, fieldnames=list(rs[0].keys()))
+            w.writeheader(); w.writerows(rs)
+    print(f"\n  train {len(rows['train'])}  eval {len(rows['eval'])}  "
+          f"({n_empty} frames got no prompt at all)")
+    for split, rs in rows.items():
+        if not rs:
+            continue
+        print(f"  {split}: {sum(r['n_owner'] for r in rs)} owner regions, "
+              f"{sum(r['n_other'] for r in rs)} other regions, "
+              f"{sum(r['has_depth'] for r in rs)}/{len(rs)} with depth")
+    print(f"\n  overlays/ is the thing to look at. These are PSEUDO-labels: "
+          f"a score against\n  them says how well the head imitates GrabCut "
+          f"plus a heuristic, not how\n  well it finds hands. Every row is "
+          f"stamped label_source=auto.")
+
+
 def main():
     import argparse
     import time
     ap = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--packages", required=True,
+    ap.add_argument("--packages",
                     help="directory of sample_* dirs from annotation_package")
+    ap.add_argument("--dataset",
+                    help="a seg_dataset output (images/ range/ manifest.csv). "
+                         "Faster than --packages when only the head is "
+                         "wanted: it renders one keyframe per anchor instead "
+                         "of a 181-frame clip, and the clips exist for SAM2 "
+                         "propagation that has not started.")
     ap.add_argument("--out", required=True)
     ap.add_argument("--model", default=DEFAULT_MODEL)
     ap.add_argument("--eval_recordings", type=int, default=4,
@@ -280,6 +374,10 @@ def main():
 
     import cv2
     import json
+    if not a.packages and not a.dataset:
+        ap.error("one of --packages or --dataset is required")
+    if a.dataset:
+        return _from_dataset(a, cv2)
     # meta.json is the COMPLETION marker -- it is written last. keyframe_rgb
     # appears partway through a render, so filtering on it picks up samples
     # that are still being written, and their metadata is not there yet: the
