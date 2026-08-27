@@ -111,6 +111,58 @@ def assign(comps, max_owner=2, max_other=2, thr=OWNER_BOTTOM_FRAC):
             + [(2, c[1], c[3]) for c in oth])
 
 
+def choose_holdout(rows, n_eval, seed=0):
+    """Recordings to hold out, chosen so every regime survives the split.
+
+    TAKING THE LAST n BY NAME PUT ZERO owner_only FRAMES IN THE EVAL SET.
+    On this corpus the four alphabetically-last recordings happen to be the
+    shared-bench station, which is 100% other_far, so the held-out set had one
+    regime and the training set had the rest. The consequence was not a weak
+    measurement but an absent one: the failure that matters most -- painting a
+    colleague onto a frame that has nobody in it, on 52% of the corpus -- had
+    no frame it could show up on.
+
+    So the eval set is built to COVER the regimes first and to reach the
+    requested size second. Split by recording throughout, because the wearer's
+    wristband makes a frame-level split meaningless."""
+    by_rec, n_rec = {}, {}
+    for r in rows:
+        rid = r["recording"]
+        by_rec.setdefault(rid, set()).add(r.get("census_label", ""))
+        n_rec[rid] = n_rec.get(rid, 0) + 1
+    want = set().union(*by_rec.values()) if by_rec else set()
+    rng = np.random.default_rng(seed)
+    order = sorted(by_rec)
+    rng.shuffle(order)
+
+    held, covered = [], set()
+    while len(held) < n_eval and len(held) < len(order) - 1:
+        # the recording adding the most still-uncovered regimes; ties by the
+        # shuffled order, so the choice is reproducible without being
+        # alphabetical
+        # Cover the regimes with the SMALLEST recordings that do it. On this
+        # corpus 14 of the 20 owner_only frames sit in one recording, so a
+        # greedy that also prefers large ones pulls that recording into eval
+        # and leaves the training set with three examples of "nobody else is
+        # here" -- covering the eval by emptying the train.
+        best = max((r for r in order if r not in held),
+                   key=lambda r: (len(by_rec[r] - covered), -n_rec[r]))
+        held.append(best)
+        covered |= by_rec[best]
+    tr_labels = set().union(*(by_rec[r] for r in by_rec if r not in held)) \
+        if len(held) < len(by_rec) else set()
+    lost = want - tr_labels
+    if lost:
+        print(f"  !! the TRAINING set now has no: {sorted(lost)}. The head "
+              f"cannot learn\n     a regime it never sees, whatever the eval "
+              f"says about it.")
+    missing = want - covered
+    if missing:
+        print(f"  !! no held-out recording contains: {sorted(missing)}. "
+              f"Those regimes\n     cannot be measured at all in this split.")
+    return set(held)
+
+
 class Segmenter:
     """Prompt -> pixels. SAM when it is reachable, GrabCut when it is not.
 
@@ -278,7 +330,7 @@ def _from_dataset(a, cv2):
         raise SystemExit(
             f"only {len(recs)} recordings; holding out {a.eval_recordings} "
             f"leaves {len(recs)-a.eval_recordings} to train on.")
-    held = set(recs[-a.eval_recordings:]) if a.eval_recordings else set()
+    held = choose_holdout(rows_in, a.eval_recordings)
     print(f"{len(rows_in)} keyframes, {len(recs)} recordings, "
           f"{len(held)} held out: {sorted(held)}\n")
 
