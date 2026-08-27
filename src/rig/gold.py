@@ -51,10 +51,16 @@ GOLD MASKS -- the wearer's own hand and arm, nothing else
   0  everything else: bench, parts, tools, machines, OTHER PEOPLE
   1  the WEARER's own hand and forearm
 
-Edit <stem>_start.png and save it in place. Values must be exactly 0 and 1.
+Edit <stem>_start.png and save it in place. WHITE (255) is the wearer's arm,
+BLACK (0) is everything else. Anything above mid-grey counts as arm, so a
+soft brush edge is fine.
 _image.png is the frame. _overlay.jpg shows the current automatic guess for
-reference only -- it is often wrong, and on the frames marked `blind` in
-manifest.csv there is deliberately no starting mask.
+reference only -- it is often wrong.
+
+SEVEN OF THESE ARE ENTIRELY BLACK ON PURPOSE. Those are the frames marked
+`blind` in manifest.csv: they ship with no starting mask so that half the set
+is drawn without being anchored to the machine's guess. Draw those from the
+image alone.
 
 WHERE THE ARM ENDS. Include the hand, the wrist and the bare forearm. Stop at
 the sleeve cuff -- the sleeve is clothing and the automatic labeller cannot
@@ -133,7 +139,12 @@ def build_package(src_root, rows, out_dir):
         # Only class 1 survives into the gold task. Class 2 was measured to be
         # furniture on this corpus, and shipping it as a starting point would
         # ask the annotator to correct a category that should not exist yet.
-        start = (m == 1).astype(np.uint8)
+        # 0 and 255, NOT 0 and 1. A mask stored as 0/1 is a valid label map
+        # and an invisible image: every viewer and every editor renders 1 as
+        # black, so the annotator is asked to correct something they cannot
+        # see. The value is read back with a threshold, so any editor that
+        # antialiases an edge still round-trips.
+        start = np.where(m == 1, 255, 0).astype(np.uint8)
         if r["seed_mode"] == "blind":
             start = np.zeros_like(start)
         cv2.imwrite(os.path.join(out_dir, stem + "_start.png"), start)
@@ -182,7 +193,7 @@ def score(gold_dir, src_root, head_ckpt=None, device=None):
             continue
         if not str(r.get("done", "")).strip():
             continue
-        gold = g == 1
+        gold = g > 127
         pseudo = p == 1
         row = {"regime": r.get("regime", ""), "seed_mode": r["seed_mode"],
                "stem": stem, "gold_px": int(gold.sum()),
