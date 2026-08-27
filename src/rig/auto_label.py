@@ -273,8 +273,26 @@ class Segmenter:
 # opposite, which is true and is exactly the distinction that is hard.
 NO_OTHER_LABELS = {"owner_only", "none", "transit"}
 
+# CLASS 2 IS OFF BY DEFAULT, AND THE REASON IS A MEASUREMENT, NOT A PREFERENCE.
+# Every class-2 component the detector produced on this corpus was inspected:
+# 83 of them, and not one was a hand or an arm. Solidity split them cleanly
+# into a machine strap (0.49-0.56) and a wooden turntable (0.96-0.99), and
+# both are furniture. The census explains why -- `other_far` means a colleague
+# on the far side of the aisle, whose arm is smaller than MIN_AREA_FRAC and
+# never becomes a component at all. What survives the area floor is the bench.
+#
+# Keeping the class was actively harmful: it taught the head that a turntable
+# is another person, and the 1.9% of pixels it then painted as `other_arm` on
+# frames with nobody in them was the head being CONSISTENT while the labels
+# were not -- the same disc was class 2 where a colleague happened to be
+# elsewhere in shot and background where one was not.
+#
+# The three-class machinery stays. It becomes correct the moment `other_near`
+# data exists, which needs the 0824 calibration.
+DEFAULT_EMIT_OTHER = False
 
-def label_frame(seg, rgb, census_label=""):
+
+def label_frame(seg, rgb, census_label="", emit_other=DEFAULT_EMIT_OTHER):
     """-> (mask uint8 with 0/1/2, [(class, bbox)] used).
 
     `census_label` is the human judgement from the blind census. It is used
@@ -283,7 +301,7 @@ def label_frame(seg, rgb, census_label=""):
     in the frame, not which pixels are theirs."""
     comps = components(rgb)
     picks = assign(comps)
-    if census_label in NO_OTHER_LABELS:
+    if not emit_other or census_label in NO_OTHER_LABELS:
         picks = [p for p in picks if p[0] == 1]
     H, W = rgb.shape[:2]
     mask = np.zeros((H, W), np.uint8)
@@ -350,7 +368,8 @@ def _from_dataset(a, cv2):
             continue
         split = "eval" if r["recording"] in held else "train"
         stem = f"{r['recording']}_f{int(r['frame']):06d}.png"
-        mask, picks = label_frame(seg, rgb, r.get("census_label", ""))
+        mask, picks = label_frame(seg, rgb, r.get("census_label", ""),
+                                  emit_other=a.emit_other)
         if not picks:
             n_empty += 1
         cv2.imwrite(os.path.join(a.out, split, "images", stem), rgb)
@@ -421,6 +440,11 @@ def main():
                          "recording rather than by frame is the minimum; the "
                          "wearer's wristband makes a frame-level split "
                          "meaningless.")
+    ap.add_argument("--emit_other", action="store_true",
+                    help="also label class 2. OFF by default: every class-2 "
+                         "component this produced on the 0822 corpus was "
+                         "furniture, never a hand -- real colleagues there "
+                         "are too far to clear the area floor.")
     ap.add_argument("--limit", type=int, default=0)
     a = ap.parse_args()
 
@@ -482,7 +506,8 @@ def main():
         fr = int(meta.get("keyframe_frame", 0))
         split = "eval" if rid in held else "train"
         stem = f"{rid}_f{fr:06d}.png"
-        mask, picks = label_frame(seg, rgb, meta.get("census_label", ""))
+        mask, picks = label_frame(seg, rgb, meta.get("census_label", ""),
+                                  emit_other=a.emit_other)
         if not picks:
             n_empty += 1
         cv2.imwrite(os.path.join(a.out, split, "images", stem), rgb)
