@@ -293,7 +293,19 @@ NO_OTHER_LABELS = {"owner_only", "none", "transit"}
 #
 # The three-class machinery stays. It becomes correct the moment `other_near`
 # data exists, which needs the 0824 calibration.
-DEFAULT_EMIT_OTHER = False
+# BACK ON at the user's instruction, with the measurement restated rather than
+# removed: on the 0822 corpus every one of 83 class-2 components was furniture
+# -- a wooden turntable at solidity 0.96-0.99 and a beige machine strap at
+# 0.49-0.56 -- because a colleague across the aisle is smaller than
+# MIN_AREA_FRAC and never becomes a component. No filter separates them from a
+# real arm, because there is not one real arm in the sample to fit against.
+#
+# So the class exists again and its contents on THIS corpus are still mostly
+# furniture. What makes that worth carrying is that the interface is what
+# `other_near` data will arrive into, and the per-component shape statistics
+# are now written to the manifest so the filter can be fitted when it does
+# rather than guessed now.
+DEFAULT_EMIT_OTHER = True
 
 
 def label_frame(seg, rgb, census_label="", emit_other=DEFAULT_EMIT_OTHER):
@@ -373,7 +385,7 @@ def _from_dataset(a, cv2):
         split = "eval" if r["recording"] in held else "train"
         stem = f"{r['recording']}_f{int(r['frame']):06d}.png"
         mask, picks = label_frame(seg, rgb, r.get("census_label", ""),
-                                  emit_other=a.emit_other)
+                                  emit_other=not a.no_other)
         if not picks:
             n_empty += 1
         cv2.imwrite(os.path.join(a.out, split, "images", stem), rgb)
@@ -444,11 +456,11 @@ def main():
                          "recording rather than by frame is the minimum; the "
                          "wearer's wristband makes a frame-level split "
                          "meaningless.")
-    ap.add_argument("--emit_other", action="store_true",
-                    help="also label class 2. OFF by default: every class-2 "
-                         "component this produced on the 0822 corpus was "
-                         "furniture, never a hand -- real colleagues there "
-                         "are too far to clear the area floor.")
+    ap.add_argument("--no_other", action="store_true",
+                    help="drop class 2. On the 0822 corpus every class-2 "
+                         "component was furniture, never a hand, and the "
+                         "channel measurably hurt: removing it moved "
+                         "background IoU 0.976 -> 0.992.")
     ap.add_argument("--limit", type=int, default=0)
     a = ap.parse_args()
 
@@ -511,7 +523,7 @@ def main():
         split = "eval" if rid in held else "train"
         stem = f"{rid}_f{fr:06d}.png"
         mask, picks = label_frame(seg, rgb, meta.get("census_label", ""),
-                                  emit_other=a.emit_other)
+                                  emit_other=not a.no_other)
         if not picks:
             n_empty += 1
         cv2.imwrite(os.path.join(a.out, split, "images", stem), rgb)
