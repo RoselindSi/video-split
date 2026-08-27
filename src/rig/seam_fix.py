@@ -109,7 +109,69 @@ def apply_photometric(img, gain, bias):
     return np.clip(img.astype(np.float32) * gain + bias, 0, 255).astype(np.uint8)
 
 
-def warp_all(rig, vcam, sources, depth_m, depth_by_module=None, map_cache=None):
+def source_maps_perpixel(rig, camera, vcam, range_m):
+    """Sampling map using the MEASURED range at each output pixel.
+
+    `source_maps` places every pixel on one plane at an assumed depth. That is
+    exact for the reference camera and only the reference camera: cam1 sits at
+    the virtual optical centre, so its mapping is a pure rotation and no depth
+    enters it. Every other module has a baseline to cam1, and its error is
+    that baseline times the difference between assumed and true inverse depth.
+    On this rig, at an assumed 0.6 m against a bench edge at 1.5 m:
+
+        module_A  cam1     0.0 mm      0.0 px
+        module_B  cam3    94.4 mm     57.7 px      <- owns 88% of the frame
+        module_C  cam5   174.5 mm    106.6 px
+
+    Which is why tuning module_A's assumed depth changed nothing and why the
+    join jumped by tens of pixels: the reference was exact and everything
+    beside it was displaced. Feeding the measured range removes the
+    assumption instead of choosing a better value for it."""
+    import cv2
+    cam = rig.cameras[camera]
+    d = vcam.directions().reshape(-1, 3)
+    r = np.asarray(range_m, np.float64).reshape(-1, 1)
+    p_ref = vcam.eye + d * r
+    p_cam = (cam.R.T @ (p_ref - cam.t).T).T
+    ok = (p_cam[:, 2] > 1e-6) & np.isfinite(r[:, 0])
+    uv = np.full((len(p_cam), 2), -1.0)
+    if ok.any():
+        pts, _ = cv2.fisheye.projectPoints(
+            p_cam[ok].reshape(-1, 1, 3).astype(np.float64),
+            np.zeros(3), np.zeros(3), cam.K, cam.D)
+        uv[ok] = pts.reshape(-1, 2)
+    inside = ok & (uv[:, 0] >= 0) & (uv[:, 0] < cam.width) \
+        & (uv[:, 1] >= 0) & (uv[:, 1] < cam.height)
+    H, W = vcam.height, vcam.width
+    return (uv[:, 0].reshape(H, W).astype(np.float32),
+            uv[:, 1].reshape(H, W).astype(np.float32),
+            inside.reshape(H, W))
+
+
+def densify_range(range_m, valid, fallback=1.2):
+    """Fill the unmeasured pixels, FOR RENDERING ONLY.
+
+    `wide_depth` refuses to fill its output and that stays true: an
+    interpolated depth written to a file is indistinguishable from a measured
+    one. Deciding where to SAMPLE is a different act -- a wrong guess there
+    costs a slightly misplaced pixel, not a false measurement -- so the holes
+    are filled here and nowhere else."""
+    import cv2
+    r = np.where(valid, np.nan_to_num(range_m, nan=fallback), np.nan)
+    m = (~np.isfinite(r)).astype(np.uint8)
+    base = np.where(np.isfinite(r), r, fallback).astype(np.float32)
+    if m.any():
+        # Nearest measured value, then a wide blur so the filled region does
+        # not carry the blocky structure of the holes into the warp.
+        filled = cv2.inpaint((base / 8.0 * 255).clip(0, 255).astype(np.uint8),
+                             m, 7, cv2.INPAINT_TELEA).astype(np.float32)
+        filled = filled / 255.0 * 8.0
+        base = np.where(m > 0, cv2.GaussianBlur(filled, (0, 0), 6), base)
+    return np.clip(base, 0.15, 8.0)
+
+
+def warp_all(rig, vcam, sources, depth_m, depth_by_module=None, map_cache=None,
+             range_m=None):
     """-> (warped, valid, cost, mid_index) keyed by module index."""
     import cv2
     from src.rig.geometry import source_maps
@@ -121,12 +183,15 @@ def warp_all(rig, vcam, sources, depth_m, depth_by_module=None, map_cache=None):
         name = m.left.name
         if name not in sources:
             continue
-        z = float(depth_by_module.get(m.name, depth_m))
-        key = (name, round(z, 6), vcam.width, vcam.height,
-               round(float(vcam.hfov), 9), round(float(vcam.vfov), 9))
-        if key not in map_cache:
-            map_cache[key] = source_maps(rig, name, vcam, z)
-        mx, my, ok = map_cache[key]
+        if range_m is not None:
+            mx, my, ok = source_maps_perpixel(rig, name, vcam, range_m)
+        else:
+            z = float(depth_by_module.get(m.name, depth_m))
+            key = (name, round(z, 6), vcam.width, vcam.height,
+                   round(float(vcam.hfov), 9), round(float(vcam.vfov), 9))
+            if key not in map_cache:
+                map_cache[key] = source_maps(rig, name, vcam, z)
+            mx, my, ok = map_cache[key]
         warped[i] = cv2.remap(sources[name], mx, my, cv2.INTER_LINEAR,
                               borderMode=cv2.BORDER_CONSTANT,
                               borderValue=(0, 0, 0))
@@ -298,6 +363,11 @@ def main():
     ap.add_argument("--mid_authority", type=float, default=72.0)
     ap.add_argument("--temp", type=float, default=BLEND_TEMP_DEG)
     ap.add_argument("--gate", type=float, default=GATE_ABS_DIFF)
+    ap.add_argument("--per_pixel_depth", action="store_true",
+                    help="reproject with the MEASURED range at every pixel "
+                         "instead of one assumed plane. Removes the "
+                         "assumption that displaces module_B by 58 px and "
+                         "module_C by 107 px; costs a stereo solve per frame.")
     ap.add_argument("--mode", default="fixed",
                     choices=("baseline", "fixed", "sidebyside"),
                     help="baseline is render_wide untouched; fixed is this "
@@ -337,6 +407,7 @@ def main():
               "where its geometry does not.")
 
     w = hard = reach = None
+    rectc = {}
     writer = None
     t0, n_gated = time.time(), []
     reader = ClipReader(rig, videos, a.start)
@@ -355,9 +426,14 @@ def main():
                 base, _, _, _ = render(rig, vcam, sources, a.depth_m)
             panels.append(("baseline", base))
         if a.mode in ("fixed", "sidebyside"):
+            rng_m = None
+            if a.per_pixel_depth:
+                from src.rig.wide_depth import wide_depth
+                wd = wide_depth(rig, vcam, sources, rect_cache=rectc)
+                rng_m = densify_range(wd.range_m, wd.valid)
             warped, valid, cost, mid_i = warp_all(
                 rig, vcam, sources, a.depth_m, depth_by_module=dbm,
-                map_cache=mc)
+                map_cache=mc, range_m=rng_m)
             for i in warped:
                 g, b = photo.get(i, (np.ones(3), np.zeros(3)))
                 warped[i] = apply_photometric(warped[i], g, b)
