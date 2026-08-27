@@ -106,26 +106,93 @@ def suppress(rgb, other_mask, dilate_px=DILATE_PX, feather_px=FEATHER_PX,
     return np.clip(out, 0, 255).astype(np.uint8), a
 
 
-def other_from_owner(rgb, owner_mask, min_area_frac=0.004):
-    """The honest stand-in for a trained class 2: skin-like, and not the
-    owner's. -> binary mask
+# A candidate must reach a border, because a person's arm is attached to a
+# person, and everything but the wearer is outside the frame. Measured over
+# 218 components on this corpus:
+#
+#                touches a border   L/R    top   bottom   solidity
+#     owner  121        80%          4%     0%     79%      0.77
+#     other   97        35%         30%      5%      0%      0.95
+#
+# 65% of what the old subtraction called "other" touched no border at all --
+# the wooden turntable, floating in the middle of the bench. Requiring a
+# border, forbidding the bottom one (which is where the wearer's own arm
+# enters, 79% against 0%), and capping solidity removes it.
+MUST_TOUCH_BORDER = True
+MAX_SOLIDITY = 0.90
+BORDER_PX = 3
 
-    This is `everything arm-coloured that the owner mask did not claim`. It
-    catches a colleague's hand and it also catches the turntable and the
-    machine strap, which is why what it selects has to be looked at before it
-    is trusted. It exists so the suppressor has a real input today, not
-    because it is the right long-term source."""
+# A skin component overlapping the owner's mask by this much is the OWNER'S,
+# entire. Not the overlapping pixels -- the whole component.
+OWNER_OVERLAP_FRAC = 0.20
+
+
+def other_components(rgb, owner_mask, min_area_frac=0.006,
+                     max_area_frac=0.25, max_solidity=MAX_SOLIDITY,
+                     require_border=MUST_TOUCH_BORDER):
+    """-> (other mask, owner-protected mask, per-component reasons)
+
+    OWNERSHIP IS DECIDED PER COMPONENT, NOT PER PIXEL, AND THAT IS THE WHOLE
+    FIX. The first version took `skin AND NOT owner_mask`, which turns every
+    pixel the owner mask MISSED into a foreign region -- and the owner mask
+    scores 0.717 against hand-drawn truth, so it misses a rim on every arm.
+    The result was the wearer's own forearm blurred along its edges, a
+    compounding failure where an imperfect mask manufactures the very thing
+    the suppressor then destroys. Here a component that overlaps the owner's
+    mask at all is the owner's in full, and is protected in full.
+
+    What remains has to look like an arm belonging to someone outside the
+    frame: reaching a border, not the bottom one, and not compact."""
     import cv2
     from src.rig.near_other_miner import skin_mask
     sk = skin_mask(rgb) > 0
     own = np.asarray(owner_mask) > 0
-    rest = (sk & ~own).astype(np.uint8)
-    n, lab, stats, _ = cv2.connectedComponentsWithStats(rest, 8)
-    out = np.zeros_like(rest, bool)
+    n, lab, stats, _ = cv2.connectedComponentsWithStats(sk.astype(np.uint8), 8)
+    H, W = sk.shape
+    other = np.zeros((H, W), bool)
+    protect = own.copy()
+    why = []
     for i in range(1, n):
-        if stats[i, cv2.CC_STAT_AREA] / rest.size >= min_area_frac:
-            out |= lab == i
-    return out
+        comp = lab == i
+        a = stats[i, cv2.CC_STAT_AREA] / sk.size
+        x, y, w, h = (stats[i, cv2.CC_STAT_LEFT], stats[i, cv2.CC_STAT_TOP],
+                      stats[i, cv2.CC_STAT_WIDTH], stats[i, cv2.CC_STAT_HEIGHT])
+        L, R = x <= BORDER_PX, x + w >= W - BORDER_PX
+        T, B = y <= BORDER_PX, y + h >= H - BORDER_PX
+        # ENTERING FROM THE BOTTOM IS THE OWNER, AND IT IS DECIDED FIRST AND
+        # WITHOUT A MODEL. 79% of owner components reach the bottom border
+        # against 0% of everything else -- the cleanest separation in this
+        # corpus, and the rule the task was originally specified with. Making
+        # the owner's protection depend on a segmentation that scores 0.717
+        # against hand-drawn truth was the mistake: the geometry is more
+        # reliable than the mask it was guarding.
+        if B:
+            protect |= comp
+            why.append((a, "owner: enters from the bottom"))
+            continue
+        ov = float((comp & own).sum()) / max(int(comp.sum()), 1)
+        if ov >= OWNER_OVERLAP_FRAC:
+            # The other 21%: a hand cut off from its arm by a sleeve, floating
+            # clear of every border. The mask is the only thing that can claim
+            # those, so it is used here and only here.
+            protect |= comp
+            why.append((a, "owner: claimed by the mask"))
+            continue
+        if not (min_area_frac <= a <= max_area_frac):
+            why.append((a, "size"))
+            continue
+        if require_border and not (L or R or T):
+            why.append((a, "touches no border -- attached to nobody"))
+            continue
+        ys, xs = np.where(comp)
+        pts = np.stack([xs, ys], 1).astype(np.float32)
+        sol = comp.sum() / max(cv2.contourArea(cv2.convexHull(pts)), 1e-6)
+        if sol > max_solidity:
+            why.append((a, f"solidity {sol:.2f} -- compact, not a limb"))
+            continue
+        other |= comp
+        why.append((a, "OTHER"))
+    return other, protect, why
 
 
 def _self_test():
@@ -177,6 +244,29 @@ def _self_test():
     chk(np.array_equal(out4[own], rgb[own]),
         "...and come through untouched")
 
+    # Component-level ownership: an owner mask that misses a rim must not
+    # manufacture a foreign region out of the arm it failed to claim.
+    from src.rig.suppress_other import other_components
+    scene = np.full((H, W, 3), (60, 90, 45), np.uint8)
+    scene[200:300, 120:190] = (110, 150, 200)     # owner arm, up from bottom
+    # A real arm is bent -- measured solidity 0.77 median, 0.90 at p90 -- so
+    # a rectangle is not a fair stand-in for one and would be rejected by the
+    # solidity cap that exists to catch the turntable.
+    scene[40:100, 0:60] = (110, 150, 200)         # other arm, in from the left
+    scene[100:150, 0:25] = (110, 150, 200)        # ...bent at the elbow
+    scene[120:180, 200:260] = (110, 150, 200)     # a compact object, mid-frame
+    partial = np.zeros((H, W), bool)
+    partial[215:290, 132:178] = True              # owner mask, a rim short
+    oth, prot, why = other_components(scene, partial, min_area_frac=0.004)
+    chk(not oth[200:300, 120:190].any(),
+        "an owner mask short by a rim does not turn its own arm into `other`")
+    chk(prot[200:300, 120:190].all(),
+        "...the whole component is protected, not just the claimed pixels")
+    chk(oth[40:150, 0:60].any(),
+        "an arm entering from the left IS other")
+    chk(not oth[120:180, 200:260].any(),
+        "a compact object touching no border is left alone entirely")
+
     o5, a5 = suppress(rgb, np.zeros((H, W), bool))
     chk(np.array_equal(o5, rgb) and a5.max() == 0,
         "an empty mask leaves the frame exactly alone")
@@ -219,7 +309,7 @@ def main():
     if a.limit:
         rows = rows[:a.limit]
     os.makedirs(a.out, exist_ok=True)
-    fracs = []
+    fracs, reasons = [], {}
     print(f"  dilate {a.dilate}px  feather {a.feather}px  sigma {a.sigma}\n")
     for r in rows:
         stem = f"{r['recording']}_f{int(r['frame']):06d}.png"
@@ -229,9 +319,11 @@ def main():
         if rgb is None or m is None:
             continue
         owner = m == 1
-        other = other_from_owner(rgb, owner)
+        other, protect, why = other_components(rgb, owner)
         out, alpha = suppress(rgb, other, a.dilate, a.feather, a.sigma,
-                              protect=owner)
+                              protect=protect)
+        for ar, w in why:
+            reasons[w] = reasons.get(w, 0) + 1
         fracs.append(float((alpha > 0.5).mean()))
         cv2.imwrite(os.path.join(a.out, stem.replace(".png", ".jpg")), out,
                     [cv2.IMWRITE_JPEG_QUALITY, 90])
@@ -241,6 +333,8 @@ def main():
     print(f"  {len(f)} frames, suppressed fraction: median {np.median(f):.2%}"
           f"  p10 {np.percentile(f,10):.2%}  p90 {np.percentile(f,90):.2%}"
           f"  std {f.std():.3%}")
+    print("\n  components by verdict: " + ", ".join(
+        f"{k} {v}" for k, v in sorted(reasons.items(), key=lambda x: -x[1])))
     print("\n  READ THE SPREAD, NOT THE MEDIAN. A fraction that barely moves "
           "between frames\n  means the same object is being blurred every "
           "time, and on this corpus that\n  object is a wooden turntable, not "
