@@ -54,34 +54,54 @@ GATE_ABS_DIFF = 40.0
 FIT_FRAMES = 12
 
 
+# Fitted gains are refused outside this range. A camera on the same rig under
+# the same light differs from its neighbour by tens of percent, not by half.
+GAIN_BOUNDS = (0.6, 1.7)
+
+
 def fit_photometric(pairs, min_px=5000):
     """[(src_img, ref_img, overlap_mask)] -> (gain[3], bias[3]).
 
-    Least squares of ref = gain * src + bias per channel, pooled over every
-    supplied frame. Bias matters and gain alone did not have it: two cameras
-    on this rig differ by a black-level offset as well as a sensitivity, and a
-    pure gain forced through the origin leaves a step at the join that no
-    amount of gain can remove."""
+    MOMENT MATCHING, NOT PER-PIXEL REGRESSION, AND THE DIFFERENCE IS NOT
+    COSMETIC. Least squares of ref = g*src + b assumes the two pixels are the
+    same surface. In the overlap they often are not: the measured mean
+    absolute difference there is 69 of 255, because the join sits in the
+    fisheye periphery where two modules 94 mm apart genuinely see different
+    things. Regressing y on a noisy x shrinks the slope toward zero and lets
+    the intercept absorb the mean -- regression dilution -- and the first run
+    produced exactly that signature: gain 0.51 with bias +53. Applying it
+    would have darkened both outer modules to fix a step that is not there.
+
+    Matching the first two moments needs no correspondence at all. It asks
+    only that the two views see the same DISTRIBUTION of the same scene, which
+    they do, and it recovers a true gain and bias exactly when one exists."""
+    ms, mr, ss, sr, n = (np.zeros(3), np.zeros(3), np.zeros(3),
+                         np.zeros(3), 0)
     xs = [[], [], []]
     ys = [[], [], []]
     for src, ref, m in pairs:
         if m is None or m.sum() < min_px:
             continue
+        n += 1
         for c in range(3):
             xs[c].append(src[..., c][m].astype(np.float64))
             ys[c].append(ref[..., c][m].astype(np.float64))
-    g = np.ones(3)
-    b = np.zeros(3)
+    if not n:
+        return np.ones(3), np.zeros(3)
+    g, b = np.ones(3), np.zeros(3)
     for c in range(3):
-        if not xs[c]:
-            continue
         x = np.concatenate(xs[c])
         y = np.concatenate(ys[c])
-        if x.size < min_px or x.std() < 1e-6:
+        sx, sy = x.std(), y.std()
+        if sx < 1e-6:
             continue
-        A = np.stack([x, np.ones_like(x)], 1)
-        sol, *_ = np.linalg.lstsq(A, y, rcond=None)
-        g[c], b[c] = float(sol[0]), float(sol[1])
+        gc = sy / sx
+        if not (GAIN_BOUNDS[0] <= gc <= GAIN_BOUNDS[1]):
+            # Outside physical range the overlap is not comparable content;
+            # refusing beats applying a correction fitted to a mismatch.
+            continue
+        g[c] = gc
+        b[c] = float(y.mean() - gc * x.mean())
     return g, b
 
 
@@ -226,13 +246,13 @@ class ClipReader:
             if not c.isOpened():
                 raise SystemExit(f"cannot open {videos[key]}")
             c.set(cv2.CAP_PROP_POS_FRAMES, int(start))
-            self.caps[m] = c
+            self.caps[m.left.name, m.right.name] = c
 
     def next(self, skip=0):
         """-> {camera_name: image} or None at end of file."""
         from src.rig.render_wide import split_halves
         out = {}
-        for m, c in self.caps.items():
+        for (ln, rn), c in self.caps.items():
             for _ in range(skip):
                 if not c.grab():
                     return None
@@ -240,7 +260,7 @@ class ClipReader:
             if not ok:
                 return None
             l, r = split_halves(img)
-            out[m.left.name], out[m.right.name] = l, r
+            out[ln], out[rn] = l, r
         return out
 
     def close(self):
