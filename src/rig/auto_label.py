@@ -66,7 +66,11 @@ OWNER_BOTTOM_FRAC = 0.88
 MIN_AREA_FRAC = 0.008
 MAX_AREA_FRAC = 0.25
 
-DEFAULT_MODEL = "facebook/sam-vit-base"
+# GrabCut by default. SAM is better and unreachable: this server has no
+# network, so naming a hub model costs five retry backoffs before the fallback
+# fires -- a delay on every run that buys nothing. Pass --model to ask for SAM
+# once weights are on disk.
+DEFAULT_MODEL = "grabcut"
 
 
 def components(rgb, min_frac=MIN_AREA_FRAC, max_frac=MAX_AREA_FRAC):
