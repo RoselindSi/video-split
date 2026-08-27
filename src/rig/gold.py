@@ -182,7 +182,7 @@ def score(gold_dir, src_root, head_ckpt=None, device=None):
         model.load_state_dict(ck["model"])
         size = tuple(ck.get("size", (1024, 576)))
 
-    out = []
+    out, skipped = [], []
     for r in rows:
         stem = r["stem"]
         g = cv2.imread(os.path.join(gold_dir, stem + "_start.png"),
@@ -194,6 +194,14 @@ def score(gold_dir, src_root, head_ckpt=None, device=None):
         if not str(r.get("done", "")).strip():
             continue
         gold = g > 127
+        if r["seed_mode"] == "blind" and not gold.any():
+            # An all-empty blind frame was never drawn, whatever the manifest
+            # says. Scoring it would put a 0 or a NaN into a table that reads
+            # as a measurement -- and marking every row done without editing
+            # is exactly how a seeded set scores 1.000 against itself and
+            # looks like a result.
+            skipped.append(stem)
+            continue
         pseudo = p == 1
         row = {"regime": r.get("regime", ""), "seed_mode": r["seed_mode"],
                "stem": stem, "gold_px": int(gold.sum()),
@@ -225,6 +233,11 @@ def score(gold_dir, src_root, head_ckpt=None, device=None):
             row["head_vs_gold"] = iou_binary(pr, gold)
             row["head_vs_pseudo"] = iou_binary(pr, pseudo)
         out.append(row)
+    if skipped:
+        print(f"  !! {len(skipped)} blind frames are marked done but are "
+              f"still empty; not scored.\n     Those are the only unanchored "
+              f"frames in the set -- without them the table\n     below is "
+              f"the pseudo-labels grading themselves.")
     return out
 
 
@@ -232,6 +245,12 @@ def report(rows):
     if not rows:
         print("  no completed gold frames yet (manifest 'done' column empty)")
         return
+    n_blind = sum(1 for r in rows if r["seed_mode"] == "blind")
+    if n_blind == 0:
+        print("  !! every scored frame was SEEDED. pseudo/gold here measures "
+              "how much the\n     annotator changed the starting mask, not "
+              "how right it was. Draw some of\n     the blind frames before "
+              "quoting any of this.")
     def m(sel, k):
         v = [r[k] for r in sel if np.isfinite(r.get(k, np.nan))]
         return (np.mean(v), len(v)) if v else (float("nan"), 0)
