@@ -285,6 +285,26 @@ def report(rows):
         pg, _ = m(rows, "pseudo_vs_gold")
         print(f"\n  THE TRIANGLE  head/gold {hg:.3f}  vs  pseudo/gold "
               f"{pg:.3f}")
+        # PAIRED, because both scores come from the same frames. An unpaired
+        # comparison of two means over seven frames is dominated by which
+        # frames happened to be easy; the per-frame difference removes that
+        # entirely and is the only thing a set this small can support.
+        d = np.array([r["head_vs_gold"] - r["pseudo_vs_gold"] for r in rows
+                      if np.isfinite(r.get("head_vs_gold", np.nan))
+                      and np.isfinite(r.get("pseudo_vs_gold", np.nan))])
+        if d.size >= 3:
+            rng = np.random.default_rng(0)
+            bs = np.array([rng.choice(d, d.size, replace=True).mean()
+                           for _ in range(20000)])
+            lo, hi = np.percentile(bs, [2.5, 97.5])
+            wins = int((d > 0).sum())
+            print(f"  paired difference  mean {d.mean():+.3f}  "
+                  f"95% CI [{lo:+.3f}, {hi:+.3f}]  n={d.size}")
+            print(f"  head beats its own labels on {wins}/{d.size} frames"
+                  + ("" if lo > 0 else
+                     "\n     The interval contains zero: the direction is "
+                     "consistent but the size is\n     not established at "
+                     "this n. It is a GO signal, not an effect size."))
         if np.isfinite(hg) and np.isfinite(pg):
             print("     " + ("the head is CLOSER to truth than its own "
                              "labels -- it is denoising,\n     and more "
