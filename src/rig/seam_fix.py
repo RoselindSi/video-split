@@ -53,6 +53,13 @@ GATE_ABS_DIFF = 40.0
 # robustness to a passing shadow, not precision.
 FIT_FRAMES = 12
 
+# The range map is smoothed before it is used as a warp field. A median of
+# this width removes SGBM speckle; the bilateral range is in METRES, so 0.15
+# keeps a hand distinct from a bench 40 cm behind it while erasing the
+# few-centimetre noise that scrubs the texture.
+MEDIAN_PX = 5
+BILAT_SIGMA_M = 0.15
+
 
 # Fitted gains are refused outside this range. A camera on the same rig under
 # the same light differs from its neighbour by tens of percent, not by half.
@@ -148,25 +155,51 @@ def source_maps_perpixel(rig, camera, vcam, range_m):
             inside.reshape(H, W))
 
 
-def densify_range(range_m, valid, fallback=1.2):
-    """Fill the unmeasured pixels, FOR RENDERING ONLY.
+def densify_range(range_m, valid, fallback=1.2, guide=None,
+                  median_px=MEDIAN_PX, bilat_sigma=BILAT_SIGMA_M):
+    """Fill and SMOOTH the range, FOR RENDERING ONLY.
 
-    `wide_depth` refuses to fill its output and that stays true: an
+    `wide_depth` refuses to fill or smooth its output and that stays true: an
     interpolated depth written to a file is indistinguishable from a measured
     one. Deciding where to SAMPLE is a different act -- a wrong guess there
-    costs a slightly misplaced pixel, not a false measurement -- so the holes
-    are filled here and nowhere else."""
+    costs a misplaced pixel, not a false measurement.
+
+    RAW SGBM IS NOT USABLE AS A WARP FIELD, and the first per-pixel render
+    showed exactly why. The sampling coordinate moves with the depth, so
+    everything the matcher gets wrong turns into geometry:
+
+        few-cm noise per pixel   ->  the sample point jitters a few px
+                                     -> the mottled, scrubbed texture
+        speckle outliers         ->  isolated pixels displaced far
+                                     -> salt-and-pepper tearing
+        inpainted holes          ->  a guessed depth over a whole region
+                                     -> that region ghosts
+
+    A median kills the speckle, and a joint bilateral guided by the image
+    smooths the noise while holding the depth edges where the picture has
+    edges -- so a hand keeps its own depth instead of being averaged into the
+    bench behind it."""
     import cv2
     r = np.where(valid, np.nan_to_num(range_m, nan=fallback), np.nan)
     m = (~np.isfinite(r)).astype(np.uint8)
     base = np.where(np.isfinite(r), r, fallback).astype(np.float32)
     if m.any():
-        # Nearest measured value, then a wide blur so the filled region does
-        # not carry the blocky structure of the holes into the warp.
         filled = cv2.inpaint((base / 8.0 * 255).clip(0, 255).astype(np.uint8),
                              m, 7, cv2.INPAINT_TELEA).astype(np.float32)
-        filled = filled / 255.0 * 8.0
-        base = np.where(m > 0, cv2.GaussianBlur(filled, (0, 0), 6), base)
+        base = np.where(m > 0, filled / 255.0 * 8.0, base)
+    if median_px >= 3:
+        base = cv2.medianBlur(base, median_px | 1)
+    if guide is None:
+        base = cv2.bilateralFilter(base, 9, bilat_sigma, 9)
+    else:
+        try:
+            base = cv2.ximgproc.jointBilateralFilter(
+                guide, base, 9, bilat_sigma, 9)
+        except Exception:
+            # ximgproc is a contrib module and may be absent; the plain
+            # bilateral smooths without the image's edges but still removes
+            # the jitter that scrubs the texture.
+            base = cv2.bilateralFilter(base, 9, bilat_sigma, 9)
     return np.clip(base, 0.15, 8.0)
 
 
@@ -430,7 +463,8 @@ def main():
             if a.per_pixel_depth:
                 from src.rig.wide_depth import wide_depth
                 wd = wide_depth(rig, vcam, sources, rect_cache=rectc)
-                rng_m = densify_range(wd.range_m, wd.valid)
+                rng_m = densify_range(wd.range_m, wd.valid,
+                                      guide=None)
             warped, valid, cost, mid_i = warp_all(
                 rig, vcam, sources, a.depth_m, depth_by_module=dbm,
                 map_cache=mc, range_m=rng_m)
