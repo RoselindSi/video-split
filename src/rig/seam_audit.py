@@ -124,7 +124,8 @@ def skin_at_seam(rgb, owner, band=SEAM_BAND_PX):
     return int((sk & s).sum()), n, (float((sk & s).sum()) / n if n else 0.0)
 
 
-def audit_clip(rig, vcam, videos, frames, depth_m=0.6, band=SEAM_BAND_PX):
+def audit_clip(rig, vcam, videos, frames, depth_m=0.6, band=SEAM_BAND_PX,
+               mid_authority=None):
     """-> (per-frame rows, owner map of the first frame)."""
     from src.rig.render_wide import read_frame, split_halves, render
     rows, owner0, mc = [], None, {}
@@ -138,11 +139,13 @@ def audit_clip(rig, vcam, videos, frames, depth_m=0.6, band=SEAM_BAND_PX):
             sources[m.left.name], sources[m.right.name] = l, r
         if not sources:
             continue
+        kw = {} if mid_authority is None else {
+            "mid_authority_deg": mid_authority}
         try:
             rgb, owner, stats, _ = render(rig, vcam, sources, depth_m,
-                                          map_cache=mc)
+                                          map_cache=mc, **kw)
         except TypeError:                      # renderer without the cache
-            rgb, owner, stats, _ = render(rig, vcam, sources, depth_m)
+            rgb, owner, stats, _ = render(rig, vcam, sources, depth_m, **kw)
         if owner0 is None:
             owner0 = owner.copy()
         er = seam_edge_ratio(rgb, owner, band)
@@ -286,6 +289,12 @@ def main():
     ap.add_argument("--hfov", type=float, default=150.0)
     ap.add_argument("--vfov", type=float, default=90.0)
     ap.add_argument("--depth_m", type=float, default=0.6)
+    ap.add_argument("--mid_authority", type=float, default=None,
+                    help="degrees off its own axis within which the middle "
+                         "module owns every pixel. Raising it pushes the "
+                         "joins outward onto FARTHER content, where two "
+                         "modules 94 mm apart disagree less -- which is the "
+                         "direction the 140/80 result says to go.")
     ap.add_argument("--out_json")
     a = ap.parse_args()
     if a.self_test:
@@ -302,11 +311,13 @@ def main():
 
     cov = coverage(rig, vcam, a.depth_m)
     print(f"seam audit  hfov {a.hfov:g}deg vfov {a.vfov:g}deg  "
-          f"{len(frames)} frames from {a.start}")
+          f"mid_authority {a.mid_authority if a.mid_authority else 'default'}"
+          f"  {len(frames)} frames from {a.start}")
     print(f"  black invalid region {1-cov['visible'].mean():.2%}   "
           f"stereo depth available {cov['stereo'].mean():.1%}")
 
-    rows, owner0 = audit_clip(rig, vcam, videos, frames, a.depth_m)
+    rows, owner0 = audit_clip(rig, vcam, videos, frames, a.depth_m,
+                              mid_authority=a.mid_authority)
     if owner0 is not None:
         for i, m in enumerate(rig.modules):
             share = (owner0 == i).mean()
