@@ -193,7 +193,8 @@ def compose(warped, valid, w, hard, reach, gate=GATE_ABS_DIFF):
     return out, hard, gated & reach
 
 
-def fit_from_video(rig, vcam, videos, frames, depth_m=0.6, map_cache=None):
+def fit_from_video(rig, vcam, videos, frames, depth_m=0.6, map_cache=None,
+                   depth_by_module=None):
     """-> {module_index: (gain, bias)} fitted once over `frames`."""
     from src.rig.render_wide import read_frame, split_halves
     map_cache = {} if map_cache is None else map_cache
@@ -209,8 +210,9 @@ def fit_from_video(rig, vcam, videos, frames, depth_m=0.6, map_cache=None):
             sources[m.left.name], sources[m.right.name] = l, r
         if not sources:
             continue
-        warped, valid, cost, mid_i = warp_all(rig, vcam, sources, depth_m,
-                                              map_cache=map_cache)
+        warped, valid, cost, mid_i = warp_all(
+            rig, vcam, sources, depth_m, depth_by_module=depth_by_module,
+            map_cache=map_cache)
         if mid_i not in warped:
             continue
         for i in warped:
@@ -284,6 +286,15 @@ def main():
     ap.add_argument("--hfov", type=float, default=150.0)
     ap.add_argument("--vfov", type=float, default=90.0)
     ap.add_argument("--depth_m", type=float, default=0.6)
+    ap.add_argument("--depth_module", action="append", default=[],
+                    metavar="NAME=METRES",
+                    help="per-module assumed depth, e.g. module_A=8. ONE "
+                         "CONSTANT CANNOT SERVE ALL THREE: the middle module "
+                         "sees a bench at 0.6 m while the outer two see floor "
+                         "and the far aisle metres away, and reprojecting "
+                         "those as if they were at 0.6 m displaces them by "
+                         "most of a wedge -- which is what the periphery of "
+                         "the baseline render actually shows.")
     ap.add_argument("--mid_authority", type=float, default=72.0)
     ap.add_argument("--temp", type=float, default=BLEND_TEMP_DEG)
     ap.add_argument("--gate", type=float, default=GATE_ABS_DIFF)
@@ -304,12 +315,20 @@ def main():
     videos = dict(s.split("=", 1) for s in a.video)
     frames = list(range(a.start, a.start + a.n * a.stride, a.stride))
     mc = {}
+    dbm = {}
+    for spec in a.depth_module:
+        k, v = spec.split("=", 1)
+        dbm[k] = float(v)
+    if dbm:
+        print("per-module depth: " + ", ".join(f"{k}={v:g}m"
+                                               for k, v in sorted(dbm.items())))
 
     photo = None
     if a.mode in ("fixed", "sidebyside"):
         fit_at = frames[::max(1, len(frames) // FIT_FRAMES)][:FIT_FRAMES]
         print(f"fitting photometric mapping on {len(fit_at)} frames...")
-        photo = fit_from_video(rig, vcam, videos, fit_at, a.depth_m, mc)
+        photo = fit_from_video(rig, vcam, videos, fit_at, a.depth_m, mc,
+                               depth_by_module=dbm)
         for i, (g, b) in sorted(photo.items()):
             print(f"  {rig.modules[i].name}  gain {np.round(g,3).tolist()}  "
                   f"bias {np.round(b,1).tolist()}")
@@ -330,13 +349,15 @@ def main():
         if a.mode in ("baseline", "sidebyside"):
             try:
                 base, _, _, _ = render(rig, vcam, sources, a.depth_m,
-                                       map_cache=mc)
+                                       map_cache=mc,
+                                       depth_by_module=dbm or None)
             except TypeError:
                 base, _, _, _ = render(rig, vcam, sources, a.depth_m)
             panels.append(("baseline", base))
         if a.mode in ("fixed", "sidebyside"):
-            warped, valid, cost, mid_i = warp_all(rig, vcam, sources,
-                                                  a.depth_m, map_cache=mc)
+            warped, valid, cost, mid_i = warp_all(
+                rig, vcam, sources, a.depth_m, depth_by_module=dbm,
+                map_cache=mc)
             for i in warped:
                 g, b = photo.get(i, (np.ones(3), np.zeros(3)))
                 warped[i] = apply_photometric(warped[i], g, b)
