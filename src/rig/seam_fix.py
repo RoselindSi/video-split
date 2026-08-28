@@ -475,6 +475,13 @@ def main():
     ap.add_argument("--mid_authority", type=float, default=72.0)
     ap.add_argument("--temp", type=float, default=BLEND_TEMP_DEG)
     ap.add_argument("--gate", type=float, default=GATE_ABS_DIFF)
+    ap.add_argument("--residual_flow", action="store_true",
+                    help="after the calibrated per-pixel-depth projection, "
+                         "measure what misalignment is LEFT in the overlap "
+                         "and correct it. Fitted once over sample frames and "
+                         "frozen, so the correction is the same on every "
+                         "frame -- a flow re-estimated per frame is a "
+                         "boundary that moves.")
     ap.add_argument("--per_pixel_depth", action="store_true",
                     help="reproject with the MEASURED range at every pixel "
                          "instead of one assumed plane. Removes the "
@@ -520,7 +527,53 @@ def main():
 
     w = hard = reach = None
     rectc = {}
+    flows = {}
     writer = None
+
+    def _warp_frame(sources):
+        rng_m = None
+        if a.per_pixel_depth:
+            from src.rig.wide_depth import wide_depth
+            wd = wide_depth(rig, vcam, sources, rect_cache=rectc)
+            rng_m = densify_range(wd.range_m, wd.valid)
+        wa, va, ca, mi = warp_all(rig, vcam, sources, a.depth_m,
+                                  depth_by_module=dbm, map_cache=mc,
+                                  range_m=rng_m)
+        for j in wa:
+            g, b = (photo or {}).get(j, (np.ones(3), np.zeros(3)))
+            wa[j] = apply_photometric(wa[j], g, b)
+        return wa, va, ca, mi
+
+    if a.residual_flow:
+        print(f"fitting residual flow on {FLOW_FRAMES} frames...")
+        fr = ClipReader(rig, videos, a.start)
+        per_mod = {}
+        for _ in range(FLOW_FRAMES):
+            src = fr.next(skip=max(0, len(frames) // FLOW_FRAMES - 1))
+            if not src:
+                break
+            wa, va, ca, mi = _warp_frame(src)
+            if mi not in wa:
+                continue
+            for j in wa:
+                if j == mi:
+                    continue
+                ov = va[j] & va[mi]
+                if ov.sum() < 2000:
+                    continue
+                per_mod.setdefault(j, []).append(
+                    (residual_flow(wa[j], wa[mi], ov), ov))
+        fr.close()
+        for j, lst in per_mod.items():
+            flows[j] = fit_residual_flow(lst)
+            m = np.linalg.norm(flows[j], axis=-1)
+            nz = m[m > 0.05]
+            print(f"  {rig.modules[j].name}: residual over {len(lst)} frames, "
+                  f"median {np.median(nz) if nz.size else 0:.2f} px, "
+                  f"p95 {np.percentile(nz,95) if nz.size else 0:.2f} px, "
+                  f"corrected on {(m>0.05).mean():.1%} of the frame")
+        print("  Fitted ONCE and held. The residual is what calibration and "
+              "depth left\n  behind; a few pixels, not a geometry.\n")
     t0, n_gated = time.time(), []
     reader = ClipReader(rig, videos, a.start)
     for k in range(len(frames)):
