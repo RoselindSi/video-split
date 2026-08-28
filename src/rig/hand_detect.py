@@ -39,7 +39,13 @@ FINGERS = list(range(1, 21))
 
 DETECTOR = "/shared/models/HaWoR/weights/external/detector.pt"
 IMGSZ = 512
-MIN_CONF = 0.35
+# Real hands on this corpus come in at 0.83-0.87. A pink box came in as a
+# hand at the old floor of 0.35 and was blurred, which is the first false
+# positive this pipeline has had that arrives with a NUMBER attached -- every
+# shape rule before it had to be cut through two overlapping distributions,
+# and this one does not. The floor is set from that gap and the distribution
+# is printed on every run so it stays checkable.
+MIN_CONF = 0.60
 
 # The forearm ray leaves the frame at some point; the wearer's leaves LOW.
 #
@@ -266,6 +272,9 @@ def main():
     ap.add_argument("--out")
     ap.add_argument("--weights", default=DETECTOR)
     ap.add_argument("--limit", type=int, default=20)
+    ap.add_argument("--min_conf", type=float, default=MIN_CONF,
+                    help="real hands score 0.83-0.87 here; a pink box scored "
+                         "enough to pass 0.35")
     ap.add_argument("--dilate", type=int, default=10)
     ap.add_argument("--sigma", type=float, default=14.0)
     a = ap.parse_args()
@@ -291,12 +300,22 @@ def main():
     print(f"  {len(imgs)} frames, detector {os.path.basename(a.weights)}\n")
 
     tally = {}
+    confs = {"owner": [], "other": []}
+    allconf = []
     for p in imgs:
         rgb = cv2.imread(p)
-        dets = detect(model, rgb)
+        dets = detect(model, rgb, min_conf=a.min_conf)
         own, oth = split_owner(dets, rgb.shape)
         for d in dets:
             tally[d.get("edge")] = tally.get(d.get("edge"), 0) + 1
+        for d in own:
+            confs["owner"].append(d["conf"])
+        for d in oth:
+            confs["other"].append(d["conf"])
+        # Everything the detector proposed, including what the floor rejected,
+        # so the floor can be judged rather than trusted.
+        for d in detect(model, rgb, min_conf=0.0):
+            allconf.append((d["conf"], bool(d.get("owner"))))
         m_own = masks_from(rgb, own)
         m_oth = masks_from(rgb, oth)
         out, alpha = suppress(rgb, m_oth, a.dilate, 4, a.sigma, protect=m_own)
@@ -309,6 +328,21 @@ def main():
               f"owner {len(own)}  other {len(oth)}  "
               f"suppressed {(alpha>0.5).mean():.2%}")
     print(f"\n  forearm exits: {tally}")
+    for k, v in confs.items():
+        if v:
+            v = np.array(v)
+            print(f"  {k:6s} confidence: min {v.min():.2f}  median "
+                  f"{np.median(v):.2f}  max {v.max():.2f}  n={len(v)}")
+    if allconf:
+        c = np.array([x[0] for x in allconf])
+        print(f"\n  EVERY proposal, floor ignored: n={len(c)}  "
+              f"min {c.min():.2f}  p25 {np.percentile(c,25):.2f}  "
+              f"median {np.median(c):.2f}")
+        for t in (0.4, 0.5, 0.6, 0.7, 0.8):
+            print(f"    floor {t}: keeps {int((c>=t).sum()):3d} of {len(c)}")
+        print("  A real hand here scores 0.83-0.87. If the rejected tail sits "
+              "well below\n  that, the floor is a gap and not another "
+              "threshold through an overlap.")
     print("  Left/right/top are colleagues; bottom is the wearer. Nothing "
           "that is not a\n  hand is reported at all, which is the whole point "
           "of replacing the colour rule.")
