@@ -291,6 +291,85 @@ def compose(warped, valid, w, hard, reach, gate=GATE_ABS_DIFF):
     return out, hard, gated & reach
 
 
+# Frames used to fit the residual flow. It is a per-pixel median over the
+# overlap, so more frames buy robustness to a hand passing through, not
+# precision.
+FLOW_FRAMES = 16
+
+# The residual is supposed to be SMALL -- a few pixels of calibration error
+# after per-pixel depth has removed the parallax. Anything larger is the flow
+# estimator latching onto a moving hand or a textureless patch, and is thrown
+# away rather than applied.
+MAX_RESIDUAL_PX = 12.0
+
+
+def residual_flow(src, ref, overlap):
+    """Dense flow from `src` to `ref`, inside the overlap only. -> [H,W,2]
+
+    Estimated AFTER the calibrated, per-pixel-depth projection has done its
+    work, so it has a few pixels to find rather than 31 degrees of geometry.
+    That is the whole reason this is tractable where a general stitcher was
+    not: a learned 2D warp had to represent a displacement field with a depth
+    discontinuity at every arm boundary, and this only has to represent what
+    is left after the depth was used properly."""
+    import cv2
+    g1 = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
+    g2 = cv2.cvtColor(ref, cv2.COLOR_BGR2GRAY)
+    f = cv2.calcOpticalFlowFarneback(g1, g2, None, 0.5, 4, 31, 3, 5, 1.2, 0)
+    f[~overlap] = 0.0
+    return f
+
+
+def fit_residual_flow(per_frame, max_px=MAX_RESIDUAL_PX):
+    """[(flow, overlap)] -> one frozen flow field, or None.
+
+    PER-PIXEL MEDIAN, AND FROZEN. A hand crossing the overlap produces a large
+    honest flow that has nothing to do with the calibration residual this is
+    correcting; a median over frames drops it. Freezing is what keeps the
+    ownership map's bit-identical property from being given away -- a flow
+    re-estimated every frame is a boundary that moves, which is the thing a
+    downstream video model must never be shown."""
+    if not per_frame:
+        return None
+    flows = np.stack([f for f, _ in per_frame], 0)
+    seen = np.stack([o for _, o in per_frame], 0)
+    n = seen.sum(0)
+    med = np.zeros(flows.shape[1:], np.float32)
+    ok = n >= max(3, len(per_frame) // 3)
+    if ok.any():
+        masked = np.where(seen[..., None], flows, np.nan)
+        import warnings
+        with warnings.catch_warnings():
+            # Pixels seen in no frame are an all-NaN slice by construction;
+            # `ok` already excludes them below.
+            warnings.simplefilter("ignore", RuntimeWarning)
+            m = np.nanmedian(masked, axis=0)
+        med[ok] = np.nan_to_num(m[ok])
+    mag = np.linalg.norm(med, axis=-1)
+    # Refuse the pixels where the estimator found something too big to be a
+    # residual: those are moving hands and blank bench, not calibration.
+    med[mag > max_px] = 0.0
+    return med
+
+
+def apply_flow(img, flow):
+    """Warp `img` to match the reference, given flow(img -> reference).
+
+    THE SIGN IS SUBTRACTED, AND IT IS NOT A CONVENTION QUIBBLE. Farneback
+    returns f with img(p) ~ ref(p + f(p)) -- it says where a pixel of img went
+    in ref. To BUILD a version of img that sits where ref does, each output
+    pixel must be sampled from img at p - f(p). Adding it instead moves
+    everything twice as far in the wrong direction, which showed up as the
+    correction making a synthetic 4-pixel shift slightly worse rather than
+    removing it."""
+    import cv2
+    H, W = img.shape[:2]
+    gx, gy = np.meshgrid(np.arange(W, dtype=np.float32),
+                         np.arange(H, dtype=np.float32))
+    return cv2.remap(img, gx - flow[..., 0], gy - flow[..., 1],
+                     cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+
+
 def fit_from_video(rig, vcam, videos, frames, depth_m=0.6, map_cache=None,
                    depth_by_module=None):
     """-> {module_index: (gain, bias)} fitted once over `frames`."""
