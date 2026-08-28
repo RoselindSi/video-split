@@ -187,6 +187,63 @@ def masks_from(rgb, dets, pad=0.15, iters=3):
     return out
 
 
+def track(prev, cur, max_move_frac=0.25):
+    """Match detections between consecutive frames by centre distance.
+    -> [(prev_index, cur_index)]
+
+    Greedy nearest-centre, capped by a fraction of the frame. A hand does not
+    cross a quarter of the frame in one 30 fps step, and refusing the match
+    beyond that keeps a dropout from being reported as a jump."""
+    if not prev or not cur:
+        return []
+    def ctr(d):
+        x0, y0, x1, y1 = d["box"]
+        return np.array([(x0 + x1) / 2.0, (y0 + y1) / 2.0])
+    P = np.stack([ctr(d) for d in prev])
+    C = np.stack([ctr(d) for d in cur])
+    dist = np.linalg.norm(P[:, None] - C[None], axis=-1)
+    cap = max_move_frac * max(dist.max(), 1.0) if dist.size else 0
+    out, used_p, used_c = [], set(), set()
+    for _ in range(min(len(prev), len(cur))):
+        i, j = np.unravel_index(np.argmin(dist), dist.shape)
+        if not np.isfinite(dist[i, j]):
+            break
+        out.append((int(i), int(j)))
+        dist[i, :] = np.inf
+        dist[:, j] = np.inf
+    return out
+
+
+def stability(model, frames, min_conf=MIN_CONF):
+    """-> dict of per-clip stability statistics.
+
+    THE FAILURE THIS LOOKS FOR is not a wrong label but a CHANGING one. A hand
+    called the wearer's on one frame and a colleague's on the next puts a
+    blur that flickers on and off in front of a downstream video model, which
+    is worse than either verdict held consistently."""
+    rows, prev = [], None
+    flips = same = 0
+    counts = []
+    for rgb in frames:
+        dets = detect(model, rgb, min_conf=min_conf)
+        counts.append(len(dets))
+        if prev is not None:
+            for i, j in track(prev, dets):
+                if bool(prev[i].get("owner")) == bool(dets[j].get("owner")):
+                    same += 1
+                else:
+                    flips += 1
+        prev = dets
+        rows.append(dets)
+    c = np.array(counts)
+    return {"frames": len(counts), "hands_per_frame_median": float(np.median(c)),
+            "hands_min": int(c.min()), "hands_max": int(c.max()),
+            "frames_with_no_hand": int((c == 0).sum()),
+            "tracked_pairs": same + flips, "owner_label_flips": flips,
+            "flip_rate": float(flips / max(same + flips, 1)),
+            "per_frame": rows}
+
+
 def _self_test():
     ok = []
 
@@ -272,6 +329,17 @@ def main():
     ap.add_argument("--out")
     ap.add_argument("--weights", default=DETECTOR)
     ap.add_argument("--limit", type=int, default=20)
+    ap.add_argument("--stability", action="store_true",
+                    help="run on CONSECUTIVE rendered frames and report how "
+                         "often a tracked hand changes its owner verdict. "
+                         "Scattered keyframes cannot show this and it is the "
+                         "failure that matters: a blur that flickers on and "
+                         "off is worse than either verdict held.")
+    ap.add_argument("--calibration")
+    ap.add_argument("--video", action="append", default=[],
+                    metavar="FILEKEY=PATH")
+    ap.add_argument("--start", type=int, default=3000)
+    ap.add_argument("--n", type=int, default=150)
     ap.add_argument("--min_conf", type=float, default=MIN_CONF,
                     help="real hands score 0.83-0.87 here; a pink box scored "
                          "enough to pass 0.35")
@@ -280,6 +348,43 @@ def main():
     a = ap.parse_args()
     if a.self_test:
         raise SystemExit(0 if _self_test() else 1)
+    if a.stability:
+        if not a.calibration or not a.video:
+            ap.error("--stability needs --calibration and --video")
+        from ultralytics import YOLO
+        from src.rig.calibration import RigCalibration
+        from src.rig.geometry import VirtualWideCamera
+        from src.rig.render_wide import render
+        from src.rig.seam_fix import ClipReader
+        rig = RigCalibration(a.calibration)
+        vcam = VirtualWideCamera.from_rig(rig)
+        rd = ClipReader(rig, dict(s.split("=", 1) for s in a.video), a.start)
+        model = YOLO(a.weights)
+        mc, frames = {}, []
+        for _ in range(a.n):
+            src = rd.next()
+            if not src:
+                break
+            try:
+                rgb, _, _, _ = render(rig, vcam, src, 0.6, map_cache=mc)
+            except TypeError:
+                rgb, _, _, _ = render(rig, vcam, src, 0.6)
+            frames.append(rgb)
+        rd.close()
+        st = stability(model, frames, a.min_conf)
+        print(f"  {st['frames']} CONSECUTIVE frames from {a.start}\n")
+        print(f"  hands per frame     median {st['hands_per_frame_median']:.0f}"
+              f"   min {st['hands_min']}   max {st['hands_max']}")
+        print(f"  frames with no hand {st['frames_with_no_hand']}")
+        print(f"  tracked pairs       {st['tracked_pairs']}")
+        print(f"  owner verdict flips {st['owner_label_flips']}"
+              f"   ({st['flip_rate']:.2%})")
+        print("\n  A flip is the same hand called the wearer's on one frame "
+              "and a colleague's\n  on the next. That makes a blur switch on "
+              "and off, which a downstream video\n  model reads as a real "
+              "event. Near zero is the requirement; the label being\n  "
+              "occasionally wrong but STEADY is a much smaller problem.")
+        raise SystemExit(0)
     if not a.src or not a.out:
         ap.error("--src and --out are required without --self_test")
 
