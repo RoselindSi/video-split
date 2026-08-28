@@ -214,7 +214,9 @@ def _self_test():
     # A third from below: the two most straight-down win, not the first two.
     slanted = {"kp": hand((300, 700), (600, 690)), "edge": "bottom"}
     own2, oth2 = split_owner([slanted] + d_own, (H, W))
-    chk(len(own2) == 2 and slanted not in own2,
+    # `not in` compares dicts holding numpy arrays with ==, which is
+    # ambiguous; identity is what is meant here anyway.
+    chk(len(own2) == 2 and all(d is not slanted for d in own2),
         "a third arm from below is resolved by direction, not by list order")
 
     print(f"\n  {sum(ok)}/{len(ok)} cases pass.")
