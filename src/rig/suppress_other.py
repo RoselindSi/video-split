@@ -122,6 +122,25 @@ MUST_TOUCH_BORDER = True
 MAX_SOLIDITY = 0.90
 BORDER_PX = 3
 
+# An arm bends. A strap, a conveyor edge and a pillar do not, and those were
+# what survived every other filter -- 42 blurred components whose median
+# straightness was 0.992, against 121 real owner arms whose median was 0.932
+# and whose MAXIMUM was 0.974. The cut sits in the gap between those two
+# numbers rather than at a round figure:
+#
+#     straight < 0.97   removes 74% of the false positives, costs 1% of arms
+#     straight < 0.98   removes 69%, costs 0%
+#
+# Aspect ratio was tested alongside and adds nothing on top of it (74% / 1%
+# either way), so it is not applied -- a second threshold that changes no
+# decision is a second thing to get wrong later.
+#
+# 26% survive: a curved conveyor edge and a round paper disc, both bent and
+# both skin-coloured. Single-frame shape has nothing left to say about those.
+# What separates them from an arm is that they do not move, and that needs
+# consecutive frames rather than a keyframe.
+MAX_STRAIGHTNESS = 0.97
+
 # A skin component overlapping the owner's mask by this much is the OWNER'S,
 # entire. Not the overlapping pixels -- the whole component.
 OWNER_OVERLAP_FRAC = 0.20
@@ -129,7 +148,8 @@ OWNER_OVERLAP_FRAC = 0.20
 
 def other_components(rgb, owner_mask, min_area_frac=0.006,
                      max_area_frac=0.25, max_solidity=MAX_SOLIDITY,
-                     require_border=MUST_TOUCH_BORDER):
+                     require_border=MUST_TOUCH_BORDER,
+                     max_straightness=MAX_STRAIGHTNESS):
     """-> (other mask, owner-protected mask, per-component reasons)
 
     OWNERSHIP IS DECIDED PER COMPONENT, NOT PER PIXEL, AND THAT IS THE WHOLE
@@ -203,6 +223,10 @@ def other_components(rgb, owner_mask, min_area_frac=0.006,
                                   (("L", L), ("R", R), ("T", T), ("B", B)) if f)}
         if sol > max_solidity:
             why.append((a, f"solidity {sol:.2f} -- compact, not a limb", stat))
+            continue
+        if straight > max_straightness:
+            why.append((a, f"straightness {straight:.3f} -- a strap or an "
+                           f"edge, not a limb", stat))
             continue
         other |= comp
         why.append((a, "OTHER", stat))
@@ -278,6 +302,12 @@ def _self_test():
         "...the whole component is protected, not just the claimed pixels")
     chk(oth[40:150, 0:60].any(),
         "an arm entering from the left IS other")
+    straightbar = np.full((H, W, 3), (60, 90, 45), np.uint8)
+    straightbar[0:200, 40:70] = (110, 150, 200)   # a strap: skin-toned, T, bent-free
+    o2, _, _ = other_components(straightbar, np.zeros((H, W), bool),
+                                min_area_frac=0.004)
+    chk(not o2.any(),
+        "a straight skin-coloured bar from the top is a strap, not an arm")
     chk(not oth[120:180, 200:260].any(),
         "a compact object touching no border is left alone entirely")
 
