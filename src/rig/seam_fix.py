@@ -116,6 +116,103 @@ def apply_photometric(img, gain, bias):
     return np.clip(img.astype(np.float32) * gain + bias, 0, 255).astype(np.uint8)
 
 
+# Vignetting, as the standard even-polynomial in normalised radius. Two
+# parameters is what an overlap can constrain and what a lens needs.
+#
+# THIS IS THE THING GAIN AND BIAS COULD NOT REACH. Measured on the overlap,
+# the intensity ratio between an outer module and the middle one runs
+#
+#     module_A   1.302 -> 1.171 -> 1.061 -> 0.936   across the overlap
+#     module_C   0.735 -> 0.916 -> 1.008 -> 1.115
+#
+# monotonic, in OPPOSITE directions, and 39% and 52% wide. That is exactly
+# what a radial falloff produces: moving across the output moves toward one
+# lens's centre and away from the other's. A global gain scales a ramp and a
+# bias shifts it; neither can flatten one, which is why the photometric fit
+# changed 27% of the pixels and none of the appearance.
+VIGNETTE_INIT = (0.0, 0.0)
+
+
+def vignette_gain(rho, params):
+    """g(rho) = 1 + a*rho^2 + b*rho^4, the correction DIVIDES by this."""
+    a, b = params
+    r2 = np.asarray(rho, np.float64) ** 2
+    return np.clip(1.0 + a * r2 + b * r2 * r2, 0.15, 4.0)
+
+
+def fit_vignette(samples, iters=3):
+    """[(rho_src, rho_ref, ratio)] -> ((a, b), (rms_before, rms_after))
+
+    ONE CURVE FOR ALL SIX, because they are the same lens on the same rig. A
+    ratio only constrains the DIFFERENCE between two radii, so per-camera
+    curves are unidentifiable up to a common factor; one shared curve turns an
+    underdetermined problem into two unknowns over a million constraints.
+
+    AND IT IS LINEAR, which is worth seeing rather than reaching for an
+    optimiser. With u = rho^2 and g = 1 + a*u + b*u^2, the constraint
+    g(u_s) = y * g(u_r) rearranges to
+
+        a * (u_s - y*u_r) + b * (u_s^2 - y*u_r^2) = y - 1
+
+    which is an ordinary least squares in a and b. A few reweighting passes
+    handle the outliers -- a hand moving through the overlap gives an honest
+    ratio that has nothing to do with the lens."""
+    rs, rr, y = (np.concatenate([s_[i] for s_ in samples]) for i in range(3))
+    keep = (np.isfinite(rs) & np.isfinite(rr) & np.isfinite(y)
+            & (y > 0.2) & (y < 5.0))
+    rs, rr, y = rs[keep], rr[keep], y[keep]
+    if rs.size < 1000:
+        return VIGNETTE_INIT, (np.nan, np.nan)
+    step = max(1, rs.size // 300000)
+    rs, rr, y = rs[::step], rr[::step], y[::step]
+    us, ur = rs ** 2, rr ** 2
+    A = np.stack([us - y * ur, us ** 2 - y * ur ** 2], 1)
+    b = y - 1.0
+
+    def rms(p):
+        return float(np.sqrt(np.mean(
+            (np.log(vignette_gain(rs, p)) - np.log(vignette_gain(rr, p))
+             - np.log(y)) ** 2)))
+
+    r0 = rms(VIGNETTE_INIT)
+    w = np.ones_like(b)
+    par = VIGNETTE_INIT
+    for _ in range(iters):
+        sol, *_ = np.linalg.lstsq(A * w[:, None], b * w, rcond=None)
+        par = (float(sol[0]), float(sol[1]))
+        res = np.abs(A @ sol - b)
+        sc = max(np.median(res), 1e-6)
+        w = 1.0 / (1.0 + (res / (3.0 * sc)) ** 2)     # soft outlier rejection
+    return par, (r0, rms(par))
+
+
+def flat_field(img, K, params):
+    """Divide out the vignette. Applied to the RAW image, before any warp."""
+    H, W = img.shape[:2]
+    ys, xs = np.mgrid[0:H, 0:W]
+    r = np.sqrt((xs - K[0, 2]) ** 2 + (ys - K[1, 2]) ** 2)
+    g = vignette_gain(r / (0.5 * np.hypot(W, H)), params)
+    return np.clip(img.astype(np.float32) / g[..., None], 0, 255).astype(
+        np.uint8)
+
+
+def rho_map(rig, camera, vcam, depth_m, map_cache=None):
+    """Normalised source radius for every output pixel. -> [H,W] float, NaN
+    outside. This is what the vignette curve is a function of."""
+    from src.rig.geometry import source_maps
+    cam = rig.cameras[camera]
+    key = ("rho", camera, round(float(depth_m), 6), vcam.width, vcam.height)
+    if map_cache is not None and key in map_cache:
+        return map_cache[key]
+    mx, my, ok = source_maps(rig, camera, vcam, depth_m)
+    r = np.sqrt((mx - cam.K[0, 2]) ** 2 + (my - cam.K[1, 2]) ** 2)
+    r = r / (0.5 * np.hypot(cam.width, cam.height))
+    out = np.where(ok, r, np.nan).astype(np.float32)
+    if map_cache is not None:
+        map_cache[key] = out
+    return out
+
+
 def source_maps_perpixel(rig, camera, vcam, range_m):
     """Sampling map using the MEASURED range at each output pixel.
 
@@ -475,6 +572,12 @@ def main():
     ap.add_argument("--mid_authority", type=float, default=72.0)
     ap.add_argument("--temp", type=float, default=BLEND_TEMP_DEG)
     ap.add_argument("--gate", type=float, default=GATE_ABS_DIFF)
+    ap.add_argument("--vignette", action="store_true",
+                    help="fit one radial falloff curve from the overlap and "
+                         "divide it out of every camera before warping. This "
+                         "is what gain and bias could not reach: the measured "
+                         "ratio across the overlap is a 39-52%% monotonic "
+                         "ramp, and a constant cannot flatten a ramp.")
     ap.add_argument("--residual_flow", action="store_true",
                     help="after the calibrated per-pixel-depth projection, "
                          "measure what misalignment is LEFT in the overlap "
@@ -528,9 +631,55 @@ def main():
     w = hard = reach = None
     rectc = {}
     flows = {}
+    vig = None
+
+    if a.vignette:
+        print("fitting one vignette curve from the overlap...")
+        fr = ClipReader(rig, videos, a.start)
+        mid_i = len(rig.modules) // 2
+        samples = []
+        for _ in range(FIT_FRAMES):
+            src = fr.next(skip=30)
+            if not src:
+                break
+            wa, va, ca, mi = warp_all(rig, vcam, src, a.depth_m,
+                                      depth_by_module=dbm, map_cache=mc)
+            if mi not in wa:
+                continue
+            gm = cv2.cvtColor(wa[mi], cv2.COLOR_BGR2GRAY).astype(np.float64)
+            rm = rho_map(rig, rig.modules[mi].left.name, vcam,
+                         float(dbm.get(rig.modules[mi].name, a.depth_m)), mc)
+            for j in wa:
+                if j == mi:
+                    continue
+                ov = va[j] & va[mi]
+                gj = cv2.cvtColor(wa[j], cv2.COLOR_BGR2GRAY).astype(np.float64)
+                rj = rho_map(rig, rig.modules[j].left.name, vcam,
+                             float(dbm.get(rig.modules[j].name, a.depth_m)),
+                             mc)
+                sel = ov & (gj > 12) & (gm > 12)
+                if sel.sum() < 5000:
+                    continue
+                samples.append((rj[sel], rm[sel], gj[sel] / gm[sel]))
+        fr.close()
+        if samples:
+            vig, (r0, r1) = fit_vignette(samples)
+            rho = np.linspace(0, 1, 6)
+            print(f"  a={vig[0]:+.3f}  b={vig[1]:+.3f}   log-ratio rms "
+                  f"{r0:.4f} -> {r1:.4f}")
+            print("  gain at rho " + "  ".join(f"{x:.1f}:{g:.3f}" for x, g
+                  in zip(rho, vignette_gain(rho, vig))))
+            print("  One curve for all six -- same lens, same rig. A ratio "
+                  "only ever fixes the\n  DIFFERENCE between two radii, so "
+                  "per-camera curves would be unidentifiable.\n")
+        else:
+            print("  no usable overlap; vignette not fitted\n")
     writer = None
 
     def _warp_frame(sources):
+        if vig is not None:
+            sources = {n: flat_field(im, rig.cameras[n].K, vig)
+                       for n, im in sources.items()}
         rng_m = None
         if a.per_pixel_depth:
             from src.rig.wide_depth import wide_depth
