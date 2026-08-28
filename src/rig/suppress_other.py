@@ -146,10 +146,43 @@ MAX_STRAIGHTNESS = 0.97
 OWNER_OVERLAP_FRAC = 0.20
 
 
+# A pixel that is skin-coloured in this share of a recording's frames is not
+# a person. Nobody holds an arm in one place for minutes; a paper disc, a
+# cabinet and a conveyor edge do exactly that.
+STATIC_FRAC = 0.7
+
+
+def static_mask(frames, frac=STATIC_FRAC):
+    """Pixels that are skin-coloured in most frames of a recording. -> bool
+
+    THIS IS THE FILTER SINGLE-FRAME SHAPE COULD NOT PROVIDE, and the reason to
+    reach for it is that the shape cuts ran out of gap. Straightness worked
+    because real arms topped out at 0.974 and the straps sat at 0.992 -- a
+    real separation. A minimum aspect ratio does not: arms reach down to 1.84
+    at the 5th percentile and the paper disc sits at 1.7, so buying 45% of the
+    remaining false positives would cost 5% of real arms.
+
+    Persistence has no such overlap and needs no threshold fitted to one. A
+    colleague's arm enters, does something and leaves. A cabinet is in every
+    frame of the recording. Computed once per recording and reused, so it
+    costs nothing per frame."""
+    from src.rig.near_other_miner import skin_mask
+    acc = None
+    n = 0
+    for f in frames:
+        m = skin_mask(f) > 0
+        acc = m.astype(np.float32) if acc is None else acc + m
+        n += 1
+    if not n:
+        return None
+    return (acc / n) >= frac
+
+
 def other_components(rgb, owner_mask, min_area_frac=0.006,
                      max_area_frac=0.25, max_solidity=MAX_SOLIDITY,
                      require_border=MUST_TOUCH_BORDER,
-                     max_straightness=MAX_STRAIGHTNESS):
+                     max_straightness=MAX_STRAIGHTNESS,
+                     static=None, static_overlap=0.6):
     """-> (other mask, owner-protected mask, per-component reasons)
 
     OWNERSHIP IS DECIDED PER COMPONENT, NOT PER PIXEL, AND THAT IS THE WHOLE
@@ -224,6 +257,12 @@ def other_components(rgb, owner_mask, min_area_frac=0.006,
         if sol > max_solidity:
             why.append((a, f"solidity {sol:.2f} -- compact, not a limb", stat))
             continue
+        if static is not None:
+            ov_s = float((comp & static).sum()) / max(int(comp.sum()), 1)
+            if ov_s >= static_overlap:
+                why.append((a, f"static in {ov_s:.0%} of the component -- "
+                               f"furniture, not a person", stat))
+                continue
         if straight > max_straightness:
             why.append((a, f"straightness {straight:.3f} -- a strap or an "
                            f"edge, not a limb", stat))
@@ -311,6 +350,31 @@ def _self_test():
     chk(not oth[120:180, 200:260].any(),
         "a compact object touching no border is left alone entirely")
 
+    # Persistence: the same tan shape in every frame is furniture.
+    from src.rig.suppress_other import static_mask
+    # The arm MOVES between frames and the disc does not. A first version of
+    # this test held both still, so the arm was static too and was correctly
+    # excluded -- the test was wrong, not the filter.
+    seq = []
+    for k in range(6):
+        f_ = np.full((H, W, 3), (60, 90, 45), np.uint8)
+        dy = k * 18
+        f_[40 + dy:100 + dy, 0:60] = (110, 150, 200)     # arm, sweeping down
+        f_[100 + dy:150 + dy, 0:25] = (110, 150, 200)    # ...bent at the elbow
+        f_[10:70, 200:255] = (110, 150, 200)             # a disc, never moves
+        seq.append(f_)
+    stat = static_mask(seq)
+    chk(stat[20:60, 210:250].all(),
+        "the disc is in the static mask")
+    chk(not stat[40:100, 0:60].all(),
+        "...and a moving arm is not")
+    o6, _, _ = other_components(seq[0], np.zeros((H, W), bool),
+                                min_area_frac=0.004, static=stat)
+    chk(not o6[10:70, 200:255].any(),
+        "a shape present in every frame is furniture and is left alone")
+    chk(o6[40:150, 0:60].any(),
+        "...while an arm in the same frames is still suppressed")
+
     o5, a5 = suppress(rgb, np.zeros((H, W), bool))
     chk(np.array_equal(o5, rgb) and a5.max() == 0,
         "an empty mask leaves the frame exactly alone")
@@ -338,6 +402,11 @@ def main():
     ap.add_argument("--dilate", type=int, default=DILATE_PX)
     ap.add_argument("--feather", type=int, default=FEATHER_PX)
     ap.add_argument("--sigma", type=float, default=BLUR_SIGMA)
+    ap.add_argument("--static_from", type=int, default=0,
+                    help="build a per-recording static mask from this many of "
+                         "its frames and exclude anything that sits inside "
+                         "it. Persistence is what separates a paper disc from "
+                         "an arm; shape has run out of gap.")
     ap.add_argument("--limit", type=int, default=0)
     a = ap.parse_args()
     if a.self_test:
@@ -355,6 +424,23 @@ def main():
     os.makedirs(a.out, exist_ok=True)
     fracs, reasons, crops, blurred_stats = [], {}, [], []
     print(f"  dilate {a.dilate}px  feather {a.feather}px  sigma {a.sigma}\n")
+    statics = {}
+    if a.static_from:
+        by_rec = {}
+        for r in rows:
+            by_rec.setdefault(r["recording"], []).append(r)
+        for rid, rs in by_rec.items():
+            imgs = []
+            for r in rs[:a.static_from]:
+                st = f"{r['recording']}_f{int(r['frame']):06d}.png"
+                im = cv2.imread(os.path.join(a.src, "images", st))
+                if im is not None:
+                    imgs.append(im)
+            if len(imgs) >= 3:
+                statics[rid] = static_mask(imgs)
+                print(f"  {rid}: static over {len(imgs)} frames, "
+                      f"{statics[rid].mean():.1%} of the frame")
+        print()
     for r in rows:
         stem = f"{r['recording']}_f{int(r['frame']):06d}.png"
         rgb = cv2.imread(os.path.join(a.src, "images", stem))
@@ -363,7 +449,8 @@ def main():
         if rgb is None or m is None:
             continue
         owner = m == 1
-        other, protect, why = other_components(rgb, owner)
+        other, protect, why = other_components(
+            rgb, owner, static=statics.get(r["recording"]))
         out, alpha = suppress(rgb, other, a.dilate, a.feather, a.sigma,
                               protect=protect)
         for item in why:
