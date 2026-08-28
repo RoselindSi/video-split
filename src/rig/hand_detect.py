@@ -41,19 +41,25 @@ DETECTOR = "/shared/models/HaWoR/weights/external/detector.pt"
 IMGSZ = 512
 MIN_CONF = 0.35
 
-# How far past the wrist the forearm ray is followed before asking which edge
-# it left by. Expressed in hand-widths, because a hand near the lens is large
-# and one across the bench is small.
-RAY_HAND_WIDTHS = 40.0
+# The forearm ray leaves the frame at some point; the wearer's leaves LOW.
+#
+# ASKING WHICH EDGE IT LEFT BY WAS TOO BRITTLE AT THE CORNERS. The wearer's
+# right arm enters from the lower right, and if the hand is far enough over,
+# the ray reaches the right edge before it reaches the bottom one -- so an arm
+# that is plainly the wearer's was reported as "exits right" and blurred. It
+# happened on 4 of 48 real detections. Where the ray leaves is an accident of
+# the corner; how far DOWN it leaves is the thing that actually distinguishes
+# an arm coming up from the wearer's body from one reaching in across the
+# bench, and it treats the bottom edge and the lower side edges alike.
+OWNER_EXIT_Y_FRAC = 0.55
 
 
 def forearm_exit(kp, shape):
-    """Which frame edge the forearm leaves by. -> ('bottom'|'left'|'right'|
-    'top'|None, exit point)
+    """Where the forearm leaves the frame. -> (edge, exit point)
 
-    The ray runs from the fingers through the wrist and outward. A hand
-    belonging to the wearer is on the end of an arm that leaves the frame at
-    the bottom; a colleague's leaves by a side or the top."""
+    The ray runs from the fingers through the wrist and outward. The edge is
+    reported for diagnosis; `is_owner` decides on the exit point's HEIGHT,
+    because the corners make the edge misleading."""
     kp = np.asarray(kp, float)
     if kp.shape[0] < 21 or not np.isfinite(kp).all():
         return None, None
@@ -78,6 +84,17 @@ def forearm_exit(kp, shape):
     return edge, wrist + d * t
 
 
+def is_owner(exit_pt, shape, y_frac=OWNER_EXIT_Y_FRAC):
+    """-> True if the forearm leaves through the lower part of the border.
+
+    One number, and it covers the bottom edge and the lower halves of both
+    side edges together -- which is the shape of "towards the wearer's body"
+    and is what four misclassified right hands were missing."""
+    if exit_pt is None:
+        return False
+    return float(exit_pt[1]) >= y_frac * shape[0]
+
+
 def detect(model, rgb, imgsz=IMGSZ, min_conf=MIN_CONF):
     """-> [{'box','kp','side','conf','edge'}] for one frame."""
     res = model(rgb, imgsz=imgsz, verbose=False)[0]
@@ -92,11 +109,12 @@ def detect(model, rgb, imgsz=IMGSZ, min_conf=MIN_CONF):
     for b, c, k, kp in zip(boxes, conf, cls, kps):
         if c < min_conf:
             continue
-        edge, _ = forearm_exit(kp, rgb.shape) if kp is not None else (None, None)
+        edge, pt = (forearm_exit(kp, rgb.shape) if kp is not None
+                    else (None, None))
         out.append({"box": b.astype(int), "kp": kp, "conf": float(c),
-                    "side": model.names.get(int(c_), str(c_))
-                    if (c_ := int(k)) is not None else "?",
-                    "edge": edge})
+                    "side": model.names.get(int(k), str(int(k))),
+                    "edge": edge, "exit": pt,
+                    "owner": is_owner(pt, rgb.shape)})
     return out
 
 
@@ -110,7 +128,7 @@ def split_owner(dets, shape, max_owner=2):
     H, W = shape[:2]
     own, oth = [], []
     for d in dets:
-        (own if d.get("edge") == "bottom" else oth).append(d)
+        (own if d.get("owner") else oth).append(d)
     if len(own) > max_owner:
         def downness(d):
             kp = np.asarray(d["kp"], float)
@@ -204,15 +222,27 @@ def _self_test():
     chk(forearm_exit(np.full((21, 2), np.nan), (H, W))[0] is None,
         "NaN keypoints return nothing")
 
-    d_own = [{"kp": hand((700, 700), (700, 500)), "edge": "bottom"},
-             {"kp": hand((900, 700), (900, 500)), "edge": "bottom"}]
-    d_oth = [{"kp": hand((400, 400), (700, 400)), "edge": "left"}]
+    # The case that actually failed: the wearer's right hand, far over, its
+    # forearm leaving through the LOWER RIGHT corner.
+    kp_lr = hand((1450, 620), (1250, 430))
+    e_lr, pt_lr = forearm_exit(kp_lr, (H, W))
+    chk(is_owner(pt_lr, (H, W)),
+        f"a right hand exiting the lower {e_lr} edge at y={pt_lr[1]:.0f} is "
+        f"still the wearer's")
+    kp_ur = hand((1450, 300), (1250, 380))
+    e_ur, pt_ur = forearm_exit(kp_ur, (H, W))
+    chk(not is_owner(pt_ur, (H, W)),
+        f"...and one exiting the UPPER {e_ur} edge at y={pt_ur[1]:.0f} is not")
+
+    d_own = [{"kp": hand((700, 700), (700, 500)), "owner": True},
+             {"kp": hand((900, 700), (900, 500)), "owner": True}]
+    d_oth = [{"kp": hand((400, 400), (700, 400)), "owner": False}]
     own, oth = split_owner(d_own + d_oth, (H, W))
     chk(len(own) == 2 and len(oth) == 1,
         "two from below are the wearer's, one from the side is not")
 
     # A third from below: the two most straight-down win, not the first two.
-    slanted = {"kp": hand((300, 700), (600, 690)), "edge": "bottom"}
+    slanted = {"kp": hand((300, 700), (600, 690)), "owner": True}
     own2, oth2 = split_owner([slanted] + d_own, (H, W))
     # `not in` compares dicts holding numpy arrays with ==, which is
     # ambiguous; identity is what is meant here anyway.
