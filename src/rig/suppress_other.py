@@ -168,7 +168,7 @@ def other_components(rgb, owner_mask, min_area_frac=0.006,
         # reliable than the mask it was guarding.
         if B:
             protect |= comp
-            why.append((a, "owner: enters from the bottom"))
+            why.append((a, "owner: enters from the bottom", None))
             continue
         ov = float((comp & own).sum()) / max(int(comp.sum()), 1)
         if ov >= OWNER_OVERLAP_FRAC:
@@ -176,22 +176,36 @@ def other_components(rgb, owner_mask, min_area_frac=0.006,
             # clear of every border. The mask is the only thing that can claim
             # those, so it is used here and only here.
             protect |= comp
-            why.append((a, "owner: claimed by the mask"))
+            why.append((a, "owner: claimed by the mask", None))
             continue
         if not (min_area_frac <= a <= max_area_frac):
-            why.append((a, "size"))
+            why.append((a, "size", None))
             continue
         if require_border and not (L or R or T):
-            why.append((a, "touches no border -- attached to nobody"))
+            why.append((a, "touches no border -- attached to nobody", None))
             continue
         ys, xs = np.where(comp)
         pts = np.stack([xs, ys], 1).astype(np.float32)
         sol = comp.sum() / max(cv2.contourArea(cv2.convexHull(pts)), 1e-6)
+        (_, _), (rw, rh), _ = cv2.minAreaRect(pts)
+        ar = max(rw, rh) / max(min(rw, rh), 1e-6)
+        # Straightness: how well the component's pixels fit a single line. A
+        # pillar or a strap is straight; an arm bends at the elbow and at the
+        # wrist. Reported rather than thresholded -- the threshold gets picked
+        # from what the failures actually measure, the way the turntable's
+        # was, not from what seems reasonable now.
+        c = pts - pts.mean(0)
+        ev = np.linalg.eigvalsh(np.cov(c.T)) if len(c) > 2 else np.array([1, 1])
+        straight = float(1.0 - ev.min() / max(ev.max(), 1e-9))
+        stat = {"area": a, "sol": float(sol), "ar": float(ar),
+                "straight": straight, "bbox": (int(x), int(y), int(w), int(h)),
+                "border": "".join(t for t, f in
+                                  (("L", L), ("R", R), ("T", T), ("B", B)) if f)}
         if sol > max_solidity:
-            why.append((a, f"solidity {sol:.2f} -- compact, not a limb"))
+            why.append((a, f"solidity {sol:.2f} -- compact, not a limb", stat))
             continue
         other |= comp
-        why.append((a, "OTHER"))
+        why.append((a, "OTHER", stat))
     return other, protect, why
 
 
@@ -309,7 +323,7 @@ def main():
     if a.limit:
         rows = rows[:a.limit]
     os.makedirs(a.out, exist_ok=True)
-    fracs, reasons = [], {}
+    fracs, reasons, crops, blurred_stats = [], {}, [], []
     print(f"  dilate {a.dilate}px  feather {a.feather}px  sigma {a.sigma}\n")
     for r in rows:
         stem = f"{r['recording']}_f{int(r['frame']):06d}.png"
@@ -322,8 +336,18 @@ def main():
         other, protect, why = other_components(rgb, owner)
         out, alpha = suppress(rgb, other, a.dilate, a.feather, a.sigma,
                               protect=protect)
-        for ar, w in why:
+        for item in why:
+            ar, w = item[0], item[1]
             reasons[w] = reasons.get(w, 0) + 1
+            st = item[2] if len(item) > 2 else None
+            if w == "OTHER" and st is not None:
+                bx, by, bw, bh = st["bbox"]
+                pad = int(max(bw, bh) * 0.25)
+                y0, y1 = max(0, by-pad), min(rgb.shape[0], by+bh+pad)
+                x0, x1 = max(0, bx-pad), min(rgb.shape[1], bx+bw+pad)
+                crops.append((cv2.resize(rgb[y0:y1, x0:x1], (240, 240)), st))
+                blurred_stats.append(dict(stem=stem, **{k: v for k, v in
+                                     st.items() if k != "bbox"}))
         fracs.append(float((alpha > 0.5).mean()))
         cv2.imwrite(os.path.join(a.out, stem.replace(".png", ".jpg")), out,
                     [cv2.IMWRITE_JPEG_QUALITY, 90])
@@ -333,6 +357,30 @@ def main():
     print(f"  {len(f)} frames, suppressed fraction: median {np.median(f):.2%}"
           f"  p10 {np.percentile(f,10):.2%}  p90 {np.percentile(f,90):.2%}"
           f"  std {f.std():.3%}")
+    if crops:
+        import math
+        cols = 6
+        rowsn = math.ceil(len(crops) / cols)
+        sheet = np.zeros((rowsn*240, cols*240, 3), np.uint8)
+        for j, (c, st) in enumerate(crops):
+            cv2.rectangle(c, (0, 0), (240, 40), (0, 0, 0), -1)
+            cv2.putText(c, f"sol{st['sol']:.2f} ar{st['ar']:.1f}", (4, 16),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 255, 255), 1)
+            cv2.putText(c, f"str{st['straight']:.2f} {st['border']} "
+                        f"{st['area']:.1%}", (4, 33),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 255, 255), 1)
+            r_, c_ = divmod(j, cols)
+            sheet[r_*240:(r_+1)*240, c_*240:(c_+1)*240] = c
+        cv2.imwrite(os.path.join(a.out, "_blurred_components.jpg"), sheet,
+                    [cv2.IMWRITE_JPEG_QUALITY, 90])
+        with open(os.path.join(a.out, "_blurred_components.csv"), "w",
+                  newline="", encoding="utf-8") as f:
+            w_ = csv.DictWriter(f, fieldnames=list(blurred_stats[0].keys()))
+            w_.writeheader(); w_.writerows(blurred_stats)
+        print(f"\n  {len(crops)} components were blurred -- every one of them "
+              f"is cropped into\n  _blurred_components.jpg with its "
+              f"statistics. That is the picture to look at:\n  the filter for "
+              f"whatever is still wrong gets chosen from what they measure.")
     print("\n  components by verdict: " + ", ".join(
         f"{k} {v}" for k, v in sorted(reasons.items(), key=lambda x: -x[1])))
     print("\n  READ THE SPREAD, NOT THE MEDIAN. A fraction that barely moves "
