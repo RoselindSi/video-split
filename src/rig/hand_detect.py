@@ -159,27 +159,39 @@ def detect(model, rgb, imgsz=IMGSZ, min_conf=MIN_CONF, clf=None):
     return out
 
 
-def split_owner(dets, shape, max_owner=2):
-    """-> (owner dets, other dets).
+def split_owner(dets, shape, max_owner=2, verbose=False):
+    """-> (owner dets, other dets). A wearer has two hands.
 
-    The wearer has two arms and they come from below. A third hand entering
-    from the bottom is a person standing beside the wearer, which happens, and
-    the cap keeps the two whose ray exits closest to straight down rather than
-    resolving it by list order."""
-    H, W = shape[:2]
+    THE CAP RANKS BY THE CLASSIFIER'S PROBABILITY, NOT BY GEOMETRY. It used to
+    sort by how straight down the forearm pointed and demote the rest, which
+    meant a hand-written geometric rule silently overruled the learned
+    decision -- using the very quantity the classifier was brought in to
+    replace. It fired on a real frame: three hands, the classifier called the
+    third the wearer's at p=0.996, and the cap blurred it anyway without
+    saying so.
+
+    The cap itself stays, because a person has two hands and a third
+    confident `owner` is a fact about the model rather than about the scene.
+    It now demotes the LEAST confident, and it announces itself."""
     own, oth = [], []
     for d in dets:
         (own if d.get("owner") else oth).append(d)
     if len(own) > max_owner:
-        def downness(d):
+        def rank(d):
+            if "owner_p" in d:
+                return float(d["owner_p"])
             kp = np.asarray(d["kp"], float)
             v = kp[WRIST] - kp[FINGERS].mean(0)
-            # y grows DOWNWARD in image coordinates, so straight down is
-            # +v[1]. The negated version sorted the least-downward arm to the
-            # front and kept exactly the wrong two.
-            return v[1] / max(np.linalg.norm(v), 1e-9)    # +1 is straight down
-        own.sort(key=downness, reverse=True)
-        oth += own[max_owner:]
+            # Fallback for detections made without a classifier: y grows
+            # DOWNWARD, so straight down is +v[1].
+            return v[1] / max(np.linalg.norm(v), 1e-9)
+        own.sort(key=rank, reverse=True)
+        demoted = own[max_owner:]
+        if verbose:
+            print(f"    !! {len(own)} hands called the wearer's; the cap "
+                  f"demotes {len(demoted)} "
+                  f"(p={[round(float(d.get('owner_p', -1)), 3) for d in demoted]})")
+        oth += demoted
         own = own[:max_owner]
     return own, oth
 
@@ -347,6 +359,17 @@ def _self_test():
     chk(len(own2) == 2 and all(d is not slanted for d in own2),
         "a third arm from below is resolved by direction, not by list order")
 
+    # The cap must follow the classifier when there is one, not the geometry.
+    hi = {"kp": hand((700, 700), (700, 500)), "owner": True, "owner_p": 0.99}
+    mid = {"kp": hand((900, 700), (900, 500)), "owner": True, "owner_p": 0.95}
+    lo = {"kp": hand((1200, 690), (1150, 500)), "owner": True,
+          "owner_p": 0.55}
+    o3, x3 = split_owner([lo, hi, mid], (H, W))
+    chk(len(o3) == 2 and all(d is not lo for d in o3),
+        "the cap demotes the LEAST CONFIDENT, not the least straight-down")
+    chk(len(x3) == 1 and x3[0] is lo,
+        "...and the demoted one is the one the classifier was least sure of")
+
     print(f"\n  {sum(ok)}/{len(ok)} cases pass.")
     print("  Ownership is read off the wrist, so it does not depend on how "
           "well anything\n  was segmented -- which is what the old "
@@ -449,7 +472,7 @@ def main():
     for p in imgs:
         rgb = cv2.imread(p)
         dets = detect(model, rgb, min_conf=a.min_conf, clf=clf)
-        own, oth = split_owner(dets, rgb.shape)
+        own, oth = split_owner(dets, rgb.shape, verbose=True)
         for d in dets:
             tally[d.get("edge")] = tally.get(d.get("edge"), 0) + 1
             if d.get("owner") != d.get("rule_owner"):
