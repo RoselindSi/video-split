@@ -76,8 +76,14 @@ def features(det, shape):
 
 
 def extract(rig, videos, out_dir, start, n_frames, model, stride=15,
-            crop_px=192, tag=""):
-    """Render frames, detect, and write one crop plus one row per hand."""
+            crop_px=192, tag="", verbose=True):
+    """Render frames, detect, and write one crop plus one row per hand.
+
+    Prints as it goes. The first version printed only on completion, and
+    since it decodes stride*n frames from three videos before it is done --
+    2700 for the defaults -- silence for ten minutes is indistinguishable
+    from a hang."""
+    import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
     from src.rig.render_wide import render
@@ -89,6 +95,7 @@ def extract(rig, videos, out_dir, start, n_frames, model, stride=15,
     os.makedirs(os.path.join(out_dir, "crops"), exist_ok=True)
     os.makedirs(os.path.join(out_dir, "context"), exist_ok=True)
     mc, rows = {}, []
+    t0 = time.time()
     for k in range(n_frames):
         rgb = None
         src = rd.next(skip=(stride - 1) if k else 0)
@@ -126,8 +133,13 @@ def extract(rig, videos, out_dir, start, n_frames, model, stride=15,
             for name, v in zip(FEATURES, features(d, rgb.shape)):
                 row[name] = float(v)
             rows.append(row)
-        rd.close() if False else None
+        if verbose and ((k + 1) % 10 == 0 or k + 1 == n_frames):
+            el = time.time() - t0
+            print(f"    [{k+1}/{n_frames}] {len(rows)} hands, {el:.0f}s, "
+                  f"{el/(k+1)*(n_frames-k-1):.0f}s left", flush=True)
     rd.close()
+    if not rows:
+        raise SystemExit(f"no hands found in {n_frames} frames from {start}")
     with open(os.path.join(out_dir, "hands.csv"), "w", newline="",
               encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
