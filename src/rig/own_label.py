@@ -148,6 +148,99 @@ def extract(rig, videos, out_dir, start, n_frames, model, stride=15,
     return rows
 
 
+def mine_disagreements(rig, videos, out_dir, start, n_frames, model, clf,
+                       stride=15, crop_px=192, tag="", verbose=True):
+    """Extract only the hands where the classifier and the rule disagree.
+
+    MINED, SO TRAINING ONLY. Selecting frames by where a model is unsure
+    teaches it its own blind spots and measures its own idea of difficulty; a
+    score computed on mined frames is about the miner. The blind packages stay
+    the evaluation set. This is the same split the census line already had to
+    learn once, and it cost an eval split to learn it.
+
+    Why it is worth mining at all: on 148 blind labels the two agree
+    everywhere, so blind sampling would need thousands of hands to turn up the
+    cases that separate them. The first one it did turn up -- a colleague's
+    hand entering from the upper left, which the classifier called the
+    wearer's at p=0.996 -- is exactly the combination the training set has
+    none of: `edge=left` appears 12 times there and is `owner` every time."""
+    import time
+    import cv2
+    from src.rig.geometry import VirtualWideCamera
+    from src.rig.render_wide import render
+    from src.rig.seam_fix import ClipReader
+    from src.rig.hand_detect import detect
+
+    vcam = VirtualWideCamera.from_rig(rig)
+    rd = ClipReader(rig, videos, start)
+    os.makedirs(os.path.join(out_dir, "crops"), exist_ok=True)
+    os.makedirs(os.path.join(out_dir, "context"), exist_ok=True)
+    mc, rows, t0, seen = {}, [], time.time(), 0
+    for k in range(n_frames):
+        src = rd.next(skip=(stride - 1) if k else 0)
+        if not src:
+            break
+        try:
+            rgb, _, _, _ = render(rig, vcam, src, 0.6, map_cache=mc)
+        except TypeError:
+            rgb, _, _, _ = render(rig, vcam, src, 0.6)
+        dets = detect(model, rgb, clf=clf)
+        seen += len(dets)
+        H, W = rgb.shape[:2]
+        for j, d in enumerate(dets):
+            if bool(d.get("owner")) == bool(d.get("rule_owner")):
+                continue
+            stem = f"{tag}f{start + k * stride:06d}_h{j}"
+            _write_sample(out_dir, stem, rgb, d, crop_px)
+            row = {"stem": stem, "frame": start + k * stride, "hand": j,
+                   "side": d.get("side", ""), "conf": round(d["conf"], 3),
+                   "edge": d.get("edge") or "",
+                   "rule_owner": int(bool(d.get("rule_owner"))),
+                   "clf_owner": int(bool(d.get("owner"))),
+                   "clf_p": round(float(d.get("owner_p", -1)), 4),
+                   "label": ""}
+            for name, v in zip(FEATURES, features(d, rgb.shape)):
+                row[name] = float(v)
+            rows.append(row)
+        if verbose and ((k + 1) % 20 == 0 or k + 1 == n_frames):
+            el = time.time() - t0
+            print(f"    [{k+1}/{n_frames}] {seen} hands, {len(rows)} "
+                  f"disagreements, {el:.0f}s", flush=True)
+    rd.close()
+    if not rows:
+        print(f"  no disagreements in {seen} hands. The two decide alike "
+              f"here; there is\n  nothing to mine and nothing to learn from "
+              f"this segment.")
+        return []
+    with open(os.path.join(out_dir, "hands.csv"), "w", newline="",
+              encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+        w.writeheader()
+        w.writerows(rows)
+    return rows
+
+
+def _write_sample(out_dir, stem, rgb, d, crop_px):
+    """The crop and the whole frame with this hand marked."""
+    import cv2
+    H, W = rgb.shape[:2]
+    x0, y0, x1, y1 = d["box"]
+    pad = int(max(x1 - x0, y1 - y0) * 0.6)
+    cx0, cy0 = max(0, x0 - pad), max(0, y0 - pad)
+    cx1, cy1 = min(W, x1 + pad), min(H, y1 + pad)
+    cv2.imwrite(os.path.join(out_dir, "crops", stem + ".jpg"),
+                cv2.resize(rgb[cy0:cy1, cx0:cx1], (crop_px, crop_px)),
+                [cv2.IMWRITE_JPEG_QUALITY, 90])
+    ctx = rgb.copy()
+    cv2.rectangle(ctx, (x0, y0), (x1, y1), (0, 255, 255), 4)
+    if d.get("exit") is not None and np.isfinite(d["exit"]).all():
+        cv2.line(ctx, tuple(np.asarray(d["kp"][0], int)),
+                 tuple(np.asarray(d["exit"], int)), (255, 0, 255), 3)
+    cv2.imwrite(os.path.join(out_dir, "context", stem + ".jpg"),
+                cv2.resize(ctx, (900, int(900 * H / W))),
+                [cv2.IMWRITE_JPEG_QUALITY, 82])
+
+
 def label_ui(pkg):
     """Keyboard labelling. o = mine, x = not mine, s = skip, u = undo, q."""
     import cv2
@@ -304,7 +397,9 @@ def main():
     ap = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("mode", choices=("extract", "label", "report", "train"))
+    ap.add_argument("mode", choices=("extract", "mine", "label", "report",
+                                     "train"))
+    ap.add_argument("--clf", help="mine only: the classifier to disagree with")
     ap.add_argument("--pkg", required=True)
     ap.add_argument("--calibration")
     ap.add_argument("--video", action="append", default=[],
@@ -322,6 +417,25 @@ def main():
     ap.add_argument("--weights",
                     default="/shared/models/HaWoR/weights/external/detector.pt")
     a = ap.parse_args()
+
+    if a.mode == "mine":
+        if not a.calibration or not a.video or not a.clf:
+            ap.error("mine needs --calibration, --video and --clf")
+        from ultralytics import YOLO
+        from src.rig.calibration import RigCalibration
+        from src.rig.hand_detect import load_owner_clf
+        rig = RigCalibration(a.calibration)
+        rows = mine_disagreements(
+            rig, dict(s.split("=", 1) for s in a.video), a.pkg, a.start, a.n,
+            YOLO(a.weights), load_owner_clf(a.clf), a.stride, tag=a.tag)
+        if rows:
+            import collections
+            c = collections.Counter(r["edge"] for r in rows)
+            print(f"\n  {len(rows)} disagreements -> {a.pkg}   exits {dict(c)}")
+            print("  MINED: these are training data only. A score computed on "
+                  "frames chosen by\n  where a model was unsure is a score "
+                  "about the model's own doubts.")
+        return
 
     if a.mode == "extract":
         if not a.calibration or not a.video:
