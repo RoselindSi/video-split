@@ -253,6 +253,14 @@ def train(rows, seed=0):
     lab = [r for r in rows if r.get("label") in ("owner", "other")]
     if len(lab) < 40:
         raise SystemExit(f"only {len(lab)} labels; this needs a few hundred")
+    n_oth = sum(1 for r in lab if r["label"] == "other")
+    if n_oth == 0 or n_oth == len(lab):
+        raise SystemExit(
+            f"every label is the same class ({len(lab)} of them). A "
+            f"classifier fitted to\n  one class predicts that class and "
+            f"scores 100%, which is a fact about the\n  labels and not about "
+            f"the model. Label a package that contains both --\n  the rule's "
+            f"`rule_owner` column shows which ones might.")
     X = np.array([[float(r[f]) for f in FEATURES] for r in lab], np.float32)
     y = np.array([r["label"] == "owner" for r in lab], int)
     # Grouped by FRAME: two hands in one frame are not independent, and a
@@ -269,11 +277,22 @@ def train(rows, seed=0):
         m.fit(X[tr], y[tr])
         accs.append(float((m.predict(X[te]) == y[te]).mean()))
         rule_accs.append(float((rule[te] == y[te]).mean()))
+    # Does it differ from the rule on held-out data, or has it just learned
+    # the rule? With 100% agreement on the labels the two are indistinguishable
+    # by accuracy alone, and the honest way to say so is to count where their
+    # PREDICTIONS differ rather than to report two identical scores.
+    diff = 0
+    for tr, te in GroupKFold(n_splits=n_split).split(X, y, g):
+        m = GradientBoostingClassifier(random_state=seed, max_depth=2,
+                                       n_estimators=120).fit(X[tr], y[tr])
+        diff += int((m.predict(X[te]) != rule[te]).sum())
     final = GradientBoostingClassifier(random_state=seed, max_depth=2,
                                        n_estimators=120).fit(X, y)
     imp = sorted(zip(FEATURES, final.feature_importances_),
                  key=lambda kv: -kv[1])[:6]
-    return final, {"n": len(lab), "owner_frac": float(y.mean()),
+    return final, {"n": len(lab), "n_other": int(n_oth),
+                   "differs_from_rule": diff,
+                   "owner_frac": float(y.mean()),
                    "cv_acc": float(np.mean(accs)),
                    "cv_acc_std": float(np.std(accs)),
                    "rule_acc": float(np.mean(rule_accs)),
@@ -294,6 +313,12 @@ def main():
     ap.add_argument("--n", type=int, default=FRAMES_PER_RECORDING)
     ap.add_argument("--stride", type=int, default=15)
     ap.add_argument("--tag", default="")
+    ap.add_argument("--also", action="append", default=[],
+                    help="additional package directories to pool. Ownership "
+                         "varies by workstation, so one recording's labels "
+                         "describe one workstation.")
+    ap.add_argument("--out", help="where to write own_clf.pkl (default: "
+                                  "inside --pkg)")
     ap.add_argument("--weights",
                     default="/shared/models/HaWoR/weights/external/detector.pt")
     a = ap.parse_args()
@@ -318,6 +343,9 @@ def main():
 
     rows = list(csv.DictReader(open(os.path.join(a.pkg, "hands.csv"),
                                     encoding="utf-8-sig")))
+    for extra in a.also:
+        rows += list(csv.DictReader(open(os.path.join(extra, "hands.csv"),
+                                         encoding="utf-8-sig")))
     if a.mode == "label":
         label_ui(a.pkg)
     elif a.mode == "report":
@@ -327,17 +355,26 @@ def main():
         import pickle
         m, rep = train(rows)
         report_rule(rows)
-        print(f"\n  {rep['n']} labels, {rep['owner_frac']:.0%} owner, "
+        print(f"\n  {rep['n']} labels ({rep['n_other']} other), "
+              f"{rep['owner_frac']:.0%} owner, "
               f"{rep['folds']}-fold grouped BY FRAME")
         print(f"  learned  {rep['cv_acc']:.3f} +/- {rep['cv_acc_std']:.3f}")
         print(f"  rule     {rep['rule_acc']:.3f}")
+        print(f"  the two make DIFFERENT predictions on "
+              f"{rep['differs_from_rule']} of {rep['n']} held-out hands")
+        if rep["differs_from_rule"] == 0:
+            print("    -- so the classifier has reproduced the rule exactly. "
+                  "It will behave\n       identically until it is given "
+                  "labels the rule gets wrong.")
         print(f"  top features: " + ", ".join(f"{k} {v:.2f}"
                                               for k, v in rep["top_features"]))
-        with open(os.path.join(a.pkg, "own_clf.pkl"), "wb") as f:
+        outp = a.out or os.path.join(a.pkg, "own_clf.pkl")
+        os.makedirs(os.path.dirname(outp) or ".", exist_ok=True)
+        with open(outp, "wb") as f:
             pickle.dump({"model": m, "features": FEATURES}, f)
-        json.dump(rep, open(os.path.join(a.pkg, "own_clf.json"), "w"),
+        json.dump(rep, open(outp.replace(".pkl", ".json"), "w"),
                   indent=1, default=float)
-        print(f"\n  wrote {a.pkg}/own_clf.pkl")
+        print(f"\n  wrote {outp}")
         print("  The comparison that matters is learned vs rule on the SAME "
               "held-out frames.\n  If they tie, the rule was fine and the "
               "labels bought a measurement rather\n  than a model -- which is "

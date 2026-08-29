@@ -30,6 +30,8 @@ lacked was a prompt from something that knew what it was pointing at.
 """
 from __future__ import annotations
 
+import os
+
 import numpy as np
 
 # MANO / WiLoR keypoint layout: 0 is the wrist, then thumb, index, middle,
@@ -101,8 +103,33 @@ def is_owner(exit_pt, shape, y_frac=OWNER_EXIT_Y_FRAC):
     return float(exit_pt[1]) >= y_frac * shape[0]
 
 
-def detect(model, rgb, imgsz=IMGSZ, min_conf=MIN_CONF):
-    """-> [{'box','kp','side','conf','edge'}] for one frame."""
+def load_owner_clf(path):
+    """-> {'model','features'} or None. Missing is not an error: the rule is
+    the fallback and it is the thing being replaced, not a placeholder."""
+    import pickle
+    if not path or not os.path.exists(path):
+        return None
+    with open(path, "rb") as f:
+        return pickle.load(f)
+
+
+def classify_owner(clf, det, shape):
+    """-> (is_owner, probability). The classifier decides; the rule's verdict
+    is left in the detection beside it so the two can be compared on live
+    data, not only on the labelled set."""
+    from src.rig.own_label import features
+    x = features(det, shape)[None]
+    p = float(clf["model"].predict_proba(x)[0, 1])
+    return p >= 0.5, p
+
+
+def detect(model, rgb, imgsz=IMGSZ, min_conf=MIN_CONF, clf=None):
+    """-> [{'box','kp','side','conf','edge','owner','owner_p'}] for one frame.
+
+    `clf` decides ownership when it is supplied. The geometric verdict stays
+    in `rule_owner` regardless: on the 268 hands labelled so far the two agree
+    everywhere, so the day they disagree is the day something new is in shot,
+    and that is worth seeing rather than silently overriding."""
     res = model(rgb, imgsz=imgsz, verbose=False)[0]
     out = []
     if res.boxes is None or len(res.boxes) == 0:
@@ -117,10 +144,18 @@ def detect(model, rgb, imgsz=IMGSZ, min_conf=MIN_CONF):
             continue
         edge, pt = (forearm_exit(kp, rgb.shape) if kp is not None
                     else (None, None))
-        out.append({"box": b.astype(int), "kp": kp, "conf": float(c),
-                    "side": model.names.get(int(k), str(int(k))),
-                    "edge": edge, "exit": pt,
-                    "owner": is_owner(pt, rgb.shape)})
+        d = {"box": b.astype(int), "kp": kp, "conf": float(c),
+             "side": model.names.get(int(k), str(int(k))),
+             "edge": edge, "exit": pt,
+             "rule_owner": is_owner(pt, rgb.shape)}
+        d["owner"] = d["rule_owner"]
+        d["owner_p"] = float(d["rule_owner"])
+        if clf is not None:
+            try:
+                d["owner"], d["owner_p"] = classify_owner(clf, d, rgb.shape)
+            except Exception:
+                pass                      # a broken model must not lose a frame
+        out.append(d)
     return out
 
 
@@ -340,6 +375,8 @@ def main():
                     metavar="FILEKEY=PATH")
     ap.add_argument("--start", type=int, default=3000)
     ap.add_argument("--n", type=int, default=150)
+    ap.add_argument("--clf", help="an own_clf.pkl from own_label. Without "
+                                  "it the geometric rule decides.")
     ap.add_argument("--min_conf", type=float, default=MIN_CONF,
                     help="real hands score 0.83-0.87 here; a pink box scored "
                          "enough to pass 0.35")
@@ -402,17 +439,22 @@ def main():
         raise SystemExit(f"no images under {a.src}")
     os.makedirs(a.out, exist_ok=True)
     model = YOLO(a.weights)
-    print(f"  {len(imgs)} frames, detector {os.path.basename(a.weights)}\n")
+    clf = load_owner_clf(a.clf)
+    print(f"  {len(imgs)} frames, detector {os.path.basename(a.weights)}, "
+          f"ownership by {'classifier' if clf else 'the geometric rule'}\n")
 
-    tally = {}
+    tally, disagree = {}, []
     confs = {"owner": [], "other": []}
     allconf = []
     for p in imgs:
         rgb = cv2.imread(p)
-        dets = detect(model, rgb, min_conf=a.min_conf)
+        dets = detect(model, rgb, min_conf=a.min_conf, clf=clf)
         own, oth = split_owner(dets, rgb.shape)
         for d in dets:
             tally[d.get("edge")] = tally.get(d.get("edge"), 0) + 1
+            if d.get("owner") != d.get("rule_owner"):
+                disagree.append((os.path.basename(p), d.get("edge"),
+                                 round(d.get("owner_p", 0.0), 3)))
         for d in own:
             confs["owner"].append(d["conf"])
         for d in oth:
@@ -433,6 +475,11 @@ def main():
               f"owner {len(own)}  other {len(oth)}  "
               f"suppressed {(alpha>0.5).mean():.2%}")
     print(f"\n  forearm exits: {tally}")
+    if clf is not None:
+        print(f"  classifier disagreed with the rule on {len(disagree)} "
+              f"detections")
+        for x in disagree[:8]:
+            print(f"    {x[0]}  exit {x[1]}  p(owner)={x[2]}")
     for k, v in confs.items():
         if v:
             v = np.array(v)
