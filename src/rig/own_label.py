@@ -307,6 +307,93 @@ def label_ui(pkg):
     print(f"\n  {n} labelled, saved to {path}")
 
 
+def label_grid(pkg, cols=3, rows_n=2, cell=460):
+    """Six at a time: everything is the wearer's unless you say otherwise.
+
+    79% of hands are the wearer's, so a keypress each spends four fifths of
+    the effort confirming the obvious. Here a page defaults to `owner` and the
+    digits mark the exceptions -- the annotator still LOOKS at every hand,
+    which is what keeps the labels unbiased; only the typing is reduced."""
+    import cv2
+    path = os.path.join(pkg, "hands.csv")
+    allrows = list(csv.DictReader(open(path, encoding="utf-8-sig")))
+    todo = [i for i, r in enumerate(allrows) if not str(r["label"]).strip()]
+    if not todo:
+        print("  everything is already labelled")
+        return
+    per = cols * rows_n
+    print(f"  {len(todo)} unlabelled, {per} per page\n"
+          f"  1-{per} toggle a hand to OTHER   space = commit page   "
+          f"b = back   q = quit\n"
+          f"  Untouched hands are recorded as the WEARER'S. Look at every "
+          f"one anyway --\n  the default is there to save typing, not "
+          f"looking.\n")
+
+    def save():
+        with open(path, "w", newline="", encoding="utf-8") as f:
+            w = csv.DictWriter(f, fieldnames=list(allrows[0].keys()))
+            w.writeheader()
+            w.writerows(allrows)
+
+    page, done = 0, 0
+    while page * per < len(todo):
+        idx = todo[page * per:(page + 1) * per]
+        marked = set()
+        while True:
+            tiles = []
+            for n, i in enumerate(idx):
+                r = allrows[i]
+                im = cv2.imread(os.path.join(pkg, "context",
+                                             r["stem"] + ".jpg"))
+                if im is None:
+                    im = np.zeros((cell, cell, 3), np.uint8)
+                im = cv2.resize(im, (cell, int(cell * im.shape[0] /
+                                               im.shape[1])))
+                col = (0, 90, 255) if n in marked else (0, 200, 0)
+                cv2.rectangle(im, (0, 0), (im.shape[1] - 1, im.shape[0] - 1),
+                              col, 6)
+                cv2.rectangle(im, (0, 0), (im.shape[1], 30), (0, 0, 0), -1)
+                cv2.putText(im, f"{n+1}  {'OTHER' if n in marked else 'mine'}"
+                            f"  {r['side']}", (8, 22),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, col, 2)
+                tiles.append(im)
+            h = max(t.shape[0] for t in tiles)
+            tiles = [cv2.copyMakeBorder(t, 0, h - t.shape[0], 0, 0,
+                                        cv2.BORDER_CONSTANT) for t in tiles]
+            while len(tiles) < per:
+                tiles.append(np.zeros_like(tiles[0]))
+            grid = np.vstack([np.hstack(tiles[r_ * cols:(r_ + 1) * cols])
+                              for r_ in range(rows_n)])
+            bar = np.zeros((34, grid.shape[1], 3), np.uint8)
+            cv2.putText(bar, f"page {page+1}/{-(-len(todo)//per)}   "
+                        f"{done} labelled   space=commit  b=back  q=quit",
+                        (8, 24), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 1)
+            cv2.imshow("whose hands", np.vstack([bar, grid]))
+            k = cv2.waitKey(0) & 0xFF
+            if k == ord("q"):
+                save()
+                cv2.destroyAllWindows()
+                print(f"\n  {done} labelled, saved")
+                return
+            if k == ord("b"):
+                page = max(0, page - 1)
+                break
+            if k == ord(" "):
+                for n, i in enumerate(idx):
+                    allrows[i]["label"] = "other" if n in marked else "owner"
+                done += len(idx)
+                page += 1
+                save()
+                break
+            if ord("1") <= k <= ord("9"):
+                n = k - ord("1")
+                if n < len(idx):
+                    marked.symmetric_difference_update({n})
+    save()
+    cv2.destroyAllWindows()
+    print(f"\n  {done} labelled, saved to {path}")
+
+
 def report_rule(rows):
     """How often the human and the geometric rule disagree, and where."""
     lab = [r for r in rows if r.get("label") in ("owner", "other")]
@@ -414,6 +501,11 @@ def main():
                          "describe one workstation.")
     ap.add_argument("--out", help="where to write own_clf.pkl (default: "
                                   "inside --pkg)")
+    ap.add_argument("--grid", action="store_true",
+                    help="label six at a time; a page defaults to the "
+                         "wearer's and the digits mark the exceptions. 79%% "
+                         "of hands are the wearer's, so this is most of the "
+                         "typing removed and none of the looking.")
     ap.add_argument("--weights",
                     default="/shared/models/HaWoR/weights/external/detector.pt")
     a = ap.parse_args()
@@ -461,7 +553,7 @@ def main():
         rows += list(csv.DictReader(open(os.path.join(extra, "hands.csv"),
                                          encoding="utf-8-sig")))
     if a.mode == "label":
-        label_ui(a.pkg)
+        (label_grid(a.pkg) if a.grid else label_ui(a.pkg))
     elif a.mode == "report":
         report_rule(rows)
     else:
