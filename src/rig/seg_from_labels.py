@@ -93,6 +93,109 @@ def match(dets, rows, shape, tol=MATCH_TOL_FRAC):
     return pairs
 
 
+def _render_one(databag, frame, width=900):
+    """Render one wide frame from a databag, sized like a stored context jpg."""
+    import cv2
+    from src.rig.calibration import RigCalibration
+    from src.rig.geometry import VirtualWideCamera
+    from src.rig.render_wide import read_frame, split_halves, render
+    rig = RigCalibration(os.path.join(databag, "calibration.yaml"))
+    vcam = VirtualWideCamera.from_rig(rig)
+    sources = {}
+    for m in rig.modules:
+        key = f"cam{m.left.name[-1]}{m.right.name[-1]}"
+        q = os.path.join(databag, f"{key}.mp4")
+        if not os.path.exists(q):
+            continue
+        l, r = split_halves(read_frame(q, frame))
+        sources[m.left.name], sources[m.right.name] = l, r
+    if not sources:
+        return None
+    rgb, _, _, _ = render(rig, vcam, sources, 0.6)
+    H, W = rgb.shape[:2]
+    return cv2.resize(rgb, (width, int(width * H / W)))
+
+
+def _score(a, b):
+    """Normalised correlation of two frames, on a heavy downscale.
+
+    Downscaled hard on purpose. The stored context image has a yellow box and
+    a magenta ray drawn on it that the fresh render does not, and at 64 pixels
+    wide those few strokes cannot outvote the scene."""
+    import cv2
+    ga = cv2.cvtColor(cv2.resize(a, (64, 48)), cv2.COLOR_BGR2GRAY).astype(float)
+    gb = cv2.cvtColor(cv2.resize(b, (64, 48)), cv2.COLOR_BGR2GRAY).astype(float)
+    ga -= ga.mean()
+    gb -= gb.mean()
+    den = np.linalg.norm(ga) * np.linalg.norm(gb)
+    return float((ga * gb).sum() / den) if den > 0 else 0.0
+
+
+# A package is tied to a databag only if the best match beats the runner-up by
+# this much. Two recordings of the same bench from the same rig correlate
+# highly with each other; without a margin the winner would often be a
+# coin toss dressed as evidence.
+RECOVER_MARGIN = 0.15
+
+
+def recover(pkgs, candidates, margin=RECOVER_MARGIN, verbose=True):
+    """Work out which databag each package came from, from its own pixels.
+
+    Ten packages were labelled before `own_label` started recording their
+    source. The mapping is in a log on the server, but a log is bookkeeping
+    and this is evidence: the package stores the rendered frame it showed the
+    labeller, so re-rendering the same frame number from each candidate and
+    correlating identifies the recording directly. -> {tag: databag}"""
+    import cv2
+    labels = load_labels(pkgs)
+    by_tag = {}
+    for (t, f) in labels:
+        by_tag.setdefault(t, []).append(f)
+    ctx_dir = {}
+    for p in pkgs:
+        for r in load_labels([p]):
+            ctx_dir[r[0]] = p
+
+    out = {}
+    for t in sorted(by_tag):
+        frame = sorted(by_tag[t])[len(by_tag[t]) // 2]
+        stem = next(r["stem"] for r in labels[(t, frame)])
+        ref = cv2.imread(os.path.join(ctx_dir[t], "context", stem + ".jpg"))
+        if ref is None:
+            if verbose:
+                print(f"  {t:6s} no context image; cannot recover")
+            continue
+        scores = []
+        for d in candidates:
+            try:
+                img = _render_one(d, frame, ref.shape[1])
+            except Exception as e:
+                if verbose:
+                    print(f"  {t:6s} {os.path.basename(d)}: {type(e).__name__}")
+                continue
+            if img is None:
+                continue
+            h = min(img.shape[0], ref.shape[0])
+            scores.append((_score(img[:h], ref[:h]), d))
+        scores.sort(reverse=True)
+        if not scores:
+            if verbose:
+                print(f"  {t:6s} nothing rendered")
+            continue
+        gap = scores[0][0] - (scores[1][0] if len(scores) > 1 else -1.0)
+        ok = gap >= margin
+        if verbose:
+            print(f"  {t:6s} frame {frame:6d}  "
+                  f"{os.path.basename(scores[0][1]):28s} r={scores[0][0]:+.3f}"
+                  f"  gap {gap:+.3f}  {'OK' if ok else 'AMBIGUOUS'}")
+            for sc, d in scores[1:3]:
+                print(f"         {'':6s}  {os.path.basename(d):28s} "
+                      f"r={sc:+.3f}")
+        if ok:
+            out[t] = scores[0][1]
+    return out
+
+
 def build(rig, videos, tag, labels, out_dir, model, split, with_depth=True,
           verbose=True):
     """Re-render each labelled frame, build its 3-class mask. -> [manifest rows]"""
@@ -272,6 +375,9 @@ def main():
     ap.add_argument("--no_depth", action="store_true")
     ap.add_argument("--weights",
                     default="/shared/models/HaWoR/weights/external/detector.pt")
+    ap.add_argument("--recover", action="append", metavar="DATABAG_DIR",
+                    help="candidate recording for --mode recover; repeatable")
+    ap.add_argument("--mode", default="build", choices=("build", "recover"))
     ap.add_argument("--self_test", action="store_true")
     a = ap.parse_args()
 
@@ -280,6 +386,19 @@ def main():
     from src.rig.class2_census import _check_space
 
     _check_space(a.out)
+    if a.mode == "recover":
+        if not a.pkg or not a.recover:
+            raise SystemExit("recover needs --pkg and --recover")
+        got = recover(a.pkg, a.recover)
+        print(f"\n  {len(got)} of the packages identified. Paste as --map:")
+        for t, d in sorted(got.items()):
+            print(f"    --map {t}={d} \\")
+        print("\n  An AMBIGUOUS row is not a near miss to be nudged: two "
+              "recordings of the\n  same bench correlate highly, so a small "
+              "gap means the pixels do not\n  distinguish them and the "
+              "mapping has to come from the log instead.")
+        return
+
     for need in ("pkg", "map", "out", "split"):
         if not getattr(a, need):
             raise SystemExit(f"--{need} is required")
