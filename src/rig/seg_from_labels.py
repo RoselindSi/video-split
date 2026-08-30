@@ -52,15 +52,19 @@ STEM_RE = re.compile(r"^(.*?)f(\d{6})_h(\d+)$")
 MATCH_TOL_FRAC = 0.03
 
 
-def load_labels(pkgs):
-    """-> {(tag, frame): [rows]}. The tag identifies the recording."""
+def load_labels(pkgs, require_label=True):
+    """-> {(tag, frame): [rows]}. The tag identifies the recording.
+
+    `require_label=False` is for `recover`, which only needs to know which
+    frame a package showed -- and must work on the server copies, which were
+    never labelled."""
     out = {}
     for p in pkgs:
         q = os.path.join(p, "hands.csv")
         if not os.path.exists(q):
             continue
         for r in csv.DictReader(open(q, encoding="utf-8-sig")):
-            if r.get("label") not in ("owner", "other"):
+            if require_label and r.get("label") not in ("owner", "other"):
                 continue
             m = STEM_RE.match(r["stem"])
             if not m:
@@ -147,13 +151,13 @@ def recover(pkgs, candidates, margin=RECOVER_MARGIN, verbose=True):
     labeller, so re-rendering the same frame number from each candidate and
     correlating identifies the recording directly. -> {tag: databag}"""
     import cv2
-    labels = load_labels(pkgs)
+    labels = load_labels(pkgs, require_label=False)
     by_tag = {}
     for (t, f) in labels:
         by_tag.setdefault(t, []).append(f)
     ctx_dir = {}
     for p in pkgs:
-        for r in load_labels([p]):
+        for r in load_labels([p], require_label=False):
             ctx_dir[r[0]] = p
 
     out = {}
