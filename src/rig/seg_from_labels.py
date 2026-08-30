@@ -385,11 +385,9 @@ def main():
     ap.add_argument("--self_test", action="store_true")
     a = ap.parse_args()
 
-    from ultralytics import YOLO
-    from src.rig.calibration import RigCalibration
-    from src.rig.class2_census import _check_space
-
-    _check_space(a.out)
+    # `recover` writes nothing and needs no detector, so it must not be made
+    # to pass a disk-space check on an output directory it will never create,
+    # nor wait for ultralytics to import.
     if a.mode == "recover":
         if not a.pkg or not a.recover:
             raise SystemExit("recover needs --pkg and --recover")
@@ -403,9 +401,14 @@ def main():
               "mapping has to come from the log instead.")
         return
 
+    from ultralytics import YOLO
+    from src.rig.calibration import RigCalibration
+    from src.rig.class2_census import _check_space
+
     for need in ("pkg", "map", "out", "split"):
         if not getattr(a, need):
             raise SystemExit(f"--{need} is required")
+    _check_space(a.out)
     labels = load_labels(a.pkg)
     if not labels:
         raise SystemExit("no labelled hands in those packages")
