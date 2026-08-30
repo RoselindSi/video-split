@@ -220,6 +220,20 @@ def mine_disagreements(rig, videos, out_dir, start, n_frames, model, clf,
     return rows
 
 
+def write_source(out_dir, calibration, videos, tag):
+    """Record which recording a package came from, next to its labels.
+
+    Nothing downstream can recover this from the package itself, and a label
+    attached to the wrong recording's pixels is a silent, total corruption of
+    a training set -- it fails no check anywhere. Ten packages have already
+    been labelled without it, and reconstructing their mapping cost a search
+    through shell history."""
+    with open(os.path.join(out_dir, "source.txt"), "w") as f:
+        f.write(f"tag {tag}\ncalibration {os.path.abspath(calibration)}\n")
+        for k, v in sorted(videos.items()):
+            f.write(f"video {k} {os.path.abspath(v)}\n")
+
+
 def _write_sample(out_dir, stem, rgb, d, crop_px):
     """The crop and the whole frame with this hand marked."""
     import cv2
@@ -517,6 +531,9 @@ def main():
         from src.rig.calibration import RigCalibration
         from src.rig.hand_detect import load_owner_clf
         rig = RigCalibration(a.calibration)
+        os.makedirs(a.pkg, exist_ok=True)
+        write_source(a.pkg, a.calibration,
+                     dict(v.split("=", 1) for v in a.video), a.tag)
         rows = mine_disagreements(
             rig, dict(s.split("=", 1) for s in a.video), a.pkg, a.start, a.n,
             YOLO(a.weights), load_owner_clf(a.clf), a.stride, tag=a.tag)
@@ -532,6 +549,9 @@ def main():
     if a.mode == "extract":
         if not a.calibration or not a.video:
             ap.error("extract needs --calibration and --video")
+        os.makedirs(a.pkg, exist_ok=True)
+        write_source(a.pkg, a.calibration,
+                     dict(v.split("=", 1) for v in a.video), a.tag)
         from ultralytics import YOLO
         from src.rig.calibration import RigCalibration
         rig = RigCalibration(a.calibration)

@@ -105,8 +105,10 @@ class OwnershipDataset:
     edge between a measured arm and an unmeasured bench, and an invented depth
     is indistinguishable from a measured one once it reaches the model."""
 
-    def __init__(self, rows, size=DEFAULT_SIZE, augment=False, seed=0):
+    def __init__(self, rows, size=DEFAULT_SIZE, augment=False, seed=0,
+                 rotate=False, force_rot=None):
         self.rows, self.size, self.augment = rows, size, augment
+        self.rotate, self.force_rot = rotate, force_rot
         self.rng = np.random.default_rng(seed)
 
     def __len__(self):
@@ -124,15 +126,32 @@ class OwnershipDataset:
             raise FileNotFoundError(r["_rgb"])
         if rng16 is None:
             rng16 = np.zeros(rgb.shape[:2], np.uint16)
-        rgb = cv2.resize(rgb, (W, H), interpolation=cv2.INTER_AREA)
+        # ROTATION, AND WHY IT REVERSES THE COMMENT BELOW. The augment block
+        # used to forbid a vertical flip on the grounds that an arm entering
+        # from the top is the strongest cue for class 2. That cue is exactly
+        # what must not be learned. It only means "someone else's arm" in the
+        # wide render, whose up axis is the fan's rotation axis; in a raw
+        # module view cam1 is mounted rolled and the wearer's own arm comes in
+        # from the lower left. A model that leans on frame orientation has
+        # reproduced the geometric rule in weights and inherited its one
+        # limitation. Rotating the training frames removes the cue, so
+        # ownership has to be read from appearance and context instead.
+        k = self.force_rot
+        if k is None:
+            k = int(self.rng.integers(4)) if (self.augment and self.rotate) \
+                else 0
+        if k:
+            rgb = np.rot90(rgb, k)
+            rng16 = np.rot90(rng16, k)
+            mask = np.rot90(mask, k)
+        rgb = cv2.resize(np.ascontiguousarray(rgb), (W, H),
+                         interpolation=cv2.INTER_AREA)
+        rng16 = np.ascontiguousarray(rng16)
+        mask = np.ascontiguousarray(mask)
         rng16 = cv2.resize(rng16, (W, H), interpolation=cv2.INTER_NEAREST)
         mask = cv2.resize(mask, (W, H), interpolation=cv2.INTER_NEAREST)
 
         if self.augment and self.rng.random() < 0.5:
-            # Horizontal flip only. A vertical flip would put the wearer's own
-            # arm in at the top of the frame, which is the single strongest
-            # geometric cue for class 2 and the one thing never to teach
-            # backwards.
             rgb, rng16, mask = rgb[:, ::-1], rng16[:, ::-1], mask[:, ::-1]
 
         x = torch.from_numpy(
@@ -409,7 +428,8 @@ def print_eval(res):
 
 
 def train(train_root, eval_root, out, encoder="resnet18", path=None,
-          epochs=20, bs=4, lr=3e-4, size=DEFAULT_SIZE, seed=0, device=None):
+          epochs=20, bs=4, lr=3e-4, size=DEFAULT_SIZE, seed=0, device=None,
+          rotate=False, eval_rot=None):
     torch = _torch()
     import torch.nn as nn
     torch.manual_seed(seed)
@@ -441,8 +461,12 @@ def train(train_root, eval_root, out, encoder="resnet18", path=None,
                              if p.requires_grad], lr=lr)
     lossf = nn.CrossEntropyLoss(weight=torch.tensor(w).to(device),
                                 ignore_index=IGNORE)
-    tr = OwnershipDataset(tr_rows, size, augment=True, seed=seed)
+    tr = OwnershipDataset(tr_rows, size, augment=True, seed=seed,
+                          rotate=rotate)
     ev = OwnershipDataset(ev_rows, size, augment=False)
+    ev_rot = (OwnershipDataset(ev_rows, size, augment=False,
+                               force_rot=eval_rot)
+              if eval_rot else None)
 
     os.makedirs(out, exist_ok=True)
     hist = []
@@ -470,6 +494,31 @@ def train(train_root, eval_root, out, encoder="resnet18", path=None,
         else:
             print(f"  epoch {ep:3d}  loss {line['loss']:.4f}")
         hist.append(line)
+    if ev_rot is not None:
+        print(f"\n  === the same frames, turned by {eval_rot*90} degrees "
+              f"===")
+        rres = evaluate(model, ev_rot, device)
+        print_eval(rres)
+        json.dump(rres, open(os.path.join(out, f"eval_rot{eval_rot}.json"),
+                             "w"), indent=1)
+        up = np.asarray(hist[-1].get("eval", {}).get("overall", [np.nan] * 3))
+        ro = np.asarray(rres["overall"])
+        print(f"\n    class            upright        rotated         drop")
+        for c, u, r in zip(CLASSES, up, ro):
+            print(f"    {c:<14}{u:>10.3f}{r:>15.3f}{u-r:>13.3f}")
+        if eval_rot == 2:
+            print("\n  The geometric rule scores ZERO here, and not "
+                  "approximately: it calls a\n  hand the wearer's when the "
+                  "forearm ray leaves above 0.55 of the height,\n  and a "
+                  "half turn maps every exit height h to H-h. Every call "
+                  "inverts. So\n  whatever the rotated column says, it is "
+                  "the whole of what the segmenter\n  has that the rule does "
+                  "not.")
+        else:
+            print("\n  The rule does not have a score here at all -- a "
+                  "quarter turn makes its\n  quantity, the exit HEIGHT, "
+                  "measure the horizontal axis. That is the case\n  the raw "
+                  "module views actually present.")
     torch.save({"model": model.state_dict(), "encoder": encoder,
                 "size": size, "classes": CLASSES}, os.path.join(out, "head.pt"))
     json.dump(hist, open(os.path.join(out, "history.json"), "w"), indent=1)
@@ -587,6 +636,14 @@ def main():
     ap = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--rotate", action="store_true",
+                    help="train with random 90-degree rotations, so ownership "
+                         "cannot be read off frame orientation")
+    ap.add_argument("--eval_rot", type=int, default=None, choices=(0, 1, 2, 3),
+                    help="evaluate with every frame turned by this many "
+                         "quarter turns. The geometric rule is exactly "
+                         "inverted at 2; a segmenter that holds up here does "
+                         "not depend on which way the render calls down.")
     ap.add_argument("--smoke", action="store_true",
                     help="synthetic end-to-end check; needs no annotations")
     ap.add_argument("--train_root")
@@ -607,7 +664,8 @@ def main():
             raise SystemExit(0 if smoke(t, a.encoder) else 1)
     if not a.train_root or not a.eval_root:
         ap.error("--train_root and --eval_root are required without --smoke")
-    train(a.train_root, a.eval_root, a.out, encoder=a.encoder,
+    train(a.train_root, a.eval_root, a.out, rotate=a.rotate,
+          eval_rot=a.eval_rot, encoder=a.encoder,
           path=a.encoder_path, epochs=a.epochs, bs=a.bs, lr=a.lr, seed=a.seed)
 
 
