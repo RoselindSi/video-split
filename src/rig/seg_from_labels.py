@@ -97,27 +97,18 @@ def match(dets, rows, shape, tol=MATCH_TOL_FRAC):
     return pairs
 
 
-def _render_one(databag, frame, width=900):
-    """Render one wide frame from a databag, sized like a stored context jpg."""
-    import cv2
-    from src.rig.calibration import RigCalibration
-    from src.rig.geometry import VirtualWideCamera
-    from src.rig.render_wide import read_frame, split_halves, render
-    rig = RigCalibration(os.path.join(databag, "calibration.yaml"))
-    vcam = VirtualWideCamera.from_rig(rig)
-    sources = {}
-    for m in rig.modules:
-        key = f"cam{m.left.name[-1]}{m.right.name[-1]}"
-        q = os.path.join(databag, f"{key}.mp4")
-        if not os.path.exists(q):
-            continue
-        l, r = split_halves(read_frame(q, frame))
-        sources[m.left.name], sources[m.right.name] = l, r
-    if not sources:
-        return None
-    rgb, _, _, _ = render(rig, vcam, sources, 0.6)
-    H, W = rgb.shape[:2]
-    return cv2.resize(rgb, (width, int(width * H / W)))
+# Only the middle module is rendered for recovery. It is the one that spans
+# the centre of the wide frame, so the centre third of a stored context image
+# is very nearly what it alone produces -- and it costs ONE video open instead
+# of three. On this mount an open is a 30-second timeout, which is the entire
+# cost of the operation; the rendering itself is free by comparison.
+RECOVER_MODULE = 1
+RECOVER_BAND = (0.34, 0.66)
+
+
+def _band(img, band=RECOVER_BAND):
+    W = img.shape[1]
+    return img[:, int(W * band[0]):int(W * band[1])]
 
 
 def _score(a, b):
@@ -142,14 +133,54 @@ def _score(a, b):
 RECOVER_MARGIN = 0.15
 
 
+def _open_middle(databag):
+    """-> (rig, vcam, cap, module) with the middle module's video open ONCE."""
+    import cv2
+    from src.rig.calibration import RigCalibration
+    from src.rig.geometry import VirtualWideCamera
+    rig = RigCalibration(os.path.join(databag, "calibration.yaml"))
+    m = rig.modules[RECOVER_MODULE]
+    key = f"cam{m.left.name[-1]}{m.right.name[-1]}"
+    q = os.path.join(databag, f"{key}.mp4")
+    if not os.path.exists(q):
+        return None
+    cap = cv2.VideoCapture(q)
+    if not cap.isOpened():
+        return None
+    return rig, VirtualWideCamera.from_rig(rig), cap, m
+
+
+def _render_at(state, frame, width, map_cache):
+    import cv2
+    from src.rig.render_wide import split_halves, render
+    rig, vcam, cap, m = state
+    cap.set(cv2.CAP_PROP_POS_FRAMES, int(frame))
+    ok, img = cap.read()
+    if not ok:
+        return None
+    l, r = split_halves(img)
+    sources = {m.left.name: l, m.right.name: r}
+    try:
+        rgb, _, _, _ = render(rig, vcam, sources, 0.6, map_cache=map_cache)
+    except TypeError:
+        rgb, _, _, _ = render(rig, vcam, sources, 0.6)
+    H, W = rgb.shape[:2]
+    return cv2.resize(rgb, (width, int(width * H / W)))
+
+
 def recover(pkgs, candidates, margin=RECOVER_MARGIN, verbose=True):
     """Work out which databag each package came from, from its own pixels.
 
     Ten packages were labelled before `own_label` started recording their
-    source. The mapping is in a log on the server, but a log is bookkeeping
-    and this is evidence: the package stores the rendered frame it showed the
-    labeller, so re-rendering the same frame number from each candidate and
-    correlating identifies the recording directly. -> {tag: databag}"""
+    source. The mapping was in a log and a shell history that no longer exist,
+    but the package stores the rendered frame it showed the labeller, so
+    re-rendering that frame number from each candidate identifies the
+    recording directly. -> {tag: databag}
+
+    THE LOOP IS DATABAG-OUTER ON PURPOSE. Package-outer is the natural way to
+    write this and costs an open per (package, candidate) pair -- 195 opens
+    where 13 suffice. On a read-only network mount an open is thirty seconds
+    and everything else is free, so the loop order IS the runtime."""
     import cv2
     labels = load_labels(pkgs, require_label=False)
     by_tag = {}
@@ -160,7 +191,7 @@ def recover(pkgs, candidates, margin=RECOVER_MARGIN, verbose=True):
         for r in load_labels([p], require_label=False):
             ctx_dir[r[0]] = p
 
-    out = {}
+    refs, frames = {}, {}
     for t in sorted(by_tag):
         frame = sorted(by_tag[t])[len(by_tag[t]) // 2]
         stem = next(r["stem"] for r in labels[(t, frame)])
@@ -169,34 +200,51 @@ def recover(pkgs, candidates, margin=RECOVER_MARGIN, verbose=True):
             if verbose:
                 print(f"  {t:6s} no context image; cannot recover")
             continue
-        scores = []
-        for d in candidates:
-            try:
-                img = _render_one(d, frame, ref.shape[1])
-            except Exception as e:
-                if verbose:
-                    print(f"  {t:6s} {os.path.basename(d)}: {type(e).__name__}")
-                continue
-            if img is None:
-                continue
-            h = min(img.shape[0], ref.shape[0])
-            scores.append((_score(img[:h], ref[:h]), d))
-        scores.sort(reverse=True)
-        if not scores:
+        refs[t], frames[t] = ref, frame
+    if not refs:
+        return {}
+
+    scores = {t: [] for t in refs}
+    for n, d in enumerate(candidates, 1):
+        name = os.path.basename(d)
+        if verbose:
+            print(f"  [{n}/{len(candidates)}] {name}", flush=True)
+        try:
+            state = _open_middle(d)
+        except Exception as e:
+            if verbose:
+                print(f"      {type(e).__name__}: {e}")
+            continue
+        if state is None:
+            continue
+        mc = {}
+        try:
+            for t, ref in refs.items():
+                img = _render_at(state, frames[t], ref.shape[1], mc)
+                if img is None:
+                    continue
+                h = min(img.shape[0], ref.shape[0])
+                scores[t].append((_score(_band(img[:h]), _band(ref[:h])), d))
+        finally:
+            state[2].release()
+
+    out = {}
+    for t in sorted(refs):
+        sc = sorted(scores[t], reverse=True)
+        if not sc:
             if verbose:
                 print(f"  {t:6s} nothing rendered")
             continue
-        gap = scores[0][0] - (scores[1][0] if len(scores) > 1 else -1.0)
+        gap = sc[0][0] - (sc[1][0] if len(sc) > 1 else -1.0)
         ok = gap >= margin
         if verbose:
-            print(f"  {t:6s} frame {frame:6d}  "
-                  f"{os.path.basename(scores[0][1]):28s} r={scores[0][0]:+.3f}"
+            print(f"  {t:6s} frame {frames[t]:6d}  "
+                  f"{os.path.basename(sc[0][1]):28s} r={sc[0][0]:+.3f}"
                   f"  gap {gap:+.3f}  {'OK' if ok else 'AMBIGUOUS'}")
-            for sc, d in scores[1:3]:
-                print(f"         {'':6s}  {os.path.basename(d):28s} "
-                      f"r={sc:+.3f}")
+            for v, d in sc[1:3]:
+                print(f"         {'':6s}  {os.path.basename(d):28s} r={v:+.3f}")
         if ok:
-            out[t] = scores[0][1]
+            out[t] = sc[0][1]
     return out
 
 
