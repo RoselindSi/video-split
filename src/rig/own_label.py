@@ -549,9 +549,22 @@ def main():
 
     rows = list(csv.DictReader(open(os.path.join(a.pkg, "hands.csv"),
                                     encoding="utf-8-sig")))
+    missing = []
     for extra in a.also:
-        rows += list(csv.DictReader(open(os.path.join(extra, "hands.csv"),
-                                         encoding="utf-8-sig")))
+        q = os.path.join(extra, "hands.csv")
+        if not os.path.exists(q):
+            # A package that failed to extract must not stop a training run
+            # over the dozen that succeeded -- but it is named, because a
+            # silently smaller dataset is how a score drifts without anyone
+            # noticing which recordings are in it.
+            missing.append(extra)
+            continue
+        rows += list(csv.DictReader(open(q, encoding="utf-8-sig")))
+    if missing:
+        print(f"  !! {len(missing)} package(s) have no hands.csv and were "
+              f"skipped:")
+        for m in missing:
+            print(f"     {m}")
     if a.mode == "label":
         (label_grid(a.pkg) if a.grid else label_ui(a.pkg))
     elif a.mode == "report":
