@@ -365,7 +365,12 @@ def build(rig, videos, tag, labels, out_dir, model, split, with_depth=True,
         if own:
             mask[masks_from(rgb, own)] = 1
 
-        stem = f"{tag}{frame:06d}.png"
+        # `seg_head.load_manifest` reconstructs this name from the manifest
+        # as f"{recording}_f{frame:06d}.png", and `recording` is the tag with
+        # its trailing underscore stripped. Writing it any other way builds a
+        # complete dataset that the trainer then reports as having no masks
+        # at all.
+        stem = f"{tag}f{frame:06d}.png"
         cv2.imwrite(os.path.join(out_dir, "images", stem), rgb)
         cv2.imwrite(os.path.join(out_dir, "masks", stem), mask)
         ov = rgb.copy()
