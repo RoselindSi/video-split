@@ -76,7 +76,7 @@ def features(det, shape):
 
 
 def extract(rig, videos, out_dir, start, n_frames, model, stride=15,
-            crop_px=192, tag="", verbose=True):
+            crop_px=192, tag="", verbose=True, min_hands=0, rows_out=None):
     """Render frames, detect, and write one crop plus one row per hand.
 
     Prints as it goes. The first version printed only on completion, and
@@ -106,6 +106,13 @@ def extract(rig, videos, out_dir, start, n_frames, model, stride=15,
         except TypeError:
             rgb, _, _, _ = render(rig, vcam, src, 0.6)
         dets = detect(model, rgb)
+        # A frame the wearer's two hands can fully explain carries no
+        # evidence about anybody else's, so in `--min_hands 3` sweeps it is
+        # not written at all. The filter is on the COUNT, never on where a
+        # hand is -- selecting by the exit-height rule would fill the set with
+        # exactly what the rule already gets right.
+        if len(dets) < min_hands:
+            continue
         H, W = rgb.shape[:2]
         for j, d in enumerate(dets):
             stem = f"{tag}f{start + k * stride:06d}_h{j}"
@@ -129,15 +136,21 @@ def extract(rig, videos, out_dir, start, n_frames, model, stride=15,
             row = {"stem": stem, "frame": start + k * stride, "hand": j,
                    "side": d.get("side", ""), "conf": round(d["conf"], 3),
                    "edge": d.get("edge") or "", "rule_owner": int(
-                       bool(d.get("owner"))), "label": ""}
+                       bool(d.get("owner"))), "label": "",
+                   "n_hands": len(dets),
+                   "stratum": "enriched" if min_hands >= 3 else "blind"}
             for name, v in zip(FEATURES, features(d, rgb.shape)):
                 row[name] = float(v)
             rows.append(row)
+            if rows_out is not None:
+                rows_out.append(row)
         if verbose and ((k + 1) % 10 == 0 or k + 1 == n_frames):
             el = time.time() - t0
             print(f"    [{k+1}/{n_frames}] {len(rows)} hands, {el:.0f}s, "
                   f"{el/(k+1)*(n_frames-k-1):.0f}s left", flush=True)
     rd.close()
+    if not write:
+        return rows
     if not rows:
         raise SystemExit(f"no hands found in {n_frames} frames from {start}")
     with open(os.path.join(out_dir, "hands.csv"), "w", newline="",
@@ -146,6 +159,71 @@ def extract(rig, videos, out_dir, start, n_frames, model, stride=15,
         w.writeheader()
         w.writerows(rows)
     return rows
+
+
+def sweep(databags, out_dir, model, n_frames=200, stride=30, min_hands=3,
+          crop_px=192, cap_per_rec=40, verbose=True):
+    """Extract from many recordings into ONE package. -> rows
+
+    A `sources.csv` is written beside the labels. The last ten packages were
+    made without one and their recordings had to be recovered from pixels
+    weeks later; a sweep over dozens of recordings would make that
+    unrecoverable, not merely expensive.
+
+    `cap_per_rec` keeps one busy recording from filling the package. Diversity
+    of workstation is the point -- 40 hands from each of twenty recordings
+    teaches more about what `other` looks like than 800 from one."""
+    import time
+    from src.rig.calibration import RigCalibration
+    os.makedirs(out_dir, exist_ok=True)
+    os.makedirs(os.path.join(out_dir, "crops"), exist_ok=True)
+    os.makedirs(os.path.join(out_dir, "context"), exist_ok=True)
+    allrows, srcs = [], []
+    t0 = time.time()
+    for i, d in enumerate(databags, 1):
+        tag = tag_for(d)
+        try:
+            rig = RigCalibration(os.path.join(d, "calibration.yaml"))
+        except Exception as e:
+            if verbose:
+                print(f"  [{i}/{len(databags)}] {os.path.basename(d)}: "
+                      f"{type(e).__name__}", flush=True)
+            continue
+        vids = {k: os.path.join(d, f"{k}.mp4")
+                for k in ("cam12", "cam34", "cam56")}
+        if not all(os.path.exists(v) for v in vids.values()):
+            continue
+        try:
+            got = extract(rig, vids, out_dir, 0, n_frames, model, stride,
+                          crop_px, tag=tag, verbose=False,
+                          min_hands=min_hands, write=False)
+        except Exception as e:
+            if verbose:
+                print(f"  [{i}/{len(databags)}] {os.path.basename(d)}: "
+                      f"{type(e).__name__}: {e}", flush=True)
+            continue
+        if cap_per_rec and len(got) > cap_per_rec:
+            got = got[:cap_per_rec]
+        allrows += got
+        srcs.append({"tag": tag, "databag": d, "hands": len(got)})
+        if verbose:
+            el = time.time() - t0
+            print(f"  [{i}/{len(databags)}] {os.path.basename(d):26s} "
+                  f"{len(got):3d} hands  (total {len(allrows)})  {el:.0f}s",
+                  flush=True)
+    if not allrows:
+        raise SystemExit("no qualifying frames in any recording")
+    with open(os.path.join(out_dir, "hands.csv"), "w", newline="",
+              encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=list(allrows[0].keys()))
+        w.writeheader()
+        w.writerows(allrows)
+    with open(os.path.join(out_dir, "sources.csv"), "w", newline="",
+              encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=["tag", "databag", "hands"])
+        w.writeheader()
+        w.writerows(srcs)
+    return allrows
 
 
 def mine_disagreements(rig, videos, out_dir, start, n_frames, model, clf,
@@ -217,6 +295,88 @@ def mine_disagreements(rig, videos, out_dir, start, n_frames, model, clf,
         w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
         w.writeheader()
         w.writerows(rows)
+    return rows
+
+
+def _wilson(k, n, z=1.96):
+    """Wilson interval. At p under a percent, normal-approximation intervals
+    reach below zero and stop meaning anything."""
+    if n == 0:
+        return (0.0, 1.0)
+    p = k / n
+    d = 1 + z * z / n
+    c = p + z * z / (2 * n)
+    h = z * ((p * (1 - p) / n + z * z / (4 * n * n)) ** 0.5)
+    return (max(0.0, (c - h) / d), min(1.0, (c + h) / d))
+
+
+def tag_for(databag):
+    """databag-26_0822_160639 -> R0822_160639_ . Unique, and readable."""
+    b = os.path.basename(databag.rstrip("/"))
+    return "R" + b.split("databag-26_")[-1].replace("-", "_") + "_"
+
+
+def hand_census(databags, model, n_frames=120, stride=30, verbose=True):
+    """How often does a frame contain three or more hands? -> rows
+
+    THE WEARER HAS TWO HANDS. A third detection is somebody else's, and that
+    is a prior about anatomy, not about the wide render's geometry -- unlike
+    the exit-height rule, which is the thing being tested and must not be used
+    to select the data that tests it.
+
+    This writes nothing and labels nothing. Its output is the stratum weight:
+    what fraction of frames are multi-person, so that a score measured on
+    enriched frames can be reweighted back to the whole corpus."""
+    import time
+    import cv2
+    from src.rig.calibration import RigCalibration
+    from src.rig.geometry import VirtualWideCamera
+    from src.rig.render_wide import render
+    from src.rig.seam_fix import ClipReader
+    from src.rig.hand_detect import detect
+
+    rows = []
+    t0 = time.time()
+    for i, d in enumerate(databags, 1):
+        try:
+            rig = RigCalibration(os.path.join(d, "calibration.yaml"))
+        except Exception as e:
+            if verbose:
+                print(f"  [{i}/{len(databags)}] {os.path.basename(d)}: "
+                      f"{type(e).__name__}", flush=True)
+            continue
+        vids = {k: os.path.join(d, f"{k}.mp4")
+                for k in ("cam12", "cam34", "cam56")}
+        if not all(os.path.exists(v) for v in vids.values()):
+            continue
+        vcam = VirtualWideCamera.from_rig(rig)
+        try:
+            rd = ClipReader(rig, vids, 0)
+        except Exception:
+            continue
+        mc, counts = {}, []
+        for k in range(n_frames):
+            src = rd.next(skip=(stride - 1) if k else 0)
+            if not src:
+                break
+            try:
+                rgb, _, _, _ = render(rig, vcam, src, 0.6, map_cache=mc)
+            except TypeError:
+                rgb, _, _, _ = render(rig, vcam, src, 0.6)
+            counts.append(len(detect(model, rgb)))
+        rd.close()
+        if not counts:
+            continue
+        c = np.asarray(counts)
+        rows.append({"databag": d, "frames": len(c),
+                     "n0": int((c == 0).sum()), "n1": int((c == 1).sum()),
+                     "n2": int((c == 2).sum()), "n3plus": int((c >= 3).sum()),
+                     "hands": int(c.sum())})
+        if verbose:
+            el = time.time() - t0
+            print(f"  [{i}/{len(databags)}] {os.path.basename(d):26s} "
+                  f"{len(c):4d} frames  >=3 hands {(c>=3).mean():6.1%}  "
+                  f"{el:.0f}s", flush=True)
     return rows
 
 
@@ -498,8 +658,16 @@ def main():
     ap = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("mode", choices=("extract", "mine", "label", "report",
-                                     "train"))
+    ap.add_argument("mode", choices=("extract", "mine", "sweep", "census",
+                                     "label", "report", "train"))
+    ap.add_argument("--list", help="sweep/census: file of databag directories, "
+                                   "one per line")
+    ap.add_argument("--min_hands", type=int, default=3,
+                    help="sweep: keep only frames with at least this many "
+                         "detections. The wearer has two, so 3 means at least "
+                         "one hand belongs to somebody else.")
+    ap.add_argument("--cap", type=int, default=40,
+                    help="sweep: most hands to take from any one recording")
     ap.add_argument("--clf", help="mine only: the classifier to disagree with")
     ap.add_argument("--pkg", required=True)
     ap.add_argument("--calibration")
@@ -523,6 +691,46 @@ def main():
     ap.add_argument("--weights",
                     default="/shared/models/HaWoR/weights/external/detector.pt")
     a = ap.parse_args()
+
+    if a.mode in ("sweep", "census"):
+        if not a.list:
+            ap.error(f"{a.mode} needs --list")
+        from ultralytics import YOLO
+        dbs = [l.strip() for l in open(a.list) if l.strip()]
+        model = YOLO(a.weights)
+        if a.mode == "census":
+            rows = hand_census(dbs, model, a.n, a.stride)
+            if not rows:
+                raise SystemExit("nothing scanned")
+            F = sum(r["frames"] for r in rows)
+            P = sum(r["n3plus"] for r in rows)
+            print(f"\n  {len(rows)} recordings, {F} frames")
+            for k, lab in (("n0", "0 hands"), ("n1", "1"), ("n2", "2"),
+                           ("n3plus", ">=3")):
+                v = sum(r[k] for r in rows)
+                print(f"    {lab:>8}  {v:6d}  {v/F:6.1%}")
+                
+            lo, hi = _wilson(P, F)
+            print(f"\n  stratum weight p(>=3 hands) = {P/F:.4f} "
+                  f"[{lo:.4f}, {hi:.4f}]")
+            print("  This is the number that lets an enriched sample be "
+                  "reweighted to the\n  whole corpus. It is measured, not "
+                  "assumed, and it needs no labels.")
+            n_rec = sum(1 for r in rows if r["n3plus"] > 0)
+            print(f"  {n_rec}/{len(rows)} recordings have at least one such "
+                  f"frame.")
+            return
+        rows = sweep(dbs, a.pkg, model, a.n, a.stride, a.min_hands,
+                     cap_per_rec=a.cap)
+        import collections
+        c = collections.Counter(r["n_hands"] for r in rows)
+        print(f"\n  {len(rows)} hands -> {a.pkg}   hands-per-frame {dict(sorted(c.items()))}")
+        print("  ENRICHED, not blind: these frames were chosen because they "
+              "contain three or\n  more hands. Label them for training, and "
+              "score them as their own stratum\n  -- never pooled with a "
+              "blind sample as if they were one population.")
+        print("  sources.csv records which recording each tag came from.")
+        return
 
     if a.mode == "mine":
         if not a.calibration or not a.video or not a.clf:
