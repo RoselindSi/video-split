@@ -59,9 +59,14 @@ def load_labels(pkgs, require_label=True):
     frame a package showed -- and must work on the server copies, which were
     never labelled."""
     out = {}
+    missing = []
     for p in pkgs:
         q = os.path.join(p, "hands.csv")
         if not os.path.exists(q):
+            # Silence here cost a build that quietly used 4 labels instead of
+            # 272: two --pkg paths did not exist on the server and the run
+            # looked like a success.
+            missing.append(p)
             continue
         for r in csv.DictReader(open(q, encoding="utf-8-sig")):
             if require_label and r.get("label") not in ("owner", "other"):
@@ -74,6 +79,10 @@ def load_labels(pkgs, require_label=True):
                     f"would attach real labels to another\n  recording's "
                     f"pixels and nothing would fail.")
             out.setdefault((m.group(1), int(r["frame"])), []).append(r)
+    if missing:
+        print(f"  !! {len(missing)} --pkg path(s) have no hands.csv:")
+        for m_ in missing:
+            print(f"     {m_}")
     return out
 
 

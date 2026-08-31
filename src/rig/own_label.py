@@ -184,7 +184,7 @@ def sweep(databags, out_dir, model, n_frames=200, stride=30, min_hands=3,
         tag = tag_for(d)
         try:
             rig = RigCalibration(os.path.join(d, "calibration.yaml"))
-        except Exception as e:
+        except (Exception, SystemExit) as e:
             if verbose:
                 print(f"  [{i}/{len(databags)}] {os.path.basename(d)}: "
                       f"{type(e).__name__}", flush=True)
@@ -197,7 +197,7 @@ def sweep(databags, out_dir, model, n_frames=200, stride=30, min_hands=3,
             got = extract(rig, vids, out_dir, 0, n_frames, model, stride,
                           crop_px, tag=tag, verbose=False,
                           min_hands=min_hands, write=False)
-        except Exception as e:
+        except (Exception, SystemExit) as e:
             if verbose:
                 print(f"  [{i}/{len(databags)}] {os.path.basename(d)}: "
                       f"{type(e).__name__}: {e}", flush=True)
@@ -340,7 +340,7 @@ def hand_census(databags, model, n_frames=120, stride=30, verbose=True):
     for i, d in enumerate(databags, 1):
         try:
             rig = RigCalibration(os.path.join(d, "calibration.yaml"))
-        except Exception as e:
+        except (Exception, SystemExit) as e:
             if verbose:
                 print(f"  [{i}/{len(databags)}] {os.path.basename(d)}: "
                       f"{type(e).__name__}", flush=True)
@@ -352,7 +352,14 @@ def hand_census(databags, model, n_frames=120, stride=30, verbose=True):
         vcam = VirtualWideCamera.from_rig(rig)
         try:
             rd = ClipReader(rig, vids, 0)
-        except Exception:
+        except (Exception, SystemExit) as e:
+            # SystemExit does NOT inherit from Exception. ClipReader raises it
+            # for an unreadable video, and a bare `except Exception` let it
+            # through -- one corrupt cam34.mp4 killed a scan of 72 recordings
+            # after the first one, and the traceback looked like a warning.
+            if verbose:
+                print(f"  [{i}/{len(databags)}] {os.path.basename(d)}: "
+                      f"{type(e).__name__}: {e}", flush=True)
             continue
         mc, counts = {}, []
         for k in range(n_frames):
