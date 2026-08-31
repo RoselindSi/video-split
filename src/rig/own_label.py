@@ -106,12 +106,27 @@ def extract(rig, videos, out_dir, start, n_frames, model, stride=15,
         except TypeError:
             rgb, _, _, _ = render(rig, vcam, src, 0.6)
         dets = detect(model, rgb)
-        # A frame the wearer's two hands can fully explain carries no
-        # evidence about anybody else's, so in `--min_hands 3` sweeps it is
-        # not written at all. The filter is on the COUNT, never on where a
-        # hand is -- selecting by the exit-height rule would fill the set with
-        # exactly what the rule already gets right.
-        if len(dets) < min_hands:
+        # TWO SELECTION CHANNELS, RECORDED SEPARATELY.
+        #
+        #   count  three or more hands. The wearer has two, so a third is
+        #          somebody else's. Anatomy, not geometry -- it cannot agree
+        #          with the exit-height rule by construction.
+        #   rule   the rule already says some hand here is not the wearer's.
+        #          High yield, but it can only ever find what the rule finds,
+        #          so a set built from this channel alone would be blind to
+        #          exactly the failures we are looking for.
+        #
+        # Both are kept because `count` alone misses the common case of a
+        # colleague's hand in frame while the wearer's are out of it, and
+        # `rule` alone begs the question. Which channel caught a hand is
+        # written to `select_by`, so any later analysis can condition on it
+        # instead of having to trust that the mixture was harmless.
+        by = []
+        if min_hands and len(dets) >= min_hands:
+            by.append("count")
+        if select_rule and any(not d.get("owner") for d in dets):
+            by.append("rule")
+        if min_hands and not by:
             continue
         H, W = rgb.shape[:2]
         for j, d in enumerate(dets):
@@ -138,7 +153,8 @@ def extract(rig, videos, out_dir, start, n_frames, model, stride=15,
                    "edge": d.get("edge") or "", "rule_owner": int(
                        bool(d.get("owner"))), "label": "",
                    "n_hands": len(dets),
-                   "stratum": "enriched" if min_hands >= 3 else "blind"}
+                   "select_by": "+".join(by),
+                   "stratum": "enriched" if min_hands else "blind"}
             for name, v in zip(FEATURES, features(d, rgb.shape)):
                 row[name] = float(v)
             rows.append(row)
@@ -162,7 +178,7 @@ def extract(rig, videos, out_dir, start, n_frames, model, stride=15,
 
 
 def sweep(databags, out_dir, model, n_frames=200, stride=30, min_hands=3,
-          crop_px=192, cap_per_rec=40, verbose=True):
+          crop_px=192, cap_per_rec=40, verbose=True, select_rule=True):
     """Extract from many recordings into ONE package. -> rows
 
     A `sources.csv` is written beside the labels. The last ten packages were
@@ -196,7 +212,8 @@ def sweep(databags, out_dir, model, n_frames=200, stride=30, min_hands=3,
         try:
             got = extract(rig, vids, out_dir, 0, n_frames, model, stride,
                           crop_px, tag=tag, verbose=False,
-                          min_hands=min_hands, write=False)
+                          min_hands=min_hands, write=False,
+                          select_rule=select_rule)
         except (Exception, SystemExit) as e:
             if verbose:
                 print(f"  [{i}/{len(databags)}] {os.path.basename(d)}: "
@@ -673,6 +690,9 @@ def main():
                     help="sweep: keep only frames with at least this many "
                          "detections. The wearer has two, so 3 means at least "
                          "one hand belongs to somebody else.")
+    ap.add_argument("--count_only", action="store_true",
+                    help="sweep: use only the hand-count channel, never the "
+                         "rule's own verdict")
     ap.add_argument("--cap", type=int, default=40,
                     help="sweep: most hands to take from any one recording")
     ap.add_argument("--clf", help="mine only: the classifier to disagree with")
@@ -728,10 +748,12 @@ def main():
                   f"frame.")
             return
         rows = sweep(dbs, a.pkg, model, a.n, a.stride, a.min_hands,
-                     cap_per_rec=a.cap)
+                     cap_per_rec=a.cap, select_rule=not a.count_only)
         import collections
         c = collections.Counter(r["n_hands"] for r in rows)
+        b = collections.Counter(r["select_by"] for r in rows)
         print(f"\n  {len(rows)} hands -> {a.pkg}   hands-per-frame {dict(sorted(c.items()))}")
+        print(f"  found by  {dict(b)}")
         print("  ENRICHED, not blind: these frames were chosen because they "
               "contain three or\n  more hands. Label them for training, and "
               "score them as their own stratum\n  -- never pooled with a "
