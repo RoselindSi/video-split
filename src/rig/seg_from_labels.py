@@ -287,13 +287,30 @@ def build(rig, videos, tag, labels, out_dir, model, split, with_depth=True,
     import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
-    from src.rig.render_wide import read_frame, split_halves, render
+    from src.rig.render_wide import split_halves, render
     from src.rig.hand_detect import detect, masks_from
     from src.rig.seg_dataset import encode_range
 
     want = sorted(f for (t, f) in labels if t == tag)
     if not want:
         return []
+    # The videos are opened ONCE and seeked, not reopened per frame. On this
+    # read-only mount an open is a thirty-second ffmpeg timeout, so the
+    # obvious `read_frame(path, n)` per frame would cost 224 frames x 3 videos
+    # x 30s -- five hours of waiting for a few minutes of work. Frames are
+    # visited in ascending order so most seeks are short.
+    caps = {}
+    for m in rig.modules:
+        key = f"cam{m.left.name[-1]}{m.right.name[-1]}"
+        if key not in videos or not os.path.exists(videos[key]):
+            continue
+        c = cv2.VideoCapture(videos[key])
+        if c.isOpened():
+            caps[m] = c
+        else:
+            c.release()
+    if not caps:
+        raise SystemExit(f"no readable video for {tag} in {videos}")
     vcam = VirtualWideCamera.from_rig(rig)
     for sub in ("images", "masks", "range", "overlays"):
         os.makedirs(os.path.join(out_dir, sub), exist_ok=True)
@@ -304,11 +321,13 @@ def build(rig, videos, tag, labels, out_dir, model, split, with_depth=True,
     t0 = time.time()
     for n, frame in enumerate(want):
         sources = {}
-        for m in rig.modules:
-            key = f"cam{m.left.name[-1]}{m.right.name[-1]}"
-            if key not in videos:
-                continue
-            l, r = split_halves(read_frame(videos[key], frame))
+        for m, c in caps.items():
+            c.set(cv2.CAP_PROP_POS_FRAMES, int(frame))
+            ok, img = c.read()
+            if not ok:
+                sources = {}
+                break
+            l, r = split_halves(img)
             sources[m.left.name], sources[m.right.name] = l, r
         if not sources:
             continue
@@ -367,6 +386,8 @@ def build(rig, videos, tag, labels, out_dir, model, split, with_depth=True,
             print(f"    [{n+1}/{len(want)}] {len(rows_out)} frames, "
                   f"{el:.0f}s, {el/(n+1)*(len(want)-n-1):.0f}s left",
                   flush=True)
+    for c in caps.values():
+        c.release()
     if n_unmatched and verbose:
         print(f"    !! {n_unmatched} labels could not be matched to a fresh "
               f"detection and were dropped")
