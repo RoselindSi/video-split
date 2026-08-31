@@ -132,22 +132,43 @@ def _score(a, b):
 # coin toss dressed as evidence.
 RECOVER_MARGIN = 0.15
 
+# A true match is not a good score, it is very nearly identity: the same
+# recording at the same frame index rendered the same way. The first run
+# measured 0.986 to 1.000 for the six it identified and at most 0.62 for the
+# eight it did not, with nothing in between. That gap is the useful signal --
+# a low best score does not mean two candidates were confusable, it means the
+# real recording was never among them. Reporting those two cases as one word
+# sent the reader looking for a threshold to tune instead of for the missing
+# directory.
+RECOVER_IDENTITY = 0.90
+
 
 def _open_middle(databag):
-    """-> (rig, vcam, cap, module) with the middle module's video open ONCE."""
+    """-> (rig, vcam, cap, module) with ONE module's video open.
+
+    The middle module is preferred because it spans the centre of the wide
+    frame, but one databag's cam34.mp4 could not be decoded at all and that
+    silently removed the whole recording from the candidate list -- if it had
+    been the true source of a package, the package would have been reported
+    unidentifiable with no hint that a file was to blame. Falling back to
+    another module costs nothing and keeps the candidate in the running."""
     import cv2
     from src.rig.calibration import RigCalibration
     from src.rig.geometry import VirtualWideCamera
     rig = RigCalibration(os.path.join(databag, "calibration.yaml"))
-    m = rig.modules[RECOVER_MODULE]
-    key = f"cam{m.left.name[-1]}{m.right.name[-1]}"
-    q = os.path.join(databag, f"{key}.mp4")
-    if not os.path.exists(q):
-        return None
-    cap = cv2.VideoCapture(q)
-    if not cap.isOpened():
-        return None
-    return rig, VirtualWideCamera.from_rig(rig), cap, m
+    order = [RECOVER_MODULE] + [i for i in range(len(rig.modules))
+                                if i != RECOVER_MODULE]
+    for i in order:
+        m = rig.modules[i]
+        key = f"cam{m.left.name[-1]}{m.right.name[-1]}"
+        q = os.path.join(databag, f"{key}.mp4")
+        if not os.path.exists(q):
+            continue
+        cap = cv2.VideoCapture(q)
+        if cap.isOpened():
+            return rig, VirtualWideCamera.from_rig(rig), cap, m
+        cap.release()
+    return None
 
 
 def _render_at(state, frame, width, map_cache):
@@ -236,15 +257,27 @@ def recover(pkgs, candidates, margin=RECOVER_MARGIN, verbose=True):
                 print(f"  {t:6s} nothing rendered")
             continue
         gap = sc[0][0] - (sc[1][0] if len(sc) > 1 else -1.0)
-        ok = gap >= margin
+        if sc[0][0] < RECOVER_IDENTITY:
+            verdict = "NOT IN CANDIDATES"
+        elif gap < margin:
+            verdict = "AMBIGUOUS"
+        else:
+            verdict = "OK"
         if verbose:
             print(f"  {t:6s} frame {frames[t]:6d}  "
                   f"{os.path.basename(sc[0][1]):28s} r={sc[0][0]:+.3f}"
-                  f"  gap {gap:+.3f}  {'OK' if ok else 'AMBIGUOUS'}")
+                  f"  gap {gap:+.3f}  {verdict}")
             for v, d in sc[1:3]:
                 print(f"         {'':6s}  {os.path.basename(d):28s} r={v:+.3f}")
-        if ok:
+        if verdict == "OK":
             out[t] = sc[0][1]
+    n_miss = sum(1 for t in refs if t not in out)
+    if verbose and n_miss:
+        print(f"\n  {n_miss} unidentified. NOT IN CANDIDATES means the best "
+              f"score is nowhere near\n  identity -- widen the candidate list "
+              f"rather than lowering the margin. A true\n  match scores above "
+              f"{RECOVER_IDENTITY:.2f}; the highest a wrong one has reached "
+              f"is 0.62.")
     return out
 
 
