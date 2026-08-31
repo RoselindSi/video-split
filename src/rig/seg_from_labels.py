@@ -299,14 +299,18 @@ def build(rig, videos, tag, labels, out_dir, model, split, with_depth=True,
     # obvious `read_frame(path, n)` per frame would cost 224 frames x 3 videos
     # x 30s -- five hours of waiting for a few minutes of work. Frames are
     # visited in ascending order so most seeks are short.
-    caps = {}
+    # Keyed by camera-name pair, not by the module. `Module` is a frozen
+    # dataclass holding numpy arrays, so it is unhashable -- and the
+    # TypeError only appears once a real video opens, well past any smoke
+    # test that never touches the filesystem.
+    caps = []
     for m in rig.modules:
         key = f"cam{m.left.name[-1]}{m.right.name[-1]}"
         if key not in videos or not os.path.exists(videos[key]):
             continue
         c = cv2.VideoCapture(videos[key])
         if c.isOpened():
-            caps[m] = c
+            caps.append((m, c))
         else:
             c.release()
     if not caps:
@@ -321,7 +325,7 @@ def build(rig, videos, tag, labels, out_dir, model, split, with_depth=True,
     t0 = time.time()
     for n, frame in enumerate(want):
         sources = {}
-        for m, c in caps.items():
+        for m, c in caps:
             c.set(cv2.CAP_PROP_POS_FRAMES, int(frame))
             ok, img = c.read()
             if not ok:
@@ -386,7 +390,7 @@ def build(rig, videos, tag, labels, out_dir, model, split, with_depth=True,
             print(f"    [{n+1}/{len(want)}] {len(rows_out)} frames, "
                   f"{el:.0f}s, {el/(n+1)*(len(want)-n-1):.0f}s left",
                   flush=True)
-    for c in caps.values():
+    for _, c in caps:
         c.release()
     if n_unmatched and verbose:
         print(f"    !! {n_unmatched} labels could not be matched to a fresh "
