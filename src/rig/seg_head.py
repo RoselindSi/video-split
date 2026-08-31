@@ -429,7 +429,7 @@ def print_eval(res):
 
 def train(train_root, eval_root, out, encoder="resnet18", path=None,
           epochs=20, bs=4, lr=3e-4, size=DEFAULT_SIZE, seed=0, device=None,
-          rotate=False, eval_rot=None):
+          rotate=False, eval_rot=None, weight_cap=None):
     torch = _torch()
     import torch.nn as nn
     torch.manual_seed(seed)
@@ -452,7 +452,8 @@ def train(train_root, eval_root, out, encoder="resnet18", path=None,
                          "scored on what it\n  fitted reports a number about "
                          "nothing.")
 
-    w = class_weights(tr_rows, size)
+    w = class_weights(tr_rows, size) if weight_cap is None \
+        else class_weights(tr_rows, size, cap=weight_cap)
     print(f"  class weights {dict(zip(CLASSES, w.round(2).tolist()))}")
     model = build_model(encoder, path).to(device)
     if not model.pretrained:
@@ -636,6 +637,12 @@ def main():
     ap = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--weight_cap", type=float, default=None,
+                    help="largest inverse-frequency class weight. The default "
+                         "of 50 gives owner_arm ~30x at its 3%% prevalence, "
+                         "and the first run answered by painting 25%% of "
+                         "every frame owner_arm. Lower it to trade recall for "
+                         "precision.")
     ap.add_argument("--rotate", action="store_true",
                     help="train with random 90-degree rotations, so ownership "
                          "cannot be read off frame orientation")
@@ -665,6 +672,7 @@ def main():
     if not a.train_root or not a.eval_root:
         ap.error("--train_root and --eval_root are required without --smoke")
     train(a.train_root, a.eval_root, a.out, rotate=a.rotate,
+          weight_cap=a.weight_cap,
           eval_rot=a.eval_rot, encoder=a.encoder,
           path=a.encoder_path, epochs=a.epochs, bs=a.bs, lr=a.lr, seed=a.seed)
 
