@@ -196,13 +196,36 @@ def split_owner(dets, shape, max_owner=2, verbose=False):
     return own, oth
 
 
-def masks_from(rgb, dets, pad=0.15, iters=3):
+# How far past the padded box the GrabCut window reaches, as a fraction of
+# that box. The rim inside it is the only DEFINITE background the algorithm
+# gets, and it needs some: with none, the background GMM has nothing to fit
+# and the cut has no evidence for what the hand is not.
+MASK_MARGIN = 0.30
+
+# Long side, in pixels, that the GrabCut window is shrunk to before the cut.
+# The mask this produces is dilated by DILATE_PX + 2*FEATHER_PX afterwards, so
+# boundary detail finer than about eighteen pixels is discarded downstream no
+# matter how exactly it was found. Paying graph-cut time for detail that the
+# next step throws away is the definition of waste.
+MASK_MAX_SIDE = 192
+
+
+def masks_from(rgb, dets, pad=0.15, iters=3, max_side=MASK_MAX_SIDE):
     """GrabCut inside each detection's box. -> binary mask
 
     The box comes from the detector and the boundary from GrabCut, which is
     the division of labour this pipeline was always meant to have and could
     not, because the only available prompt was a colour threshold that did not
-    know a hand from a turntable."""
+    know a hand from a turntable.
+
+    THE CUT RUNS ON A WINDOW ROUND THE BOX, NOT ON THE FRAME. It used to be
+    handed the whole image with everything outside the box marked background.
+    GrabCut still builds its graph over every pixel it is given, so that spent
+    a 1.4-megapixel graph cut, three iterations, PER DETECTION, and then kept
+    only the part inside the box and discarded the rest. The window is the
+    padded box grown by MASK_MARGIN, which preserves the one thing the frame
+    was providing -- definite background to fit against -- and drops the rest.
+    `max_side` shrinks that window further; pass None to cut at full scale."""
     import cv2
     H, W = rgb.shape[:2]
     out = np.zeros((H, W), bool)
@@ -213,20 +236,45 @@ def masks_from(rgb, dets, pad=0.15, iters=3):
               min(W, x1 + px), min(H, y1 + py))
         if bx[2] - bx[0] < 8 or bx[3] - bx[1] < 8:
             continue
-        m = np.full((H, W), cv2.GC_BGD, np.uint8)
-        m[bx[1]:bx[3], bx[0]:bx[2]] = cv2.GC_PR_BGD
+        mx_, my_ = int((bx[2] - bx[0]) * MASK_MARGIN), \
+            int((bx[3] - bx[1]) * MASK_MARGIN)
+        win = (max(0, bx[0] - mx_), max(0, bx[1] - my_),
+               min(W, bx[2] + mx_), min(H, bx[3] + my_))
+        roi = rgb[win[1]:win[3], win[0]:win[2]]
+        wh, ww = roi.shape[:2]
+        s = 1.0
+        if max_side and max(wh, ww) > max_side:
+            s = float(max_side) / max(wh, ww)
+            roi = cv2.resize(roi, (max(8, int(ww * s)), max(8, int(wh * s))),
+                             interpolation=cv2.INTER_AREA)
+        rh, rw = roi.shape[:2]
+
+        def to_roi(px_, py_):
+            return (int((px_ - win[0]) * (rw / float(ww))),
+                    int((py_ - win[1]) * (rh / float(wh))))
+
+        m = np.full((rh, rw), cv2.GC_BGD, np.uint8)
+        a0, b0 = to_roi(bx[0], bx[1])
+        a1, b1 = to_roi(bx[2], bx[3])
+        m[max(0, b0):max(1, b1), max(0, a0):max(1, a1)] = cv2.GC_PR_BGD
         # The keypoints are inside the hand by construction -- a far better
         # foreground seed than a colour rule, and unavailable until now.
         if d.get("kp") is not None:
             for (kx, ky) in np.asarray(d["kp"], int):
-                if 0 <= kx < W and 0 <= ky < H:
-                    cv2.circle(m, (int(kx), int(ky)), 6, cv2.GC_FGD, -1)
+                cx, cy = to_roi(kx, ky)
+                if 0 <= cx < rw and 0 <= cy < rh:
+                    cv2.circle(m, (cx, cy), max(2, int(6 * s)),
+                               cv2.GC_FGD, -1)
         bg, fg = np.zeros((1, 65), np.float64), np.zeros((1, 65), np.float64)
+        r = np.zeros((H, W), bool)
         try:
-            cv2.grabCut(rgb, m, None, bg, fg, iters, cv2.GC_INIT_WITH_MASK)
-            r = (m == cv2.GC_FGD) | (m == cv2.GC_PR_FGD)
+            cv2.grabCut(np.ascontiguousarray(roi), m, None, bg, fg, iters,
+                        cv2.GC_INIT_WITH_MASK)
+            rm = ((m == cv2.GC_FGD) | (m == cv2.GC_PR_FGD)).astype(np.uint8)
+            if (rh, rw) != (wh, ww):
+                rm = cv2.resize(rm, (ww, wh), interpolation=cv2.INTER_NEAREST)
+            r[win[1]:win[3], win[0]:win[2]] = rm.astype(bool)
         except cv2.error:
-            r = np.zeros((H, W), bool)
             r[bx[1]:bx[3], bx[0]:bx[2]] = True
         keep = np.zeros((H, W), bool)
         keep[bx[1]:bx[3], bx[0]:bx[2]] = True
@@ -369,6 +417,34 @@ def _self_test():
         "the cap demotes the LEAST CONFIDENT, not the least straight-down")
     chk(len(x3) == 1 and x3[0] is lo,
         "...and the demoted one is the one the classifier was least sure of")
+
+    # masks_from now cuts on a window round the box instead of the frame. The
+    # thing to prove is that the answer did not move, not merely that it is
+    # faster: a bright square on a dark bench, cut both ways.
+    import time
+    img = np.full((H, W, 3), 30, np.uint8)
+    img[380:520, 640:820] = 230
+    det = [{"box": (630, 370, 830, 530),
+            "kp": np.array([[730, 450]] * 21, float)}]
+    t0 = time.time()
+    m_full = masks_from(img, det, max_side=None)
+    t_full = time.time() - t0
+    t0 = time.time()
+    m_win = masks_from(img, det)
+    t_win = time.time() - t0
+    inter = int((m_full & m_win).sum())
+    union = int((m_full | m_win).sum())
+    chk(union > 0 and inter / union > 0.90,
+        f"the windowed cut agrees with the full-frame one "
+        f"(IoU {inter/max(1,union):.3f})")
+    chk(m_win[380:520, 640:820].mean() > 0.9,
+        "the bright object is inside the mask")
+    outside = m_win.copy()
+    outside[370:530, 630:830] = False
+    chk(not outside.any(), "and nothing outside the padded box is claimed")
+    chk(t_win < t_full,
+        f"and it is faster ({t_win*1000:.0f} ms vs {t_full*1000:.0f} ms, "
+        f"{t_full/max(1e-6, t_win):.1f}x)")
 
     print(f"\n  {sum(ok)}/{len(ok)} cases pass.")
     print("  Ownership is read off the wrist, so it does not depend on how "

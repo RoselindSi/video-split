@@ -101,7 +101,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     import cv2
     from src.rig.geometry import VirtualWideCamera
     from src.rig.render_wide import render
-    from src.rig.seam_fix import ClipReader
+    from src.rig.seam_fix import ClipReader, Prefetch
     from src.rig.hand_detect import detect, masks_from
     from src.rig.suppress_other import suppress
     from src.rig import own_cnn
@@ -112,12 +112,14 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         else None
     hold = face_mask.Hold()
     vcam = VirtualWideCamera.from_rig(rig)
-    rd = ClipReader(rig, videos, start)
+    rd = Prefetch(ClipReader(rig, videos, start), skip=max(0, stride - 1))
     mc, writer = {}, None
     n_dis = n_written = n_face = 0
     t0 = time.time()
     for k in range(n):
-        src = rd.next(skip=(stride - 1) if k else 0)
+        # The stride is the prefetcher's now: it applies skip=0 to the first
+        # frame and the stride thereafter, on its own thread.
+        src = rd.next()
         if not src:
             break
         try:
@@ -143,8 +145,12 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
                   for d, (o, _) in zip(dets, flags))
         n_dis += bool(dis)
 
-        m_own = masks_from(rgb, own) if own else np.zeros(rgb.shape[:2], bool)
+        # The owner mask exists only to veto overlap with the other mask, so
+        # with nothing to suppress it is a segmentation computed and thrown
+        # away. On a clip where a colleague is rare that is most frames.
         m_oth = masks_from(rgb, oth) if oth else np.zeros(rgb.shape[:2], bool)
+        m_own = masks_from(rgb, own) if (own and m_oth.any()) \
+            else np.zeros(rgb.shape[:2], bool)
         sup, alpha = suppress(rgb, m_oth, dilate, 4, sigma, protect=m_own)
         panel = compose(rgb, annotate(rgb, dets, flags, m_oth), sup,
                         len(own), len(oth), start + k * stride, dis,
@@ -211,8 +217,40 @@ def _self_test():
     chk("an empty suppression says so",
         not np.array_equal(compose(rgb, vis, rgb, 1, 0, 42, False, 0.0),
                            compose(rgb, vis, rgb, 1, 1, 42, False, 0.05)))
-    print(f"\n  {ok}/8")
-    return ok == 8
+    # The prefetcher stands in for the reader, so it has to hand back exactly
+    # the same sequence and apply the stride the same way: nothing skipped
+    # before the first frame, the stride before every one after it.
+    from src.rig.seam_fix import Prefetch
+
+    class FakeReader:
+        def __init__(self, n):
+            self.n, self.i, self.skips, self.closed = n, 0, [], False
+
+        def next(self, skip=0):
+            self.skips.append(skip)
+            if self.i >= self.n:
+                return None
+            self.i += 1
+            return {"f": self.i}
+
+        def close(self):
+            self.closed = True
+
+    fr = FakeReader(4)
+    pf = Prefetch(fr, skip=3)
+    got = [pf.next() for _ in range(5)]
+    chk("the prefetcher yields the reader's frames in order",
+        [g["f"] for g in got[:4]] == [1, 2, 3, 4])
+    chk("and passes end of file through", got[4] is None)
+    chk("asking past the end returns None instead of hanging",
+        pf.next() is None)
+    chk("the first frame skips nothing and the rest skip the stride",
+        fr.skips[0] == 0 and set(fr.skips[1:]) == {3})
+    pf.close()
+    chk("closing it closes the reader underneath", fr.closed)
+
+    print(f"\n  {ok}/13")
+    return ok == 13
 
 
 def main():

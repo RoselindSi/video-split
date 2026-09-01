@@ -544,6 +544,76 @@ class ClipReader:
             c.release()
 
 
+class Prefetch:
+    """A ClipReader read on its own thread. -> same `next`/`close` interface.
+
+    Decoding three videos off the shared mount costs about a second per frame
+    step and the CPU spends all of it waiting. That second is only unavoidable
+    if it is spent in series with the work: the reader has no dependency on
+    what the last frame was used for, so it can be a frame or two ahead while
+    the render, the detector and the cut run on the previous one.
+
+    The queue is short on purpose. A long one would read far ahead and hold
+    several decoded frames of a 1520p source in memory to hide a wait that two
+    frames already hide.
+
+    ONE THREAD TOUCHES THE READER. VideoCapture is not safe to share, and the
+    consumer only ever takes finished frames off the queue."""
+
+    def __init__(self, reader, skip, depth=2):
+        import queue
+        import threading
+        self.q = queue.Queue(maxsize=int(depth))
+        self.reader = reader
+        self.stop = threading.Event()
+        # The producer exits after it reports the end of the file, so a caller
+        # that asks once more would wait on a queue nobody will ever fill
+        # again. Remembering the end is cheaper than a timeout and cannot race
+        # with the producer, because only the consumer touches it.
+        self._ended = False
+        self._t = threading.Thread(target=self._run, args=(int(skip),),
+                                   daemon=True)
+        self._t.start()
+
+    def _run(self, skip):
+        first = True
+        while not self.stop.is_set():
+            try:
+                src = self.reader.next(skip=0 if first else skip)
+            except Exception as e:                  # noqa: BLE001
+                self.q.put(e)
+                return
+            first = False
+            self.q.put(src)
+            if not src:
+                return
+
+    def next(self, skip=0):
+        """`skip` is fixed at construction; the argument is accepted so this
+        can stand in for a ClipReader without the caller changing."""
+        if self._ended:
+            return None
+        got = self.q.get()
+        if isinstance(got, Exception):
+            self._ended = True
+            raise got
+        if not got:
+            self._ended = True
+        return got
+
+    def close(self):
+        self.stop.set()
+        # Unblock the thread if it is parked on a full queue, then let the
+        # reader go. Draining is enough: the thread is a daemon and exits on
+        # the flag.
+        try:
+            while not self.q.empty():
+                self.q.get_nowait()
+        except Exception:                           # noqa: BLE001
+            pass
+        self.reader.close()
+
+
 def main():
     import argparse
     import json
