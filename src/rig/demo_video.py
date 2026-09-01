@@ -137,7 +137,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     from src.rig.geometry import VirtualWideCamera
     from src.rig.render_wide import render
     from src.rig.seam_fix import ClipReader, Prefetch
-    from src.rig.hand_detect import detect, masks_from
+    from src.rig.hand_detect import detect, masks_from, OwnHold
     from src.rig.suppress_other import suppress
     from src.rig import own_cnn
 
@@ -146,6 +146,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     fdet = face_mask.load_detector(face_model, face_conf) if face_model \
         else None
     hold = face_mask.Hold()
+    ownhold = OwnHold()
     vcam = VirtualWideCamera.from_rig(rig)
     rd = Prefetch(ClipReader(rig, videos, start), skip=max(0, stride - 1))
     mc, writer = {}, None
@@ -162,20 +163,27 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
             rgb, _, _, _ = render(rig, vcam, src, 0.6, map_cache=mc)
         except TypeError:
             rgb, _, _, _ = render(rig, vcam, src, 0.6)
-        # Hands are found on the untouched frame and the panels are drawn on
-        # the covered one. Detecting on the mosaic would make the privacy step
-        # degrade the measurement it is supposed to leave alone.
-        dets = detect(model, rgb)
+        # EVERY DECISION IS MADE ON THE UNTOUCHED FRAME. The detector and the
+        # ownership classifier both read `clean`; only the panels are drawn on
+        # the covered copy. Classifying on the mosaic would let the privacy
+        # step corrupt the crop the verdict is read from -- and a colleague's
+        # face sits directly above a colleague's hands, so that is precisely
+        # where the two would collide.
+        clean = rgb
+        dets = detect(model, clean)
         if fdet is not None:
-            faces = face_mask.detect_faces(fdet, rgb)
+            faces = face_mask.detect_faces(fdet, clean)
             n_face += len(faces)
-            rgb, _ = face_mask.cover(rgb, hold.update(faces,
-                                                     shape=rgb.shape))
+            rgb, _ = face_mask.cover(clean, hold.update(faces,
+                                                        shape=clean.shape))
         if cnn is not None:
-            flags = own_cnn.predict(cnn, device, rgb, dets)
+            flags = own_cnn.predict(cnn, device, clean, dets)
         else:
             flags = [(bool(d.get("owner")), float(d.get("owner_p", 1.0)))
                      for d in dets]
+        # One frame's doubt is a flicker; the trace charged every dropped
+        # cover to the label and none to the cut or the veto.
+        flags = ownhold.update(dets, flags)
         own = [d for d, (o, _) in zip(dets, flags) if o]
         oth = [d for d, (o, _) in zip(dets, flags) if not o]
         dis = any(bool(d.get("rule_owner")) != bool(o)
@@ -185,9 +193,10 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         # The owner mask exists only to veto overlap with the other mask, so
         # with nothing to suppress it is a segmentation computed and thrown
         # away. On a clip where a colleague is rare that is most frames.
-        m_oth = masks_from(rgb, oth) if oth else np.zeros(rgb.shape[:2], bool)
-        m_own = masks_from(rgb, own) if (own and m_oth.any()) \
-            else np.zeros(rgb.shape[:2], bool)
+        m_oth = masks_from(clean, oth) if oth \
+            else np.zeros(clean.shape[:2], bool)
+        m_own = masks_from(clean, own) if (own and m_oth.any()) \
+            else np.zeros(clean.shape[:2], bool)
         sup, alpha = suppress(rgb, m_oth, dilate, 4, sigma, protect=m_own)
         if trace is not None:
             # Every quantity between "a hand was called foreign" and "pixels

@@ -282,6 +282,64 @@ def masks_from(rgb, dets, pad=0.15, iters=3, max_side=MASK_MAX_SIDE):
     return out
 
 
+class OwnHold:
+    """Ownership carried across frames, so one frame's doubt is not a flicker.
+
+    WHY THIS AND NOT A BETTER CLASSIFIER. Instrumented over 120 consecutive
+    frames, every one of the five times the cover dropped was the label: the
+    classifier stopped calling a hand foreign while the detector's box sat
+    still on it. GrabCut returned an empty mask zero times and the owner mask
+    vetoed zero times. The cut and the veto are not what is broken.
+
+    A SCHMITT TRIGGER, NOT AN AVERAGE. Averaging alone still crosses 0.5 in
+    both directions on a hand the classifier is unsure of, which is exactly
+    the hand that flickers. Two thresholds with a gap between them mean a
+    verdict has to be contradicted by a margin, not merely by noise.
+
+    THE TWO THRESHOLDS ARE NOT SYMMETRIC, AND SHOULD NOT BE. Calling a
+    colleague's hand yours puts it in front of the downstream model; calling
+    yours a colleague's blurs a hand that model wanted. Both are wrong, but
+    only the first is a leak, so leaving `other` costs more evidence than
+    entering it. This is the same asymmetry the face hold is built on.
+
+    Smoothing needs to know which hand is which, so the matching is `track`'s
+    and inherits its limits: a hand that vanishes for a frame and returns is a
+    new track, and starts from its own probability with no history."""
+
+    def __init__(self, fast=0.8, slow=0.4, lo=0.35, hi=0.70):
+        # Asymmetric in the smoothing as well as in the thresholds. A single
+        # symmetric rate cannot do both jobs: slow enough to ignore a frame of
+        # doubt is also slow enough to leave a colleague's hand uncovered for
+        # a frame after it appears, and that frame is a leak. Evidence moving
+        # TOWARDS `other` is taken at `fast`, evidence moving away at `slow`.
+        self.fast, self.slow = float(fast), float(slow)
+        self.lo, self.hi = float(lo), float(hi)
+        self.prev = []                      # last frame's detections
+        self.state = []                     # per prev index: [ema, is_owner]
+
+    def update(self, dets, flags):
+        """dets, flags as `detect` produces them.
+        -> [(is_owner, ema_p)] in the order of `dets`."""
+        pairs = dict((j, i) for i, j in track(self.prev, dets))
+        out, state = [], []
+        for j, (d, (raw_own, p)) in enumerate(zip(dets, flags)):
+            i = pairs.get(j)
+            if i is not None and i < len(self.state):
+                prev_ema, was = self.state[i]
+                a = self.fast if p < prev_ema else self.slow
+                ema = a * p + (1 - a) * prev_ema
+            else:
+                ema, was = float(p), bool(raw_own)
+            if was:
+                now = ema >= self.lo          # leaving owner is easy
+            else:
+                now = ema >= self.hi          # leaving other needs a margin
+            state.append([float(ema), bool(now)])
+            out.append((bool(now), float(ema)))
+        self.prev, self.state = list(dets), state
+        return out
+
+
 def track(prev, cur, max_move_frac=0.25):
     """Match detections between consecutive frames by centre distance.
     -> [(prev_index, cur_index)]
@@ -445,6 +503,30 @@ def _self_test():
     chk(t_win < t_full,
         f"and it is faster ({t_win*1000:.0f} ms vs {t_full*1000:.0f} ms, "
         f"{t_full/max(1e-6, t_win):.1f}x)")
+
+    # The flicker the trace charged every dropped cover to: a hand held
+    # steady, called foreign, with one frame of doubt in the middle.
+    def box(cx):
+        return {"box": (cx - 40, 300, cx + 40, 380),
+                "kp": np.array([[cx, 340]] * 21, float)}
+
+    oh = OwnHold()
+    seq = [0.05, 0.03, 0.62, 0.04, 0.06]        # one excursion, never > hi
+    got = [oh.update([box(500)], [(p >= 0.5, p)])[0][0] for p in seq]
+    chk(not any(got), "one frame of doubt does not flip a held `other`")
+
+    oh2 = OwnHold()
+    sustained = [0.05, 0.9, 0.92, 0.95, 0.96]
+    got2 = [oh2.update([box(500)], [(p >= 0.5, p)])[0][0] for p in sustained]
+    chk(got2[-1] and not got2[0],
+        "but sustained evidence does flip it, so the hold is not a latch")
+
+    # Entering `other` must be cheaper than leaving it: the asymmetry is the
+    # point, not an artefact of the numbers chosen.
+    oh3 = OwnHold()
+    oh3.update([box(500)], [(True, 0.95)])
+    quick = oh3.update([box(500)], [(False, 0.10)])[0][0]
+    chk(not quick, "a confident `other` is entered in one frame")
 
     print(f"\n  {sum(ok)}/{len(ok)} cases pass.")
     print("  Ownership is read off the wrist, so it does not depend on how "
