@@ -77,7 +77,7 @@ def features(det, shape):
 
 def extract(rig, videos, out_dir, start, n_frames, model, stride=15,
             crop_px=192, tag="", verbose=True, min_hands=0, rows_out=None,
-            write=True, select_rule=False):
+            write=True, select_rule=False, stats=None):
     """Render frames, detect, and write one crop plus one row per hand.
 
     Prints as it goes. The first version printed only on completion, and
@@ -122,6 +122,15 @@ def extract(rig, videos, out_dir, start, n_frames, model, stride=15,
         # `rule` alone begs the question. Which channel caught a hand is
         # written to `select_by`, so any later analysis can condition on it
         # instead of having to trust that the mixture was harmless.
+        if stats is not None:
+            # The scan that draws the sample also measures the stratum it was
+            # drawn from. A separate census pass would decode the same frames
+            # a second time to learn the same thing.
+            stats["frames"] += 1
+            stats["hands"] += len(dets)
+            if min_hands and len(dets) >= min_hands:
+                stats["frames_hi"] += 1
+                stats["hands_hi"] += len(dets)
         by = []
         if min_hands and len(dets) >= min_hands:
             by.append("count")
@@ -179,7 +188,8 @@ def extract(rig, videos, out_dir, start, n_frames, model, stride=15,
 
 
 def sweep(databags, out_dir, model, n_frames=200, stride=30, min_hands=3,
-          crop_px=192, cap_per_rec=40, verbose=True, select_rule=True):
+          crop_px=192, cap_per_rec=40, verbose=True, select_rule=True,
+          seed=0):
     """Extract from many recordings into ONE package. -> rows
 
     A `sources.csv` is written beside the labels. The last ten packages were
@@ -196,6 +206,7 @@ def sweep(databags, out_dir, model, n_frames=200, stride=30, min_hands=3,
     os.makedirs(os.path.join(out_dir, "crops"), exist_ok=True)
     os.makedirs(os.path.join(out_dir, "context"), exist_ok=True)
     allrows, srcs = [], []
+    rng = np.random.default_rng(seed)
     t0 = time.time()
     for i, d in enumerate(databags, 1):
         tag = tag_for(d)
@@ -210,20 +221,26 @@ def sweep(databags, out_dir, model, n_frames=200, stride=30, min_hands=3,
                 for k in ("cam12", "cam34", "cam56")}
         if not all(os.path.exists(v) for v in vids.values()):
             continue
+        st = {"frames": 0, "hands": 0, "frames_hi": 0, "hands_hi": 0}
         try:
             got = extract(rig, vids, out_dir, 0, n_frames, model, stride,
                           crop_px, tag=tag, verbose=False,
                           min_hands=min_hands, write=False,
-                          select_rule=select_rule)
+                          select_rule=select_rule, stats=st)
         except (Exception, SystemExit) as e:
             if verbose:
                 print(f"  [{i}/{len(databags)}] {os.path.basename(d)}: "
                       f"{type(e).__name__}: {e}", flush=True)
             continue
         if cap_per_rec and len(got) > cap_per_rec:
-            got = got[:cap_per_rec]
+            # A RANDOM subset, not the first N. Taking the head would sample
+            # the start of every recording, and a workstation looks the same
+            # for minutes at a time -- the cap would then be a systematic
+            # choice of "early", which is not a stratum anyone can weight.
+            keep = rng.choice(len(got), cap_per_rec, replace=False)
+            got = [got[int(i)] for i in sorted(keep)]
         allrows += got
-        srcs.append({"tag": tag, "databag": d, "hands": len(got)})
+        srcs.append({"tag": tag, "databag": d, "hands": len(got), **st})
         if verbose:
             el = time.time() - t0
             print(f"  [{i}/{len(databags)}] {os.path.basename(d):26s} "
@@ -238,7 +255,8 @@ def sweep(databags, out_dir, model, n_frames=200, stride=30, min_hands=3,
         w.writerows(allrows)
     with open(os.path.join(out_dir, "sources.csv"), "w", newline="",
               encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=["tag", "databag", "hands"])
+        w = csv.DictWriter(f, fieldnames=["tag", "databag", "hands",
+                                          "frames", "hands_hi", "frames_hi"])
         w.writeheader()
         w.writerows(srcs)
     return allrows
