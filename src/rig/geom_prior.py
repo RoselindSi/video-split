@@ -309,8 +309,6 @@ def main():
           "a differently mounted camera.")
 
 
-if __name__ == "__main__":
-    main()
 
 
 def compare(rows, clf_path, holdout, blend=0.5, verbose=True):
@@ -408,3 +406,7 @@ def compare(rows, clf_path, holdout, blend=0.5, verbose=True):
               "rank cannot be moved by a workstation where\n  every hand is "
               "uniformly smaller.")
     return out
+
+
+if __name__ == "__main__":
+    main()
