@@ -180,6 +180,66 @@ def build_model():
         nn.Linear(128, 2))
 
 
+def load_model(path, device=None):
+    """-> (model, device) ready for inference, or (None, None) if absent.
+
+    A missing checkpoint is not an error. The geometric rule is the fallback,
+    and it is the incumbent being replaced rather than a stub."""
+    torch = _torch()
+    if not path or not os.path.exists(path):
+        return None, None
+    device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+    ck = torch.load(path, map_location=device)
+    m = build_model().to(device)
+    m.load_state_dict(ck["model"])
+    m.eval()
+    return m, device
+
+
+def crop_of(rgb, det, pad=0.6):
+    """The same crop the labeller saw. -> BGR image
+
+    `pad = 0.6 * max(w, h)` is not a tunable: it is what `own_label` wrote to
+    disk, so every training example has exactly this much forearm around the
+    hand. Inference on a tighter or looser crop would be a different input
+    distribution from the one the weights were fitted to."""
+    import cv2
+    H, W = rgb.shape[:2]
+    x0, y0, x1, y1 = det["box"]
+    p = int(max(x1 - x0, y1 - y0) * pad)
+    cx0, cy0 = max(0, x0 - p), max(0, y0 - p)
+    cx1, cy1 = min(W, x1 + p), min(H, y1 + p)
+    if cx1 - cx0 < 4 or cy1 - cy0 < 4:
+        return None
+    return cv2.resize(rgb[cy0:cy1, cx0:cx1], (SIZE, SIZE))
+
+
+def predict(model, device, rgb, dets):
+    """-> [(is_owner, p_owner)] one per detection, in order."""
+    import cv2
+    torch = _torch()
+    if not dets:
+        return []
+    xs, keep = [], []
+    for i, d in enumerate(dets):
+        c = crop_of(rgb, d)
+        if c is None:
+            continue
+        x = torch.from_numpy(
+            np.ascontiguousarray(cv2.resize(c, (SIZE, SIZE))[:, :, ::-1]
+                                 ).astype(np.float32) / 255.0).permute(2, 0, 1)
+        xs.append((x - 0.45) / 0.25)
+        keep.append(i)
+    out = [(True, 1.0)] * len(dets)
+    if not xs:
+        return out
+    with torch.no_grad():
+        pr = torch.softmax(model(torch.stack(xs).to(device)), 1)[:, 1]
+    for i, p in zip(keep, pr.cpu().numpy().tolist()):
+        out[i] = (p >= 0.5, float(p))
+    return out
+
+
 def evaluate(model, ds, device, batch=64):
     torch = _torch()
     model.eval()

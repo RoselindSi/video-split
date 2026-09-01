@@ -38,6 +38,7 @@ WHOLE = [
     ("own_cnn.py", "ownership from the crop -- the model that ships"),
     ("own_label.py", "labelling, mining, stratified sweep"),
     ("rule_baseline.py", "the incumbent's score, upright and turned"),
+    ("demo_video.py", "a before-and-after clip, straight from a databag"),
 ]
 
 # Taken apart. name -> the top-level definitions worth keeping.
