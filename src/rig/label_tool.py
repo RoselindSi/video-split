@@ -43,13 +43,22 @@ STEM_RE = re.compile(r"^(.*?)f(\d{6})_h(\d+)$")
 LABELS = ("owner", "other", "skip")
 
 
-def load_rows(pkg, verbose=True):
+def load_rows(pkg, csv_only=False, verbose=True):
     """-> [row] for every crop in the package, csv row or not.
 
     The sweep left 851 crops and 479 csv rows on this corpus. A crop with no
     row is still a labellable hand and its identity is entirely in its
     filename, so it is recovered rather than dropped -- silently labelling 56%
-    of what was harvested would be the tool quietly deciding the sample."""
+    of what was harvested would be the tool quietly deciding the sample.
+
+    `csv_only` IS FOR TEST SETS AND ONLY FOR TEST SETS. A crop with no row is
+    not a leftover: `extract` writes a crop for every hand it finds and the
+    sweep's per-recording cap then keeps a random subset of the ROWS, so the
+    orphans are precisely the hands the cap threw away. Recovering them is
+    right for training -- they are real labelled hands. It is wrong for a
+    package whose `sources.csv` weights describe the capped subset, because
+    the weights are what turn a measured error rate into a deployment one, and
+    they do not describe a population the cap did not draw."""
     rows, by_stem = [], {}
     q = os.path.join(pkg, "hands.csv")
     if os.path.exists(q):
@@ -64,6 +73,8 @@ def load_rows(pkg, verbose=True):
         r = by_stem.get(stem)
         if r is None:
             orphans += 1
+            if csv_only:
+                continue
             r = {"stem": stem}
         rows.append({"stem": stem, "tag": m.group(1), "frame": int(m.group(2)),
                      "hand": int(m.group(3)), "_crop": c,
@@ -73,7 +84,14 @@ def load_rows(pkg, verbose=True):
     if verbose:
         n_tag = len({r["tag"] for r in rows})
         print(f"  {len(rows)} crops over {n_tag} recordings"
-              + (f", {orphans} of them had no csv row" if orphans else ""))
+              + ((f", {orphans} with no csv row "
+                  + ("EXCLUDED (--csv_only)" if csv_only else "recovered"))
+                 if orphans else ""))
+        if orphans and not csv_only:
+            print("     Those are the hands the sweep's per-recording cap "
+                  "discarded. Fine for\n     training; for a test set pass "
+                  "--csv_only, or `sources.csv` no longer\n     describes "
+                  "the population being labelled.")
     return rows
 
 
@@ -446,6 +464,11 @@ def main():
     b.add_argument("--per_recording", type=int, default=20)
     b.add_argument("--seed", type=int, default=0)
     b.add_argument("--thumb", type=int, default=96)
+    b.add_argument("--csv_only", action="store_true",
+                   help="label only the hands the sweep's cap actually kept. "
+                        "REQUIRED for a test set: `sources.csv` weights "
+                        "describe that subset, and the discarded crops are "
+                        "not part of the population it can weight.")
     b.add_argument("--ctx_px", type=int, default=760,
                    help="width of the full frame shown for each hand")
 
@@ -472,7 +495,7 @@ def main():
                 print(f"    `other` by recording: {dict(tags)}")
         return
 
-    rows = load_rows(a.pkg)
+    rows = load_rows(a.pkg, csv_only=a.csv_only)
     if a.mode == "rank":
         rows = score_rows(rows, a.model)
     else:
