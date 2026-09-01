@@ -95,8 +95,43 @@ def compose(rgb, vis, out, n_own, n_oth, frame, disagreed, frac=None):
     return np.vstack([top, vis, _bar(W, note), out])
 
 
+def _report_trace(rows, path):
+    """Say which of the three things dropped the cover, per frame.
+
+    A frame counts as a DROP when the previous frame suppressed something and
+    this one did not. Each drop is attributed to the first stage that came up
+    empty, because they are in series: no `other` label means the cut is never
+    asked, and an empty cut means the veto has nothing to cancel."""
+    drops = {"label": [], "cut": [], "veto": [], "unexplained": []}
+    covered = [r for r in rows if r["alpha_frac"] > 0]
+    for a, b in zip(rows, rows[1:]):
+        if not (a["alpha_frac"] > 0 and b["alpha_frac"] <= 0):
+            continue
+        if b["n_oth"] == 0:
+            drops["label"].append(b["frame"])
+        elif b["oth_px"] == 0:
+            drops["cut"].append(b["frame"])
+        elif b["veto_px"] >= b["oth_px"]:
+            drops["veto"].append(b["frame"])
+        else:
+            drops["unexplained"].append(b["frame"])
+    print(f"\n  trace -> {path}")
+    print(f"  {len(covered)} of {len(rows)} frames suppressed something; "
+          f"{sum(len(v) for v in drops.values())} drops")
+    for k, v in drops.items():
+        if v:
+            print(f"    {k:<12} {len(v):3d}   frames {v[:10]}")
+    print("  label = the classifier stopped calling it foreign.  "
+          "cut = GrabCut returned\n  nothing for a hand still called foreign."
+          "  veto = the owner mask covered the\n  whole of it. These are in "
+          "series, so each drop is charged to the first one\n  that was "
+          "empty.")
+    return drops
+
+
 def run(rig, videos, out_path, start, n, stride, model, cnn, device,
-        dilate, sigma, fps, verbose=True, face_model=None, face_conf=None):
+        dilate, sigma, fps, verbose=True, face_model=None, face_conf=None,
+        trace_path=None):
     import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
@@ -114,6 +149,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     vcam = VirtualWideCamera.from_rig(rig)
     rd = Prefetch(ClipReader(rig, videos, start), skip=max(0, stride - 1))
     mc, writer = {}, None
+    trace = [] if trace_path else None
     n_dis = n_written = n_face = 0
     t0 = time.time()
     for k in range(n):
@@ -153,6 +189,22 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         m_own = masks_from(rgb, own) if (own and m_oth.any()) \
             else np.zeros(rgb.shape[:2], bool)
         sup, alpha = suppress(rgb, m_oth, dilate, 4, sigma, protect=m_own)
+        if trace is not None:
+            # Every quantity between "a hand was called foreign" and "pixels
+            # were suppressed", so a frame where the cover drops can be
+            # attributed instead of guessed at. A stable box with no cover is
+            # one of: the label flipped, the cut returned nothing, or the
+            # owner mask vetoed it -- and these three columns separate them.
+            trace.append({
+                "frame": start + k * stride,
+                "n_det": len(dets), "n_own": len(own), "n_oth": len(oth),
+                "oth_px": int(m_oth.sum()), "own_px": int(m_own.sum()),
+                "veto_px": int((m_oth & m_own).sum()),
+                "alpha_frac": round(float((alpha > 0.5).mean()), 6),
+                "p_min_oth": round(min([p for (o, p) in flags if not o],
+                                       default=float("nan")), 4),
+                "p_max_own": round(max([p for (o, p) in flags if o],
+                                       default=float("nan")), 4)})
         panel = compose(rgb, annotate(rgb, dets, flags, m_oth), sup,
                         len(own), len(oth), start + k * stride, dis,
                         float((alpha > 0.5).mean()))
@@ -172,6 +224,13 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     rd.close()
     if writer is not None:
         writer.release()
+    if trace:
+        import csv
+        with open(trace_path, "w", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=list(trace[0].keys()))
+            w.writeheader()
+            w.writerows(trace)
+        _report_trace(trace, trace_path)
     return n_written, n_dis, n_face
 
 
@@ -287,6 +346,9 @@ def main():
                     help="do NOT cover faces (they are covered by default)")
     ap.add_argument("--face_model", default=face_mask.MODEL)
     ap.add_argument("--face_conf", type=float, default=face_mask.MIN_CONF)
+    ap.add_argument("--trace", help="write a per-frame CSV of every quantity "
+                                    "between the label and the suppressed "
+                                    "pixels, and attribute each dropout")
     ap.add_argument("--self_test", action="store_true")
     a = ap.parse_args()
 
@@ -318,7 +380,7 @@ def main():
     n, dis, nf = run(rig, vids, a.out, a.start, a.n, a.stride,
                      YOLO(a.weights), cnn, device, a.dilate, a.sigma, a.fps,
                      face_model=None if a.no_faces else a.face_model,
-                     face_conf=a.face_conf)
+                     face_conf=a.face_conf, trace_path=a.trace)
     if not n:
         raise SystemExit("no frames written")
     mb = os.path.getsize(a.out) / 1e6
