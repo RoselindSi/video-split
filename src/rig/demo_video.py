@@ -133,7 +133,8 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         if fdet is not None:
             faces = face_mask.detect_faces(fdet, rgb)
             n_face += len(faces)
-            rgb, _ = face_mask.cover(rgb, hold.update(faces))
+            rgb, _ = face_mask.cover(rgb, hold.update(faces,
+                                                     shape=rgb.shape))
         if cnn is not None:
             flags = own_cnn.predict(cnn, device, rgb, dets)
         else:

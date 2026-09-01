@@ -61,6 +61,11 @@ MIN_CONF = 0.30
 # 10-15 fps these demos render, this is roughly a second.
 HOLD_FRAMES = 12
 
+# A detection wider than this fraction of the frame is refused. Nobody's face
+# but the wearer's could be that large here, and the wearer's is behind the
+# camera. This is a statement about the rig, not a tuning knob.
+MAX_FACE_FRAC = 0.12
+
 # The detector bounds a face from brow to chin. Ears, hairline and jaw are
 # outside that and carry identity, so the box is grown before it is used.
 PAD = 0.35
@@ -113,39 +118,63 @@ def detect_faces(det, rgb):
 class Hold:
     """Keeps a face covered for a while after the detector stops finding it.
 
-    Matching is by overlap with what is already held, so a face that drifts a
-    little between frames refreshes its own entry instead of starting a second
-    one. A held box grows to the union of where it has been seen: a face that
-    moves during the hold would otherwise be covered where it was rather than
-    where it is."""
+    A TRACK IS ITS LATEST BOX, NOT THE UNION OF ITS BOXES. The first version
+    grew a held box to the union of everything that overlapped it, so that a
+    face moving during a hold stayed covered. That is a runaway: the grown box
+    overlaps more of the next frame's detections, absorbing them extends it
+    further, and the box that does the matching is the one growth has already
+    inflated. Measured on a rendered clip it swallowed a face of 84x84 into a
+    region of roughly 350x420 over fifty frames -- the colleague, the shelving
+    and a third of the bench. Replacing the box on each match instead bounds
+    the region by what the detector actually saw, and the hold still covers the
+    frames where it saw nothing.
 
-    def __init__(self, frames=HOLD_FRAMES):
+    Matching is by IoU rather than by any overlap, for the same reason: a box
+    that merely touches another is not evidence they are the same face, and
+    accepting it is what let one track eat the frame."""
+
+    def __init__(self, frames=HOLD_FRAMES, min_iou=0.2, max_frac=MAX_FACE_FRAC):
         self.frames = int(frames)
+        self.min_iou = float(min_iou)
+        self.max_frac = max_frac
         self.items = []                        # [[x0, y0, x1, y1, ttl]]
 
     @staticmethod
-    def _overlaps(a, b):
-        return not (a[2] <= b[0] or b[2] <= a[0]
-                    or a[3] <= b[1] or b[3] <= a[1])
+    def _iou(a, b):
+        ix = max(0, min(a[2], b[2]) - max(a[0], b[0]))
+        iy = max(0, min(a[3], b[3]) - max(a[1], b[1]))
+        inter = ix * iy
+        if inter <= 0:
+            return 0.0
+        ua = (a[2] - a[0]) * (a[3] - a[1])
+        ub = (b[2] - b[0]) * (b[3] - b[1])
+        return inter / float(ua + ub - inter)
 
-    def update(self, boxes):
-        """boxes: [(x0,y0,x1,y1,score)] -> [(x0,y0,x1,y1)] to cover now."""
+    def update(self, boxes, shape=None):
+        """boxes: [(x0,y0,x1,y1,score)] -> [(x0,y0,x1,y1)] to cover now.
+
+        `shape` enables the size sanity check: the wearer's own face is never
+        in view, so every face here belongs to somebody across a bench and is
+        small. A detection wider than `max_frac` of the frame is not a face at
+        this range, and covering it destroys the bench this pipeline exists to
+        keep."""
+        if self.max_frac and shape is not None:
+            W = shape[1]
+            boxes = [b for b in boxes
+                     if (b[2] - b[0]) <= self.max_frac * W]
         for it in self.items:
             it[4] -= 1
         for b in boxes:
-            hit = None
+            best, best_iou = None, self.min_iou
             for it in self.items:
-                if self._overlaps(b, it):
-                    hit = it
-                    break
-            if hit is None:
+                v = self._iou(b, it)
+                if v >= best_iou:
+                    best, best_iou = it, v
+            if best is None:
                 self.items.append([b[0], b[1], b[2], b[3], self.frames])
             else:
-                hit[0] = min(hit[0], b[0])
-                hit[1] = min(hit[1], b[1])
-                hit[2] = max(hit[2], b[2])
-                hit[3] = max(hit[3], b[3])
-                hit[4] = self.frames
+                best[0], best[1], best[2], best[3] = b[0], b[1], b[2], b[3]
+                best[4] = self.frames
         self.items = [it for it in self.items if it[4] > 0]
         return [tuple(it[:4]) for it in self.items]
 
@@ -219,11 +248,30 @@ def _self_test():
 
     h2 = Hold(frames=5)
     h2.update([(10, 10, 30, 30, 0.9)])
-    kept = h2.update([(20, 20, 40, 40, 0.9)])
-    chk("an overlapping detection refreshes one face, not two",
-        len(kept) == 1 and kept[0] == (10, 10, 40, 40))
+    kept = h2.update([(16, 16, 36, 36, 0.9)])
+    chk("a matching detection refreshes one face, not two", len(kept) == 1)
+    chk("and the held box FOLLOWS it instead of growing to the union",
+        kept[0] == (16, 16, 36, 36))
     h2.update([(200, 200, 220, 220, 0.9)])
     chk("a disjoint detection starts its own", len(h2.items) == 2)
+
+    # The runaway that made the first version cover a third of the frame: a
+    # chain of detections each barely touching the last. Held boxes must not
+    # accumulate across it.
+    h3 = Hold(frames=30)
+    for i in range(40):
+        h3.update([(10 + 5 * i, 10, 90 + 5 * i, 90, 0.9)])
+    widest = max(b[2] - b[0] for b in h3.update([]))
+    chk(f"a drifting face never inflates the held box (widest {widest})",
+        widest <= 80)
+
+    # Size sanity: the wearer's face is behind the camera, so a face filling a
+    # quarter of the width is not a face.
+    h4 = Hold(frames=5, max_frac=0.12)
+    chk("an implausibly large detection is refused",
+        h4.update([(0, 0, 400, 300, 0.9)], shape=(600, 1000)) == [])
+    chk("a plausible one at the same threshold is kept",
+        len(h4.update([(0, 0, 90, 90, 0.9)], shape=(600, 1000))) == 1)
 
     print(f"\n  {ok}/{n}")
     return ok == n
