@@ -277,6 +277,22 @@ def train(rows, holdout, epochs=30, bs=32, lr=1e-3, seed=0, rotate=True,
         results[f"cnn {lab}"] = scores(p, y)
         rv = rule_verdict(ev_rows, k)
         results[f"rule {lab}"] = scores(rv, np.array([r["y"] for r in ev_rows]))
+
+    # PER RECORDING, AND THE REASON IS A COMPETING EXPLANATION. Two of the
+    # held-out recordings are 100% `other`, so a model that only recognises
+    # "this does not look like anything I trained on" would score perfectly on
+    # them without ever deciding ownership. The recording that contains BOTH
+    # classes is the one where novelty cannot help, and it is the only row
+    # that distinguishes the two accounts.
+    tags = sorted({r["tag"] for r in ev_rows})
+    p0, _ = evaluate(model, Crops(ev_rows, force_rot=0), device)
+    per = {}
+    for t in tags:
+        idx = [i for i, r in enumerate(ev_rows) if r["tag"] == t]
+        yy = np.array([ev_rows[i]["y"] for i in idx])
+        mixed = "" if len(set(yy.tolist())) > 1 else "   (single class)"
+        per[f"  {t} upright{mixed}"] = scores(p0[idx], yy)
+    results.update(per)
     if out:
         os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
         torch.save({"model": model.state_dict(), "size": SIZE}, out)
