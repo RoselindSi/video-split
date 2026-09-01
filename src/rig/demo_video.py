@@ -39,10 +39,20 @@ def _bar(width, text, height=BAR_H, bg=(28, 28, 30), fg=(235, 235, 235)):
     return b
 
 
-def annotate(rgb, dets, own_flags):
-    """Top panel: the decision, drawn. -> BGR image"""
+def annotate(rgb, dets, own_flags, m_oth=None):
+    """Top panel: the decision, drawn. -> BGR image
+
+    The region bound for suppression is tinted here rather than only blurred
+    below. A blur is a weak thing to look for on a small dark sleeve, and a
+    viewer who cannot find it has no way to tell a hand that was cleared from
+    a hand that was missed. The tint is on the DECISION panel only; the output
+    panel stays the real output, so nothing on screen claims the downstream
+    model receives a red arm."""
     import cv2
     vis = rgb.copy()
+    if m_oth is not None and m_oth.any():
+        vis[m_oth] = (0.45 * vis[m_oth]
+                      + 0.55 * np.array(RED, np.float32)).astype(np.uint8)
     for d, (is_own, p) in zip(dets, own_flags):
         x0, y0, x1, y1 = [int(v) for v in d["box"]]
         col = GREEN if is_own else RED
@@ -62,16 +72,27 @@ def annotate(rgb, dets, own_flags):
     return vis
 
 
-def compose(rgb, vis, out, n_own, n_oth, frame, disagreed):
+def compose(rgb, vis, out, n_own, n_oth, frame, disagreed, frac=None):
+    """`frac` is the share of pixels actually suppressed.
+
+    A frame where nothing was blurred is the failure that hides best: it looks
+    exactly like a frame that never had a colleague in it. Saying so on the
+    bar costs nothing and makes the two readable apart."""
     import cv2
     W = rgb.shape[1]
     top = _bar(W, f"input + decision      frame {frame}      "
                   f"self {n_own}   other {n_oth}"
                   + ("   [classifier disagrees with the rule]" if disagreed
                      else ""))
-    bot = _bar(W, "output to the downstream model      "
-                  "other arms blurred, the wearer's untouched")
-    return np.vstack([top, vis, bot, out])
+    # The status leads. Appended to a label it is the first thing a narrow
+    # frame truncates, and it is the only part that changes.
+    if frac is None:
+        note = "output to the downstream model"
+    elif frac <= 0:
+        note = "NOTHING SUPPRESSED - no hand here was called foreign"
+    else:
+        note = f"{frac:.2%} of pixels suppressed - output to the model"
+    return np.vstack([top, vis, _bar(W, note), out])
 
 
 def run(rig, videos, out_path, start, n, stride, model, cnn, device,
@@ -112,9 +133,10 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
 
         m_own = masks_from(rgb, own) if own else np.zeros(rgb.shape[:2], bool)
         m_oth = masks_from(rgb, oth) if oth else np.zeros(rgb.shape[:2], bool)
-        sup, _ = suppress(rgb, m_oth, dilate, 4, sigma, protect=m_own)
-        panel = compose(rgb, annotate(rgb, dets, flags), sup,
-                        len(own), len(oth), start + k * stride, dis)
+        sup, alpha = suppress(rgb, m_oth, dilate, 4, sigma, protect=m_own)
+        panel = compose(rgb, annotate(rgb, dets, flags, m_oth), sup,
+                        len(own), len(oth), start + k * stride, dis,
+                        float((alpha > 0.5).mean()))
         if writer is None:
             h, w = panel.shape[:2]
             writer = cv2.VideoWriter(out_path,
@@ -167,8 +189,18 @@ def _self_test():
                   [(False, 0.03)])
     chk("a disagreeing hand is drawn differently from an agreeing one",
         not np.array_equal(v2, v3))
-    print(f"\n  {ok}/6")
-    return ok == 6
+
+    m = np.zeros((60, 300), bool)
+    m[20:30, 200:220] = True
+    chk("the suppressed region is tinted on the decision panel",
+        not np.array_equal(annotate(rgb, dets, flags, m), vis))
+    # A frame with nothing suppressed has to read differently from a frame
+    # with something suppressed, or the demo cannot show a miss.
+    chk("an empty suppression says so",
+        not np.array_equal(compose(rgb, vis, rgb, 1, 0, 42, False, 0.0),
+                           compose(rgb, vis, rgb, 1, 1, 42, False, 0.05)))
+    print(f"\n  {ok}/8")
+    return ok == 8
 
 
 def main():

@@ -72,6 +72,7 @@ def load(pkgs, verbose=True):
                 continue
             rows.append({
                 "stem": r["stem"], "tag": m.group(1), "_crop": crop,
+                "frame": int(m.group(2)),
                 "y": 1 if r["label"] == "owner" else 0,
                 "exit_y": float(r.get("exit_y", np.nan)),
                 "rule": int(r.get("rule_owner", 0)),
@@ -285,6 +286,49 @@ def report(results):
         print(_row(lab, s))
 
 
+def check(rows, path, verbose=True):
+    """Run a saved model over crops that already carry a label. -> misses
+
+    A demo shows a decision the eye can read but not one it can check: a frame
+    where nothing is blurred looks the same whether the classifier cleared it
+    or missed everything in it. An empty `other` set is the failure that hides
+    best, because it renders as a clean frame.
+
+    So this reads the shipped checkpoint over the same crops the labeller saw,
+    upright and unaugmented, and prints the frame numbers where a hand a
+    person called foreign was called the wearer's. Those numbers index the
+    video: a missing blur can be laid at the classifier's door or taken off
+    it."""
+    model, device = load_model(path)
+    if model is None:
+        raise SystemExit(f"no checkpoint at {path}")
+    pred, true = evaluate(model, Crops(rows, augment=False), device)
+    res = {"all": scores(pred, true)}
+    by = {}
+    for r, p in zip(rows, pred):
+        by.setdefault(r["tag"], []).append((p, r["y"]))
+    for t, v in sorted(by.items()):
+        if any(y == 0 for _, y in v):
+            res[t] = scores([p for p, _ in v], [y for _, y in v])
+    if verbose:
+        report(res)
+    miss = [r for r, p in zip(rows, pred) if r["y"] == 0 and p == 1]
+    if verbose:
+        print(f"\n  {len(miss)} of {sum(1 for r in rows if r['y']==0)} "
+              f"`other` hands were called the wearer's.")
+        seen = {}
+        for r in miss:
+            seen.setdefault(r["tag"], []).append(r["frame"])
+        for t, f in sorted(seen.items()):
+            print(f"    {t:<12} frames {sorted(set(f))}")
+        print("\n  A frame listed here renders with no red box and nothing "
+              "blurred, which is\n  indistinguishable on screen from a frame "
+              "that never had a colleague in it.\n  Only recordings that "
+              "contain `other` are broken out: the rest have no\n  positive "
+              "to recall and their accuracy is the always-owner number.")
+    return miss
+
+
 def train(rows, holdout, epochs=30, bs=32, lr=1e-3, seed=0, rotate=True,
           device=None, out=None):
     torch = _torch()
@@ -412,6 +456,8 @@ def main():
     ap.add_argument("--no_rotate", action="store_true")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out")
+    ap.add_argument("--check", help="score a saved checkpoint on these "
+                                    "packages instead of training")
     ap.add_argument("--self_test", action="store_true")
     a = ap.parse_args()
 
@@ -422,6 +468,9 @@ def main():
     c = collections.Counter(r["tag"] for r in rows)
     print(f"{len(rows)} hands with crops over {len(c)} recordings, "
           f"{sum(1 for r in rows if r['y']==0)} other")
+    if a.check:
+        check(rows, a.check)
+        raise SystemExit(0)
     hold = set(a.holdout) if a.holdout else choose_holdout(rows)
     res = train(rows, hold, epochs=a.epochs, seed=a.seed,
                 rotate=not a.no_rotate, out=a.out)
