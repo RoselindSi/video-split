@@ -20,19 +20,31 @@ hand's own colours would be smeared into a hand-shaped smudge; blurring the
 frame lets the surrounding bench flow inward instead. Pixels outside the
 feather are bit-identical to the input, which is checked rather than assumed.
 
-WHAT FEEDS IT, TODAY, AND THE PROBLEM WITH THAT. There is no trained
-`other_arm` mask: the class was removed after all 83 of its components on this
-corpus were inspected and none was a hand -- solidity 0.96-0.99 was a wooden
-turntable and 0.49-0.56 a beige machine strap, because a colleague across the
-aisle is smaller than the detector's area floor. So the honest default here is
-`skin-like components minus the owner mask`, which is "hands in view that are
-not yours" and which, on this corpus, is mostly furniture.
+WHAT FEEDS IT. A hand detector proposes the regions and a classifier decides
+whose each one is; GrabCut finds the boundary inside the detector's box. So
+`other` is a positive claim about something already established to be a hand.
+`suppress` is the last step and takes that mask as given -- it does not decide
+anything, and nothing downstream of it defines `other`.
 
-Blurring a turntable in a fixed position on every frame is worse than blurring
-nothing: the downstream model sees a permanent smudge. That is why the
-suppressed FRACTION is reported per frame -- a number that never moves is the
-signature of furniture, and it is meant to be looked at before this is turned
-on for a whole recording.
+THE ORDER MATTERS AND USED TO BE THE OTHER WAY ROUND. The first version had no
+hand detector, so it thresholded skin-like colour over the whole frame, took
+connected components, subtracted the owner mask, and called the remainder
+`other`. That defines a colleague's arm as a residue -- not "I recognised
+someone else's hand" but "I could not explain this as yours" -- so anything
+skin-coloured fell in. Of the 83 components it called `other_arm` on this
+corpus, none was a hand: solidity 0.96-0.99 was a wooden turntable, 0.49-0.56 a
+beige machine strap. Worse, a turntable sits in the same place on every frame,
+so the downstream model saw a permanent smudge, which is a worse input than no
+suppression at all.
+
+`other_components` and `static_mask` below are that older path. Nothing in the
+pipeline calls them; they are kept because the border and solidity statistics
+in their comments are the measurements that justified replacing them.
+
+The suppressed FRACTION is still reported per frame, and is still worth
+reading: a number that never moves is the signature of a fixed object being
+covered, which is the failure that survived from the old design into any
+future one.
 """
 from __future__ import annotations
 
