@@ -70,15 +70,17 @@ def load(pkgs, verbose=True):
             m = STEM_RE.match(r.get("stem", ""))
             if not m:
                 continue
-            d = {"tag": m.group(1), "frame": int(m.group(2)),
+            crop = os.path.join(p, "crops", r["stem"] + ".jpg")
+            d = {"tag": m.group(1), "frame": int(m.group(2)), "_crop": crop,
                  "y": 1.0 if r["label"] == "owner" else 0.0}
             for c in ALL_CUES:
                 if c != "rel_size":
                     d[c] = _f(r.get(c))
             rows.append(d)
     rows = [r for r in rows
-            if all(np.isfinite(r.get(c, np.nan))
-                   for c in ALL_CUES if c != "rel_size")]
+            if os.path.exists(r["_crop"])
+            and all(np.isfinite(r.get(c, np.nan))
+                    for c in ALL_CUES if c != "rel_size")]
     if verbose:
         print(f"  {len(rows)} labelled hands with complete geometry, "
               f"{int(sum(1 for r in rows if r['y'] == 0))} other, "
@@ -274,6 +276,11 @@ def main():
     ap.add_argument("--invariant", action="store_true",
                     help="fit the rotation-invariant cues only")
     ap.add_argument("--min_other", type=int, default=3)
+    ap.add_argument("--compare", metavar="CLF",
+                    help="score the CNN, the geometry and their blend "
+                         "separately on --holdout recordings")
+    ap.add_argument("--holdout", action="append", default=[])
+    ap.add_argument("--blend", type=float, default=0.5)
     a = ap.parse_args()
     pkgs = []
     for p in a.pkg:
@@ -281,6 +288,11 @@ def main():
     rows = add_rel_size(load(pkgs))
     if not rows:
         raise SystemExit("no labelled hands with complete geometry")
+    if a.compare:
+        if not a.holdout:
+            raise SystemExit("--compare needs at least one --holdout")
+        compare(rows, a.compare, a.holdout, blend=a.blend)
+        raise SystemExit(0)
     cues = INVARIANT if a.invariant else ALL_CUES
     m = fit(rows, cues=cues, min_other=a.min_other)
     with open(a.out, "w") as f:
@@ -295,3 +307,76 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+def compare(rows, clf_path, holdout, blend=0.5, verbose=True):
+    """CNN, geometry, and their blend, scored separately on held-out
+    recordings. -> {name: {tag: (prec, rec, n, n_other)}}
+
+    THE BLEND HAS NEVER BEEN MEASURED APART FROM ITS PARTS. The demo fuses a
+    network and a fitted prior at equal weight and shows one verdict; when
+    that verdict is wrong there is no way to tell from the screen whether the
+    network dragged the geometry down, the geometry dragged the network down,
+    or both were wrong. Three columns cost one pass over crops that are
+    already on disk.
+
+    THE GEOMETRY IS REFITTED WITHOUT THE RECORDING IT IS SCORED ON. The
+    shipped JSON was fitted on everything, so using it here would give the
+    prior an advantage the network does not have and make the blend look
+    better than it will be on a new workstation."""
+    from src.rig import own_cnn
+    model, device = own_cnn.load_model(clf_path)
+    if model is None:
+        raise SystemExit(f"no checkpoint at {clf_path}")
+    torch = own_cnn._torch()
+    hold = set(holdout)
+    out = {"cnn": {}, "geom": {}, "blend": {}}
+    for tag in sorted(hold):
+        te = [r for r in rows if r["tag"] == tag]
+        if not te or not any(r["y"] == 0 for r in te):
+            continue
+        tr = [r for r in rows if r["tag"] != tag]
+        m = fit(tr, cues=INVARIANT, verbose=False)
+        X = np.array([[r[c] for c in m["cues"]] for r in te], float)
+        z = (X - np.array(m["mean"])) / np.array(m["std"])
+        p_geom = 1.0 / (1.0 + np.exp(-(z @ np.array(m["coef"])
+                                       + m["intercept"])))
+        ds = own_cnn.Crops([dict(r, _crop=r["_crop"], y=int(r["y"]))
+                            for r in te], augment=False)
+        ps = []
+        model.eval()
+        with torch.no_grad():
+            for i in range(0, len(ds), 64):
+                xs = [ds[j][0] for j in range(i, min(i + 64, len(ds)))]
+                ps.append(torch.softmax(model(torch.stack(xs).to(device)),
+                                        1)[:, 1].cpu().numpy())
+        p_cnn = np.concatenate(ps)
+        y = np.array([r["y"] for r in te])
+        for name, p in (("cnn", p_cnn), ("geom", p_geom),
+                        ("blend", (1 - blend) * p_cnn + blend * p_geom)):
+            pred_other = p < 0.5
+            tp = int((pred_other & (y == 0)).sum())
+            fp = int((pred_other & (y == 1)).sum())
+            fn = int((~pred_other & (y == 0)).sum())
+            out[name][tag] = (tp / (tp + fp) if tp + fp else float("nan"),
+                              tp / (tp + fn) if tp + fn else float("nan"),
+                              len(te), int((y == 0).sum()))
+    if verbose:
+        print(f"\n    {'recording':<16}{'n':>5}{'other':>7}"
+              + "".join(f"{k + ' prec':>12}{k + ' rec':>11}"
+                        for k in ("cnn", "geom", "blend")))
+        for tag in sorted(out["cnn"]):
+            n, no = out["cnn"][tag][2], out["cnn"][tag][3]
+            line = f"    {tag:<16}{n:>5}{no:>7}"
+            for k in ("cnn", "geom", "blend"):
+                pr, rc, _, _ = out[k][tag]
+                line += (f"{pr:>12.3f}" if np.isfinite(pr) else f"{'-':>12}")
+                line += (f"{rc:>11.3f}" if np.isfinite(rc) else f"{'-':>11}")
+            print(line)
+        print("\n  `other` is the positive class. The geometry column is a "
+              "fit that never saw\n  the recording it scores, so all three "
+              "columns are answering the same\n  question about a new "
+              "workstation. If the blend sits below its better part,\n  "
+              "fusing at equal weight is costing accuracy rather than "
+              "buying it.")
+    return out
