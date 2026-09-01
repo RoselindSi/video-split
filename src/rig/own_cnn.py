@@ -129,20 +129,30 @@ def split_by_tag(rows, holdout):
     return tr, ev
 
 
-def choose_holdout(rows, want_other=8, verbose=True):
+def choose_holdout(rows, want_other=8, min_rec_hands=5, verbose=True):
     """Pick held-out recordings that contain `other`, smallest first.
 
     An eval split with no `other` in it cannot score the class the whole
     feature exists for -- the first segmentation run held out two recordings
     that were 100% owner and reported a dash. Smallest-first because `other`
     is concentrated in a few recordings and spending the largest of them on
-    the eval would empty the training set of the class."""
+    the eval would empty the training set of the class.
+
+    `min_rec_hands` EXISTS BECAUSE SMALLEST-FIRST STOPPED BEING SAFE. It was
+    written when four recordings held every `other` there was. With twenty it
+    picks the scraps: one run held out seven recordings of which one had a
+    single hand and two had two, then reported a per-recording accuracy of
+    1.000 on a sample of one. A recording too small to carry a rate should not
+    be spent as though it could."""
     import collections
     by = collections.defaultdict(lambda: [0, 0])
     for r in rows:
         by[r["tag"]][r["y"]] += 1
-    have = sorted(((n_oth, tag) for tag, (n_oth, _) in by.items()
-                   if n_oth > 0))
+    have = sorted(((n_oth, tag) for tag, (n_oth, n_own) in by.items()
+                   if n_oth > 0 and n_oth + n_own >= min_rec_hands))
+    if not have:                      # nothing is big enough; take what exists
+        have = sorted(((n_oth, tag) for tag, (n_oth, _) in by.items()
+                       if n_oth > 0))
     hold, got = [], 0
     for n_oth, tag in have:
         hold.append(tag)
@@ -150,8 +160,13 @@ def choose_holdout(rows, want_other=8, verbose=True):
         if got >= want_other:
             break
     if verbose:
-        print(f"  holdout {hold}  ({got} other, "
-              f"{sum(sum(by[t]) for t in hold)} hands)")
+        n_h = sum(sum(by[t]) for t in hold)
+        print(f"  holdout {hold}  ({got} other, {n_h} hands)")
+        big = max(((sum(by[t]), t) for t in hold), default=(0, ""))
+        if n_h and big[0] > 0.5 * n_h:
+            print(f"    !! {big[1]} alone is {big[0]}/{n_h} of the held-out "
+                  f"hands. Read the per-recording\n       rows below before "
+                  f"the aggregate: one recording can carry the whole number.")
     return set(hold)
 
 
@@ -357,7 +372,7 @@ def check(rows, path, verbose=True):
 
 
 def train(rows, holdout, epochs=30, bs=32, lr=1e-3, seed=0, rotate=True,
-          device=None, out=None):
+          device=None, out=None, class_weight="auto"):
     torch = _torch()
     import torch.nn as nn
     torch.manual_seed(seed)
@@ -377,10 +392,26 @@ def train(rows, holdout, epochs=30, bs=32, lr=1e-3, seed=0, rotate=True,
     tr = Crops(tr_rows, augment=True, seed=seed, force_rot=None if rotate else 0)
     model = build_model().to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=lr)
-    # `other` is 3% of the labels. Weighted by inverse frequency and no more:
-    # the dense head showed what an unbounded weight does to a minority class.
-    w = torch.tensor([len(tr_rows) / max(n_oth, 1) / 2.0, 1.0],
-                     dtype=torch.float32, device=device).clamp(max=20.0)
+    # INVERSE FREQUENCY AND ENRICHED SAMPLING DO THE SAME JOB, AND DOING BOTH
+    # COUNTS IT TWICE. The weight was written when `other` was 3% of the
+    # labels and the sample was whatever the sweep found. Labelling is now
+    # ordered by the model's own p(other), which lifted the training set to
+    # around 13% `other` against a deployment rate near 3%. Weighting the
+    # already-enriched set by its own inverse frequency pushed the effective
+    # prior to roughly 36% -- eleven times reality -- and a model that expects
+    # a third of hands to be foreign calls a third of them foreign. That is
+    # the shape of the first result off this data: recall 0.625, precision
+    # 0.250. `auto` keeps the old behaviour so earlier runs stay reproducible;
+    # `none` lets the enrichment be the only balancing, which is what an
+    # actively sampled set wants.
+    if class_weight in (None, "none"):
+        w = torch.tensor([1.0, 1.0], dtype=torch.float32, device=device)
+    elif class_weight == "auto":
+        w = torch.tensor([len(tr_rows) / max(n_oth, 1) / 2.0, 1.0],
+                         dtype=torch.float32, device=device).clamp(max=20.0)
+    else:
+        w = torch.tensor([float(class_weight), 1.0],
+                         dtype=torch.float32, device=device)
     lossf = nn.CrossEntropyLoss(weight=w)
     print(f"  class weights other={w[0]:.2f} owner={w[1]:.2f}")
 
@@ -502,6 +533,14 @@ def main():
     ap.add_argument("--out")
     ap.add_argument("--check", help="score a saved checkpoint on these "
                                     "packages instead of training")
+    ap.add_argument("--class_weight", default="auto",
+                    help="`auto` weights `other` by inverse frequency, which "
+                         "double-counts an actively sampled set; `none` lets "
+                         "the enrichment do the balancing; a number sets it "
+                         "directly.")
+    ap.add_argument("--min_rec_hands", type=int, default=5,
+                    help="recordings smaller than this are not spent on the "
+                         "holdout")
     ap.add_argument("--self_test", action="store_true")
     a = ap.parse_args()
 
@@ -515,9 +554,11 @@ def main():
     if a.check:
         check(rows, a.check)
         raise SystemExit(0)
-    hold = set(a.holdout) if a.holdout else choose_holdout(rows)
+    hold = set(a.holdout) if a.holdout else choose_holdout(
+        rows, min_rec_hands=a.min_rec_hands)
     res = train(rows, hold, epochs=a.epochs, seed=a.seed,
-                rotate=not a.no_rotate, out=a.out)
+                rotate=not a.no_rotate, out=a.out,
+                class_weight=a.class_weight)
     report(res)
     print("\n  `other` is the positive class: precision is how often a hand "
           "called foreign\n  really is one, recall is how many foreign hands "
