@@ -148,7 +148,7 @@ def _report_trace(rows, path):
 
 def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         dilate, sigma, fps, verbose=True, face_model=None, face_conf=None,
-        trace_path=None, geom=None):
+        trace_path=None, geom=None, geom_w=0.5, max_owner=None):
     import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
@@ -165,7 +165,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     hold = face_mask.Hold()
     # Without a fitted prior this falls back to the single exit-height rule,
     # which is what every render before this one used.
-    ownhold = OwnHold(geom=geom)
+    ownhold = OwnHold(geom=geom, geom_w=geom_w, max_owner=max_owner)
     vcam = VirtualWideCamera.from_rig(rig)
     rd = Prefetch(ClipReader(rig, videos, start), skip=max(0, stride - 1))
     mc, writer = {}, None
@@ -365,6 +365,15 @@ def main():
                                    "ownership prior is the single "
                                    "exit-height rule, which the cue scan put "
                                    "ninth of sixteen.")
+    ap.add_argument("--geom_w", type=float, default=0.5,
+                    help="weight on the geometric prior against the CNN. "
+                         "1.0 is geometry alone, which beat the 0.5 blend on "
+                         "two of nineteen held-out recordings and tied on "
+                         "the rest.")
+    ap.add_argument("--max_owner", type=int, default=2,
+                    help="most hands one frame may call the wearer's")
+    ap.add_argument("--no_cap", action="store_true",
+                    help="lift the two-hand cap")
     ap.add_argument("--clf", help="own_cnn.pt. Without it the demo shows the "
                                   "geometric RULE, which is not the thing "
                                   "being demonstrated.")
@@ -424,7 +433,8 @@ def main():
                      YOLO(a.weights), cnn, device, a.dilate, a.sigma, a.fps,
                      face_model=None if a.no_faces else a.face_model,
                      face_conf=a.face_conf, trace_path=a.trace,
-                     geom=geom)
+                     geom=geom, geom_w=a.geom_w,
+                     max_owner=None if a.no_cap else a.max_owner)
     if not n:
         raise SystemExit("no frames written")
     mb = os.path.getsize(a.out) / 1e6
