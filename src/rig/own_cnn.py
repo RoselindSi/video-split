@@ -74,12 +74,32 @@ def load(pkgs, verbose=True):
                 "stem": r["stem"], "tag": m.group(1), "_crop": crop,
                 "frame": int(m.group(2)),
                 "y": 1 if r["label"] == "owner" else 0,
-                "exit_y": float(r.get("exit_y", np.nan)),
-                "rule": int(r.get("rule_owner", 0)),
+                # A crop labelled through the sheet may carry no geometry: the
+                # sweep writes hands.csv only when it finishes, so a package
+                # labelled from crops alone has rows with these columns empty.
+                # `get` defaults do not fire on an empty STRING, and an empty
+                # `rule` must not become 0 -- that would be recording a verdict
+                # of `other` from a rule that never saw the hand, and the rule
+                # is the baseline the model is being compared against.
+                "exit_y": _num(r.get("exit_y"), float),
+                "rule": _num(r.get("rule_owner"), int),
                 "pkg": os.path.basename(p)})
     if verbose and missing:
         print(f"  !! {len(missing)} package(s) skipped: {missing}")
     return rows
+
+
+def _num(v, cast):
+    """-> cast(v), or None when the cell is empty or unparseable."""
+    try:
+        return cast(v)
+    except (TypeError, ValueError):
+        return None
+
+
+def has_geometry(r):
+    """-> True if the rule can be asked about this hand at all."""
+    return r.get("rule") is not None and r.get("exit_y") is not None
 
 
 def rule_verdict(rows, k):
@@ -87,12 +107,19 @@ def rule_verdict(rows, k):
 
     Only k=0 and k=2 are defined: a quarter turn swaps the axes, so the
     quantity the rule reads -- a height -- is no longer a height at all, and
-    reporting a number there would be inventing one."""
+    reporting a number there would be inventing one.
+
+    Rows with no forearm exit get None rather than a guess. They are perfectly
+    good training data -- a crop and a human's verdict -- but the rule was
+    never shown them, and scoring it on hands it never saw would understate
+    the incumbent this model has to beat."""
     if k % 4 == 0:
-        return np.array([r["rule"] for r in rows])
+        return np.array([r["rule"] if has_geometry(r) else None
+                         for r in rows], dtype=object)
     if k % 4 == 2:
-        return np.array([1 if (1.0 - r["exit_y"]) >= RULE_FRAC else 0
-                         for r in rows])
+        return np.array([(1 if (1.0 - r["exit_y"]) >= RULE_FRAC else 0)
+                         if has_geometry(r) else None
+                         for r in rows], dtype=object)
     return None
 
 
@@ -379,8 +406,15 @@ def train(rows, holdout, epochs=30, bs=32, lr=1e-3, seed=0, rotate=True,
     for k, lab in ((0, "upright"), (2, "turned 180")):
         p, y = evaluate(model, Crops(ev_rows, force_rot=k), device)
         results[f"cnn {lab}"] = scores(p, y)
+        # Scored only where the rule has something to read. The `n` column
+        # therefore differs between the cnn and rule rows, which is the honest
+        # presentation: they were not asked the same number of questions.
         rv = rule_verdict(ev_rows, k)
-        results[f"rule {lab}"] = scores(rv, np.array([r["y"] for r in ev_rows]))
+        keep = [i for i, r in enumerate(ev_rows) if has_geometry(r)]
+        if keep:
+            results[f"rule {lab}"] = scores(
+                np.array([int(rv[i]) for i in keep]),
+                np.array([ev_rows[i]["y"] for i in keep]))
 
     # PER RECORDING, AND THE REASON IS A COMPETING EXPLANATION. Two of the
     # held-out recordings are 100% `other`, so a model that only recognises
@@ -418,6 +452,15 @@ def _self_test():
             {"tag": "C_", "y": 1, "exit_y": 0.60, "rule": 1}]
     chk("upright verdict is the stored one",
         list(rule_verdict(rows, 0)) == [1, 0, 1, 1])
+    # A crop labelled from the sheet alone has no forearm exit. It is training
+    # data all the same, but the rule must not be credited or blamed for it.
+    blind = rows + [{"tag": "D_", "y": 0, "exit_y": None, "rule": None}]
+    chk("a hand with no geometry gets no verdict rather than a default",
+        list(rule_verdict(blind, 0))[-1] is None
+        and list(rule_verdict(blind, 2))[-1] is None)
+    chk("empty csv cells parse to None, not to a crash or a zero",
+        _num("", int) is None and _num(None, float) is None
+        and _num("0", int) == 0)
     # 0.90 -> 0.10 (other), 0.20 -> 0.80 (owner), 0.70 -> 0.30, 0.60 -> 0.40
     chk("a half turn inverts every verdict",
         list(rule_verdict(rows, 2)) == [0, 1, 0, 0])
