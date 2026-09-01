@@ -515,6 +515,93 @@ def _self_test():
     return ok == n
 
 
+
+def leave_one_out(rows, epochs=30, seed=0, min_other=5, verbose=True):
+    """Hold out each recording in turn. -> [(tag, prec, rec, n, n_other)]
+
+    WHY A DISTRIBUTION AND NOT A NUMBER. Every cross-recording figure this
+    project has quoted came from one split, and the splits disagree violently:
+    holding out six recordings gave f1 0.519, holding out three gave 0.568,
+    and inside those the per-recording recall ran from 0.158 to 1.000. A
+    single split of a 43-recording corpus estimates the mean of that spread
+    from three or six draws, which is why the number moved every time the
+    split did. Held out one at a time, every recording contributes, and the
+    spread itself becomes the result.
+
+    THE SPREAD IS THE FINDING, NOT NOISE AROUND ONE. A model that works on two
+    thirds of workstations and fails on the rest is a different object from one
+    that is mediocre everywhere, and they have the same mean. Only the first
+    can be shipped behind a check that detects the bad third.
+
+    Recordings with fewer than `min_other` foreign hands are skipped rather
+    than scored: a recall computed on two positives is a coin toss reported to
+    three decimals."""
+    import collections
+    import time
+    by = collections.Counter(r["tag"] for r in rows if r["y"] == 0)
+    tags = sorted(t for t, n in by.items() if n >= min_other)
+    if verbose:
+        print(f"  {len(tags)} recordings carry at least {min_other} `other`; "
+              f"training {len(tags)} models")
+    out, t0 = [], time.time()
+    for i, t in enumerate(tags, 1):
+        res = train(rows, {t}, epochs=epochs, seed=seed, verbose=False)
+        sc = res.get("cnn upright") or {}
+        out.append((t, sc.get("other_prec", float("nan")),
+                    sc.get("other_rec", float("nan")),
+                    sc.get("n", 0), sc.get("n_other", 0)))
+        if verbose:
+            el = time.time() - t0
+            print(f"    [{i}/{len(tags)}] {t:<16} "
+                  f"prec {out[-1][1]:.3f}  rec {out[-1][2]:.3f}  "
+                  f"({out[-1][4]} other)   "
+                  f"{el:.0f}s, {el / i * (len(tags) - i):.0f}s left",
+                  flush=True)
+    return out
+
+
+def report_loo(res, verbose=True):
+    """Print the distribution, not the mean alone. -> dict"""
+    rec = np.array([r[2] for r in res], float)
+    prec = np.array([r[1] for r in res], float)
+    ok = np.isfinite(rec)
+    nan = float("nan")
+    q = {"n_recordings": int(ok.sum()),
+         "rec_median": float(np.median(rec[ok])) if ok.any() else nan,
+         "rec_q1": float(np.percentile(rec[ok], 25)) if ok.any() else nan,
+         "rec_q3": float(np.percentile(rec[ok], 75)) if ok.any() else nan,
+         "rec_min": float(rec[ok].min()) if ok.any() else nan,
+         "rec_max": float(rec[ok].max()) if ok.any() else nan,
+         "prec_median": float(np.nanmedian(prec)) if len(prec) else nan,
+         "frac_below_half": (float((rec[ok] < 0.5).mean())
+                             if ok.any() else nan)}
+    if verbose:
+        head = f"{'recording':<18}{'other':>7}{'prec':>9}{'rec':>9}"
+        print()
+        print("    " + head)
+        for t, p, r, n, no in sorted(
+                res, key=lambda x: (x[2] if np.isfinite(x[2]) else -1)):
+            ps = f"{p:>9.3f}" if np.isfinite(p) else f"{'-':>9}"
+            rs = f"{r:>9.3f}" if np.isfinite(r) else f"{'-':>9}"
+            print(f"    {t:<18}{no:>7}{ps}{rs}")
+        print()
+        print(f"  recall over {q['n_recordings']} held-out recordings: "
+              f"median {q['rec_median']:.3f}  "
+              f"IQR [{q['rec_q1']:.3f}, {q['rec_q3']:.3f}]  "
+              f"range [{q['rec_min']:.3f}, {q['rec_max']:.3f}]")
+        print(f"  precision median {q['prec_median']:.3f}")
+        print(f"  {q['frac_below_half']:.0%} of recordings fall below "
+              f"0.5 recall")
+        print()
+        print("  Read the IQR, not the median. One split of this corpus "
+              "returns a number")
+        print("  anywhere inside that range depending on which recordings it "
+              "happened to hold")
+        print("  out, which is why the earlier figures moved every time the "
+              "split did.")
+    return q
+
+
 def main():
     import argparse
     import sys
@@ -538,6 +625,12 @@ def main():
                          "double-counts an actively sampled set; `none` lets "
                          "the enrichment do the balancing; a number sets it "
                          "directly.")
+    ap.add_argument("--loo", action="store_true",
+                    help="hold out each recording in turn and report the "
+                         "DISTRIBUTION of per-recording precision and recall. "
+                         "One split cannot estimate this: the spread between "
+                         "recordings is wider than any difference between "
+                         "models measured so far.")
     ap.add_argument("--min_rec_hands", type=int, default=5,
                     help="recordings smaller than this are not spent on the "
                          "holdout")
@@ -551,6 +644,9 @@ def main():
     c = collections.Counter(r["tag"] for r in rows)
     print(f"{len(rows)} hands with crops over {len(c)} recordings, "
           f"{sum(1 for r in rows if r['y']==0)} other")
+    if a.loo:
+        report_loo(leave_one_out(rows, epochs=a.epochs, seed=a.seed))
+        raise SystemExit(0)
     if a.check:
         check(rows, a.check)
         raise SystemExit(0)
