@@ -272,7 +272,9 @@ def main():
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--pkg", action="append", required=True)
-    ap.add_argument("--out", required=True)
+    ap.add_argument("--out", help="where to write the fitted prior. Not "
+                                  "needed with --compare, which fits per "
+                                  "held-out recording and ships nothing.")
     ap.add_argument("--invariant", action="store_true",
                     help="fit the rotation-invariant cues only")
     ap.add_argument("--min_other", type=int, default=3)
@@ -293,6 +295,8 @@ def main():
             raise SystemExit("--compare needs at least one --holdout")
         compare(rows, a.compare, a.holdout, blend=a.blend)
         raise SystemExit(0)
+    if not a.out:
+        raise SystemExit("--out is required when fitting")
     cues = INVARIANT if a.invariant else ALL_CUES
     m = fit(rows, cues=cues, min_other=a.min_other)
     with open(a.out, "w") as f:
