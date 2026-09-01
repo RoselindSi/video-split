@@ -580,8 +580,25 @@ class Prefetch:
         while not self.stop.is_set():
             try:
                 src = self.reader.next(skip=0 if first else skip)
-            except Exception as e:                  # noqa: BLE001
-                self.q.put(e)
+            # SystemExit does NOT inherit from Exception, and ClipReader
+            # raises it for a video it cannot open. Catching only Exception
+            # let that kill the thread with nothing on the queue, so the
+            # consumer either blocked forever or -- worse -- read a falsy
+            # value and reported a clean end of file. A whole segment went
+            # missing from a batch render that way, reported as `no frames
+            # written` with no error anywhere.
+            except (Exception, SystemExit) as e:    # noqa: BLE001
+                self.q.put(e if isinstance(e, Exception)
+                           else RuntimeError(str(e)))
+                return
+            if not src and first:
+                # Nothing at all on the very first read is a failure, not an
+                # empty clip: the caller asked for a frame that the reader was
+                # positioned on. Saying so beats a silent zero-frame video.
+                self.q.put(RuntimeError(
+                    "the reader returned nothing on its first frame -- the "
+                    "start offset may be past the end of the clip, or the "
+                    "decode failed (shared storage under load does this)"))
                 return
             first = False
             self.q.put(src)
