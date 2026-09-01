@@ -148,7 +148,7 @@ def _report_trace(rows, path):
 
 def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         dilate, sigma, fps, verbose=True, face_model=None, face_conf=None,
-        trace_path=None):
+        trace_path=None, geom=None):
     import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
@@ -163,7 +163,9 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     fdet = face_mask.load_detector(face_model, face_conf) if face_model \
         else None
     hold = face_mask.Hold()
-    ownhold = OwnHold()
+    # Without a fitted prior this falls back to the single exit-height rule,
+    # which is what every render before this one used.
+    ownhold = OwnHold(geom=geom)
     vcam = VirtualWideCamera.from_rig(rig)
     rd = Prefetch(ClipReader(rig, videos, start), skip=max(0, stride - 1))
     mc, writer = {}, None
@@ -359,6 +361,10 @@ def main():
     ap.add_argument("--video", action="append", default=[],
                     metavar="FILEKEY=PATH")
     ap.add_argument("--out", help="an .mp4 path on the SAN")
+    ap.add_argument("--geom", help="a geom_prior JSON. Without it the "
+                                   "ownership prior is the single "
+                                   "exit-height rule, which the cue scan put "
+                                   "ninth of sixteen.")
     ap.add_argument("--clf", help="own_cnn.pt. Without it the demo shows the "
                                   "geometric RULE, which is not the thing "
                                   "being demonstrated.")
@@ -398,6 +404,10 @@ def main():
             ap.error("give --databag, or --calibration and --video")
         cal, vids = a.calibration, dict(s.split("=", 1) for s in a.video)
     rig = RigCalibration(cal)
+    from src.rig import geom_prior
+    geom = geom_prior.load_model(a.geom)
+    if a.geom and geom is None:
+        raise SystemExit(f"--geom {a.geom} not found")
     cnn, device = own_cnn.load_model(a.clf)
     if a.clf and cnn is None:
         raise SystemExit(f"--clf {a.clf} not found. Refusing to fall back to "
@@ -406,12 +416,15 @@ def main():
     print(f"  {a.n} frames from {a.start}, stride {a.stride}, {a.fps} fps")
     print(f"  ownership by {'the CNN' if cnn else 'the geometric RULE'}"
           f"{'' if cnn else '   <- not the shipped path'}")
+    print(f"  prior: {'fitted geometry, ' + str(len(geom['cues'])) + ' cues'
+                    if geom else 'the single exit-height rule'}")
     print(f"  faces {'NOT covered' if a.no_faces else 'covered'}"
           f"{'   <- do not send this anywhere' if a.no_faces else ''}")
     n, dis, nf = run(rig, vids, a.out, a.start, a.n, a.stride,
                      YOLO(a.weights), cnn, device, a.dilate, a.sigma, a.fps,
                      face_model=None if a.no_faces else a.face_model,
-                     face_conf=a.face_conf, trace_path=a.trace)
+                     face_conf=a.face_conf, trace_path=a.trace,
+                     geom=geom)
     if not n:
         raise SystemExit("no frames written")
     mb = os.path.getsize(a.out) / 1e6

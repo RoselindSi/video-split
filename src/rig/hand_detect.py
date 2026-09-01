@@ -341,7 +341,8 @@ class OwnHold:
     and inherits its limits: a hand that vanishes for a frame and returns is a
     new track, and starts from its own probability with no history."""
 
-    def __init__(self, fast=0.8, slow=0.4, lo=0.35, hi=0.70, rule_w=0.35):
+    def __init__(self, fast=0.8, slow=0.4, lo=0.35, hi=0.70, rule_w=0.35,
+                 geom=None, geom_w=0.5):
         # Asymmetric in the smoothing as well as in the thresholds. A single
         # symmetric rate cannot do both jobs: slow enough to ignore a frame of
         # doubt is also slow enough to leave a colleague's hand uncovered for
@@ -357,6 +358,20 @@ class OwnHold:
         # same frame scores 0.65*0.93 + 0.35*0.0 = 0.60, under the 0.70 a
         # verdict of `other` has to be beaten by, so the cover stays on.
         self.rule_w = float(rule_w)
+        # A FITTED PRIOR REPLACES THE HAND-SET ONE RATHER THAN JOINING IT.
+        # `rule_score` is exit height with a weight chosen by hand; the fitted
+        # prior takes exit height as ONE of its inputs and sets its weight
+        # from the data. Running both would count that cue twice with two
+        # different coefficients, which is the mistake that inverse-frequency
+        # weighting on an enriched sample already cost this project once.
+        #
+        # The weight is higher because the prior earned it: leave-one-
+        # recording-out macro AUC 0.989, against a single rule that ranked
+        # ninth of sixteen cues. And the invariant fit -- size, span,
+        # confidence, relative size, no heights at all -- scores 0.988, so
+        # the orientation-dependent half of the evidence is worth 0.001 and
+        # the pipeline can stop depending on how the camera is mounted.
+        self.geom, self.geom_w = geom, float(geom_w)
         self.prev = []                      # last frame's detections
         self.state = []                     # per prev index: [ema, is_owner]
 
@@ -371,7 +386,12 @@ class OwnHold:
         out, state = [], []
         for j, (d, (raw_own, p)) in enumerate(zip(dets, flags)):
             p = float(p)
-            if shape is not None and self.rule_w > 0:
+            if shape is not None and self.geom is not None:
+                from src.rig import geom_prior
+                gs = geom_prior.score(d, dets, shape, self.geom)
+                if gs is not None:
+                    p = (1 - self.geom_w) * p + self.geom_w * gs
+            elif shape is not None and self.rule_w > 0:
                 rs = rule_score(d, shape)
                 if rs is not None:
                     p = (1 - self.rule_w) * p + self.rule_w * rs
