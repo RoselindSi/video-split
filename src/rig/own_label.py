@@ -76,7 +76,8 @@ def features(det, shape):
 
 
 def extract(rig, videos, out_dir, start, n_frames, model, stride=15,
-            crop_px=192, tag="", verbose=True, min_hands=0, rows_out=None):
+            crop_px=192, tag="", verbose=True, min_hands=0, rows_out=None,
+            write=True, select_rule=False):
     """Render frames, detect, and write one crop plus one row per hand.
 
     Prints as it goes. The first version printed only on completion, and
