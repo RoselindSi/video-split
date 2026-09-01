@@ -330,7 +330,7 @@ def compare(rows, clf_path, holdout, blend=0.5, verbose=True):
         raise SystemExit(f"no checkpoint at {clf_path}")
     torch = own_cnn._torch()
     hold = set(holdout)
-    out = {"cnn": {}, "geom": {}, "blend": {}}
+    out = {"cnn": {}, "geom": {}, "blend": {}, "cap2": {}}
     for tag in sorted(hold):
         te = [r for r in rows if r["tag"] == tag]
         if not te or not any(r["y"] == 0 for r in te):
@@ -352,9 +352,29 @@ def compare(rows, clf_path, holdout, blend=0.5, verbose=True):
                                         1)[:, 1].cpu().numpy())
         p_cnn = np.concatenate(ps)
         y = np.array([r["y"] for r in te])
-        for name, p in (("cnn", p_cnn), ("geom", p_geom),
-                        ("blend", (1 - blend) * p_cnn + blend * p_geom)):
+        p_bl = (1 - blend) * p_cnn + blend * p_geom
+        frames = np.array([r["frame"] for r in te])
+        for name, p in (("cnn", p_cnn), ("geom", p_geom), ("blend", p_bl),
+                        ("cap2", p_bl)):
             pred_other = p < 0.5
+            if name == "cap2":
+                # AT MOST TWO OWNERS PER FRAME, because a person has two
+                # hands. AUC says the ranking inside a recording is nearly
+                # perfect while the threshold is not, and a threshold is
+                # exactly what does not transport: a workstation where every
+                # hand is a little smaller shifts every score the same way
+                # and moves them all to one side of 0.5 with their order
+                # intact. A within-frame rank cannot be shifted like that.
+                # This only ever turns `owner` into `other`, so it can lose
+                # precision and cannot lose recall.
+                for fr in np.unique(frames):
+                    m_fr = frames == fr
+                    idx = np.where(m_fr)[0]
+                    if len(idx) <= 2:
+                        continue
+                    keep = idx[np.argsort(-p[idx])[:2]]
+                    demote = np.setdiff1d(idx, keep)
+                    pred_other[demote] = True
             tp = int((pred_other & (y == 0)).sum())
             fp = int((pred_other & (y == 1)).sum())
             fn = int((~pred_other & (y == 0)).sum())
@@ -364,19 +384,23 @@ def compare(rows, clf_path, holdout, blend=0.5, verbose=True):
     if verbose:
         print(f"\n    {'recording':<16}{'n':>5}{'other':>7}"
               + "".join(f"{k + ' prec':>12}{k + ' rec':>11}"
-                        for k in ("cnn", "geom", "blend")))
+                        for k in ("cnn", "geom", "blend", "cap2")))
         for tag in sorted(out["cnn"]):
             n, no = out["cnn"][tag][2], out["cnn"][tag][3]
             line = f"    {tag:<16}{n:>5}{no:>7}"
-            for k in ("cnn", "geom", "blend"):
+            for k in ("cnn", "geom", "blend", "cap2"):
                 pr, rc, _, _ = out[k][tag]
                 line += (f"{pr:>12.3f}" if np.isfinite(pr) else f"{'-':>12}")
                 line += (f"{rc:>11.3f}" if np.isfinite(rc) else f"{'-':>11}")
             print(line)
         print("\n  `other` is the positive class. The geometry column is a "
-              "fit that never saw\n  the recording it scores, so all three "
-              "columns are answering the same\n  question about a new "
-              "workstation. If the blend sits below its better part,\n  "
-              "fusing at equal weight is costing accuracy rather than "
-              "buying it.")
+              "fit that never saw\n  the recording it scores, so every "
+              "column answers the same question about a\n  new workstation. "
+              "If the blend sits below its better part, fusing at equal\n  "
+              "weight is costing accuracy rather than buying it.")
+        print("  cap2 is the blend with at most two owners per frame. It "
+              "trades a threshold\n  for a within-frame rank, which is what "
+              "an AUC of 0.988 says this data\n  actually supports -- and a "
+              "rank cannot be moved by a workstation where\n  every hand is "
+              "uniformly smaller.")
     return out
