@@ -714,6 +714,14 @@ def main():
                          "rule's own verdict")
     ap.add_argument("--cap", type=int, default=40,
                     help="sweep: most hands to take from any one recording")
+    ap.add_argument("--seed", type=int, default=0,
+                    help="sweep: which random subset the cap keeps. The "
+                         "selection has always been random; without this the "
+                         "seed was fixed at 0, so a second sweep of the same "
+                         "recordings returned the SAME hands and could not be "
+                         "an independent sample. A package meant to measure "
+                         "the model must not share its draw with the package "
+                         "the model was trained on.")
     ap.add_argument("--clf", help="mine only: the classifier to disagree with")
     ap.add_argument("--pkg", required=True)
     ap.add_argument("--calibration")
@@ -767,7 +775,8 @@ def main():
                   f"frame.")
             return
         rows = sweep(dbs, a.pkg, model, a.n, a.stride, a.min_hands,
-                     cap_per_rec=a.cap, select_rule=not a.count_only)
+                     cap_per_rec=a.cap, select_rule=not a.count_only,
+                     seed=a.seed)
         import collections
         c = collections.Counter(r["n_hands"] for r in rows)
         b = collections.Counter(r["select_by"] for r in rows)
