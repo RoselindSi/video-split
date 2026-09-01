@@ -291,9 +291,18 @@ def main():
     if not rows:
         raise SystemExit("no labelled hands with complete geometry")
     if a.compare:
-        if not a.holdout:
-            raise SystemExit("--compare needs at least one --holdout")
-        compare(rows, a.compare, a.holdout, blend=a.blend)
+        hold = a.holdout
+        if not hold:
+            # Every recording that can carry a rate, not a hand-picked few.
+            # Three recordings gave geometry a clean sweep of 1.000s; that is
+            # either the finding or the sample, and the only way to tell is
+            # to stop choosing which recordings to look at.
+            import collections
+            by = collections.Counter(r["tag"] for r in rows if r["y"] == 0)
+            hold = sorted(t for t, n in by.items() if n >= a.min_other)
+            print(f"  no --holdout given: comparing on all {len(hold)} "
+                  f"recordings with at least {a.min_other} `other`")
+        compare(rows, a.compare, hold, blend=a.blend)
         raise SystemExit(0)
     if not a.out:
         raise SystemExit("--out is required when fitting")
@@ -400,6 +409,15 @@ def compare(rows, clf_path, holdout, blend=0.5, verbose=True):
               "column answers the same question about a\n  new workstation. "
               "If the blend sits below its better part, fusing at equal\n  "
               "weight is costing accuracy rather than buying it.")
+        print()
+        for k in ("cnn", "geom", "blend", "cap2"):
+            pr = np.array([v[0] for v in out[k].values()], float)
+            rc = np.array([v[1] for v in out[k].values()], float)
+            print(f"    {k:<7} median prec {np.nanmedian(pr):.3f}   "
+                  f"median rec {np.nanmedian(rc):.3f}   "
+                  f"recordings under 0.5 rec: "
+                  f"{int(np.nansum(rc < 0.5))}/{len(rc)}")
+        print()
         print("  cap2 is the blend with at most two owners per frame. It "
               "trades a threshold\n  for a within-frame rank, which is what "
               "an AUC of 0.988 says this data\n  actually supports -- and a "
