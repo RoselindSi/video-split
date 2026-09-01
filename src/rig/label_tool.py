@@ -108,7 +108,8 @@ def score_rows(rows, model_path, verbose=True):
     return rows
 
 
-def order_rows(rows, how="score", per_recording=None, limit=None, seed=0):
+def order_rows(rows, how="score", per_recording=None, limit=None, seed=0,
+               offset=0):
     """-> the subset to label, in the order to label it.
 
     The cap is applied BEFORE the cut to `limit`, so spreading across
@@ -127,34 +128,55 @@ def order_rows(rows, how="score", per_recording=None, limit=None, seed=0):
                 seen[r["tag"]] = n + 1
                 kept.append(r)
         rows = kept
+    rows = rows[offset:]
     return rows[:limit] if limit else rows
 
 
-def _thumb(path, size=160):
+def _thumb(path, size=160, quality=80, by_width=False):
     import cv2
     img = cv2.imread(path, cv2.IMREAD_COLOR)
     if img is None:
         return ""
     h, w = img.shape[:2]
-    s = size / float(max(h, w))
+    s = size / float(w if by_width else max(h, w))
     if s < 1:
         img = cv2.resize(img, (max(1, int(w * s)), max(1, int(h * s))),
                          interpolation=cv2.INTER_AREA)
-    ok, buf = cv2.imencode(".jpg", img, [cv2.IMWRITE_JPEG_QUALITY, 80])
+    ok, buf = cv2.imencode(".jpg", img, [cv2.IMWRITE_JPEG_QUALITY, quality])
     if not ok:
         return ""
     return "data:image/jpeg;base64," + base64.b64encode(buf).decode()
 
 
-def build_sheet(rows, out_path, mode, pkg, thumb=160, verbose=True):
-    """Write the labelling sheet. -> number of crops in it."""
-    items = []
+def build_sheet(rows, out_path, mode, pkg, thumb=96, ctx_px=760, ctx_q=70,
+                verbose=True):
+    """Write the labelling sheet. -> number of crops in it.
+
+    THE WHOLE FRAME IS THE PRIMARY IMAGE AND THE CROP IS THE INSET. The first
+    version showed a grid of 192px crops, and a crop cannot answer the
+    question being asked: whether a hand is the wearer's is decided by where
+    its forearm goes and whether a body is attached to it, and both of those
+    live outside the box by construction. `extract` has been writing exactly
+    the right picture all along -- the full frame with this hand boxed and a
+    line drawn from its wrist to where the forearm leaves the border -- into
+    `context/`, and the sheet was reading `crops/`.
+
+    A sheet is therefore heavier per item and holds fewer of them. That is the
+    real cost of the question, not a regression: a labeller shown a crop can
+    be fast and wrong, and 37 positives is already too few to also be dirty."""
+    items, missing = [], 0
     for r in rows:
+        ctx = os.path.join(pkg, "context", r["stem"] + ".jpg")
+        c = _thumb(ctx, ctx_px, ctx_q, by_width=True) \
+            if os.path.exists(ctx) else ""
+        if not c:
+            missing += 1
         items.append({"stem": r["stem"], "tag": r["tag"],
                       "frame": r["frame"],
                       "p": (None if r.get("p_other") is None
                             else round(float(r["p_other"]), 3)),
-                      "img": _thumb(r["_crop"], thumb)})
+                      "img": _thumb(r["_crop"], thumb),
+                      "ctx": c})
     payload = json.dumps({"mode": mode, "pkg": os.path.basename(pkg),
                           "items": items})
     html = _HTML.replace("__PAYLOAD__", payload)
@@ -163,8 +185,12 @@ def build_sheet(rows, out_path, mode, pkg, thumb=160, verbose=True):
     if verbose:
         mb = os.path.getsize(out_path) / 1e6
         tags = len({r["tag"] for r in rows})
-        print(f"  {len(items)} crops over {tags} recordings -> {out_path} "
+        print(f"  {len(items)} hands over {tags} recordings -> {out_path} "
               f"({mb:.1f} MB, mode={mode})")
+        if missing:
+            print(f"  !! {missing} have no context frame and show the crop "
+                  f"only. Ownership cannot\n     be judged from a crop; "
+                  f"label those `skip` rather than guessing.")
     return len(items)
 
 
@@ -212,50 +238,74 @@ def merge_csv(pkg, label_csv, verbose=True):
 
 
 _HTML = """<!doctype html><meta charset="utf-8">
-<title>hand crops</title>
+<title>hand ownership</title>
 <style>
- body{font:13px system-ui;margin:0;background:#111;color:#eee}
- #bar{position:sticky;top:0;background:#000;padding:8px 12px;
-      border-bottom:1px solid #333;display:flex;gap:16px;align-items:center}
- #grid{display:flex;flex-wrap:wrap;gap:6px;padding:10px}
- .c{width:160px;border:3px solid #333;border-radius:4px;position:relative;
+ body{font:13px system-ui;margin:0;background:#111;color:#eee;
+      display:flex;flex-direction:column;height:100vh;overflow:hidden}
+ #bar{background:#000;padding:8px 12px;border-bottom:1px solid #333;
+      display:flex;gap:18px;align-items:center;flex:0 0 auto}
+ #main{flex:1 1 auto;display:flex;gap:12px;padding:12px;min-height:0}
+ #ctxwrap{flex:1 1 auto;display:flex;align-items:center;
+          justify-content:center;min-width:0;position:relative}
+ #ctx{max-width:100%;max-height:100%;object-fit:contain;border-radius:4px}
+ #side{flex:0 0 190px;display:flex;flex-direction:column;gap:8px}
+ #zoom{width:190px;border-radius:4px;border:1px solid #444}
+ #meta{font:12px ui-monospace;color:#aaa;line-height:1.7}
+ #film{flex:0 0 auto;display:flex;gap:4px;overflow-x:auto;padding:8px;
+       background:#0a0a0a;border-top:1px solid #333}
+ .t{width:76px;flex:0 0 auto;border:3px solid #333;border-radius:3px;
     cursor:pointer;background:#1a1a1a}
- .c img{width:100%;display:block;border-radius:2px}
- .c .m{font:11px ui-monospace;padding:2px 4px;color:#aaa;
-       display:flex;justify-content:space-between}
+ .t img{width:100%;display:block;border-radius:1px}
  .owner{border-color:#2ea043} .other{border-color:#d9534f}
- .skip{border-color:#888;opacity:.45}
- .cur{outline:3px solid #ffd33d;outline-offset:2px}
+ .skip{border-color:#888;opacity:.4}
+ .cur{outline:3px solid #ffd33d;outline-offset:1px}
  button{font:13px system-ui;padding:5px 10px;cursor:pointer}
- b{color:#ffd33d}
+ b{color:#ffd33d} .warn{color:#d9534f}
 </style>
 <div id=bar>
  <span id=mode></span>
  <span id=prog></span>
  <span><b>1</b> owner &nbsp; <b>2</b> other &nbsp; <b>3</b> skip
    &nbsp; <b>&larr; &rarr;</b> move &nbsp; <b>u</b> undo</span>
+ <span style="color:#888">yellow box = this hand &nbsp;
+   magenta line = wrist to where the forearm leaves the frame</span>
  <button onclick="dl()">download CSV</button>
 </div>
-<div id=grid></div>
+<div id=main>
+  <div id=ctxwrap><img id=ctx></div>
+  <div id=side>
+    <img id=zoom>
+    <div id=meta></div>
+  </div>
+</div>
+<div id=film></div>
 <script>
 const D = __PAYLOAD__;
 const KEY = "labels:" + D.pkg + ":" + D.mode;
 let lab = {}, cur = 0, hist = [];
 try { lab = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch(e) { lab={}; }
-const g = document.getElementById("grid");
+const film = document.getElementById("film");
 D.items.forEach((it, i) => {
   const d = document.createElement("div");
-  d.className = "c"; d.id = "c" + i;
-  d.innerHTML = '<img src="' + it.img + '"><div class=m><span>' + it.tag +
-    it.frame + '</span><span>' + (it.p === null ? "" : it.p) + '</span></div>';
+  d.className = "t"; d.id = "t" + i;
+  d.innerHTML = '<img src="' + it.img + '">';
   d.onclick = () => { cur = i; draw(); };
-  g.appendChild(d);
+  film.appendChild(d);
 });
 function draw(){
   D.items.forEach((it,i)=>{
-    const e = document.getElementById("c"+i);
-    e.className = "c " + (lab[it.stem] || "") + (i===cur ? " cur" : "");
+    const e = document.getElementById("t"+i);
+    e.className = "t " + (lab[it.stem] || "") + (i===cur ? " cur" : "");
   });
+  const it = D.items[cur];
+  document.getElementById("ctx").src = it.ctx || it.img;
+  document.getElementById("zoom").src = it.img;
+  document.getElementById("meta").innerHTML =
+    it.tag + "<br>frame " + it.frame +
+    (it.p === null ? "" : "<br>p(other) " + it.p) +
+    "<br>" + (cur+1) + " of " + D.items.length +
+    (it.ctx ? "" : "<br><span class=warn>no context frame<br>" +
+                   "label this skip</span>");
   const n = Object.keys(lab).length;
   const o = Object.values(lab).filter(v=>v==="other").length;
   document.getElementById("prog").textContent =
@@ -263,13 +313,14 @@ function draw(){
   document.getElementById("mode").innerHTML =
     "<b>" + D.pkg + "</b> &nbsp; mode=" + D.mode;
   localStorage.setItem(KEY, JSON.stringify(lab));
+  document.getElementById("t"+cur).scrollIntoView(
+    {block:"nearest", inline:"center"});
 }
 function set(v){
   const it = D.items[cur]; if(!it) return;
   hist.push([it.stem, lab[it.stem]]);
   lab[it.stem] = v; cur = Math.min(cur+1, D.items.length-1);
   draw();
-  document.getElementById("c"+cur).scrollIntoView({block:"nearest"});
 }
 document.onkeydown = e => {
   if(e.key==="1") set("owner");
@@ -334,6 +385,12 @@ def _self_test():
     done = order_rows([dict(r, label="owner") for r in rows], how="score")
     chk(done == [], "already-labelled crops are not offered again")
 
+    # Batch two must continue batch one rather than repeat it.
+    b1 = order_rows(list(rows), how="score", limit=5)
+    b2 = order_rows(list(rows), how="score", limit=5, offset=5)
+    chk(not ({r["stem"] for r in b1} & {r["stem"] for r in b2}),
+        "an offset sheet does not repeat the sheet before it")
+
     import tempfile
     with tempfile.TemporaryDirectory() as td:
         pkg = os.path.join(td, "pkg")
@@ -377,10 +434,20 @@ def main():
                    help="rank: order by p(other), for TRAINING data. "
                         "random: unbiased, the only kind a TEST set may use.")
     b.add_argument("--model", default="/workspace/own_cnn.pt")
-    b.add_argument("--limit", type=int, default=400)
+    b.add_argument("--limit", type=int, default=120,
+                   help="hands per sheet. Each carries a full frame now, so "
+                        "a sheet is a few MB; use --offset for the next "
+                        "batch rather than raising this into a file too "
+                        "large to open.")
+    b.add_argument("--offset", type=int, default=0,
+                   help="skip this many of the ordered hands, for batch two "
+                        "onwards. The order is deterministic given the same "
+                        "mode, seed and checkpoint.")
     b.add_argument("--per_recording", type=int, default=20)
     b.add_argument("--seed", type=int, default=0)
-    b.add_argument("--thumb", type=int, default=160)
+    b.add_argument("--thumb", type=int, default=96)
+    b.add_argument("--ctx_px", type=int, default=760,
+                   help="width of the full frame shown for each hand")
 
     m = sub.add_parser("merge", help="write a downloaded sheet's labels back")
     m.add_argument("--pkg", required=True)
@@ -412,10 +479,10 @@ def main():
         for r in rows:
             r["p_other"] = None
     sel = order_rows(rows, how=a.mode, per_recording=a.per_recording,
-                     limit=a.limit, seed=a.seed)
+                     limit=a.limit, seed=a.seed, offset=a.offset)
     if not sel:
         raise SystemExit("nothing left to label in this package")
-    build_sheet(sel, a.out, a.mode, a.pkg, thumb=a.thumb)
+    build_sheet(sel, a.out, a.mode, a.pkg, thumb=a.thumb, ctx_px=a.ctx_px)
     print("\n  Copy the sheet down, open it, label with 1/2/3, press "
           "`download CSV`,\n  copy that back up, and merge it with "
           f"`merge --pkg {a.pkg} --csv <file>`.")
