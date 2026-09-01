@@ -372,7 +372,7 @@ def check(rows, path, verbose=True):
 
 
 def train(rows, holdout, epochs=30, bs=32, lr=1e-3, seed=0, rotate=True,
-          device=None, out=None, class_weight="auto"):
+          device=None, out=None, class_weight="auto", verbose=True):
     torch = _torch()
     import torch.nn as nn
     torch.manual_seed(seed)
@@ -413,7 +413,8 @@ def train(rows, holdout, epochs=30, bs=32, lr=1e-3, seed=0, rotate=True,
         w = torch.tensor([float(class_weight), 1.0],
                          dtype=torch.float32, device=device)
     lossf = nn.CrossEntropyLoss(weight=w)
-    print(f"  class weights other={w[0]:.2f} owner={w[1]:.2f}")
+    if verbose:
+        print(f"  class weights other={w[0]:.2f} owner={w[1]:.2f}")
 
     for ep in range(1, epochs + 1):
         model.train()
@@ -431,7 +432,8 @@ def train(rows, holdout, epochs=30, bs=32, lr=1e-3, seed=0, rotate=True,
             tot += loss.detach().item() * len(idx)
             n += len(idx)
         if ep % 10 == 0 or ep == epochs:
-            print(f"  epoch {ep:3d}  loss {tot/max(n,1):.4f}", flush=True)
+            if verbose:
+                print(f"  epoch {ep:3d}  loss {tot/max(n,1):.4f}", flush=True)
 
     results = {}
     for k, lab in ((0, "upright"), (2, "turned 180")):
@@ -516,7 +518,8 @@ def _self_test():
 
 
 
-def leave_one_out(rows, epochs=30, seed=0, min_other=5, verbose=True):
+def leave_one_out(rows, epochs=30, seed=0, min_other=5, class_weight="none",
+                  verbose=True):
     """Hold out each recording in turn. -> [(tag, prec, rec, n, n_other)]
 
     WHY A DISTRIBUTION AND NOT A NUMBER. Every cross-recording figure this
@@ -545,7 +548,13 @@ def leave_one_out(rows, epochs=30, seed=0, min_other=5, verbose=True):
               f"training {len(tags)} models")
     out, t0 = [], time.time()
     for i, t in enumerate(tags, 1):
-        res = train(rows, {t}, epochs=epochs, seed=seed, verbose=False)
+        # class_weight MUST be threaded through. Left to its default this
+        # would train nineteen models with inverse-frequency weighting on an
+        # actively enriched sample -- the exact double-count that put
+        # precision at 0.250 -- and the distribution it reported would be of
+        # a model nobody intends to ship.
+        res = train(rows, {t}, epochs=epochs, seed=seed, verbose=False,
+                    class_weight=class_weight)
         sc = res.get("cnn upright") or {}
         out.append((t, sc.get("other_prec", float("nan")),
                     sc.get("other_rec", float("nan")),
@@ -645,7 +654,8 @@ def main():
     print(f"{len(rows)} hands with crops over {len(c)} recordings, "
           f"{sum(1 for r in rows if r['y']==0)} other")
     if a.loo:
-        report_loo(leave_one_out(rows, epochs=a.epochs, seed=a.seed))
+        report_loo(leave_one_out(rows, epochs=a.epochs, seed=a.seed,
+                                 class_weight=a.class_weight))
         raise SystemExit(0)
     if a.check:
         check(rows, a.check)
