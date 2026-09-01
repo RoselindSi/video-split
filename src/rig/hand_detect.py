@@ -282,6 +282,41 @@ def masks_from(rgb, dets, pad=0.15, iters=3, max_side=MASK_MAX_SIDE):
     return out
 
 
+# How far past the rule's boundary the prior takes to saturate, as a fraction
+# of frame height. Inside this band the rule is saying "just about", and a
+# prior that shouted at one pixel either side of a threshold would be claiming
+# a confidence the measurement never had.
+RULE_RAMP_FRAC = 0.15
+
+
+def rule_score(det, shape, y_frac=OWNER_EXIT_Y_FRAC, ramp=RULE_RAMP_FRAC):
+    """The geometric rule as a soft prior on owner. -> [0,1], or None.
+
+    `is_owner` answers yes or no at a threshold. That throws away the part of
+    the measurement worth keeping: a forearm leaving through the very bottom
+    of the frame is the wearer's beyond argument, while one leaving a pixel
+    below the boundary is a coin toss the threshold happened to round. The
+    ramp returns 0.5 -- no information -- exactly at the boundary.
+
+    WHAT THIS PRIOR IS WORTH, AND WHERE IT IS WORTHLESS. On 1028 labelled
+    hands over 13 recordings the rule agreed with the human on every one. It
+    is also the cue the 2019 egocentric work found carries real disambiguation
+    signal independently of what a hand looks like, which is why it survives a
+    change of worker, uniform and lighting that appearance does not.
+
+    It is worthless upside down. Rotated 180 degrees the same rule scores
+    0.000 on owner_arm against 0.983 upright, because the exit height it reads
+    is exactly what a half turn inverts. That is not a weakness to be tuned
+    away -- it is a statement that this prior encodes the mounting. Callers on
+    a differently mounted rig must turn it off, which is why the weight is a
+    parameter and not a constant."""
+    pt = det.get("exit")
+    if pt is None:
+        return None
+    t = (float(pt[1]) - y_frac * shape[0]) / max(1e-6, ramp * shape[0])
+    return float(np.clip(0.5 + 0.5 * t, 0.0, 1.0))
+
+
 class OwnHold:
     """Ownership carried across frames, so one frame's doubt is not a flicker.
 
@@ -306,7 +341,7 @@ class OwnHold:
     and inherits its limits: a hand that vanishes for a frame and returns is a
     new track, and starts from its own probability with no history."""
 
-    def __init__(self, fast=0.8, slow=0.4, lo=0.35, hi=0.70):
+    def __init__(self, fast=0.8, slow=0.4, lo=0.35, hi=0.70, rule_w=0.35):
         # Asymmetric in the smoothing as well as in the thresholds. A single
         # symmetric rate cannot do both jobs: slow enough to ignore a frame of
         # doubt is also slow enough to leave a colleague's hand uncovered for
@@ -314,22 +349,44 @@ class OwnHold:
         # TOWARDS `other` is taken at `fast`, evidence moving away at `slow`.
         self.fast, self.slow = float(fast), float(slow)
         self.lo, self.hi = float(lo), float(hi)
+        # A BLEND AND NOT A TIE-BREAK. Using the rule only where the network
+        # is unsure would have left the failure that prompted this untouched:
+        # on the frame measured, the classifier called a colleague's hand the
+        # wearer's at 0.93, confidently and wrongly, while the rule had it
+        # right. A tie-break never runs at 0.93. Blended at this weight the
+        # same frame scores 0.65*0.93 + 0.35*0.0 = 0.60, under the 0.70 a
+        # verdict of `other` has to be beaten by, so the cover stays on.
+        self.rule_w = float(rule_w)
         self.prev = []                      # last frame's detections
         self.state = []                     # per prev index: [ema, is_owner]
 
-    def update(self, dets, flags):
+    def update(self, dets, flags, shape=None):
         """dets, flags as `detect` produces them.
-        -> [(is_owner, ema_p)] in the order of `dets`."""
+        -> [(is_owner, ema_p)] in the order of `dets`.
+
+        `shape` enables the geometric prior; without it the classifier's
+        probability is used alone, which is what a rig mounted some other way
+        up must do."""
         pairs = dict((j, i) for i, j in track(self.prev, dets))
         out, state = [], []
         for j, (d, (raw_own, p)) in enumerate(zip(dets, flags)):
+            p = float(p)
+            if shape is not None and self.rule_w > 0:
+                rs = rule_score(d, shape)
+                if rs is not None:
+                    p = (1 - self.rule_w) * p + self.rule_w * rs
             i = pairs.get(j)
             if i is not None and i < len(self.state):
                 prev_ema, was = self.state[i]
                 a = self.fast if p < prev_ema else self.slow
                 ema = a * p + (1 - a) * prev_ema
             else:
-                ema, was = float(p), bool(raw_own)
+                # A track with no history starts from the FUSED score, not
+                # from the classifier's own verdict: the prior is evidence
+                # about the first frame as much as about the tenth, and
+                # seeding from `raw_own` would let a hand enter the sequence
+                # on exactly the reading the prior was added to correct.
+                ema, was = float(p), bool(p >= 0.5)
             if was:
                 now = ema >= self.lo          # leaving owner is easy
             else:
@@ -527,6 +584,45 @@ def _self_test():
     oh3.update([box(500)], [(True, 0.95)])
     quick = oh3.update([box(500)], [(False, 0.10)])[0][0]
     chk(not quick, "a confident `other` is entered in one frame")
+
+    # The geometric prior, soft. At the boundary it must say nothing at all:
+    # a threshold rounding a coin toss is not evidence.
+    lowexit = {"exit": (800, 0.95 * H)}          # forearm leaves at the bottom
+    highexit = {"exit": (800, 0.20 * H)}         # leaves near the top
+    onexit = {"exit": (800, OWNER_EXIT_Y_FRAC * H)}
+    chk(rule_score(lowexit, (H, W)) > 0.95,
+        "an exit at the bottom of the frame is the wearer's, near certainly")
+    chk(rule_score(highexit, (H, W)) < 0.05,
+        "an exit near the top is not")
+    chk(abs(rule_score(onexit, (H, W)) - 0.5) < 1e-6,
+        "and an exit ON the boundary carries no information either way")
+    chk(rule_score({"box": (0, 0, 1, 1)}, (H, W)) is None,
+        "a hand with no forearm exit gets no prior rather than a default")
+
+    # The frame this was built for. The classifier called a colleague's hand
+    # the wearer's at 0.93 while the rule had it right; a tie-break would
+    # never have run at that confidence.
+    ohr = OwnHold()
+    other_hand = {"box": (760, 300, 840, 380),
+                  "kp": np.array([[800, 340]] * 21, float),
+                  "exit": (800, 0.20 * H)}
+    # The hysteresis alone already survives ONE frame of 0.93, so the prior
+    # has to be judged on sustained evidence -- which is the harder case and
+    # the one that actually uncovers a hand for a second at a time.
+    ohr = OwnHold()
+    ohr.update([other_hand], [(False, 0.02)], shape=(H, W))
+    with_prior = [ohr.update([other_hand], [(True, 0.93)],
+                             shape=(H, W))[0][0] for _ in range(8)]
+    chk(not any(with_prior),
+        "sustained but wrong `self` stays overruled while the prior holds")
+    # With the prior off -- a rig mounted some other way up, where the rule
+    # is not merely weaker but inverted -- the same evidence gets through.
+    ohn = OwnHold()
+    ohn.update([other_hand], [(False, 0.02)])
+    without = [ohn.update([other_hand], [(True, 0.93)])[0][0]
+               for _ in range(8)]
+    chk(without[-1],
+        "...and gets through with the prior off, as it must on a turned rig")
 
     print(f"\n  {sum(ok)}/{len(ok)} cases pass.")
     print("  Ownership is read off the wrist, so it does not depend on how "

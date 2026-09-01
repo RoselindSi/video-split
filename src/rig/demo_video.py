@@ -183,7 +183,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
                      for d in dets]
         # One frame's doubt is a flicker; the trace charged every dropped
         # cover to the label and none to the cut or the veto.
-        flags = ownhold.update(dets, flags)
+        flags = ownhold.update(dets, flags, shape=rgb.shape)
         own = [d for d, (o, _) in zip(dets, flags) if o]
         oth = [d for d, (o, _) in zip(dets, flags) if not o]
         dis = any(bool(d.get("rule_owner")) != bool(o)
