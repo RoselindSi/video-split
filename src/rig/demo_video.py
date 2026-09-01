@@ -96,7 +96,7 @@ def compose(rgb, vis, out, n_own, n_oth, frame, disagreed, frac=None):
 
 
 def run(rig, videos, out_path, start, n, stride, model, cnn, device,
-        dilate, sigma, fps, verbose=True):
+        dilate, sigma, fps, verbose=True, face_model=None, face_conf=None):
     import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
@@ -106,10 +106,15 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     from src.rig.suppress_other import suppress
     from src.rig import own_cnn
 
+    from src.rig import face_mask
+
+    fdet = face_mask.load_detector(face_model, face_conf) if face_model \
+        else None
+    hold = face_mask.Hold()
     vcam = VirtualWideCamera.from_rig(rig)
     rd = ClipReader(rig, videos, start)
     mc, writer = {}, None
-    n_dis = n_written = 0
+    n_dis = n_written = n_face = 0
     t0 = time.time()
     for k in range(n):
         src = rd.next(skip=(stride - 1) if k else 0)
@@ -119,7 +124,14 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
             rgb, _, _, _ = render(rig, vcam, src, 0.6, map_cache=mc)
         except TypeError:
             rgb, _, _, _ = render(rig, vcam, src, 0.6)
+        # Hands are found on the untouched frame and the panels are drawn on
+        # the covered one. Detecting on the mosaic would make the privacy step
+        # degrade the measurement it is supposed to leave alone.
         dets = detect(model, rgb)
+        if fdet is not None:
+            faces = face_mask.detect_faces(fdet, rgb)
+            n_face += len(faces)
+            rgb, _ = face_mask.cover(rgb, hold.update(faces))
         if cnn is not None:
             flags = own_cnn.predict(cnn, device, rgb, dets)
         else:
@@ -153,7 +165,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     rd.close()
     if writer is not None:
         writer.release()
-    return n_written, n_dis
+    return n_written, n_dis, n_face
 
 
 def _self_test():
@@ -208,6 +220,7 @@ def main():
     import sys
     if "--self_test" in sys.argv:
         raise SystemExit(0 if _self_test() else 1)
+    from src.rig import face_mask
     ap = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -228,6 +241,13 @@ def main():
     ap.add_argument("--sigma", type=float, default=14.0)
     ap.add_argument("--weights",
                     default="/shared/models/HaWoR/weights/external/detector.pt")
+    # On by default. A demo that leaks a colleague's face is not a demo that
+    # can be sent anywhere, and defaulting the privacy step off would make
+    # that failure the quiet one.
+    ap.add_argument("--no_faces", action="store_true",
+                    help="do NOT cover faces (they are covered by default)")
+    ap.add_argument("--face_model", default=face_mask.MODEL)
+    ap.add_argument("--face_conf", type=float, default=face_mask.MIN_CONF)
     ap.add_argument("--self_test", action="store_true")
     a = ap.parse_args()
 
@@ -254,8 +274,12 @@ def main():
     print(f"  {a.n} frames from {a.start}, stride {a.stride}, {a.fps} fps")
     print(f"  ownership by {'the CNN' if cnn else 'the geometric RULE'}"
           f"{'' if cnn else '   <- not the shipped path'}")
-    n, dis = run(rig, vids, a.out, a.start, a.n, a.stride, YOLO(a.weights),
-                 cnn, device, a.dilate, a.sigma, a.fps)
+    print(f"  faces {'NOT covered' if a.no_faces else 'covered'}"
+          f"{'   <- do not send this anywhere' if a.no_faces else ''}")
+    n, dis, nf = run(rig, vids, a.out, a.start, a.n, a.stride,
+                     YOLO(a.weights), cnn, device, a.dilate, a.sigma, a.fps,
+                     face_model=None if a.no_faces else a.face_model,
+                     face_conf=a.face_conf)
     if not n:
         raise SystemExit("no frames written")
     mb = os.path.getsize(a.out) / 1e6
@@ -263,6 +287,14 @@ def main():
           f"{n/a.fps:.0f}s of video)")
     print(f"  the classifier disagreed with the rule on {dis} of {n} frames "
           f"({dis/n:.1%})")
+    if not a.no_faces:
+        print(f"  {nf} face detections over {n} frames "
+              f"({nf/n:.2f} per frame), held {face_mask.HOLD_FRAMES} frames "
+              f"each")
+        if nf == 0:
+            print("  Zero faces is not the same as nobody present. Check one "
+                  "frame that has a\n  person in it before treating this "
+                  "clip as safe to send.")
     if dis == 0:
         print("  Zero disagreement means this clip does not distinguish them. "
               "It is a fine\n  demo of the pipeline and no evidence at all "
