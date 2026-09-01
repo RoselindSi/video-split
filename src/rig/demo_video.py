@@ -101,13 +101,25 @@ def _report_trace(rows, path):
     A frame counts as a DROP when the previous frame suppressed something and
     this one did not. Each drop is attributed to the first stage that came up
     empty, because they are in series: no `other` label means the cut is never
-    asked, and an empty cut means the veto has nothing to cancel."""
-    drops = {"label": [], "cut": [], "veto": [], "unexplained": []}
+    asked, and an empty cut means the veto has nothing to cancel.
+
+    THE FIRST STAGE IS THE DETECTOR, AND LEAVING IT OUT MISREAD THE ANSWER.
+    With only label/cut/veto to choose from, a frame where the detector simply
+    stopped finding the hand fell into `label` -- there was no `other` label,
+    after all, because there was no detection to carry one. That reported the
+    classifier as the cause of drops it had no part in: on the run that
+    prompted this, all three surviving drops had `n_det` FALL at the same
+    frame, and one of them had no detections at all. A stage that can be empty
+    has to be a category, or its failures are charged to the next one down."""
+    drops = {"detector": [], "label": [], "cut": [], "veto": [],
+             "unexplained": []}
     covered = [r for r in rows if r["alpha_frac"] > 0]
     for a, b in zip(rows, rows[1:]):
         if not (a["alpha_frac"] > 0 and b["alpha_frac"] <= 0):
             continue
-        if b["n_oth"] == 0:
+        if b["n_oth"] == 0 and b["n_det"] < a["n_det"]:
+            drops["detector"].append(b["frame"])
+        elif b["n_oth"] == 0:
             drops["label"].append(b["frame"])
         elif b["oth_px"] == 0:
             drops["cut"].append(b["frame"])
@@ -115,17 +127,22 @@ def _report_trace(rows, path):
             drops["veto"].append(b["frame"])
         else:
             drops["unexplained"].append(b["frame"])
+    blind = [r["frame"] for r in rows if r["n_det"] == 0]
     print(f"\n  trace -> {path}")
     print(f"  {len(covered)} of {len(rows)} frames suppressed something; "
           f"{sum(len(v) for v in drops.values())} drops")
     for k, v in drops.items():
         if v:
             print(f"    {k:<12} {len(v):3d}   frames {v[:10]}")
-    print("  label = the classifier stopped calling it foreign.  "
-          "cut = GrabCut returned\n  nothing for a hand still called foreign."
-          "  veto = the owner mask covered the\n  whole of it. These are in "
-          "series, so each drop is charged to the first one\n  that was "
-          "empty.")
+    if blind:
+        print(f"    ({len(blind)} of {len(rows)} frames had NO detections at "
+              f"all: {blind[:12]})")
+    print("  detector = the hand stopped being found, so nothing reached the "
+          "classifier.\n  label = it was found and called the wearer's.  "
+          "cut = GrabCut returned nothing\n  for a hand still called foreign."
+          "  veto = the owner mask covered the whole of\n  it. These are in "
+          "series, so each drop is charged to the first one that was\n  "
+          "empty -- and the detector is first.")
     return drops
 
 
