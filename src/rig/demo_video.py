@@ -190,6 +190,11 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         dets = detect(model, clean)
         if fdet is not None:
             faces = face_mask.detect_faces(fdet, clean)
+            # The hand detector runs first for a reason: it is the better
+            # instrument for deciding whether a patch of skin is a hand, and
+            # the face detector fires on skin. Watched back, this is what was
+            # mosaicking the wearer's own hands.
+            faces = face_mask.drop_on_hands(faces, dets)
             n_face += len(faces)
             rgb, _ = face_mask.cover(clean, hold.update(faces,
                                                         shape=clean.shape))

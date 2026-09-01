@@ -52,10 +52,22 @@ import numpy as np
 
 MODEL = "/workspace/models/face_detection_full_range.tflite"
 
-# Well below a detector's usual 0.5. See the error asymmetry above: the cost of
-# being wrong is a mosaicked patch of bench in one direction and a recognisable
-# face in the other.
-MIN_CONF = 0.30
+# THE ASYMMETRY ARGUMENT ABOVE IS TRUE AND WAS APPLIED TOO FAR. At 0.30 this
+# detector fires on skin, and on a bench full of hands most skin is a hand.
+# The cost of a false positive was described as "a mosaicked patch of bench",
+# which understated it: watched back, the wearer's own hands and forearms were
+# being covered, and those are the pixels the entire pipeline exists to
+# deliver. A privacy cover that destroys the subject is not a conservative
+# choice. 0.5 is the detector's own default and the floor a real face at this
+# range clears; the overlap veto below removes the rest.
+MIN_CONF = 0.50
+
+# A "face" covering this much of a detected hand is that hand. The hand
+# detector is the better instrument here -- it was trained to find hands, it
+# reports 0.83-0.87 on real ones, and a face detector has no business firing
+# inside its boxes. This is a structural veto, not a threshold: it does not
+# get weaker as the face score rises.
+HAND_OVERLAP_VETO = 0.45
 
 # Frames a face keeps its cover after the last detection supporting it. At the
 # 10-15 fps these demos render, this is roughly a second.
@@ -113,6 +125,34 @@ def detect_faces(det, rgb):
                     min(H, int(b.origin_y + b.height)),
                     float(d.categories[0].score)))
     return out
+
+
+def drop_on_hands(faces, dets, frac=HAND_OVERLAP_VETO):
+    """Remove face detections that sit on a detected hand. -> [face]
+
+    THE WEARER'S OWN FACE IS NEVER IN VIEW, so a face found on the wearer's
+    own hand is wrong twice over: it is not a face, and even if it were, it
+    could not be anyone whose privacy this protects. The same holds for a
+    colleague's hand -- a hand is not a head.
+
+    Overlap is measured against the FACE's area, not the union. A small false
+    face sitting inside a large hand box has an IoU near zero and would
+    survive a symmetric test, and small false faces on hands are exactly what
+    this is for."""
+    if not dets:
+        return list(faces)
+    keep = []
+    for f in faces:
+        fa = max(1, (f[2] - f[0]) * (f[3] - f[1]))
+        worst = 0.0
+        for d in dets:
+            x0, y0, x1, y1 = [int(v) for v in d["box"]]
+            ix = max(0, min(f[2], x1) - max(f[0], x0))
+            iy = max(0, min(f[3], y1) - max(f[1], y0))
+            worst = max(worst, ix * iy / float(fa))
+        if worst < frac:
+            keep.append(f)
+    return keep
 
 
 class Hold:
@@ -238,6 +278,23 @@ def _self_test():
     patch = out[60:110, 100:140].reshape(-1, 3)
     chk("the cover is blocky rather than smoothed",
         len(np.unique(patch, axis=0)) < 0.5 * len(patch))
+
+    # A face landing on a hand is a hand. This is what was covering the
+    # wearer's own fingers in the first batch of renders.
+    hand = [{"box": (100, 100, 200, 200)}]
+    on_hand = (120, 120, 170, 170, 0.9)
+    off_hand = (400, 400, 450, 450, 0.9)
+    chk("a face inside a hand box is dropped",
+        drop_on_hands([on_hand], hand) == [])
+    chk("...and one away from every hand is kept",
+        drop_on_hands([off_hand], hand) == [off_hand])
+    # Overlap is against the FACE's area: a small box inside a big one has a
+    # tiny IoU and would survive a symmetric test.
+    big_hand = [{"box": (0, 0, 900, 900)}]
+    chk("a small face inside a large hand is still dropped",
+        drop_on_hands([on_hand], big_hand) == [])
+    chk("with no hands detected nothing is vetoed",
+        drop_on_hands([on_hand], []) == [on_hand])
 
     h = Hold(frames=3)
     b = [(10, 10, 30, 30, 0.9)]
