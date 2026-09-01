@@ -439,10 +439,11 @@ def train(rows, holdout, epochs=30, bs=32, lr=1e-3, seed=0, rotate=True,
 
 
 def _self_test():
-    ok = 0
+    ok = n = 0
 
     def chk(name, cond):
-        nonlocal ok
+        nonlocal ok, n
+        n += 1
         print(f"  {'ok  ' if cond else 'FAIL'} {name}")
         ok += bool(cond)
 
@@ -479,8 +480,8 @@ def _self_test():
     s2 = scores(np.array([0, 0]), np.array([0, 1]))
     chk("precision counts the wrong `other` calls",
         abs(s2["other_prec"] - 0.5) < 1e-9)
-    print(f"\n  {ok}/7")
-    return ok == 7
+    print(f"\n  {ok}/{n}")
+    return ok == n
 
 
 def main():
