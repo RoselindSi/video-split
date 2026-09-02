@@ -393,7 +393,11 @@ class OwnHold:
         # stopped being the same list every time the detector gained or lost
         # a hand -- which is when this state was silently transferred to a
         # different hand.
-        self.state = {}                     # track id -> [ema, is_owner]
+        self.state = {}          # track id -> [ema, is_owner, frames_unseen]
+        # Frames a verdict outlives the detection that produced it. Matches
+        # the tracker's own patience: state for a track the tracker has given
+        # up on is state nobody will ask for again.
+        self.state_ttl = 5
 
     def update(self, dets, flags, shape=None, ids=None):
         """-> [(is_owner, smoothed_p)] aligned with `dets`.
@@ -410,7 +414,7 @@ class OwnHold:
         which is the correct behaviour and was not available before."""
         if ids is None:
             ids = list(range(len(dets)))
-        out, state = [], {}
+        out, seen = [], set()
         for k, (d, (o, p)) in enumerate(zip(dets, flags)):
             tid = ids[k]
             p = float(p)
@@ -440,7 +444,8 @@ class OwnHold:
                     lab = False
                 elif (not lab) and ema > self.hi:
                     lab = True
-            state[tid] = [ema, lab]
+            self.state[tid] = [ema, lab, 0]
+            seen.add(tid)
             out.append((bool(lab), float(ema)))
         # A PERSON HAS TWO HANDS. Applied last, after the hysteresis, so it
         # ranks the smoothed scores rather than one frame's noise. Measured on
@@ -457,8 +462,22 @@ class OwnHold:
                 for i in own_i:
                     if i not in keep:
                         out[i] = (False, out[i][1])
-                        state[ids[i]][1] = False
-        self.state = state
+                        self.state[ids[i]][1] = False
+        # STATE SURVIVES A FRAME THE TRACKER SAW NOTHING IN. It used to be
+        # rebuilt from scratch every frame, so a track the detector missed for
+        # one frame lost its smoothed score AND its verdict. Two things broke
+        # on that. The cover could not be bridged across a dropout -- the
+        # caller asks this class what a coasting track's last verdict was, and
+        # the answer was always None, so a fix for the dropouts fired zero
+        # times and a render came back byte-identical to the one before it.
+        # And a hand that reappeared started its hysteresis over, which is the
+        # opposite of what a hysteresis is for.
+        for tid in list(self.state):
+            if tid in seen:
+                continue
+            self.state[tid][2] += 1
+            if self.state[tid][2] > self.state_ttl:
+                del self.state[tid]
         return out
 
 
@@ -707,6 +726,21 @@ def _self_test():
                for _ in range(8)]
     chk(without[-1],
         "...and gets through with the prior off, as it must on a turned rig")
+
+    # THE BRIDGE HAD NO TEST AND FIRED ZERO TIMES. A render came back
+    # byte-identical to the one before the fix, because state for a track the
+    # detector missed was discarded on the same frame the caller needed it.
+    ohb = OwnHold()
+    b1 = {"box": (100, 300, 180, 380), "kp": np.array([[140, 340]] * 21,
+                                                      float)}
+    ohb.update([b1], [(False, 0.05)], ids=[9])
+    ohb.update([], [], ids=[])
+    chk(ohb.state.get(9) is not None and not ohb.state[9][1],
+        "a verdict survives a frame with no detection to carry it")
+    for _ in range(7):
+        ohb.update([], [], ids=[])
+    chk(ohb.state.get(9) is None,
+        "...and is dropped once the tracker would have given up too")
 
     print(f"\n  {sum(ok)}/{len(ok)} cases pass.")
     print("  Ownership is read off the wrist, so it does not depend on how "
