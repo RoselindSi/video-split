@@ -152,7 +152,7 @@ class Tracker:
     def __init__(self, gate_frac=GATE_FRAC, max_lost=MAX_LOST):
         self.gate_frac = float(gate_frac)
         self.max_lost = int(max_lost)
-        self.tracks = {}          # id -> {"box", "lost", "age"}
+        self.tracks = {}          # id -> {"box", "det", "lost", "age"}
         self._next = 0
         self.n_new = 0
         self.n_lost = 0
@@ -181,13 +181,17 @@ class Tracker:
             for a, b in hungarian(cost):
                 ids[b] = live[a]
                 self.tracks[live[a]]["box"] = dets[b]["box"]
+                # The whole detection, not just the box: a coasting track has
+                # to be able to hand back something GrabCut can use, and
+                # GrabCut needs the keypoints as its foreground seed.
+                self.tracks[live[a]]["det"] = dets[b]
                 self.tracks[live[a]]["lost"] = 0
                 self.tracks[live[a]]["age"] += 1
         matched = {i for i in ids if i is not None}
         for b, d in enumerate(dets):
             if ids[b] is None:
-                self.tracks[self._next] = {"box": d["box"], "lost": 0,
-                                           "age": 1}
+                self.tracks[self._next] = {"box": d["box"], "det": d,
+                                           "lost": 0, "age": 1}
                 ids[b] = self._next
                 self._next += 1
                 self.n_new += 1
@@ -199,6 +203,29 @@ class Tracker:
                 del self.tracks[tid]
                 self.n_lost += 1
         return ids
+
+
+    def coasting(self, bridge=2):
+        """Tracks the detector lost this frame but that are still alive.
+        -> [(track_id, detection)]
+
+        THE TRACKER KNEW WHERE THE HAND WAS AND NOBODY ASKED IT. Masks are
+        built from the CURRENT frame's detections, so a track the tracker was
+        holding through a one-frame dropout contributed no box, no mask and no
+        blur -- the identity was bridged and the cover was not. On the clip
+        that prompted this, every drop was the detector losing one hand for
+        one or two frames while the wearer's two stayed put: 3 detections
+        became 2, the colleague's hand went uncovered, and the frame counted
+        as a drop.
+
+        `bridge` IS DELIBERATELY SHORTER THAN `max_lost`. Keeping an identity
+        alive for five frames is cheap -- the worst case is a new hand having
+        to start a new track. Covering pixels at a five-frame-old position is
+        not: a hand moves, and blurring where it WAS both misses it and
+        destroys bench that was never anyone's hand. Two frames is a sixth of
+        a second, within the dilation the mask already carries."""
+        return [(tid, t["det"]) for tid, t in sorted(self.tracks.items())
+                if 0 < t["lost"] <= bridge and t.get("det") is not None]
 
 
 class FlipCount:

@@ -148,7 +148,8 @@ def _report_trace(rows, path):
 
 def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         dilate, sigma, fps, verbose=True, face_model=None, face_conf=None,
-        trace_path=None, geom=None, geom_w=0.5, max_owner=None):
+        trace_path=None, geom=None, geom_w=0.5, max_owner=None, bridge=2,
+        min_conf=None):
     import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
@@ -171,6 +172,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     vcam = VirtualWideCamera.from_rig(rig)
     rd = Prefetch(ClipReader(rig, videos, start), skip=max(0, stride - 1))
     mc, writer = {}, None
+    n_bridged = 0
     trace = [] if trace_path else None
     n_dis = n_written = n_face = 0
     t0 = time.time()
@@ -191,7 +193,8 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         # face sits directly above a colleague's hands, so that is precisely
         # where the two would collide.
         clean = rgb
-        dets = detect(model, clean)
+        dets = (detect(model, clean, min_conf=min_conf) if min_conf
+                else detect(model, clean))
         if fdet is not None:
             faces = face_mask.detect_faces(fdet, clean)
             # The hand detector runs first for a reason: it is the better
@@ -217,6 +220,16 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         flips.update(tids, [o for o, _ in flags])
         own = [d for d, (o, _) in zip(dets, flags) if o]
         oth = [d for d, (o, _) in zip(dets, flags) if not o]
+        # A track the detector lost for a frame or two is still a hand, and
+        # the tracker still has its last box. Covering it is the difference
+        # between a cover that survives a dropout and one that blinks off:
+        # every drop on the clip that prompted this was the detector losing
+        # ONE hand for ONE frame while the wearer's two stayed put.
+        for tid, d in tracker.coasting(bridge):
+            st = ownhold.state.get(tid)
+            if st is not None and not st[1]:
+                oth.append(d)
+                n_bridged += 1
         dis = any(bool(d.get("rule_owner")) != bool(o)
                   for d, (o, _) in zip(dets, flags))
         n_dis += bool(dis)
@@ -390,6 +403,15 @@ def main():
                          "1.0 is geometry alone, which beat the 0.5 blend on "
                          "two of nineteen held-out recordings and tied on "
                          "the rest.")
+    ap.add_argument("--bridge", type=int, default=2,
+                    help="frames to keep covering a hand the detector lost. "
+                         "0 restores the old behaviour, where the tracker "
+                         "bridged the identity and nothing bridged the mask.")
+    ap.add_argument("--min_conf", type=float, default=None,
+                    help="detector floor. The default 0.60 was set from the "
+                         "wearer's own near hands, which score 0.83-0.87; a "
+                         "colleague's hand at the frame edge sits near the "
+                         "floor and blinks across it.")
     ap.add_argument("--max_owner", type=int, default=2,
                     help="most hands one frame may call the wearer's")
     ap.add_argument("--no_cap", action="store_true",
@@ -454,7 +476,8 @@ def main():
                      face_model=None if a.no_faces else a.face_model,
                      face_conf=a.face_conf, trace_path=a.trace,
                      geom=geom, geom_w=a.geom_w,
-                     max_owner=None if a.no_cap else a.max_owner)
+                     max_owner=None if a.no_cap else a.max_owner,
+                     bridge=a.bridge, min_conf=a.min_conf)
     if not n:
         raise SystemExit("no frames written")
     mb = os.path.getsize(a.out) / 1e6
