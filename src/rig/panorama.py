@@ -99,6 +99,7 @@ class DepthAwarePanorama:
         self.photo = {self.reference: (np.ones(3), np.zeros(3))}
         self.flows = {}
         self._rect_cache = {}
+        self.n_unguided = 0
         self._cost = {
             i: off_axis_deg(rig, name, vcam).astype(np.float32)
             for i, name in enumerate(self.camera_names)
@@ -120,8 +121,55 @@ class DepthAwarePanorama:
         else:
             measured, valid = got.range_m, got.valid
         valid = np.asarray(valid, bool)
-        dense = densify_range(measured, valid, fallback=self.depth_m)
+        # THE GUIDE IS NOT OPTIONAL AND LEAVING IT OUT PUT WAVES IN THE OUTPUT.
+        # `densify_range` smooths the range before it is used as a warp field,
+        # and with no guide it does so isotropically: depth bleeds across
+        # object boundaries, the sampling coordinate follows it, and the
+        # picture ripples along every edge where near meets far. Guided by the
+        # image, the same filter holds the depth step where the picture has
+        # one, so a hand keeps its own depth instead of being averaged into
+        # the bench behind it.
+        #
+        # The guide has to be in the virtual camera's frame, and none exists
+        # yet at this point -- the range is what the warp needs. So the middle
+        # module is warped once at the constant fallback depth purely to make
+        # one. That costs a single remap, about two milliseconds against the
+        # stereo match already done above, and it does not have to be
+        # geometrically perfect: it is being read for WHERE THE EDGES ARE.
+        guide = self._constant_depth_guide(sources)
+        dense = densify_range(measured, valid, fallback=self.depth_m,
+                              guide=guide)
         return dense, float(valid.mean())
+
+    def _constant_depth_guide(self, sources):
+        """The middle module at constant depth, as an edge reference. -> img
+
+        Returns None when no guide can be built, which falls back to the
+        un-guided smoothing -- the behaviour that put waves in the picture.
+        That is a degradation, so it is COUNTED. Silent fallbacks are how this
+        pipeline shipped a no-op residual flow, a deleted two-hand cap and a
+        mask that never asked the tracker where the hand was; each looked
+        fine and each cost a render cycle to find."""
+        import cv2
+        from src.rig.geometry import source_maps
+        mid = self.camera_names[len(self.camera_names) // 2]
+        if mid not in sources:
+            mid = next((n for n in self.camera_names if n in sources), None)
+        if mid is None:
+            self.n_unguided += 1
+            return None
+        key = ("guide", mid, round(float(self.depth_m), 6))
+        try:
+            if key not in self._rect_cache:
+                self._rect_cache[key] = source_maps(self.rig, mid, self.vcam,
+                                                    self.depth_m)
+            mx, my, _ok = self._rect_cache[key]
+            return cv2.remap(sources[mid], mx, my, cv2.INTER_LINEAR,
+                             borderMode=cv2.BORDER_CONSTANT,
+                             borderValue=(0, 0, 0))
+        except Exception:                       # noqa: BLE001
+            self.n_unguided += 1
+            return None
 
     def _warp(self, sources, range_m):
         import cv2

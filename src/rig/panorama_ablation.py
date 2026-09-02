@@ -62,6 +62,7 @@ def evaluate(rig, vcam, videos, frames, fit_frames=6, depth_m=0.6):
                 first_owner = owner.copy()
             edge = seam_edge_ratio(rgb, owner)
             metrics.append({
+                "frame": int(frame),
                 "edge_ratio": edge["ratio"],
                 "seam_excess": edge["excess"],
                 "owner_changed": float((owner != first_owner).mean()),
@@ -76,12 +77,34 @@ def evaluate(rig, vcam, videos, frames, fit_frames=6, depth_m=0.6):
             return float(np.nanmedian(values)) if np.isfinite(values).any() \
                 else float("nan")
 
+        def pct(key, q):
+            values = np.array([m[key] for m in metrics], float)
+            return float(np.nanpercentile(values, q)) \
+                if np.isfinite(values).any() else float("nan")
+
+        def worst(key, n):
+            pairs = [(m[key], m["frame"]) for m in metrics
+                     if np.isfinite(m.get(key, np.nan))]
+            return [int(f) for _v, f in sorted(pairs, reverse=True)[:n]]
+
         rows.append({"variant": name, "frames": len(metrics),
                      "seam_edge_ratio_median": med("edge_ratio"),
                      "seam_excess_median": med("seam_excess"),
                      "owner_change_median": med("owner_changed"),
                      "gated_frac_median": med("gated_frac"),
                      "depth_coverage_median": med("depth_coverage"),
+                     # THE MEDIAN HID THE COMPLAINT. Alone it said the join
+                     # improved from 1.64 to 1.20 while the frames actually
+                     # watched still showed a boundary -- the median is the
+                     # middle frame and the visible ones are the tail. This
+                     # project has been caught by exactly this before, on a
+                     # single-split f1 that moved between 0.519 and 0.941
+                     # depending on which recordings were held out.
+                     "seam_ratio_p90": pct("edge_ratio", 90),
+                     "seam_ratio_max": pct("edge_ratio", 100),
+                     "seam_ratio_worst_frames": worst("edge_ratio", 3),
+                     "unguided_depth_frames": int(
+                         getattr(renderer, "n_unguided", 0)),
                      "n_views": max([m["n_views"] for m in metrics],
                                     default=0)})
     return rows
@@ -119,14 +142,21 @@ def main():
     frames = list(range(args.start, args.start + args.n * args.stride,
                         args.stride))
     rows = evaluate(rig, vcam, videos, frames, args.fit_frames, args.depth_m)
-    print(f"  {'variant':<24} {'views':>5} {'seam ratio':>11} "
-          f"{'excess':>9} {'owner move':>11} {'gated':>9}")
+    print(f"  {'variant':<24} {'views':>5} {'ratio med':>10} "
+          f"{'p90':>8} {'max':>8} {'excess':>9} {'owner move':>11} "
+          f"{'gated':>9}")
     for row in rows:
         print(f"  {row['variant']:<24} {row['n_views']:>5d} "
-              f"{row['seam_edge_ratio_median']:>11.3f} "
+              f"{row['seam_edge_ratio_median']:>10.3f} "
+              f"{row['seam_ratio_p90']:>8.3f} "
+              f"{row['seam_ratio_max']:>8.3f} "
               f"{row['seam_excess_median']:>+9.3f} "
               f"{row['owner_change_median']:>11.3%} "
-              f"{row['gated_frac_median']:>9.3%}")
+              f"{row['gated_frac_median']:>9.3%}"
+              f"{row['seam_ratio_p90']:>10.3f}"
+              f"{row['seam_ratio_max']:>9.3f}"
+              + (f"   !! {row['unguided_depth_frames']} 帧无引导深度"
+                 if row.get("unguided_depth_frames") else ""))
     if args.out_json:
         with open(args.out_json, "w", encoding="utf-8") as f:
             json.dump(rows, f, indent=2)
