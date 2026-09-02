@@ -837,6 +837,10 @@ def main():
                 rig, vcam, sources, a.depth_m, depth_by_module=dbm,
                 map_cache=mc, range_m=rng_m)
             for i in warped:
+                if i in flows:
+                    # The fitted residual used to be reported above but never
+                    # applied here, making --residual_flow a silent no-op.
+                    warped[i] = apply_flow(warped[i], flows[i])
                 g, b = photo.get(i, (np.ones(3), np.zeros(3)))
                 warped[i] = apply_photometric(warped[i], g, b)
             if w is None:

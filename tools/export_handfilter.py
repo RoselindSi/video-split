@@ -34,8 +34,12 @@ WHOLE = [
                        "the zero template"),
     ("geometry.py", "the virtual wide camera"),
     ("render_wide.py", "six eyes -> one wide frame"),
+    ("depth.py", "metric stereo depth for each camera pair"),
+    ("wide_depth.py", "three stereo reconstructions in the virtual view"),
+    ("seam_fix.py", "photometric, flow and gated blend primitives"),
     ("hand_detect.py", "detection, the geometric rule, GrabCut masks"),
     ("hand_track.py", "motion prediction and bounded hand identities"),
+    ("panorama.py", "depth-aware all-six-view panorama rendering"),
     ("own_cnn.py", "ownership from the crop -- the model that ships"),
     ("own_label.py", "labelling, mining, stratified sweep"),
     ("rule_baseline.py", "the incumbent's score, upright and turned"),
@@ -47,11 +51,10 @@ WHOLE = [
 # Taken apart. name -> the top-level definitions worth keeping.
 TRIMMED = {
     "suppress_other.py": ["dilate_feather", "suppress"],
-    "seam_fix.py": ["ClipReader", "Prefetch"],
 }
 
-# seam_fix is 791 lines about stitching; the ownership line needs 43 of them.
-RENAME = {"seam_fix.py": "clip_io.py"}
+# The panorama now consumes the complete seam module; no source file is renamed.
+RENAME = {}
 
 CLIP_IO_DOC = '''"""Three videos, opened once and read straight through.
 
@@ -293,10 +296,9 @@ def main():
             print(f"    {b}")
         raise SystemExit(1)
     print(f"\n  {len(have)} modules, no dangling imports, all parse.")
-    print(f"  dropped: the colour detector, the depth rule, the dense "
-          f"segmentation head,\n  the gold-mask tooling, and 748 lines of "
-          f"stitching -- each with a line in\n  the README so it is not "
-          f"rediscovered.")
+    print(f"  dropped: the colour detector, the ownership depth rule, the "
+          f"dense segmentation head,\n  and the gold-mask tooling -- each "
+          f"with a line in the README so it is not rediscovered.")
 
 
 if __name__ == "__main__":

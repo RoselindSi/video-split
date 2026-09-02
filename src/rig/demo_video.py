@@ -163,7 +163,8 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         new_track_conf=NEW_TRACK_CONF,
         continue_conf=CONTINUE_TRACK_CONF,
         predict_motion=True, safe_association=True, safe_reacquire=True,
-        min_conf=None, bridge=None):
+        min_conf=None, bridge=None, panorama_mode="baseline",
+        panorama_fit_frames=0, panorama_depth=True, panorama_flow=True):
     import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
@@ -213,6 +214,30 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
                       state_ttl=tracker.max_lost)
     flips = FlipCount()
     vcam = VirtualWideCamera.from_rig(rig)
+    panorama = None
+    panorama_fit = {}
+    if panorama_mode == "depth":
+        from src.rig.panorama import DepthAwarePanorama
+        panorama = DepthAwarePanorama(
+            rig, vcam, use_depth=panorama_depth,
+            use_residual_flow=panorama_flow)
+        if panorama_fit_frames > 0:
+            sample_reader = ClipReader(rig, videos, start)
+
+            def _samples():
+                try:
+                    for j in range(int(panorama_fit_frames)):
+                        got = sample_reader.next(
+                            skip=0 if j == 0 else max(0, stride - 1))
+                        if not got:
+                            break
+                        yield got
+                finally:
+                    sample_reader.close()
+
+            panorama_fit = panorama.fit(_samples())
+    elif panorama_mode != "baseline":
+        raise ValueError("panorama_mode must be 'baseline' or 'depth'")
     rd = Prefetch(ClipReader(rig, videos, start), skip=max(0, stride - 1))
     mc, writer = {}, None
     n_predicted = 0
@@ -225,10 +250,14 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         src = rd.next()
         if not src:
             break
-        try:
-            rgb, _, _, _ = render(rig, vcam, src, 0.6, map_cache=mc)
-        except TypeError:
-            rgb, _, _, _ = render(rig, vcam, src, 0.6)
+        pano_stats = {}
+        if panorama is not None:
+            rgb, _, pano_stats, _ = panorama.render(src)
+        else:
+            try:
+                rgb, _, _, _ = render(rig, vcam, src, 0.6, map_cache=mc)
+            except TypeError:
+                rgb, _, _, _ = render(rig, vcam, src, 0.6)
         # EVERY DECISION IS MADE ON THE UNTOUCHED FRAME. The detector and the
         # ownership classifier both read `clean`; only the panels are drawn on
         # the covered copy. Classifying on the mosaic would let the privacy
@@ -307,6 +336,12 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
             trace.append({
                 "frame": start + k * stride,
                 "n_raw_det": len(raw_dets), "n_det": len(dets),
+                "panorama": pano_stats.get("renderer", "baseline"),
+                "pano_views": int(pano_stats.get("n_views", 3)),
+                "pano_depth_coverage": round(float(
+                    pano_stats.get("depth_coverage", float("nan"))), 6),
+                "pano_gated_frac": round(float(
+                    pano_stats.get("gated_frac", float("nan"))), 6),
                 "n_low_match": sum(p == "matched_low" for p in provenance),
                 "n_new_track": sum(p == "new_high" for p in provenance),
                 "n_predicted": n_predicted_frame,
@@ -345,6 +380,8 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
               f"({fr['flips_per_100_hand_frames']:.1f} per 100)")
         if fr["worst"]:
             print(f"    worst tracks: {fr['worst']}")
+        if panorama is not None:
+            print(f"    panorama: depth-aware six-view; fit {panorama_fit}")
         print(f"    tracker: {tracker.n_new} tracks started, "
               f"{tracker.n_lost} ended")
         print(f"    predicted covers: {n_predicted} hand-frames, horizon "
@@ -505,6 +542,19 @@ def main():
     ap.add_argument("--sigma", type=float, default=14.0)
     ap.add_argument("--weights",
                     default="/shared/models/HaWoR/weights/external/detector.pt")
+    ap.add_argument("--panorama", choices=("depth", "baseline"),
+                    default="depth",
+                    help="depth uses image-derived per-pixel range and all six "
+                         "RGB views; baseline is the old three-left-eye "
+                         "constant-depth renderer")
+    ap.add_argument("--pano_fit_frames", type=int, default=6,
+                    help="synchronized frames used once to fit frozen colour "
+                         "and residual-flow corrections")
+    ap.add_argument("--no_pano_depth", action="store_true",
+                    help="ablation: use one depth plane in the new six-view "
+                         "renderer")
+    ap.add_argument("--no_pano_flow", action="store_true",
+                    help="ablation: disable content-fitted residual alignment")
     # On by default. A demo that leaks a colleague's face is not a demo that
     # can be sent anywhere, and defaulting the privacy step off would make
     # that failure the quiet one.
@@ -550,6 +600,11 @@ def main():
     print(f"  detector: new>={a.new_track_conf:.2f}, "
           f"continue>={a.continue_conf if a.min_conf is None else a.min_conf:.2f}; "
           f"prediction age {a.max_prediction_age}")
+    print(f"  panorama: {a.panorama}"
+          + (f", fit {a.pano_fit_frames} frames, "
+             f"depth {'off' if a.no_pano_depth else 'on'}, "
+             f"residual flow {'off' if a.no_pano_flow else 'on'}"
+             if a.panorama == "depth" else ""))
     print(f"  faces {'NOT covered' if a.no_faces else 'covered'}"
           f"{'   <- do not send this anywhere' if a.no_faces else ''}")
     n, dis, nf = run(rig, vids, a.out, a.start, a.n, a.stride,
@@ -564,7 +619,11 @@ def main():
                      predict_motion=not a.no_motion_prediction,
                      safe_association=not a.legacy_association,
                      safe_reacquire=not a.inherit_self_on_reacquire,
-                     bridge=a.bridge, min_conf=a.min_conf)
+                     bridge=a.bridge, min_conf=a.min_conf,
+                     panorama_mode=a.panorama,
+                     panorama_fit_frames=a.pano_fit_frames,
+                     panorama_depth=not a.no_pano_depth,
+                     panorama_flow=not a.no_pano_flow)
     if not n:
         raise SystemExit("no frames written")
     mb = os.path.getsize(a.out) / 1e6
