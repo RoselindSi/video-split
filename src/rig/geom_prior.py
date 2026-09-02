@@ -217,6 +217,100 @@ def load_model(path):
         return json.load(f)
 
 
+
+def deployment_rate(rows, clf_path, blend=0.5, min_other=2, verbose=True):
+    """The rate at which the wearer's own hands get covered. -> dict
+
+    WHY THIS NEEDS ITS OWN FUNCTION. `compare` scores recordings that carry
+    enough `other` to compute a recall, and on a deployment-rate sample that
+    is almost none of them: 68 recordings, 12 with two or more foreign hands,
+    39 hands scored out of 806. The 762 `owner` hands -- the entire reason for
+    sampling this stratum -- were discarded, and they are the only thing here
+    that can be measured precisely. Forty-two positives cannot carry a recall
+    at any confidence worth printing; seven hundred and sixty-two negatives
+    can carry a false-positive rate.
+
+    AND IT IS THE ERROR THAT MATTERS MOST. Missing a colleague's hand leaves a
+    stranger in one frame. Covering the wearer's hand destroys the pixels the
+    downstream model was built to read, in the exact region it is reading. The
+    two are not symmetric and only one of them has been measurable until now.
+
+    THE PREVALENCE IS THE POINT, NOT AN INCONVENIENCE. Every precision figure
+    this project has quoted came from a sample that is 40% foreign; deployment
+    is nearer 5%. Precision falls with prevalence even when the classifier is
+    unchanged, because the same false-positive rate is divided by a much
+    smaller number of true positives. So the number to carry forward is the
+    per-hand FALSE POSITIVE RATE, which does not move with prevalence, and the
+    precision implied by it at the real base rate."""
+    from src.rig import own_cnn
+    model, device = own_cnn.load_model(clf_path)
+    if model is None:
+        raise SystemExit(f"no checkpoint at {clf_path}")
+    torch = own_cnn._torch()
+    tags = sorted({r["tag"] for r in rows})
+    out = {k: {"fp": 0, "n_own": 0, "tp": 0, "n_oth": 0}
+           for k in ("cnn", "geom", "blend")}
+    per_rec = {}
+    for tag in tags:
+        te = [r for r in rows if r["tag"] == tag]
+        tr = [r for r in rows if r["tag"] != tag]
+        if not te or not tr:
+            continue
+        if sum(1 for r in tr if r["y"] == 0) < min_other:
+            continue
+        m = fit(tr, cues=INVARIANT, min_other=min_other, verbose=False)
+        X = np.array([[r[c] for c in m["cues"]] for r in te], float)
+        z = (X - np.array(m["mean"])) / np.array(m["std"])
+        p_geom = 1.0 / (1.0 + np.exp(-(z @ np.array(m["coef"])
+                                       + m["intercept"])))
+        ds = own_cnn.Crops([dict(r, y=int(r["y"])) for r in te], augment=False)
+        ps = []
+        model.eval()
+        with torch.no_grad():
+            for i in range(0, len(ds), 64):
+                xs = [ds[j][0] for j in range(i, min(i + 64, len(ds)))]
+                ps.append(torch.softmax(model(torch.stack(xs).to(device)),
+                                        1)[:, 1].cpu().numpy())
+        p_cnn = np.concatenate(ps)
+        y = np.array([r["y"] for r in te])
+        rec = {}
+        for name, p in (("cnn", p_cnn), ("geom", p_geom),
+                        ("blend", (1 - blend) * p_cnn + blend * p_geom)):
+            pred_other = p < 0.5
+            fp = int((pred_other & (y == 1)).sum())
+            tp = int((pred_other & (y == 0)).sum())
+            out[name]["fp"] += fp
+            out[name]["n_own"] += int((y == 1).sum())
+            out[name]["tp"] += tp
+            out[name]["n_oth"] += int((y == 0).sum())
+            rec[name] = (fp, int((y == 1).sum()))
+        per_rec[tag] = rec
+    if verbose:
+        base = (sum(1 for r in rows if r["y"] == 0) / max(len(rows), 1))
+        print(f"\n  {len(rows)} hands over {len(per_rec)} recordings, "
+              f"{sum(1 for r in rows if r['y'] == 0)} other "
+              f"({base:.1%} -- this is the deployment prevalence)")
+        print(f"\n    {'scorer':<8}{'own covered':>14}{'FP rate':>10}"
+              f"{'other found':>14}{'recall':>9}{'precision':>11}")
+        for k in ("cnn", "geom", "blend"):
+            v = out[k]
+            fpr = v["fp"] / max(v["n_own"], 1)
+            rc = v["tp"] / max(v["n_oth"], 1)
+            pr = v["tp"] / max(v["tp"] + v["fp"], 1)
+            print(f"    {k:<8}{v['fp']:>6}/{v['n_own']:<7}{fpr:>10.3%}"
+                  f"{v['tp']:>6}/{v['n_oth']:<7}{rc:>9.3f}{pr:>11.3f}")
+        worst = sorted(((v["geom"][0] / max(v["geom"][1], 1), t)
+                        for t, v in per_rec.items()), reverse=True)[:5]
+        print(f"\n  worst recordings for covering the wearer (geom): "
+              + ", ".join(f"{t} {r:.1%}" for r, t in worst if r > 0))
+        print("\n  `own covered` is the wearer's own hands called foreign and "
+              "therefore blurred.\n  Read the FP RATE rather than the "
+              "precision: the rate is a property of the\n  classifier, while "
+              "the precision also depends on how rare foreign hands are,\n  "
+              "and it will fall on any recording quieter than this sample.")
+    return out
+
+
 def _self_test():
     ok = []
 
@@ -300,6 +394,11 @@ def main():
                          "separately on --holdout recordings")
     ap.add_argument("--holdout", action="append", default=[])
     ap.add_argument("--blend", type=float, default=0.5)
+    ap.add_argument("--deployment", metavar="CLF",
+                    help="score EVERY labelled hand and report the rate at "
+                         "which the wearer's own hands are covered. Use on a "
+                         "randomly sampled package, where positives are too "
+                         "few for a recall but negatives are plentiful.")
     a = ap.parse_args()
     pkgs = []
     for p in a.pkg:
@@ -307,6 +406,10 @@ def main():
     rows = add_rel_size(load(pkgs))
     if not rows:
         raise SystemExit("no labelled hands with complete geometry")
+    if a.deployment:
+        deployment_rate(rows, a.deployment, blend=a.blend,
+                        min_other=a.min_other)
+        raise SystemExit(0)
     if a.compare:
         hold = a.holdout
         if not hold:
