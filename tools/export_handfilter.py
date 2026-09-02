@@ -35,16 +35,19 @@ WHOLE = [
     ("geometry.py", "the virtual wide camera"),
     ("render_wide.py", "six eyes -> one wide frame"),
     ("hand_detect.py", "detection, the geometric rule, GrabCut masks"),
+    ("hand_track.py", "motion prediction and bounded hand identities"),
     ("own_cnn.py", "ownership from the crop -- the model that ships"),
     ("own_label.py", "labelling, mining, stratified sweep"),
     ("rule_baseline.py", "the incumbent's score, upright and turned"),
+    ("geom_prior.py", "the fitted ownership prior"),
+    ("face_mask.py", "face privacy on the rendered output"),
     ("demo_video.py", "a before-and-after clip, straight from a databag"),
 ]
 
 # Taken apart. name -> the top-level definitions worth keeping.
 TRIMMED = {
     "suppress_other.py": ["dilate_feather", "suppress"],
-    "seam_fix.py": ["ClipReader"],
+    "seam_fix.py": ["ClipReader", "Prefetch"],
 }
 
 # seam_fix is 791 lines about stitching; the ownership line needs 43 of them.
@@ -170,6 +173,7 @@ def repoint(text, pkg):
     text = re.sub(r"from src\.rig\.(\w+)", lambda m:
                   f"from {pkg}.{RENAME.get(m.group(1) + '.py', m.group(1) + '.py')[:-3]}",
                   text)
+    text = text.replace("from src.rig import", f"from {pkg} import")
     return text.replace("src.rig.", f"{pkg}.")
 
 

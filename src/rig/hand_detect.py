@@ -130,7 +130,13 @@ def detect(model, rgb, imgsz=IMGSZ, min_conf=MIN_CONF, clf=None):
     in `rule_owner` regardless: on the 268 hands labelled so far the two agree
     everywhere, so the day they disagree is the day something new is in shot,
     and that is worth seeing rather than silently overriding."""
-    res = model(rgb, imgsz=imgsz, verbose=False)[0]
+    predict_args = {"imgsz": imgsz, "verbose": False}
+    if min_conf is not None:
+        # Ultralytics filters candidates inside inference. Applying only the
+        # second Python-side cut below means a requested floor lower than the
+        # model default can never recover the discarded boxes.
+        predict_args["conf"] = float(min_conf)
+    res = model(rgb, **predict_args)[0]
     out = []
     if res.boxes is None or len(res.boxes) == 0:
         return out
@@ -140,7 +146,7 @@ def detect(model, rgb, imgsz=IMGSZ, min_conf=MIN_CONF, clf=None):
     kps = (res.keypoints.xy.cpu().numpy()
            if res.keypoints is not None else [None] * len(boxes))
     for b, c, k, kp in zip(boxes, conf, cls, kps):
-        if c < min_conf:
+        if min_conf is not None and c < min_conf:
             continue
         edge, pt = (forearm_exit(kp, rgb.shape) if kp is not None
                     else (None, None))
@@ -342,7 +348,8 @@ class OwnHold:
     new track, and starts from its own probability with no history."""
 
     def __init__(self, fast=0.8, slow=0.4, lo=0.35, hi=0.70, rule_w=0.35,
-                 geom=None, geom_w=0.5, max_owner=None):
+                 geom=None, geom_w=0.5, max_owner=None, state_ttl=5,
+                 self_reconfirm_frames=2):
         # Asymmetric in the smoothing as well as in the thresholds. A single
         # symmetric rate cannot do both jobs: slow enough to ignore a frame of
         # doubt is also slow enough to leave a colleague's hand uncovered for
@@ -393,13 +400,17 @@ class OwnHold:
         # stopped being the same list every time the detector gained or lost
         # a hand -- which is when this state was silently transferred to a
         # different hand.
-        self.state = {}          # track id -> [ema, is_owner, frames_unseen]
+        # [ema, is_owner, frames_unseen, pending_self_confirmations]. A
+        # positive pending count means a formerly-self track was reacquired and
+        # is not allowed to inherit that old verdict without fresh evidence.
+        self.state = {}
         # Frames a verdict outlives the detection that produced it. Matches
         # the tracker's own patience: state for a track the tracker has given
         # up on is state nobody will ask for again.
-        self.state_ttl = 5
+        self.state_ttl = int(state_ttl)
+        self.self_reconfirm_frames = max(1, int(self_reconfirm_frames))
 
-    def update(self, dets, flags, shape=None, ids=None):
+    def update(self, dets, flags, shape=None, ids=None, reacquired=None):
         """-> [(is_owner, smoothed_p)] aligned with `dets`.
 
         IDENTITY IS NOT THIS CLASS'S JOB ANY MORE. It used to match the
@@ -414,6 +425,7 @@ class OwnHold:
         which is the correct behaviour and was not available before."""
         if ids is None:
             ids = list(range(len(dets)))
+        reacquired = set(reacquired or ())
         out, seen = [], set()
         for k, (d, (o, p)) in enumerate(zip(dets, flags)):
             tid = ids[k]
@@ -429,7 +441,18 @@ class OwnHold:
                     p = (1 - self.rule_w) * p + self.rule_w * rs
             prev = self.state.get(tid)
             if prev is None:
-                ema, lab = p, p >= 0.5
+                ema, lab, pending = p, p >= 0.5, 0
+            elif tid in reacquired and prev[1]:
+                # A missing self hand and a newly arrived colleague can occupy
+                # the same patch of image. Track geometry may tentatively join
+                # them, but the old self verdict is the unsafe state to carry:
+                # reset to the current evidence and require another supporting
+                # frame before the pixels are allowed through unmasked.
+                ema = p
+                pending = 1 if p >= 0.5 else 0
+                lab = pending >= self.self_reconfirm_frames
+                if lab:
+                    pending = 0
             else:
                 # ASYMMETRIC ON PURPOSE. Evidence that this hand is foreign is
                 # adopted fast and evidence that it is the wearer's is adopted
@@ -440,11 +463,17 @@ class OwnHold:
                 a = self.fast if p < prev[0] else self.slow
                 ema = a * p + (1 - a) * prev[0]
                 lab = prev[1]
-                if lab and ema < self.lo:
+                pending = prev[3] if len(prev) > 3 else 0
+                if pending:
+                    pending = pending + 1 if p >= 0.5 else 0
+                    lab = pending >= self.self_reconfirm_frames
+                    if lab:
+                        pending = 0
+                elif lab and ema < self.lo:
                     lab = False
                 elif (not lab) and ema > self.hi:
                     lab = True
-            self.state[tid] = [ema, lab, 0]
+            self.state[tid] = [ema, lab, 0, pending]
             seen.add(tid)
             out.append((bool(lab), float(ema)))
         # A PERSON HAS TWO HANDS. Applied last, after the hysteresis, so it
@@ -463,6 +492,7 @@ class OwnHold:
                     if i not in keep:
                         out[i] = (False, out[i][1])
                         self.state[ids[i]][1] = False
+                        self.state[ids[i]][3] = 0
         # STATE SURVIVES A FRAME THE TRACKER SAW NOTHING IN. It used to be
         # rebuilt from scratch every frame, so a track the detector missed for
         # one frame lost its smoothed score AND its verdict. Two things broke

@@ -41,10 +41,23 @@ import numpy as np
 # it exists to refuse impossible matches, not to model hand speed.
 GATE_FRAC = 0.15
 
-# How the cost is made. Centre displacement is the primary term; overlap
-# disambiguates hands at similar distance; a large change in apparent size
-# means the box is probably a different object.
-W_DIST, W_IOU, W_SCALE = 1.0, 1.0, 0.5
+# How the cost is made. Distance is measured against a motion prediction,
+# overlap disambiguates nearby hands, and pose/entry geometry stop a newly
+# arrived hand from inheriting a track merely because it appeared nearby.
+W_DIST, W_IOU, W_SCALE = 1.0, 0.75, 0.35
+W_POSE, EDGE_MISMATCH, SIDE_MISMATCH = 0.50, 0.40, 0.25
+REACQUIRE_EDGE_MISMATCH = 1.50
+
+# A finite pair is not automatically a match. The old rectangular Hungarian
+# solve assigned every pair inside the centre-distance gate, even when leaving
+# both sides unmatched was the more plausible explanation. Dummy columns make
+# that option explicit; MAX_ASSOC_COST remains a hard refusal above it.
+UNMATCHED_COST = 1.35
+MAX_ASSOC_COST = 1.60
+
+# Exponential update for the constant-velocity box state. A high value follows
+# real motion quickly; the old estimate still damps one-frame detector jitter.
+VELOCITY_ALPHA = 0.70
 
 # Frames a track survives with no detection supporting it. Long enough to
 # bridge the detector's short dropouts, short enough that a hand which really
@@ -72,6 +85,64 @@ def _centre(box):
 def _diag(box):
     x0, y0, x1, y1 = [float(v) for v in box]
     return float(np.hypot(x1 - x0, y1 - y0))
+
+
+def _box_state(box):
+    x0, y0, x1, y1 = [float(v) for v in box]
+    return np.array([(x0 + x1) / 2.0, (y0 + y1) / 2.0,
+                     max(2.0, x1 - x0), max(2.0, y1 - y0)], float)
+
+
+def _state_box(state, shape):
+    H, W = shape[:2]
+    cx, cy, w, h = [float(v) for v in state]
+    w, h = max(2.0, w), max(2.0, h)
+    x0, x1 = cx - w / 2.0, cx + w / 2.0
+    y0, y1 = cy - h / 2.0, cy + h / 2.0
+    if x0 < 0:
+        x1 -= x0
+        x0 = 0.0
+    if x1 > W:
+        x0 -= x1 - W
+        x1 = float(W)
+    if y0 < 0:
+        y1 -= y0
+        y0 = 0.0
+    if y1 > H:
+        y0 -= y1 - H
+        y1 = float(H)
+    return np.array([max(0, x0), max(0, y0), min(W, x1), min(H, y1)],
+                    dtype=int)
+
+
+def _normalised_pose(det):
+    kp = det.get("kp")
+    if kp is None:
+        return None
+    kp = np.asarray(kp, float)
+    if kp.ndim != 2 or kp.shape[1] != 2 or not np.isfinite(kp).all():
+        return None
+    x0, y0, x1, y1 = [float(v) for v in det["box"]]
+    scale = np.array([max(x1 - x0, 1.0), max(y1 - y0, 1.0)])
+    return (kp - np.array([x0, y0])) / scale
+
+
+def _move_detection(det, new_box):
+    """Move a stale detection with its predicted box and keypoints."""
+    out = dict(det)
+    old = np.asarray(det["box"], float)
+    new = np.asarray(new_box, float)
+    old_wh = np.maximum(old[2:] - old[:2], 1.0)
+    new_wh = np.maximum(new[2:] - new[:2], 1.0)
+    for key in ("kp", "exit"):
+        value = det.get(key)
+        if value is None:
+            continue
+        pts = np.asarray(value, float)
+        out[key] = new[:2] + (pts - old[:2]) * (new_wh / old_wh)
+    out["box"] = np.asarray(new_box, dtype=int)
+    out["predicted"] = True
+    return out
 
 
 def hungarian(cost):
@@ -149,64 +220,190 @@ class Tracker:
     that wants to accumulate something per hand -- a smoothed score, a size
     history, a verdict -- keys it on the id this returns."""
 
-    def __init__(self, gate_frac=GATE_FRAC, max_lost=MAX_LOST):
+    def __init__(self, gate_frac=GATE_FRAC, max_lost=MAX_LOST,
+                 predict_motion=True, rich_association=True,
+                 max_assoc_cost=MAX_ASSOC_COST,
+                 unmatched_cost=UNMATCHED_COST):
         self.gate_frac = float(gate_frac)
         self.max_lost = int(max_lost)
-        self.tracks = {}          # id -> {"box", "det", "lost", "age"}
+        self.predict_motion = bool(predict_motion)
+        self.rich_association = bool(rich_association)
+        self.max_assoc_cost = (None if max_assoc_cost is None
+                               else float(max_assoc_cost))
+        self.unmatched_cost = (None if unmatched_cost is None
+                               else float(unmatched_cost))
+        self.tracks = {}
         self._next = 0
         self.n_new = 0
         self.n_lost = 0
+        self.reacquired = set()
+        self.low_matches = set()
+        self.new_ids = set()
+        self.provenance = []
 
-    def update(self, dets, shape):
-        """-> [track_id] aligned with `dets`, one per detection."""
+    def _predicted_boxes(self, shape):
+        out = {}
+        for tid, track in self.tracks.items():
+            state = track["state"].copy()
+            if self.predict_motion:
+                state += track["velocity"]
+            state[2:] = np.maximum(state[2:], 2.0)
+            out[tid] = _state_box(state, shape)
+        return out
+
+    def _cost(self, tid, det, predicted_box, shape):
         H, W = shape[:2]
-        gate = self.gate_frac * float(np.hypot(W, H))
+        track = self.tracks[tid]
+        uncertainty = 1.0 + 0.25 * min(track["lost"], 3)
+        gate = self.gate_frac * float(np.hypot(W, H)) * uncertainty
+        dist = float(np.linalg.norm(_centre(predicted_box)
+                                    - _centre(det["box"])))
+        if dist > gate:
+            return np.inf
+        td = _diag(predicted_box)
+        sc = abs(_diag(det["box"]) - td) / max(td, 1.0)
+        cost = (W_DIST * dist / max(gate, 1.0)
+                + W_IOU * (1.0 - box_iou(predicted_box, det["box"]))
+                + W_SCALE * min(sc, 2.0))
+        if not self.rich_association:
+            return cost
+
+        old_pose, new_pose = _normalised_pose(track["det"]), \
+            _normalised_pose(det)
+        if old_pose is not None and new_pose is not None \
+                and old_pose.shape == new_pose.shape:
+            pose = float(np.linalg.norm(old_pose - new_pose, axis=1).mean())
+            cost += W_POSE * min(pose, 2.0)
+
+        old_edge, new_edge = track["det"].get("edge"), det.get("edge")
+        if old_edge and new_edge and old_edge != new_edge:
+            cost += (REACQUIRE_EDGE_MISMATCH if track["lost"] > 0
+                     else EDGE_MISMATCH)
+        old_side, new_side = track["det"].get("side"), det.get("side")
+        if old_side and new_side and old_side != new_side:
+            cost += SIDE_MISMATCH
+        return cost
+
+    def _associate(self, tids, det_indices, dets, predicted, shape):
+        if not tids or not det_indices:
+            return []
+        cost = np.full((len(tids), len(det_indices)), np.inf)
+        for row, tid in enumerate(tids):
+            for col, det_i in enumerate(det_indices):
+                value = self._cost(tid, dets[det_i], predicted[tid], shape)
+                if self.max_assoc_cost is None or value <= self.max_assoc_cost:
+                    cost[row, col] = value
+
+        if self.unmatched_cost is None:
+            assigned = hungarian(cost)
+        else:
+            # One private dummy column per track. Choosing it means the track
+            # remains lost and the detection remains free to start a new track.
+            aug = np.full((len(tids), len(det_indices) + len(tids)), np.inf)
+            aug[:, :len(det_indices)] = cost
+            for row in range(len(tids)):
+                aug[row, len(det_indices) + row] = self.unmatched_cost
+            assigned = [(row, col) for row, col in hungarian(aug)
+                        if col < len(det_indices)]
+        return [(tids[row], det_indices[col]) for row, col in assigned]
+
+    def _start(self, det):
+        tid = self._next
+        state = _box_state(det["box"])
+        self.tracks[tid] = {
+            "box": np.asarray(det["box"], dtype=int),
+            "det": dict(det), "state": state,
+            "velocity": np.zeros(4, float), "lost": 0, "age": 1,
+        }
+        self._next += 1
+        self.n_new += 1
+        self.new_ids.add(tid)
+        return tid
+
+    def _match(self, tid, det):
+        track = self.tracks[tid]
+        was_lost = track["lost"] > 0
+        observed = _box_state(det["box"])
+        measured = observed - track["state"]
+        if track["age"] <= 1:
+            velocity = measured
+        else:
+            velocity = (VELOCITY_ALPHA * measured
+                        + (1.0 - VELOCITY_ALPHA) * track["velocity"])
+        track.update({"box": np.asarray(det["box"], dtype=int),
+                      "det": dict(det), "state": observed,
+                      "velocity": velocity, "lost": 0,
+                      "age": track["age"] + 1})
+        if was_lost:
+            self.reacquired.add(tid)
+
+    def update(self, dets, shape, new_track_conf=None, continue_conf=None):
+        """Associate detections and return track ids aligned with ``dets``.
+
+        With thresholds omitted every unmatched detection starts a track, which
+        preserves the original API. With thresholds supplied, high-confidence
+        detections are associated first and may start tracks; lower-confidence
+        detections get a second association pass and may only continue one.
+        Unmatched low detections return ``None`` and must be dropped by callers.
+        """
         ids = [None] * len(dets)
+        self.reacquired, self.low_matches, self.new_ids = set(), set(), set()
+        self.provenance = ["dropped" for _ in dets]
         live = sorted(self.tracks)
-        if live and dets:
-            cost = np.full((len(live), len(dets)), np.inf)
-            for a, tid in enumerate(live):
-                tb = self.tracks[tid]["box"]
-                tc, td = _centre(tb), _diag(tb)
-                for b, d in enumerate(dets):
-                    db = d["box"]
-                    dist = float(np.linalg.norm(tc - _centre(db)))
-                    if dist > gate:
-                        continue          # impossible, leave it infinite
-                    ov = box_iou(tb, db)
-                    sc = abs(_diag(db) - td) / max(td, 1.0)
-                    cost[a, b] = (W_DIST * dist / max(gate, 1.0)
-                                  + W_IOU * (1.0 - ov)
-                                  + W_SCALE * min(sc, 2.0))
-            for a, b in hungarian(cost):
-                ids[b] = live[a]
-                self.tracks[live[a]]["box"] = dets[b]["box"]
-                # The whole detection, not just the box: a coasting track has
-                # to be able to hand back something GrabCut can use, and
-                # GrabCut needs the keypoints as its foreground seed.
-                self.tracks[live[a]]["det"] = dets[b]
-                self.tracks[live[a]]["lost"] = 0
-                self.tracks[live[a]]["age"] += 1
-        matched = {i for i in ids if i is not None}
-        for b, d in enumerate(dets):
-            if ids[b] is None:
-                self.tracks[self._next] = {"box": d["box"], "det": d,
-                                           "lost": 0, "age": 1}
-                ids[b] = self._next
-                self._next += 1
-                self.n_new += 1
-        for tid in list(self.tracks):
-            if tid in matched or tid in ids:
+        predicted = self._predicted_boxes(shape)
+
+        if new_track_conf is None:
+            high = list(range(len(dets)))
+            low = []
+        else:
+            new_track_conf = float(new_track_conf)
+            continue_conf = (new_track_conf if continue_conf is None
+                             else float(continue_conf))
+            high = [i for i, d in enumerate(dets)
+                    if float(d.get("conf", 1.0)) >= new_track_conf]
+            low = [i for i, d in enumerate(dets)
+                   if continue_conf <= float(d.get("conf", 1.0))
+                   < new_track_conf]
+
+        matched_tracks = set()
+        matched_dets = set()
+        for stage, candidates in (("high", high), ("low", low)):
+            remaining_tracks = [tid for tid in live if tid not in matched_tracks]
+            remaining_dets = [i for i in candidates if i not in matched_dets]
+            for tid, det_i in self._associate(remaining_tracks, remaining_dets,
+                                               dets, predicted, shape):
+                self._match(tid, dets[det_i])
+                ids[det_i] = tid
+                self.provenance[det_i] = f"matched_{stage}"
+                matched_tracks.add(tid)
+                matched_dets.add(det_i)
+                if stage == "low":
+                    self.low_matches.add(tid)
+
+        for det_i in high:
+            if det_i in matched_dets:
                 continue
-            self.tracks[tid]["lost"] += 1
-            if self.tracks[tid]["lost"] > self.max_lost:
+            tid = self._start(dets[det_i])
+            ids[det_i] = tid
+            self.provenance[det_i] = "new_high"
+
+        for tid in live:
+            if tid in matched_tracks:
+                continue
+            track = self.tracks[tid]
+            new_box = predicted[tid]
+            track["det"] = _move_detection(track["det"], new_box)
+            track["box"] = new_box
+            track["state"] = _box_state(new_box)
+            track["lost"] += 1
+            track["age"] += 1
+            if track["lost"] > self.max_lost:
                 del self.tracks[tid]
                 self.n_lost += 1
         return ids
 
-
-    def coasting(self, bridge=2):
-        """Tracks the detector lost this frame but that are still alive.
+    def coasting(self, max_prediction_age=2):
+        """Predicted tracks missing a detection but still within the horizon.
         -> [(track_id, detection)]
 
         THE TRACKER KNEW WHERE THE HAND WAS AND NOBODY ASKED IT. Masks are
@@ -218,14 +415,12 @@ class Tracker:
         became 2, the colleague's hand went uncovered, and the frame counted
         as a drop.
 
-        `bridge` IS DELIBERATELY SHORTER THAN `max_lost`. Keeping an identity
-        alive for five frames is cheap -- the worst case is a new hand having
-        to start a new track. Covering pixels at a five-frame-old position is
-        not: a hand moves, and blurring where it WAS both misses it and
-        destroys bench that was never anyone's hand. Two frames is a sixth of
-        a second, within the dilation the mask already carries."""
+        ``max_prediction_age`` is deliberately bounded separately from track
+        lifetime. Prediction answers where a missing hand may be; this horizon
+        answers how long that estimate is allowed to affect output pixels."""
         return [(tid, t["det"]) for tid, t in sorted(self.tracks.items())
-                if 0 < t["lost"] <= bridge and t.get("det") is not None]
+                if 0 < t["lost"] <= max_prediction_age
+                and t.get("det") is not None]
 
 
 class FlipCount:

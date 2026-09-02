@@ -29,6 +29,9 @@ BAR_H = 34
 GREEN = (60, 220, 60)
 RED = (60, 60, 240)
 AMBER = (40, 190, 250)
+NEW_TRACK_CONF = 0.60
+CONTINUE_TRACK_CONF = 0.25
+MAX_PREDICTION_AGE = 2
 
 
 def _bar(width, text, height=BAR_H, bg=(28, 28, 30), fg=(235, 235, 235)):
@@ -57,7 +60,10 @@ def annotate(rgb, dets, own_flags, m_oth=None):
         x0, y0, x1, y1 = [int(v) for v in d["box"]]
         col = GREEN if is_own else RED
         cv2.rectangle(vis, (x0, y0), (x1, y1), col, 3)
-        lab = f"{'self' if is_own else 'other'} {p:.2f}"
+        det_conf = d.get("conf")
+        lab = f"{'self' if is_own else 'other'} own {p:.2f}"
+        if det_conf is not None:
+            lab += f" det {float(det_conf):.2f}"
         if bool(d.get("rule_owner")) != bool(is_own):
             # The only frames worth arguing about. Marked so a viewer can
             # find them instead of taking the agreement on trust.
@@ -72,7 +78,8 @@ def annotate(rgb, dets, own_flags, m_oth=None):
     return vis
 
 
-def compose(rgb, vis, out, n_own, n_oth, frame, disagreed, frac=None):
+def compose(rgb, vis, out, n_own, n_oth, frame, disagreed, frac=None,
+            cfg=None):
     """`frac` is the share of pixels actually suppressed.
 
     A frame where nothing was blurred is the failure that hides best: it looks
@@ -80,10 +87,13 @@ def compose(rgb, vis, out, n_own, n_oth, frame, disagreed, frac=None):
     bar costs nothing and makes the two readable apart."""
     import cv2
     W = rgb.shape[1]
-    top = _bar(W, f"input + decision      frame {frame}      "
-                  f"self {n_own}   other {n_oth}"
-                  + ("   [classifier disagrees with the rule]" if disagreed
-                     else ""))
+    # THE CONFIGURATION IS STAMPED ON EVERY FRAME. Two renders of the same
+    # clip under different switches are indistinguishable once the files are
+    # copied off the machine, and an A/B nobody can tell apart is not an A/B.
+    top = _bar(W, (f"{cfg}   " if cfg else "")
+               + f"frame {frame}      self {n_own}   other {n_oth}"
+               + ("   [classifier disagrees with the rule]" if disagreed
+                  else ""))
     # The status leads. Appended to a label it is the first thing a narrow
     # frame truncates, and it is the only part that changes.
     if frac is None:
@@ -148,31 +158,64 @@ def _report_trace(rows, path):
 
 def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         dilate, sigma, fps, verbose=True, face_model=None, face_conf=None,
-        trace_path=None, geom=None, geom_w=0.5, max_owner=None, bridge=2,
-        min_conf=None):
+        trace_path=None, geom=None, geom_w=0.5, max_owner=None,
+        max_prediction_age=MAX_PREDICTION_AGE,
+        new_track_conf=NEW_TRACK_CONF,
+        continue_conf=CONTINUE_TRACK_CONF,
+        predict_motion=True, safe_association=True, safe_reacquire=True,
+        min_conf=None, bridge=None):
     import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
     from src.rig.render_wide import render
     from src.rig.seam_fix import ClipReader, Prefetch
     from src.rig.hand_detect import detect, masks_from, OwnHold
-    from src.rig.hand_track import Tracker, FlipCount
+    from src.rig.hand_track import (Tracker, FlipCount, MAX_LOST,
+                                    MAX_ASSOC_COST, UNMATCHED_COST)
     from src.rig.suppress_other import suppress
     from src.rig import own_cnn
 
     from src.rig import face_mask
+
+    if bridge is not None:
+        # Compatibility with commands written before the policy acquired its
+        # real name. Prediction says where; this age says for how long.
+        max_prediction_age = int(bridge)
+    if min_conf is not None:
+        # Deprecated single-floor alias. ``is not None`` is intentional:
+        # min_conf=0 must reach the detector rather than restoring 0.60.
+        continue_conf = float(min_conf)
+    cfg = ("[" + ("motion" if predict_motion else "no-motion")
+           + ("+assoc" if safe_association else "")
+           + ("+reacq" if safe_reacquire else "")
+           + f"+pred{int(max_prediction_age)}"
+           + f"+T{float(new_track_conf):.2f}/{float(continue_conf):.2f}"
+           + (f"+cap{max_owner}" if max_owner else "")
+           + "]")
+    max_prediction_age = max(0, int(max_prediction_age))
+    new_track_conf, continue_conf = (float(new_track_conf),
+                                     float(continue_conf))
+    if not 0.0 <= continue_conf <= new_track_conf <= 1.0:
+        raise ValueError("need 0 <= continue_conf <= new_track_conf <= 1")
 
     fdet = face_mask.load_detector(face_model, face_conf) if face_model \
         else None
     hold = face_mask.Hold()
     # Without a fitted prior this falls back to the single exit-height rule,
     # which is what every render before this one used.
-    ownhold = OwnHold(geom=geom, geom_w=geom_w, max_owner=max_owner)
-    tracker, flips = Tracker(), FlipCount()
+    tracker = Tracker(
+        max_lost=max(MAX_LOST, max_prediction_age),
+        predict_motion=predict_motion,
+        rich_association=safe_association,
+        max_assoc_cost=MAX_ASSOC_COST if safe_association else None,
+        unmatched_cost=UNMATCHED_COST if safe_association else None)
+    ownhold = OwnHold(geom=geom, geom_w=geom_w, max_owner=max_owner,
+                      state_ttl=tracker.max_lost)
+    flips = FlipCount()
     vcam = VirtualWideCamera.from_rig(rig)
     rd = Prefetch(ClipReader(rig, videos, start), skip=max(0, stride - 1))
     mc, writer = {}, None
-    n_bridged = 0
+    n_predicted = 0
     trace = [] if trace_path else None
     n_dis = n_written = n_face = 0
     t0 = time.time()
@@ -193,15 +236,24 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         # face sits directly above a colleague's hands, so that is precisely
         # where the two would collide.
         clean = rgb
-        dets = (detect(model, clean, min_conf=min_conf) if min_conf
-                else detect(model, clean))
+        raw_dets = detect(model, clean, min_conf=continue_conf)
+        raw_ids = tracker.update(raw_dets, rgb.shape,
+                                 new_track_conf=new_track_conf,
+                                 continue_conf=continue_conf)
+        keep_i = [i for i, tid in enumerate(raw_ids) if tid is not None]
+        dets = [raw_dets[i] for i in keep_i]
+        tids = [raw_ids[i] for i in keep_i]
+        provenance = [tracker.provenance[i] for i in keep_i]
         if fdet is not None:
             faces = face_mask.detect_faces(fdet, clean)
             # The hand detector runs first for a reason: it is the better
             # instrument for deciding whether a patch of skin is a hand, and
             # the face detector fires on skin. Watched back, this is what was
             # mosaicking the wearer's own hands.
-            faces = face_mask.drop_on_hands(faces, dets)
+            # Low-score unmatched candidates still veto a face false positive:
+            # failure to start a hand track does not turn that patch into a
+            # plausible face.
+            faces = face_mask.drop_on_hands(faces, raw_dets)
             n_face += len(faces)
             rgb, _ = face_mask.cover(clean, hold.update(faces,
                                                         shape=clean.shape))
@@ -215,21 +267,25 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         # Identity first, ownership second. Anything accumulated per hand is
         # keyed on the track id, so a hand the tracker calls new starts from
         # its own score instead of inheriting a departed hand's verdict.
-        tids = tracker.update(dets, rgb.shape)
-        flags = ownhold.update(dets, flags, shape=rgb.shape, ids=tids)
+        flags = ownhold.update(
+            dets, flags, shape=rgb.shape, ids=tids,
+            reacquired=tracker.reacquired if safe_reacquire else ())
         flips.update(tids, [o for o, _ in flags])
         own = [d for d, (o, _) in zip(dets, flags) if o]
         oth = [d for d, (o, _) in zip(dets, flags) if not o]
-        # A track the detector lost for a frame or two is still a hand, and
-        # the tracker still has its last box. Covering it is the difference
-        # between a cover that survives a dropout and one that blinks off:
+        # A track the detector lost for a few frames is still a hand. Its box
+        # is advanced by the track velocity, then bounded by the prediction
+        # horizon. Covering it is the difference between a cover that survives
+        # a dropout and one that blinks off:
         # every drop on the clip that prompted this was the detector losing
         # ONE hand for ONE frame while the wearer's two stayed put.
-        for tid, d in tracker.coasting(bridge):
+        n_predicted_frame = 0
+        for tid, d in tracker.coasting(max_prediction_age):
             st = ownhold.state.get(tid)
             if st is not None and not st[1]:
                 oth.append(d)
-                n_bridged += 1
+                n_predicted += 1
+                n_predicted_frame += 1
         dis = any(bool(d.get("rule_owner")) != bool(o)
                   for d, (o, _) in zip(dets, flags))
         n_dis += bool(dis)
@@ -250,17 +306,24 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
             # owner mask vetoed it -- and these three columns separate them.
             trace.append({
                 "frame": start + k * stride,
-                "n_det": len(dets), "n_own": len(own), "n_oth": len(oth),
+                "n_raw_det": len(raw_dets), "n_det": len(dets),
+                "n_low_match": sum(p == "matched_low" for p in provenance),
+                "n_new_track": sum(p == "new_high" for p in provenance),
+                "n_predicted": n_predicted_frame,
+                "n_own": len(own), "n_oth": len(oth),
                 "oth_px": int(m_oth.sum()), "own_px": int(m_own.sum()),
                 "veto_px": int((m_oth & m_own).sum()),
                 "alpha_frac": round(float((alpha > 0.5).mean()), 6),
+                "det_conf_min": round(min(
+                    [float(d.get("conf", 1.0)) for d in dets],
+                    default=float("nan")), 4),
                 "p_min_oth": round(min([p for (o, p) in flags if not o],
                                        default=float("nan")), 4),
                 "p_max_own": round(max([p for (o, p) in flags if o],
                                        default=float("nan")), 4)})
         panel = compose(rgb, annotate(rgb, dets, flags, m_oth), sup,
                         len(own), len(oth), start + k * stride, dis,
-                        float((alpha > 0.5).mean()))
+                        float((alpha > 0.5).mean()), cfg=cfg)
         if writer is None:
             h, w = panel.shape[:2]
             writer = cv2.VideoWriter(out_path,
@@ -284,6 +347,8 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
             print(f"    worst tracks: {fr['worst']}")
         print(f"    tracker: {tracker.n_new} tracks started, "
               f"{tracker.n_lost} ended")
+        print(f"    predicted covers: {n_predicted} hand-frames, horizon "
+              f"{max_prediction_age}")
         print("  A flip is one hand changing its own verdict between two "
               "frames it was seen\n  in. The frame-level `drop` count above "
               "cannot see a flip that happens\n  while another hand keeps "
@@ -403,15 +468,28 @@ def main():
                          "1.0 is geometry alone, which beat the 0.5 blend on "
                          "two of nineteen held-out recordings and tied on "
                          "the rest.")
-    ap.add_argument("--bridge", type=int, default=2,
-                    help="frames to keep covering a hand the detector lost. "
-                         "0 restores the old behaviour, where the tracker "
-                         "bridged the identity and nothing bridged the mask.")
+    ap.add_argument("--max_prediction_age", type=int,
+                    default=MAX_PREDICTION_AGE,
+                    help="maximum missed frames for which a confirmed other "
+                         "track's motion prediction may cover output pixels")
+    ap.add_argument("--bridge", type=int, default=None,
+                    help=argparse.SUPPRESS)
+    ap.add_argument("--new_track_conf", type=float,
+                    default=NEW_TRACK_CONF,
+                    help="high detector threshold: unmatched detections at or "
+                         "above it may start tracks")
+    ap.add_argument("--continue_conf", type=float,
+                    default=CONTINUE_TRACK_CONF,
+                    help="low detector threshold: detections below the new "
+                         "track threshold may only continue existing tracks")
     ap.add_argument("--min_conf", type=float, default=None,
-                    help="detector floor. The default 0.60 was set from the "
-                         "wearer's own near hands, which score 0.83-0.87; a "
-                         "colleague's hand at the frame edge sits near the "
-                         "floor and blinks across it.")
+                    help="deprecated alias for --continue_conf")
+    ap.add_argument("--no_motion_prediction", action="store_true")
+    ap.add_argument("--legacy_association", action="store_true",
+                    help="ablation only: disable rich costs and explicit "
+                         "unmatched assignments")
+    ap.add_argument("--inherit_self_on_reacquire", action="store_true",
+                    help="ablation only: restore the unsafe old ownership hold")
     ap.add_argument("--max_owner", type=int, default=2,
                     help="most hands one frame may call the wearer's")
     ap.add_argument("--no_cap", action="store_true",
@@ -469,6 +547,9 @@ def main():
           f"{'' if cnn else '   <- not the shipped path'}")
     print(f"  prior: {'fitted geometry, ' + str(len(geom['cues'])) + ' cues'
                     if geom else 'the single exit-height rule'}")
+    print(f"  detector: new>={a.new_track_conf:.2f}, "
+          f"continue>={a.continue_conf if a.min_conf is None else a.min_conf:.2f}; "
+          f"prediction age {a.max_prediction_age}")
     print(f"  faces {'NOT covered' if a.no_faces else 'covered'}"
           f"{'   <- do not send this anywhere' if a.no_faces else ''}")
     n, dis, nf = run(rig, vids, a.out, a.start, a.n, a.stride,
@@ -477,6 +558,12 @@ def main():
                      face_conf=a.face_conf, trace_path=a.trace,
                      geom=geom, geom_w=a.geom_w,
                      max_owner=None if a.no_cap else a.max_owner,
+                     max_prediction_age=a.max_prediction_age,
+                     new_track_conf=a.new_track_conf,
+                     continue_conf=a.continue_conf,
+                     predict_motion=not a.no_motion_prediction,
+                     safe_association=not a.legacy_association,
+                     safe_reacquire=not a.inherit_self_on_reacquire,
                      bridge=a.bridge, min_conf=a.min_conf)
     if not n:
         raise SystemExit("no frames written")
