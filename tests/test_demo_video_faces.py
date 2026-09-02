@@ -278,11 +278,18 @@ class RealBackendTest(unittest.TestCase):
         return [_frame(1), np.repeat(np.repeat(_frame(2), 2, 0), 2, 1)]
 
     def test_every_available_backend_honours_the_contract(self):
-        checked = []
+        checked, skipped = [], []
         for name, path in MODELS.items():
             if not Path(path).exists():
                 continue
-            det = face_mask.load_detector(path, face_mask.MIN_CONF)
+            try:
+                det = face_mask.load_detector(path, face_mask.MIN_CONF)
+            except SystemExit as e:
+                # A backend whose native library is missing is not a failure
+                # of the cover logic. It is recorded rather than swallowed:
+                # a silently skipped backend is how one stops being tested.
+                skipped.append(f"{name} ({str(e).splitlines()[0]})")
+                continue
             self.assertIsNotNone(det, f"{name} failed to load")
             for img in self._frames():
                 H, W = img.shape[:2]
@@ -296,6 +303,8 @@ class RealBackendTest(unittest.TestCase):
                                     f"{name} box {box} outside {W}x{H}")
                     self.assertGreaterEqual(sc, face_mask.MIN_CONF - 1e-6)
             checked.append(name)
+        print(f"\n    backends exercised: {checked or 'none'}"
+              + (f"   unavailable: {skipped}" if skipped else ""))
         if not checked:
             self.skipTest("no model weights on this machine")
 

@@ -220,18 +220,25 @@ def load_detector(model_path=MODEL, min_conf=MIN_CONF):
         if "yolo" in os.path.basename(model_path).lower():
             return _YoloFace(model_path, min_conf)
         return _YuNet(model_path, min_conf)
+    # THE GUARD HAS TO COVER THE CONSTRUCTION, NOT ONLY THE IMPORT. MediaPipe
+    # loads its native library lazily, inside create_from_options, so wrapping
+    # the import alone let the real failure through as a bare OSError about
+    # libEGL -- accurate and useless. The message a caller needs is which
+    # environment variable is missing.
     try:
         from mediapipe.tasks import python as mpp
         from mediapipe.tasks.python import vision
+        return vision.FaceDetector.create_from_options(
+            vision.FaceDetectorOptions(
+                base_options=mpp.BaseOptions(model_asset_path=model_path),
+                min_detection_confidence=float(min_conf)))
     except OSError as e:                       # libglvnd missing, not absence
         raise SystemExit(
             f"MediaPipe could not load its native library ({e}).\n"
             "  export LD_LIBRARY_PATH=/workspace/glvnd/usr/lib/"
-            "x86_64-linux-gnu:$LD_LIBRARY_PATH  before starting python.")
-    return vision.FaceDetector.create_from_options(
-        vision.FaceDetectorOptions(
-            base_options=mpp.BaseOptions(model_asset_path=model_path),
-            min_detection_confidence=float(min_conf)))
+            "x86_64-linux-gnu:$LD_LIBRARY_PATH  before starting python.\n"
+            "  YuNet needs none of this and is the default; only the "
+            "BlazeFace fallback does.")
 
 
 def detect_faces(det, rgb):
