@@ -385,6 +385,96 @@ def cover(rgb, boxes, pad=PAD, block_frac=BLOCK_FRAC):
     return out, mask
 
 
+
+def harvest(pkgs, out_dir, model_path=MODEL, min_conf=0.50, crop_px=192,
+            verbose=True):
+    """Save every surviving face detection as a labellable crop. -> n
+
+    THE FACE LINE HAS NEVER BEEN MEASURED AND IT IS NOW THE ONLY ONE THAT HAS
+    NOT. The hand side has 322 held-out hands, a false-positive rate and a
+    confidence interval. The face side has a threshold picked from the score
+    gap on ONE frame, and that frame turned out not to be representative: on
+    48 frames of a car-repair recording the same detector produced 1280
+    proposals, 90% of them below 0.35, and called an engine cover a face at
+    0.57.
+
+    A threshold cannot be chosen from proposals alone, because the question is
+    not how many there are but how many are faces. This writes the survivors
+    -- what passes the threshold and the size cap, which is exactly what would
+    be mosaicked -- in the layout `label_tool` already serves, so the same
+    workflow that produced the hand numbers produces these.
+
+    THE CONTEXT FRAME MATTERS MORE HERE THAN FOR HANDS. A 192px crop of an
+    engine cover and a 192px crop of a face across a workshop are both blurry
+    beige rectangles; whether it is a face is often only answerable from what
+    surrounds it."""
+    import cv2
+    import glob
+    import re
+    stem_re = re.compile(r"^(.*?)f(\d{6})_h(\d+)$")
+    det = load_detector(model_path, min_conf)
+    if det is None:
+        raise SystemExit(f"no face model at {model_path}")
+    os.makedirs(os.path.join(out_dir, "crops"), exist_ok=True)
+    os.makedirs(os.path.join(out_dir, "context"), exist_ok=True)
+    rows, seen = [], set()
+    for pkg in pkgs:
+        for f in sorted(glob.glob(os.path.join(pkg, "context", "*.jpg"))):
+            m = stem_re.match(os.path.basename(f)[:-4])
+            if not m:
+                continue
+            tag, frame = m.group(1), m.group(2)
+            if (tag, frame) in seen:
+                continue                  # one pass per frame, not per hand
+            seen.add((tag, frame))
+            img = cv2.imread(f)
+            if img is None:
+                continue
+            H, W = img.shape[:2]
+            faces = [x for x in detect_faces(det, img)
+                     if (x[2] - x[0]) <= MAX_FACE_FRAC * W]
+            for j, (x0, y0, x1, y1, sc) in enumerate(faces):
+                stem = f"{tag}f{int(frame):06d}_h{j}"
+                px = int(max(x1 - x0, y1 - y0) * 0.6)
+                cx0, cy0 = max(0, x0 - px), max(0, y0 - px)
+                cx1, cy1 = min(W, x1 + px), min(H, y1 + px)
+                cv2.imwrite(os.path.join(out_dir, "crops", stem + ".jpg"),
+                            cv2.resize(img[cy0:cy1, cx0:cx1],
+                                       (crop_px, crop_px)),
+                            [cv2.IMWRITE_JPEG_QUALITY, 90])
+                ctx = img.copy()
+                cv2.rectangle(ctx, (x0, y0), (x1, y1), (0, 255, 255), 3)
+                cv2.imwrite(os.path.join(out_dir, "context", stem + ".jpg"),
+                            ctx, [cv2.IMWRITE_JPEG_QUALITY, 82])
+                rows.append({"stem": stem, "frame": int(frame), "hand": j,
+                             "conf": round(float(sc), 4),
+                             "w_frac": round((x1 - x0) / W, 4),
+                             "h_frac": round((y1 - y0) / H, 4),
+                             "cx_frac": round((x0 + x1) / 2 / W, 4),
+                             "cy_frac": round((y0 + y1) / 2 / H, 4),
+                             "model": os.path.basename(model_path),
+                             "label": ""})
+    if rows:
+        import csv as _csv
+        with open(os.path.join(out_dir, "hands.csv"), "w", newline="",
+                  encoding="utf-8") as fh:
+            w = _csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
+            w.writeheader()
+            w.writerows(rows)
+    if verbose:
+        import numpy as _np
+        sc = _np.array([r["conf"] for r in rows]) if rows else _np.zeros(1)
+        print(f"  {len(rows)} surviving detections over {len(seen)} frames "
+              f"-> {out_dir}")
+        print(f"  scores 10/50/90: {_np.percentile(sc, 10):.2f} / "
+              f"{_np.percentile(sc, 50):.2f} / {_np.percentile(sc, 90):.2f}")
+        print("\n  These are the regions that WOULD be mosaicked. Label them "
+              "face/not-face with\n  label_tool and the threshold stops being "
+              "a guess -- the hand line's numbers\n  came from exactly this "
+              "loop.")
+    return len(rows)
+
+
 def _self_test():
     ok = n = 0
 
@@ -473,11 +563,23 @@ def main():
     if "--self_test" in sys.argv:
         raise SystemExit(0 if _self_test() else 1)
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--img", required=True, help="a frame to try it on")
+    ap.add_argument("--img", help="a frame to try it on")
+    ap.add_argument("--harvest", action="append", default=[],
+                    metavar="PKG", help="packages whose context/ frames to "
+                                        "scan for faces")
+    ap.add_argument("--out_pkg", help="where to write the harvested crops")
     ap.add_argument("--out", help="write the covered frame here")
     ap.add_argument("--model", default=MODEL)
     ap.add_argument("--min_conf", type=float, default=MIN_CONF)
     a = ap.parse_args()
+
+    if a.harvest:
+        if not a.out_pkg:
+            raise SystemExit("--harvest needs --out_pkg")
+        harvest(a.harvest, a.out_pkg, a.model, a.min_conf)
+        raise SystemExit(0)
+    if not a.img:
+        raise SystemExit("give --img, or --harvest with --out_pkg")
 
     import cv2
     det = load_detector(a.model, a.min_conf)
