@@ -442,6 +442,22 @@ class OwnHold:
                     lab = True
             state[tid] = [ema, lab]
             out.append((bool(lab), float(ema)))
+        # A PERSON HAS TWO HANDS. Applied last, after the hysteresis, so it
+        # ranks the smoothed scores rather than one frame's noise. Measured on
+        # the clip that prompted it, this constraint was producing most of the
+        # `other` verdicts: with it the owner count sat at exactly 2.000 on
+        # every frame and 257 hands were called foreign; the release that
+        # accidentally dropped it called 67. The classifier and the prior are
+        # not what was carrying that clip -- the anatomy was.
+        if self.max_owner is not None:
+            own_i = [i for i, (o, _) in enumerate(out) if o]
+            if len(own_i) > self.max_owner:
+                keep = set(sorted(own_i, key=lambda i: -out[i][1])
+                           [:self.max_owner])
+                for i in own_i:
+                    if i not in keep:
+                        out[i] = (False, out[i][1])
+                        state[ids[i]][1] = False
         self.state = state
         return out
 
@@ -581,6 +597,25 @@ def _self_test():
         "the cap demotes the LEAST CONFIDENT, not the least straight-down")
     chk(len(x3) == 1 and x3[0] is lo,
         "...and the demoted one is the one the classifier was least sure of")
+
+    # THE CAP INSIDE OwnHold, WHICH IS A DIFFERENT CODE PATH FROM split_owner
+    # AND WAS SILENTLY LOST IN A REWRITE. Nothing here covered it: the two
+    # cases above call split_owner directly, and that function was never
+    # touched. The demo lost 74% of its `other` verdicts before anyone noticed,
+    # so the path the demo actually uses gets its own case.
+    ohc = OwnHold(max_owner=2)
+    three = [{"kp": hand((700, 700), (700, 500)), "box": (600, 600, 800, 800)},
+             {"kp": hand((900, 700), (900, 500)), "box": (800, 600, 1000, 800)},
+             {"kp": hand((1100, 700), (1100, 500)),
+              "box": (1000, 600, 1200, 800)}]
+    capped = ohc.update(three, [(True, 0.95), (True, 0.90), (True, 0.55)],
+                        ids=[0, 1, 2])
+    chk(sum(1 for o, _ in capped if o) == 2 and not capped[2][0],
+        "OwnHold caps owners at two and demotes the least confident")
+    again = ohc.update(three, [(True, 0.95), (True, 0.90), (True, 0.55)],
+                       ids=[0, 1, 2])
+    chk(not again[2][0],
+        "...and writes the demotion back, so the hysteresis cannot undo it")
 
     # masks_from now cuts on a window round the box instead of the frame. The
     # thing to prove is that the answer did not move, not merely that it is
