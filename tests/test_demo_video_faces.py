@@ -258,5 +258,55 @@ class FaceCoverRenderTest(unittest.TestCase):
         self.assertTrue(face_mask.MODEL_FALLBACK.endswith(".tflite"))
 
 
+MODELS = {
+    "yunet": "/workspace/models/face_detection_yunet_2023mar.onnx",
+    "yolo": "/workspace/models/yolov8n-face-lindevs.onnx",
+    "blazeface": "/workspace/models/face_detection_full_range.tflite",
+}
+
+
+class RealBackendTest(unittest.TestCase):
+    """The backends themselves, on the machine that has their weights.
+
+    Skipped where the files are absent, which is every machine but the one
+    that renders. What it checks is not accuracy -- there is no ground truth
+    here -- but that each backend honours the contract the rest of the module
+    assumes: boxes inside the frame, scores above the floor, and coordinates
+    that survive a change of frame size."""
+
+    def _frames(self):
+        return [_frame(1), np.repeat(np.repeat(_frame(2), 2, 0), 2, 1)]
+
+    def test_every_available_backend_honours_the_contract(self):
+        checked = []
+        for name, path in MODELS.items():
+            if not Path(path).exists():
+                continue
+            det = face_mask.load_detector(path, face_mask.MIN_CONF)
+            self.assertIsNotNone(det, f"{name} failed to load")
+            for img in self._frames():
+                H, W = img.shape[:2]
+                for box in face_mask.detect_faces(det, img):
+                    x0, y0, x1, y1, sc = box
+                    # THE FRAME-SIZE BUG THIS GUARDS. YuNet rescales its
+                    # output by whatever size it was last told about, so a
+                    # stale setInputSize returns boxes in another frame's
+                    # coordinates -- which looks exactly like hallucination.
+                    self.assertTrue(0 <= x0 < x1 <= W and 0 <= y0 < y1 <= H,
+                                    f"{name} box {box} outside {W}x{H}")
+                    self.assertGreaterEqual(sc, face_mask.MIN_CONF - 1e-6)
+            checked.append(name)
+        if not checked:
+            self.skipTest("no model weights on this machine")
+
+    def test_the_two_reachable_onnx_backends_dispatch_differently(self):
+        for name in ("yunet", "yolo"):
+            if not Path(MODELS[name]).exists():
+                self.skipTest("weights absent")
+        a = face_mask.load_detector(MODELS["yunet"], face_mask.MIN_CONF)
+        b = face_mask.load_detector(MODELS["yolo"], face_mask.MIN_CONF)
+        self.assertEqual((a.kind, b.kind), ("yunet", "yolo"))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

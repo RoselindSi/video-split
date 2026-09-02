@@ -146,6 +146,62 @@ class _YuNet:
         pass
 
 
+class _YoloFace:
+    """A YOLOv8 face head through cv2.dnn, behind the same two calls.
+
+    The export is a single-class detect head: (1, 5, 8400), four box
+    parameters and one score per candidate, no keypoints. Decoding is the
+    plain YOLO one -- centre/size to corners, then NMS -- and the resize is a
+    straight one rather than a letterbox, so the two axes scale back
+    independently.
+
+    IT IS HERE AS AN ALTERNATIVE, NOT AN UPGRADE. It is fifty times the size
+    of YuNet for the same job, and nothing has yet been measured that says it
+    is better on this footage; the point of having two is that the choice can
+    be made from a comparison rather than from a release date."""
+
+    kind = "yolo"
+    SIDE = 640
+
+    def __init__(self, path, min_conf, nms=0.45):
+        import cv2
+        self.cv2 = cv2
+        self.net = cv2.dnn.readNetFromONNX(path)
+        self.min_conf = float(min_conf)
+        self.nms = float(nms)
+
+    def detect(self, bgr):
+        cv2 = self.cv2
+        H, W = bgr.shape[:2]
+        blob = cv2.dnn.blobFromImage(bgr, 1 / 255.0, (self.SIDE, self.SIDE),
+                                     swapRB=True, crop=False)
+        self.net.setInput(blob)
+        a = self.net.forward()
+        a = a[0] if a.ndim == 3 else a
+        if a.shape[0] < a.shape[1]:
+            a = a.T                       # -> (candidates, 5)
+        sx, sy = W / float(self.SIDE), H / float(self.SIDE)
+        boxes, scores = [], []
+        for cx, cy, w, h, sc in a:
+            if sc < self.min_conf:
+                continue
+            boxes.append([int((cx - w / 2) * sx), int((cy - h / 2) * sy),
+                          int(w * sx), int(h * sy)])
+            scores.append(float(sc))
+        if not boxes:
+            return []
+        keep = cv2.dnn.NMSBoxes(boxes, scores, self.min_conf, self.nms)
+        out = []
+        for i in np.asarray(keep).reshape(-1):
+            x, y, w, h = boxes[int(i)]
+            out.append((max(0, x), max(0, y), min(W, x + w), min(H, y + h),
+                        scores[int(i)]))
+        return out
+
+    def close(self):
+        pass
+
+
 def load_detector(model_path=MODEL, min_conf=MIN_CONF):
     """-> a MediaPipe FaceDetector, or None if the model file is absent.
 
@@ -159,6 +215,10 @@ def load_detector(model_path=MODEL, min_conf=MIN_CONF):
         else:
             return None
     if str(model_path).endswith(".onnx"):
+        # Both are ONNX; the file name says which head it is. Guessing from
+        # the graph would be cleverer and would fail silently on a rename.
+        if "yolo" in os.path.basename(model_path).lower():
+            return _YoloFace(model_path, min_conf)
         return _YuNet(model_path, min_conf)
     try:
         from mediapipe.tasks import python as mpp
@@ -176,7 +236,7 @@ def load_detector(model_path=MODEL, min_conf=MIN_CONF):
 
 def detect_faces(det, rgb):
     """-> [(x0, y0, x1, y1, score)] in pixels, clipped to the frame."""
-    if getattr(det, "kind", None) == "yunet":
+    if getattr(det, "kind", None) in ("yunet", "yolo"):
         return det.detect(rgb)
     import cv2
     import mediapipe as mp
