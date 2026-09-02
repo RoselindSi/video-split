@@ -6,13 +6,14 @@ and every face found is somebody else's. There is no classifier here and so
 none of the flip risk that comes from one -- the only instability left is the
 detector's own, frame to frame.
 
-THE ERROR ASYMMETRY RUNS THE OPPOSITE WAY, TOO. A false positive costs a
-mosaicked patch of bench, which the downstream model reads as a fixed texture
-and learns to ignore. A false negative is a frame in which a real person's
-face left the building recognisable. The two are not comparable, so the
-threshold belongs low and the hold below belongs long. This is the reason the
-`min_conf` default here is well under the 0.5 a detector ships with, and it is
-a deliberate choice rather than a tuning oversight.
+THE ERROR ASYMMETRY IS REAL AND WAS ONCE PUSHED TOO FAR. A false negative
+leaves a real person recognisable; a false positive mosaics something that is
+not a face. That argued for a low threshold, and 0.30 was chosen from it --
+which turned out to cover the wearer's own hands, because a detector this
+permissive fires on skin and on a bench most skin is a hand. Destroying the
+subject is not the conservative choice. The threshold now sits at 0.60, where
+the scores actually separate, and the hand-overlap veto below removes what is
+left.
 
 MOSAIC, NOT BLUR. A Gaussian blur on a 60-pixel face leaves the arrangement of
 eyes, hairline and jaw intact at low frequency, and low frequency is most of
@@ -26,23 +27,27 @@ frame and misses it on the next produces a mosaic that switches off for a
 frame. That is both a leak and, worse for what this pipeline feeds, a
 flicker -- a local region changing sharply in time is exactly the signature
 the downstream segmenter reads as an event. So a face, once seen, keeps its
-cover for HOLD_FRAMES afterwards even with no detection to support it, and the
-held box is the union of where it has recently been.
+cover for HOLD_FRAMES afterwards even with no detection to support it, at the
+last position the detector reported. It is NOT the union of where the face has
+been: growing a held box by everything that overlapped it made one 84x84 face
+into a 350x420 region over fifty frames, swallowing the colleague, the shelving
+and a third of the bench.
 
-RUNNING IT. MediaPipe's bindings need libglvnd, which this container does not
-carry and which cannot be apt-installed without root. The .deb was unpacked to
-/workspace/glvnd, so callers need
+TWO BACKENDS, AND THE FALLBACK IS THE ONE TO AVOID. YuNet runs through OpenCV
+and needs nothing beyond it. BlazeFace runs through MediaPipe, whose native
+bindings need libglvnd, which this container lacks and which cannot be
+apt-installed without root; the .deb was unpacked to /workspace/glvnd, so a
+caller falling back to it needs
 
     export LD_LIBRARY_PATH=/workspace/glvnd/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
 
-before the interpreter starts -- the dynamic loader reads it at exec time, so
-setting it from inside Python is too late to help.
+set before the interpreter starts -- the loader reads it at exec time, so
+setting it from Python is too late.
 
-THE MODEL IS THE FULL-RANGE ONE, AND HAS TO BE. `blaze_face_short_range` is
-built for a face that fills much of a 128px input. Measured on this corpus a
-colleague's face is about 60px in a 1100px frame, which survives the resize as
-roughly seven pixels, and that model returns nothing at all on frames where a
-face is plainly visible. The full-range model finds the same face at 0.43-0.56.
+AND IF IT DOES FALL BACK, USE THE FULL-RANGE WEIGHTS. `blaze_face_short_range`
+is built for a face filling much of a 128px input. A colleague's face here is
+about 60px in a 1100px frame, seven pixels after the resize, and that model
+returns nothing at all on frames where a face is plainly visible.
 """
 from __future__ import annotations
 
@@ -50,7 +55,23 @@ import os
 
 import numpy as np
 
-MODEL = "/workspace/models/face_detection_full_range.tflite"
+# YUNET IS THE DEFAULT AND BLAZEFACE IS THE FALLBACK, WHICH IS THE REVERSE OF
+# HOW THIS STARTED. BlazeFace was chosen because it was the only detector whose
+# weights the SERVER could reach -- GitHub, gitee, gitcode and HuggingFace are
+# all blocked there. That reasoning had a hole: the laptop's network is not the
+# server's, and the same ssh pipe that carries code patches carries a 230 KB
+# model. YuNet's weights live behind Git LFS, so they come from
+# media.githubusercontent.com rather than raw.githubusercontent.com, which
+# returns a 131-byte pointer file instead.
+#
+# ON THE SAME FRAME, THE SCORES SEPARATE AND BLAZEFACE'S DO NOT. YuNet puts the
+# real faces at 0.82 and 0.86 and its first false positive at 0.39, a gap of
+# 0.43 to place a threshold in. BlazeFace put real faces at 0.43-0.56 and a
+# false one at 0.32: a gap of 0.11, so any threshold cuts through the overlap.
+# That gap is the whole reason a threshold can be set at all, and it is why the
+# earlier version needed the hand-overlap veto to be usable.
+MODEL = "/workspace/models/face_detection_yunet_2023mar.onnx"
+MODEL_FALLBACK = "/workspace/models/face_detection_full_range.tflite"
 
 # THE ASYMMETRY ARGUMENT ABOVE IS TRUE AND WAS APPLIED TOO FAR. At 0.30 this
 # detector fires on skin, and on a bench full of hands most skin is a hand.
@@ -60,7 +81,7 @@ MODEL = "/workspace/models/face_detection_full_range.tflite"
 # deliver. A privacy cover that destroys the subject is not a conservative
 # choice. 0.5 is the detector's own default and the floor a real face at this
 # range clears; the overlap veto below removes the rest.
-MIN_CONF = 0.50
+MIN_CONF = 0.60
 
 # A "face" covering this much of a detected hand is that hand. The hand
 # detector is the better instrument here -- it was trained to find hands, it
@@ -88,6 +109,43 @@ PAD = 0.35
 BLOCK_FRAC = 0.18
 
 
+class _YuNet:
+    """cv2.FaceDetectorYN behind the same two calls as the MediaPipe one.
+
+    setInputSize IS NOT OPTIONAL AND IS THE CLASSIC WAY TO GET GARBAGE FROM
+    THIS MODEL. The network is built for a fixed input and the detector rescales
+    boxes by whatever size it was last told about, so a size that does not match
+    the frame returns boxes in the wrong coordinates -- which looks exactly like
+    a detector hallucinating. It is set on construction and again whenever the
+    frame shape changes."""
+
+    kind = "yunet"
+
+    def __init__(self, path, min_conf):
+        import cv2
+        self.cv2 = cv2
+        self.min_conf = float(min_conf)
+        self.size = (320, 320)
+        self.det = cv2.FaceDetectorYN.create(path, "", self.size,
+                                             float(min_conf), 0.3, 5000)
+
+    def detect(self, bgr):
+        H, W = bgr.shape[:2]
+        if (W, H) != self.size:
+            self.size = (W, H)
+            self.det.setInputSize(self.size)
+        _, faces = self.det.detect(bgr)
+        out = []
+        for f in (faces if faces is not None else []):
+            x, y, w, h = [float(v) for v in f[:4]]
+            out.append((max(0, int(x)), max(0, int(y)),
+                        min(W, int(x + w)), min(H, int(y + h)), float(f[-1])))
+        return out
+
+    def close(self):
+        pass
+
+
 def load_detector(model_path=MODEL, min_conf=MIN_CONF):
     """-> a MediaPipe FaceDetector, or None if the model file is absent.
 
@@ -95,7 +153,13 @@ def load_detector(model_path=MODEL, min_conf=MIN_CONF):
     asks for faces to be covered and cannot have them covered, and that is
     where it should be raised."""
     if not model_path or not os.path.exists(model_path):
-        return None
+        # Named model missing: fall back rather than silently covering nothing.
+        if model_path == MODEL and os.path.exists(MODEL_FALLBACK):
+            model_path = MODEL_FALLBACK
+        else:
+            return None
+    if str(model_path).endswith(".onnx"):
+        return _YuNet(model_path, min_conf)
     try:
         from mediapipe.tasks import python as mpp
         from mediapipe.tasks.python import vision
@@ -112,6 +176,8 @@ def load_detector(model_path=MODEL, min_conf=MIN_CONF):
 
 def detect_faces(det, rgb):
     """-> [(x0, y0, x1, y1, score)] in pixels, clipped to the frame."""
+    if getattr(det, "kind", None) == "yunet":
+        return det.detect(rgb)
     import cv2
     import mediapipe as mp
     H, W = rgb.shape[:2]
