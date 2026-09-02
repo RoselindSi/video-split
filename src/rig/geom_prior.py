@@ -218,7 +218,27 @@ def load_model(path):
 
 
 
-def deployment_rate(rows, clf_path, blend=0.5, min_other=2, verbose=True):
+
+def wilson(k, n, z=1.96):
+    """95% interval for a rate. -> (lo, hi)
+
+    Every rate this project has printed has been a point estimate, which was
+    tolerable while the samples were the training pool and the number moved
+    with every split anyway. On a held-out package it is not: 6 of 762 and 60
+    of 762 are different claims, and so are 6 of 762 and 1 of 30. Wilson
+    rather than the normal approximation because the rates of interest here
+    are near zero, where the normal interval runs below it."""
+    if n <= 0:
+        return (float("nan"), float("nan"))
+    p = k / n
+    d = 1 + z * z / n
+    c = (p + z * z / (2 * n)) / d
+    h = z * np.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / d
+    return (max(0.0, c - h), min(1.0, c + h))
+
+
+def deployment_rate(rows, clf_path, blend=0.5, min_other=2, geom_model=None,
+                    verbose=True):
     """The rate at which the wearer's own hands get covered. -> dict
 
     WHY THIS NEEDS ITS OWN FUNCTION. `compare` scores recordings that carry
@@ -256,9 +276,17 @@ def deployment_rate(rows, clf_path, blend=0.5, min_other=2, verbose=True):
         tr = [r for r in rows if r["tag"] != tag]
         if not te or not tr:
             continue
-        if sum(1 for r in tr if r["y"] == 0) < min_other:
+        if geom_model is None and sum(1 for r in tr
+                                      if r["y"] == 0) < min_other:
             continue
-        m = fit(tr, cues=INVARIANT, min_other=min_other, verbose=False)
+        # A SHIPPED PRIOR IS SCORED AS SHIPPED. Refitting per recording is
+        # the right correction when the test recordings sit inside the
+        # training pool, because otherwise the prior has seen them. On a
+        # package of genuinely fresh recordings it is the wrong thing: what
+        # goes to a new workstation is one fixed set of coefficients, and
+        # refitting reports a prior nobody will deploy.
+        m = geom_model or fit(tr, cues=INVARIANT, min_other=min_other,
+                              verbose=False)
         X = np.array([[r[c] for c in m["cues"]] for r in te], float)
         z = (X - np.array(m["mean"])) / np.array(m["std"])
         p_geom = 1.0 / (1.0 + np.exp(-(z @ np.array(m["coef"])
@@ -290,15 +318,20 @@ def deployment_rate(rows, clf_path, blend=0.5, min_other=2, verbose=True):
         print(f"\n  {len(rows)} hands over {len(per_rec)} recordings, "
               f"{sum(1 for r in rows if r['y'] == 0)} other "
               f"({base:.1%} -- this is the deployment prevalence)")
-        print(f"\n    {'scorer':<8}{'own covered':>14}{'FP rate':>10}"
-              f"{'other found':>14}{'recall':>9}{'precision':>11}")
+        print(f"\n    {'scorer':<8}{'own covered':>14}{'FP rate':>8}"
+              f"{'  95% CI':<16}{'found':>11}{'recall':>7}"
+              f"{'  95% CI':<14}{'prec':>8}")
         for k in ("cnn", "geom", "blend"):
             v = out[k]
             fpr = v["fp"] / max(v["n_own"], 1)
             rc = v["tp"] / max(v["n_oth"], 1)
             pr = v["tp"] / max(v["tp"] + v["fp"], 1)
-            print(f"    {k:<8}{v['fp']:>6}/{v['n_own']:<7}{fpr:>10.3%}"
-                  f"{v['tp']:>6}/{v['n_oth']:<7}{rc:>9.3f}{pr:>11.3f}")
+            flo, fhi = wilson(v["fp"], v["n_own"])
+            rlo, rhi = wilson(v["tp"], v["n_oth"])
+            print(f"    {k:<8}{v['fp']:>6}/{v['n_own']:<7}{fpr:>8.2%}"
+                  f" [{flo:.2%},{fhi:.2%}]"
+                  f"{v['tp']:>5}/{v['n_oth']:<5}{rc:>7.3f}"
+                  f" [{rlo:.2f},{rhi:.2f}]{pr:>8.3f}")
         worst = sorted(((v["geom"][0] / max(v["geom"][1], 1), t)
                         for t, v in per_rec.items()), reverse=True)[:5]
         print(f"\n  worst recordings for covering the wearer (geom): "
@@ -394,6 +427,11 @@ def main():
                          "separately on --holdout recordings")
     ap.add_argument("--holdout", action="append", default=[])
     ap.add_argument("--blend", type=float, default=0.5)
+    ap.add_argument("--geom_model",
+                    help="score with this shipped prior instead of refitting "
+                         "one per recording. Correct whenever the package's "
+                         "recordings are not in the training pool: refitting "
+                         "would report a prior nobody deploys.")
     ap.add_argument("--deployment", metavar="CLF",
                     help="score EVERY labelled hand and report the rate at "
                          "which the wearer's own hands are covered. Use on a "
@@ -408,7 +446,8 @@ def main():
         raise SystemExit("no labelled hands with complete geometry")
     if a.deployment:
         deployment_rate(rows, a.deployment, blend=a.blend,
-                        min_other=a.min_other)
+                        min_other=a.min_other,
+                        geom_model=load_model(a.geom_model))
         raise SystemExit(0)
     if a.compare:
         hold = a.holdout
