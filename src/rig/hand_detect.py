@@ -388,19 +388,31 @@ class OwnHold:
         # correctly; on a frame with three of the wearer's own detections, one
         # of them is a duplicate and demoting it blurs part of a hand.
         self.max_owner = max_owner
-        self.prev = []                      # last frame's detections
-        self.state = []                     # per prev index: [ema, is_owner]
+        # Keyed on TRACK ID, not on the previous frame's list position. A
+        # position is only meaningful while the list is the same list, and it
+        # stopped being the same list every time the detector gained or lost
+        # a hand -- which is when this state was silently transferred to a
+        # different hand.
+        self.state = {}                     # track id -> [ema, is_owner]
 
-    def update(self, dets, flags, shape=None):
-        """dets, flags as `detect` produces them.
-        -> [(is_owner, ema_p)] in the order of `dets`.
+    def update(self, dets, flags, shape=None, ids=None):
+        """-> [(is_owner, smoothed_p)] aligned with `dets`.
 
-        `shape` enables the geometric prior; without it the classifier's
-        probability is used alone, which is what a rig mounted some other way
-        up must do."""
-        pairs = dict((j, i) for i, j in track(self.prev, dets))
-        out, state = [], []
-        for j, (d, (raw_own, p)) in enumerate(zip(dets, flags)):
+        IDENTITY IS NOT THIS CLASS'S JOB ANY MORE. It used to match the
+        previous frame's detections itself, by nearest centre with a distance
+        cap that was computed and never applied. Every previous detection was
+        therefore assigned to some current one however far it had moved, so a
+        departing hand's smoothed verdict was handed to an arriving one and
+        the hysteresis became a channel for propagating a wrong state onto a
+        different hand. `ids` now comes from a tracker that gates and solves
+        the assignment properly, and state is keyed on those ids: a hand that
+        the tracker considers new starts from its own score with no history,
+        which is the correct behaviour and was not available before."""
+        if ids is None:
+            ids = list(range(len(dets)))
+        out, state = [], {}
+        for k, (d, (o, p)) in enumerate(zip(dets, flags)):
+            tid = ids[k]
             p = float(p)
             if shape is not None and self.geom is not None:
                 from src.rig import geom_prior
@@ -411,33 +423,26 @@ class OwnHold:
                 rs = rule_score(d, shape)
                 if rs is not None:
                     p = (1 - self.rule_w) * p + self.rule_w * rs
-            i = pairs.get(j)
-            if i is not None and i < len(self.state):
-                prev_ema, was = self.state[i]
-                a = self.fast if p < prev_ema else self.slow
-                ema = a * p + (1 - a) * prev_ema
+            prev = self.state.get(tid)
+            if prev is None:
+                ema, lab = p, p >= 0.5
             else:
-                # A track with no history starts from the FUSED score, not
-                # from the classifier's own verdict: the prior is evidence
-                # about the first frame as much as about the tenth, and
-                # seeding from `raw_own` would let a hand enter the sequence
-                # on exactly the reading the prior was added to correct.
-                ema, was = float(p), bool(p >= 0.5)
-            if was:
-                now = ema >= self.lo          # leaving owner is easy
-            else:
-                now = ema >= self.hi          # leaving other needs a margin
-            state.append([float(ema), bool(now)])
-            out.append((bool(now), float(ema)))
-        if self.max_owner is not None:
-            own_i = [i for i, (o, _) in enumerate(out) if o]
-            if len(own_i) > self.max_owner:
-                keep = sorted(own_i, key=lambda i: -out[i][1])[:self.max_owner]
-                for i in own_i:
-                    if i not in keep:
-                        out[i] = (False, out[i][1])
-                        state[i][1] = False
-        self.prev, self.state = list(dets), state
+                # ASYMMETRIC ON PURPOSE. Evidence that this hand is foreign is
+                # adopted fast and evidence that it is the wearer's is adopted
+                # slowly, because the two errors are not equal: failing to
+                # cover a colleague's hand leaves a stranger in the frame,
+                # while covering the wearer's destroys the pixels the whole
+                # pipeline exists to deliver.
+                a = self.fast if p < prev[0] else self.slow
+                ema = a * p + (1 - a) * prev[0]
+                lab = prev[1]
+                if lab and ema < self.lo:
+                    lab = False
+                elif (not lab) and ema > self.hi:
+                    lab = True
+            state[tid] = [ema, lab]
+            out.append((bool(lab), float(ema)))
+        self.state = state
         return out
 
 

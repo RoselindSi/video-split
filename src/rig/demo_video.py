@@ -155,6 +155,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     from src.rig.render_wide import render
     from src.rig.seam_fix import ClipReader, Prefetch
     from src.rig.hand_detect import detect, masks_from, OwnHold
+    from src.rig.hand_track import Tracker, FlipCount
     from src.rig.suppress_other import suppress
     from src.rig import own_cnn
 
@@ -166,6 +167,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     # Without a fitted prior this falls back to the single exit-height rule,
     # which is what every render before this one used.
     ownhold = OwnHold(geom=geom, geom_w=geom_w, max_owner=max_owner)
+    tracker, flips = Tracker(), FlipCount()
     vcam = VirtualWideCamera.from_rig(rig)
     rd = Prefetch(ClipReader(rig, videos, start), skip=max(0, stride - 1))
     mc, writer = {}, None
@@ -207,7 +209,12 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
                      for d in dets]
         # One frame's doubt is a flicker; the trace charged every dropped
         # cover to the label and none to the cut or the veto.
-        flags = ownhold.update(dets, flags, shape=rgb.shape)
+        # Identity first, ownership second. Anything accumulated per hand is
+        # keyed on the track id, so a hand the tracker calls new starts from
+        # its own score instead of inheriting a departed hand's verdict.
+        tids = tracker.update(dets, rgb.shape)
+        flags = ownhold.update(dets, flags, shape=rgb.shape, ids=tids)
+        flips.update(tids, [o for o, _ in flags])
         own = [d for d, (o, _) in zip(dets, flags) if o]
         oth = [d for d, (o, _) in zip(dets, flags) if not o]
         dis = any(bool(d.get("rule_owner")) != bool(o)
@@ -255,6 +262,19 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
             print(f"    [{k+1}/{n}] {el:.0f}s, "
                   f"{el/(k+1)*(n-k-1):.0f}s left", flush=True)
     rd.close()
+    if verbose:
+        fr = flips.report()
+        print(f"\n  TRACK-LEVEL FLIPS: {fr['flips']} over {fr['tracks']} "
+              f"tracks and {fr['hand_frames']} hand-frames "
+              f"({fr['flips_per_100_hand_frames']:.1f} per 100)")
+        if fr["worst"]:
+            print(f"    worst tracks: {fr['worst']}")
+        print(f"    tracker: {tracker.n_new} tracks started, "
+              f"{tracker.n_lost} ended")
+        print("  A flip is one hand changing its own verdict between two "
+              "frames it was seen\n  in. The frame-level `drop` count above "
+              "cannot see a flip that happens\n  while another hand keeps "
+              "the frame's suppression non-empty.")
     if writer is not None:
         writer.release()
     if trace:

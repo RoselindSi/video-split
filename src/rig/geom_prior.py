@@ -39,9 +39,23 @@ import numpy as np
 
 STEM_RE = re.compile(r"^(.*?)f(\d{6})_h(\d+)$")
 
-# Unchanged by a rotation of the camera: an apparent size, a detector's
-# confidence, a size relative to the other hands in the same frame.
-INVARIANT = ("hand_span", "box_w", "box_h", "rel_size", "conf")
+# Unchanged by a rotation of the camera, AND unchanged by what else the
+# detector happened to find in the same frame. `box_w`, `box_h` and
+# `hand_span` are already divided by the frame's own dimensions in
+# `own_label.features`, so each is a property of this hand alone.
+INVARIANT = ("hand_span", "box_w", "box_h", "conf")
+
+# `rel_size` is this hand's diagonal over the LARGEST hand's diagonal in the
+# same frame, and that denominator is another detection. It was carrying the
+# fourth-largest weight in the fitted prior, and it is a defect rather than a
+# feature: when the wearer's own near hand enters the frame, every other
+# hand's value drops without any of them having moved, and when the detector
+# loses a hand -- which it does on 14% of frames here -- they all rise again.
+# A colleague's hand alone in shot is the largest hand in shot, scores 1.0,
+# and is called the wearer's; the wearer's hand arrives and the same hand
+# flips to foreign. That is exactly the flicker the demos showed. Kept behind
+# a flag so the cost of removing it can be measured rather than assumed.
+DETECTION_SET_DEPENDENT = ("rel_size",)
 
 # Meaningful only in the mounting they were measured in. A half turn maps a
 # height to one minus itself and a downward direction to an upward one.
@@ -275,6 +289,9 @@ def main():
     ap.add_argument("--out", help="where to write the fitted prior. Not "
                                   "needed with --compare, which fits per "
                                   "held-out recording and ships nothing.")
+    ap.add_argument("--with_rel_size", action="store_true",
+                    help="add the detection-set-dependent cue back, to "
+                         "measure what removing it cost")
     ap.add_argument("--invariant", action="store_true",
                     help="fit the rotation-invariant cues only")
     ap.add_argument("--min_other", type=int, default=3)
@@ -307,6 +324,8 @@ def main():
     if not a.out:
         raise SystemExit("--out is required when fitting")
     cues = INVARIANT if a.invariant else ALL_CUES
+    if a.with_rel_size:
+        cues = tuple(cues) + DETECTION_SET_DEPENDENT
     m = fit(rows, cues=cues, min_other=a.min_other)
     with open(a.out, "w") as f:
         json.dump(m, f, indent=1)
