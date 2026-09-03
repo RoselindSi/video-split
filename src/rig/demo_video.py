@@ -542,11 +542,29 @@ def main():
     ap.add_argument("--sigma", type=float, default=14.0)
     ap.add_argument("--weights",
                     default="/shared/models/HaWoR/weights/external/detector.pt")
+    # BASELINE IS THE DEFAULT AGAIN, ON THE STRENGTH OF WATCHING THE OUTPUT.
+    # The six-view depth renderer wins the numbers it was built to win: it
+    # cut near-black hole area from 7.4-9.7% to 3.0-3.9% by actually reaching
+    # all six cameras. It did not fix the thing anyone looks at. Seam ratio
+    # stayed above 1.20 through the depth densifier, the guided filter, the
+    # two-view blend and the hole fade, and the rendered result was called
+    # worse than the old renderer by the person it is being built for.
+    #
+    # A per-pixel range map is a warp field, and every defect in it is a
+    # geometric one -- a ripple, a tear, a speckle -- which reads as broken
+    # in a way a visible straight seam does not. The old renderer's constant
+    # plane is wrong everywhere by a smooth amount, and smooth-and-wrong
+    # survives viewing better than sharp-and-nearly-right.
+    #
+    # The depth path is kept, not deleted: the black-hole measurement is real
+    # and the mode still runs under `--panorama depth`. What is withdrawn is
+    # its claim on being the default.
     ap.add_argument("--panorama", choices=("depth", "baseline"),
-                    default="depth",
-                    help="depth uses image-derived per-pixel range and all six "
-                         "RGB views; baseline is the old three-left-eye "
-                         "constant-depth renderer")
+                    default="baseline",
+                    help="baseline is the three-left-eye constant-depth "
+                         "renderer and is what ships; depth uses per-pixel "
+                         "range and all six RGB views, which closes the black "
+                         "holes but has never got the seam ratio under 1.20")
     ap.add_argument("--pano_fit_frames", type=int, default=6,
                     help="synchronized frames used once to fit frozen colour "
                          "and residual-flow corrections")
