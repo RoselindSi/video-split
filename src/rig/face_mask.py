@@ -33,8 +33,8 @@ been: growing a held box by everything that overlapped it made one 84x84 face
 into a 350x420 region over fifty frames, swallowing the colleague, the shelving
 and a third of the bench.
 
-TWO BACKENDS, AND THE FALLBACK IS THE ONE TO AVOID. YuNet runs through OpenCV
-and needs nothing beyond it. BlazeFace runs through MediaPipe, whose native
+THREE BACKENDS, AND ONLY ONE NEEDS ANYTHING OF ITS HOST. YOLOv8-face and YuNet
+both run through OpenCV. BlazeFace runs through MediaPipe, whose native
 bindings need libglvnd, which this container lacks and which cannot be
 apt-installed without root; the .deb was unpacked to /workspace/glvnd, so a
 caller falling back to it needs
@@ -55,22 +55,25 @@ import os
 
 import numpy as np
 
-# YUNET IS THE DEFAULT AND BLAZEFACE IS THE FALLBACK, WHICH IS THE REVERSE OF
-# HOW THIS STARTED. BlazeFace was chosen because it was the only detector whose
-# weights the SERVER could reach -- GitHub, gitee, gitcode and HuggingFace are
-# all blocked there. That reasoning had a hole: the laptop's network is not the
-# server's, and the same ssh pipe that carries code patches carries a 230 KB
-# model. YuNet's weights live behind Git LFS, so they come from
-# media.githubusercontent.com rather than raw.githubusercontent.com, which
-# returns a 131-byte pointer file instead.
+# YOLOv8-FACE IS THE DEFAULT, AND THE ROUTE HERE WAS NOT A STRAIGHT LINE.
+# BlazeFace came first because it was the only weight file the server could
+# reach; YuNet replaced it on the strength of a score gap measured on ONE
+# frame -- real faces at 0.82-0.86, a false one at 0.39. That frame was an
+# electronics bench and it did not generalise. On 48 frames of a car-repair
+# recording YuNet produced 1280 proposals to YOLO's 84, nine tenths of them
+# below 0.35, and called an engine cover a face at 0.57; the size cap, meant
+# as a backstop, was removing 46% of what passed its threshold against 3% of
+# YOLO's. A backstop doing that much work is a threshold that does not
+# separate.
 #
-# ON THE SAME FRAME, THE SCORES SEPARATE AND BLAZEFACE'S DO NOT. YuNet puts the
-# real faces at 0.82 and 0.86 and its first false positive at 0.39, a gap of
-# 0.43 to place a threshold in. BlazeFace put real faces at 0.43-0.56 and a
-# false one at 0.32: a gap of 0.11, so any threshold cuts through the overlap.
-# That gap is the whole reason a threshold can be set at all, and it is why the
-# earlier version needed the hand-overlap veto to be usable.
-MODEL = "/workspace/models/face_detection_yunet_2023mar.onnx"
+# NONE OF THIS IS A MEASURED ERROR RATE. There is still no labelled face set,
+# so what is known is proposal counts and score distributions, not precision.
+# `face_mask --harvest` writes the survivors in the layout `label_tool`
+# serves, and until those are labelled every face number in this pipeline is
+# an ordering, not a rate. The hand line's figures came from exactly that
+# loop; this one has not been through it.
+MODEL = "/workspace/models/yolov8n-face-lindevs.onnx"
+MODEL_ALT = "/workspace/models/face_detection_yunet_2023mar.onnx"
 MODEL_FALLBACK = "/workspace/models/face_detection_full_range.tflite"
 
 # THE ASYMMETRY ARGUMENT ABOVE IS TRUE AND WAS APPLIED TOO FAR. At 0.30 this

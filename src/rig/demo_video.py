@@ -164,7 +164,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         continue_conf=CONTINUE_TRACK_CONF,
         predict_motion=True, safe_association=True, safe_reacquire=True,
         min_conf=None, bridge=None, panorama_mode="baseline",
-        panorama_fit_frames=0, panorama_depth=True, panorama_flow=True):
+        panorama_fit_frames=0, panorama_depth=True, panorama_flow=False):
     import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
