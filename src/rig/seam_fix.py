@@ -54,9 +54,9 @@ GATE_ABS_DIFF = 40.0
 FIT_FRAMES = 12
 
 # The range map is smoothed before it is used as a warp field. A median of
-# this width removes SGBM speckle; the bilateral range is in METRES, so 0.15
-# keeps a hand distinct from a bench 40 cm behind it while erasing the
-# few-centimetre noise that scrubs the texture.
+# this width removes SGBM speckle. The historical constant name is retained
+# for compatibility, though the filter now operates on inverse metres, which
+# is proportional to the parallax displacement being regularised.
 MEDIAN_PX = 5
 BILAT_SIGMA_M = 0.15
 
@@ -301,8 +301,13 @@ def densify_range(range_m, valid, fallback=1.2, guide=None,
         # became visible displacement bands after reprojection.
         filled = cv2.inpaint(base, m, 7, cv2.INPAINT_TELEA)
         distance = cv2.distanceTransform(m, cv2.DIST_L2, 3)
-        close_hole = (m > 0) & (distance <= float(max_inpaint_distance))
-        base = np.where(close_hole, filled, base)
+        radius = max(float(max_inpaint_distance), 1e-6)
+        # Trust the inner half, then fade to the fallback plane. A hard cutoff
+        # at the radius would itself become a circular displacement ripple.
+        confidence = np.clip((radius - distance) / (0.5 * radius), 0.0, 1.0)
+        filled_or_fallback = (confidence * filled
+                              + (1.0 - confidence) * float(fallback))
+        base = np.where(m > 0, filled_or_fallback, base)
 
     # Displacement is approximately linear in inverse depth. Filtering range
     # directly over-smooths nearby geometry and barely regularises the far

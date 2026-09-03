@@ -192,6 +192,22 @@ class PanoramaRendererTest(unittest.TestCase):
         self.assertFalse(gated.any())
         self.assertLessEqual(int(np.abs(out.astype(int) - 100).max()), 12)
 
+    def test_pixelwise_gate_noise_is_not_rendered_as_speckles(self):
+        yy, xx = np.mgrid[:H, :W]
+        hard_image = np.full((H, W, 3), 100, np.uint8)
+        alternate = hard_image.copy()
+        alternate[(xx + yy) % 2 == 0] = 200
+        valid = {0: np.ones((H, W), bool),
+                 1: np.ones((H, W), bool)}
+        weights = {0: np.full((H, W), 0.5),
+                   1: np.full((H, W), 0.5)}
+        out, _, gated = _detail_preserving_compose(
+            {0: hard_image, 1: alternate}, valid, weights,
+            np.zeros((H, W), np.int8), np.ones((H, W), bool), gate=40)
+
+        self.assertAlmostEqual(float(gated.mean()), 0.5)
+        self.assertEqual(float(out.std()), 0.0)
+
     def test_blend_uses_only_two_best_sources(self):
         valid = {i: np.ones((H, W), bool) for i in range(4)}
         cost = {i: np.full((H, W), float(i), np.float32)
