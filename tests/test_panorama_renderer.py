@@ -16,6 +16,7 @@ if str(ROOT) not in sys.path:
 
 from src.rig.panorama import (DepthAwarePanorama,
                               _detail_preserving_compose)  # noqa: E402
+from src.rig.seam_fix import blend_weights, densify_range  # noqa: E402
 
 
 H, W = 48, 120
@@ -101,7 +102,7 @@ class PanoramaRendererTest(unittest.TestCase):
         seen_ranges = []
 
         def maps(rig, name, vcam, range_m):
-            seen_ranges.append(float(np.median(range_m)))
+            seen_ranges.append(range_m.copy())
             return _maps(rig, name, vcam, range_m)
 
         with mock.patch("src.rig.panorama.source_maps_perpixel",
@@ -111,7 +112,38 @@ class PanoramaRendererTest(unittest.TestCase):
         self.assertEqual(len(calls), 1)
         self.assertEqual(calls[0][2], 6)
         self.assertAlmostEqual(stats["depth_coverage"], 0.5)
-        self.assertTrue(all(abs(x - 1.25) < 1e-4 for x in seen_ranges))
+        self.assertTrue(all(abs(float(np.median(x[:, :W // 3])) - 1.25)
+                            < 1e-4 for x in seen_ranges))
+        self.assertTrue(all(abs(float(np.median(x[:, -W // 6:])) - 0.6)
+                            < 1e-4 for x in seen_ranges))
+
+    def test_depth_is_temporally_damped_only_when_measurements_agree(self):
+        values = iter((1.0, 1.06, 1.5))
+
+        def provider(_rig, _vcam, _sources):
+            value = next(values)
+            return (np.full((H, W), value, np.float32),
+                    np.ones((H, W), bool))
+
+        renderer = self._renderer(depth_provider=provider,
+                                  use_residual_flow=False)
+        renderer._constant_depth_guide = lambda _sources: None
+        seen = []
+
+        def maps(rig, name, vcam, range_m):
+            seen.append(float(range_m[H // 2, W // 2]))
+            return _maps(rig, name, vcam, range_m)
+
+        with mock.patch("src.rig.panorama.source_maps_perpixel",
+                        side_effect=maps):
+            renderer.render(_sources())
+            renderer.render(_sources())
+            renderer.render(_sources())
+
+        per_frame = seen[::6]
+        self.assertAlmostEqual(per_frame[0], 1.0, places=4)
+        self.assertAlmostEqual(per_frame[1], 1.027, places=3)
+        self.assertAlmostEqual(per_frame[2], 1.5, places=4)
 
     def test_frozen_residual_flow_is_applied_to_output(self):
         renderer = self._renderer(use_depth=False,
@@ -145,6 +177,47 @@ class PanoramaRendererTest(unittest.TestCase):
 
         self.assertFalse(gated.any())
         self.assertGreater(float(out.std()), 110.0)
+
+    def test_low_frequency_tone_correction_is_bounded(self):
+        hard_image = np.full((H, W, 3), 100, np.uint8)
+        bright = np.full((H, W, 3), 200, np.uint8)
+        valid = {0: np.ones((H, W), bool),
+                 1: np.ones((H, W), bool)}
+        weights = {0: np.full((H, W), 0.5),
+                   1: np.full((H, W), 0.5)}
+        out, _, gated = _detail_preserving_compose(
+            {0: hard_image, 1: bright}, valid, weights,
+            np.zeros((H, W), np.int8), np.ones((H, W), bool), gate=255)
+
+        self.assertFalse(gated.any())
+        self.assertLessEqual(int(np.abs(out.astype(int) - 100).max()), 12)
+
+    def test_blend_uses_only_two_best_sources(self):
+        valid = {i: np.ones((H, W), bool) for i in range(4)}
+        cost = {i: np.full((H, W), float(i), np.float32)
+                for i in range(4)}
+        weights, hard, reach = blend_weights(
+            valid, cost, mid_i=None, mid_authority_deg=0.0, temp=6.0)
+
+        count = sum((weights[i] > 0).astype(np.uint8) for i in weights)
+        self.assertTrue(reach.all())
+        self.assertTrue((hard == 0).all())
+        self.assertTrue((count == 2).all())
+        self.assertTrue((weights[2] == 0).all())
+        self.assertTrue((weights[3] == 0).all())
+
+    def test_depth_hole_fill_stays_float_and_is_bounded(self):
+        depth = np.full((41, 41), 1.013, np.float32)
+        valid = np.ones(depth.shape, bool)
+        valid[20, 20] = False
+        dense = densify_range(depth, valid, fallback=0.6, median_px=1,
+                              bilat_sigma=1e-6, max_inpaint_distance=3)
+        self.assertAlmostEqual(float(dense[20, 20]), 1.013, places=2)
+
+        valid[8:33, 8:33] = False
+        dense = densify_range(depth, valid, fallback=0.6, median_px=1,
+                              bilat_sigma=1e-6, max_inpaint_distance=3)
+        self.assertAlmostEqual(float(dense[20, 20]), 0.6, places=3)
 
 
 if __name__ == "__main__":

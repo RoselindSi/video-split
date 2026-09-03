@@ -153,8 +153,6 @@ def main():
               f"{row['seam_excess_median']:>+9.3f} "
               f"{row['owner_change_median']:>11.3%} "
               f"{row['gated_frac_median']:>9.3%}"
-              f"{row['seam_ratio_p90']:>10.3f}"
-              f"{row['seam_ratio_max']:>9.3f}"
               + (f"   !! {row['unguided_depth_frames']} 帧无引导深度"
                  if row.get("unguided_depth_frames") else ""))
     if args.out_json:
@@ -165,4 +163,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

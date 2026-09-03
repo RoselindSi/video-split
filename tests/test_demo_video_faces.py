@@ -38,10 +38,13 @@ from src.rig import face_mask   # noqa: E402
 
 HEIGHT = 96
 WIDTH = 160
-# face_mask.MAX_FACE_FRAC is a fraction of the frame width, so on a 160px
-# fixture anything wider than about 19px is refused as implausible.
-FACE = (100, 8, 114, 24)
-FACE_ON_HAND = (60, 58, 74, 72)
+# face_mask.MAX_FACE_FRAC is a fraction of the frame width. It was 0.12 and is
+# now 0.055, fitted against labelled detections rather than guessed, so on this
+# 160px fixture a plausible face is under 9px wide. These boxes were 14px and
+# the tightening refused them -- which is the cap working, and the reason the
+# fixture moves rather than the constant.
+FACE = (100, 8, 108, 18)
+FACE_ON_HAND = (62, 58, 70, 68)
 FACE_TOO_BIG = (10, 5, 70, 65)
 
 

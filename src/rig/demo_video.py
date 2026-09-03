@@ -553,8 +553,13 @@ def main():
     ap.add_argument("--no_pano_depth", action="store_true",
                     help="ablation: use one depth plane in the new six-view "
                          "renderer")
-    ap.add_argument("--no_pano_flow", action="store_true",
-                    help="ablation: disable content-fitted residual alignment")
+    flow = ap.add_mutually_exclusive_group()
+    flow.add_argument("--pano_flow", action="store_true",
+                      help="experimental: enable content-fitted residual "
+                           "alignment (off by default; current ablation "
+                           "worsens seam ratio)")
+    flow.add_argument("--no_pano_flow", action="store_true",
+                      help="compatibility alias; residual flow is already off")
     # On by default. A demo that leaks a colleague's face is not a demo that
     # can be sent anywhere, and defaulting the privacy step off would make
     # that failure the quiet one.
@@ -603,7 +608,7 @@ def main():
     print(f"  panorama: {a.panorama}"
           + (f", fit {a.pano_fit_frames} frames, "
              f"depth {'off' if a.no_pano_depth else 'on'}, "
-             f"residual flow {'off' if a.no_pano_flow else 'on'}"
+             f"residual flow {'on' if a.pano_flow else 'off'}"
              if a.panorama == "depth" else ""))
     print(f"  faces {'NOT covered' if a.no_faces else 'covered'}"
           f"{'   <- do not send this anywhere' if a.no_faces else ''}")
@@ -623,7 +628,7 @@ def main():
                      panorama_mode=a.panorama,
                      panorama_fit_frames=a.pano_fit_frames,
                      panorama_depth=not a.no_pano_depth,
-                     panorama_flow=not a.no_pano_flow)
+                     panorama_flow=a.pano_flow and not a.no_pano_flow)
     if not n:
         raise SystemExit("no frames written")
     mb = os.path.getsize(a.out) / 1e6

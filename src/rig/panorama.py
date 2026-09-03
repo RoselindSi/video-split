@@ -25,6 +25,11 @@ DEFAULT_DEPTH_M = 0.6
 DEFAULT_FIT_FRAMES = 6
 FLOW_SCALE = 0.25
 LOW_FREQUENCY_SIGMA = 12.0
+MAX_LOW_FREQUENCY_CORRECTION = 12.0
+GATE_FEATHER_SIGMA = 1.5
+DEPTH_EMA_CURRENT = 0.45
+DEPTH_EMA_REL_TOL = 0.08
+DEPTH_EMA_ABS_TOL_M = 0.04
 
 
 def _remap_mask(mask, flow):
@@ -52,7 +57,9 @@ def _small_flow(src, ref, overlap, scale=FLOW_SCALE):
 
 
 def _detail_preserving_compose(warped, valid, weights, hard, reach, gate,
-                               low_sigma=LOW_FREQUENCY_SIGMA):
+                               low_sigma=LOW_FREQUENCY_SIGMA,
+                               max_correction=MAX_LOW_FREQUENCY_CORRECTION,
+                               gate_feather_sigma=GATE_FEATHER_SIGMA):
     """Blend low-frequency tone while keeping detail from one physical view."""
     import cv2
     soft, owner, gated = compose(warped, valid, weights, hard, reach,
@@ -63,11 +70,22 @@ def _detail_preserving_compose(warped, valid, weights, hard, reach, gate,
         hard_image[selected] = image[selected]
     low_soft = cv2.GaussianBlur(soft, (0, 0), low_sigma)
     low_hard = cv2.GaussianBlur(hard_image, (0, 0), low_sigma)
+    correction = low_soft.astype(np.float32) - low_hard.astype(np.float32)
+    correction = np.clip(correction, -float(max_correction),
+                         float(max_correction))
+
+    # Keep `gated` as a binary diagnostic, but do not render a binary switch.
+    # Isolated threshold crossings otherwise become visible spots. Detail is
+    # always from the hard owner; only the low-frequency tone is feathered.
+    if gate_feather_sigma > 0:
+        gate_alpha = cv2.GaussianBlur(
+            gated.astype(np.float32), (0, 0), gate_feather_sigma)
+        gate_alpha = np.clip(gate_alpha * 2.0, 0.0, 1.0)
+    else:
+        gate_alpha = gated.astype(np.float32)
     corrected = (hard_image.astype(np.float32)
-                 + low_soft.astype(np.float32)
-                 - low_hard.astype(np.float32))
-    corrected = np.clip(corrected, 0, 255).astype(np.uint8)
-    out = np.where(gated[..., None], hard_image, corrected)
+                 + correction * (1.0 - gate_alpha[..., None]))
+    out = np.clip(corrected, 0, 255).astype(np.uint8)
     out[~reach] = 0
     return out, owner, gated
 
@@ -82,8 +100,9 @@ class DepthAwarePanorama:
     """
 
     def __init__(self, rig, vcam, depth_m=DEFAULT_DEPTH_M, use_depth=True,
-                 use_residual_flow=True, depth_provider=None, blend_temp=6.0,
-                 disagreement_gate=40.0, flow_scale=FLOW_SCALE):
+                 use_residual_flow=False, depth_provider=None, blend_temp=6.0,
+                 disagreement_gate=40.0, flow_scale=FLOW_SCALE,
+                 stabilize_depth=True):
         self.rig = rig
         self.vcam = vcam
         self.depth_m = float(depth_m)
@@ -93,6 +112,7 @@ class DepthAwarePanorama:
         self.blend_temp = float(blend_temp)
         self.disagreement_gate = float(disagreement_gate)
         self.flow_scale = float(flow_scale)
+        self.stabilize_depth = bool(stabilize_depth)
         self.camera_names = tuple(sorted(rig.cameras))
         mid = rig.modules[len(rig.modules) // 2].left.name
         self.reference = self.camera_names.index(mid)
@@ -100,6 +120,7 @@ class DepthAwarePanorama:
         self.flows = {}
         self._rect_cache = {}
         self.n_unguided = 0
+        self._previous_range = None
         self._cost = {
             i: off_axis_deg(rig, name, vcam).astype(np.float32)
             for i, name in enumerate(self.camera_names)
@@ -139,6 +160,16 @@ class DepthAwarePanorama:
         guide = self._constant_depth_guide(sources)
         dense = densify_range(measured, valid, fallback=self.depth_m,
                               guide=guide)
+        if self.stabilize_depth and self._previous_range is not None \
+                and self._previous_range.shape == dense.shape:
+            previous = self._previous_range
+            tolerance = np.maximum(DEPTH_EMA_ABS_TOL_M,
+                                   DEPTH_EMA_REL_TOL * dense)
+            stable = np.abs(dense - previous) <= tolerance
+            blended = (DEPTH_EMA_CURRENT * dense
+                       + (1.0 - DEPTH_EMA_CURRENT) * previous)
+            dense = np.where(stable, blended, dense).astype(np.float32)
+        self._previous_range = dense.copy()
         return dense, float(valid.mean())
 
     def _constant_depth_guide(self, sources):
@@ -226,6 +257,9 @@ class DepthAwarePanorama:
                 full = cv2.resize(small, size, interpolation=cv2.INTER_LINEAR)
                 full /= max(self.flow_scale, 1e-6)
                 self.flows[i] = full.astype(np.float32)
+        # Fit samples are replayed from the start by the production reader.
+        # Do not seed temporal depth with the last (future) fit frame.
+        self._previous_range = None
         return {"fit_frames": n, "photo_views": len(self.photo),
                 "flow_views": len(self.flows)}
 

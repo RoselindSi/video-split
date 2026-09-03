@@ -60,6 +60,17 @@ FIT_FRAMES = 12
 MEDIAN_PX = 5
 BILAT_SIGMA_M = 0.15
 
+# A stereo hole farther than this from a real measurement is not geometry we
+# can recover with an image inpainter. Close pinholes are filled to keep the
+# warp continuous; large textureless regions use the calibrated fallback
+# plane instead of propagating an arbitrary foreground depth across them.
+MAX_INPAINT_DISTANCE_PX = 12.0
+
+# More than two contributors cannot improve a local transition. It does let
+# distant fisheye views (including their dark support edge) leak into the
+# result, which shows up as low-frequency spots after tone blending.
+MAX_BLEND_SOURCES = 2
+
 
 # Fitted gains are refused outside this range. A camera on the same rig under
 # the same light differs from its neighbour by tens of percent, not by half.
@@ -253,7 +264,8 @@ def source_maps_perpixel(rig, camera, vcam, range_m):
 
 
 def densify_range(range_m, valid, fallback=1.2, guide=None,
-                  median_px=MEDIAN_PX, bilat_sigma=BILAT_SIGMA_M):
+                  median_px=MEDIAN_PX, bilat_sigma=BILAT_SIGMA_M,
+                  max_inpaint_distance=MAX_INPAINT_DISTANCE_PX):
     """Fill and SMOOTH the range, FOR RENDERING ONLY.
 
     `wide_depth` refuses to fill or smooth its output and that stays true: an
@@ -277,27 +289,42 @@ def densify_range(range_m, valid, fallback=1.2, guide=None,
     edges -- so a hand keeps its own depth instead of being averaged into the
     bench behind it."""
     import cv2
-    r = np.where(valid, np.nan_to_num(range_m, nan=fallback), np.nan)
+    valid = np.asarray(valid, bool) & np.isfinite(range_m)
+    r = np.where(valid, range_m, np.nan)
     m = (~np.isfinite(r)).astype(np.uint8)
     base = np.where(np.isfinite(r), r, fallback).astype(np.float32)
+    if m.all():
+        return np.full(base.shape, fallback, np.float32)
     if m.any():
-        filled = cv2.inpaint((base / 8.0 * 255).clip(0, 255).astype(np.uint8),
-                             m, 7, cv2.INPAINT_TELEA).astype(np.float32)
-        base = np.where(m > 0, filled / 255.0 * 8.0, base)
+        # OpenCV supports a float32 single-channel source. The old uint8
+        # round-trip quantised an 8 m range into 31 mm steps, and those steps
+        # became visible displacement bands after reprojection.
+        filled = cv2.inpaint(base, m, 7, cv2.INPAINT_TELEA)
+        distance = cv2.distanceTransform(m, cv2.DIST_L2, 3)
+        close_hole = (m > 0) & (distance <= float(max_inpaint_distance))
+        base = np.where(close_hole, filled, base)
+
+    # Displacement is approximately linear in inverse depth. Filtering range
+    # directly over-smooths nearby geometry and barely regularises the far
+    # field, so smooth the quantity the remap actually responds to.
+    inverse = 1.0 / np.clip(base, 0.15, 8.0)
     if median_px >= 3:
-        base = cv2.medianBlur(base, median_px | 1)
+        inverse = cv2.medianBlur(inverse.astype(np.float32), median_px | 1)
     if guide is None:
-        base = cv2.bilateralFilter(base, 9, bilat_sigma, 9)
+        inverse = cv2.bilateralFilter(inverse, 9, bilat_sigma, 9)
     else:
         try:
-            base = cv2.ximgproc.jointBilateralFilter(
-                guide, base, 9, bilat_sigma, 9)
+            # sigmaColor is measured in the guide's 8-bit intensity units,
+            # not metres. 0.15 effectively disabled smoothing everywhere
+            # except exactly equal pixels.
+            inverse = cv2.ximgproc.jointBilateralFilter(
+                guide, inverse, 9, 12.0, 9)
         except Exception:
             # ximgproc is a contrib module and may be absent; the plain
             # bilateral smooths without the image's edges but still removes
             # the jitter that scrubs the texture.
-            base = cv2.bilateralFilter(base, 9, bilat_sigma, 9)
-    return np.clip(base, 0.15, 8.0)
+            inverse = cv2.bilateralFilter(inverse, 9, bilat_sigma, 9)
+    return np.clip(1.0 / np.maximum(inverse, 1.0 / 8.0), 0.15, 8.0)
 
 
 def warp_all(rig, vcam, sources, depth_m, depth_by_module=None, map_cache=None,
@@ -331,7 +358,7 @@ def warp_all(rig, vcam, sources, depth_m, depth_by_module=None, map_cache=None,
 
 
 def blend_weights(valid, cost, mid_i, mid_authority_deg=72.0,
-                  temp=BLEND_TEMP_DEG):
+                  temp=BLEND_TEMP_DEG, max_sources=MAX_BLEND_SOURCES):
     """Fixed per-pixel weights from geometry alone. -> ({i: w}, hard_owner)
 
     A softmax over the SAME cost the argmin used, so the region each module
@@ -352,6 +379,11 @@ def blend_weights(valid, cost, mid_i, mid_authority_deg=72.0,
     reach = stack.min(0) < 1e5
     hard = np.where(reach, np.array(keys, np.int8)[stack.argmin(0)],
                     -1).astype(np.int8)
+    if max_sources is not None and 0 < int(max_sources) < len(keys):
+        keep = np.zeros_like(stack, dtype=bool)
+        order = np.argsort(stack, axis=0, kind="stable")
+        np.put_along_axis(keep, order[:int(max_sources)], True, axis=0)
+        stack = np.where(keep, stack, big)
     z = np.exp(-(stack - stack.min(0, keepdims=True)) / max(temp, 1e-6))
     z = np.where(stack < 1e5, z, 0.0)
     tot = z.sum(0)
