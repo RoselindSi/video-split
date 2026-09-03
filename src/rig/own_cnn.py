@@ -328,6 +328,136 @@ def report(results):
         print(_row(lab, s))
 
 
+def _owner_prob(model, ds, device, batch=64):
+    """-> P(owner) per row, not the hard argmax `evaluate` returns.
+
+    A miss at 0.51 and a miss at 0.99 are different failures. The first says
+    the boundary is roughly in the right place and this hand fell the wrong
+    side of it; the second says the model is confidently wrong, which is what
+    a recording it has no representation for looks like."""
+    torch = _torch()
+    model.eval()
+    out = []
+    with torch.no_grad():
+        for i in range(0, len(ds), batch):
+            xs, _ = zip(*[ds[j] for j in range(i, min(i + batch, len(ds)))])
+            p = model(torch.stack(xs).to(device)).softmax(1)[:, 1]
+            out.append(p.cpu().numpy())
+    return np.concatenate(out)
+
+
+def _tile(path, width):
+    """-> a base64 <img> src for `path` scaled to `width`, or None."""
+    import base64
+    import cv2
+    im = cv2.imread(path)
+    if im is None:
+        return None
+    if im.shape[1] > width:
+        h = int(round(im.shape[0] * width / im.shape[1]))
+        im = cv2.resize(im, (width, h), interpolation=cv2.INTER_AREA)
+    ok, buf = cv2.imencode(".jpg", im, [int(cv2.IMWRITE_JPEG_QUALITY), 72])
+    if not ok:
+        return None
+    return "data:image/jpeg;base64," + base64.b64encode(buf).decode()
+
+
+MISS_SHEET_CSS = """<meta charset=utf-8><title>foreign hands</title><style>
+body{font:13px/1.45 system-ui;margin:20px;background:#111;color:#ddd}
+h1{font-size:16px}
+h2{margin:28px 0 4px;font-size:15px}
+h2.blind{border-left:3px solid #d33;padding-left:10px}
+.sub{color:#888;margin-bottom:10px}
+.row{display:flex;flex-wrap:wrap;gap:10px}
+.t{width:290px;background:#1c1c1c;border-radius:5px;padding:6px;
+   position:relative}
+.t img.ctx{width:100%;border-radius:3px;display:block}
+.t img.crop{position:absolute;right:10px;bottom:26px;width:52px;
+   border:2px solid #000;border-radius:3px}
+.miss{outline:2px solid #d33}
+.ok{outline:2px solid #2a6}
+.cap{margin-top:4px;font-size:11px;color:#aaa}
+b.m{color:#f66}
+b.o{color:#5c8}
+</style>"""
+
+
+def miss_sheet(rows, path, out, ctx_width=560, crop_width=150):
+    """Write every `other` hand the checkpoint saw, right and wrong. -> n
+
+    WHY THE CAUGHT ONES ARE ON THE PAGE TOO. A page of failures alone invites
+    a story about what failure looks like, and some story fits any 31
+    pictures. The question is what separates them from the ones the model got,
+    so both are here, in the same recording, at the same size, sorted by the
+    model's confidence. If the missed crops look like the caught crops, the
+    answer is not in the crop, and a better classifier over the same input
+    will not find it either.
+
+    RECORDINGS THAT CAUGHT NOTHING COME FIRST. Those are the interesting
+    ones: not a boundary drawn slightly wrong, but a recording the model has
+    no purchase on at all, where it answers `owner` to everything and the
+    render goes out clean."""
+    import html as _html
+    model, device = load_model(path)
+    if model is None:
+        raise SystemExit(f"no checkpoint at {path}")
+    prob = _owner_prob(model, Crops(rows, augment=False), device)
+
+    by = {}
+    for r, pr in zip(rows, prob):
+        by.setdefault(r["tag"], []).append((r, float(pr)))
+    groups = []
+    for tag, v in by.items():
+        oth = [(r, pr) for r, pr in v if r["y"] == 0]
+        if not oth:            # nothing foreign here, nothing to miss
+            continue
+        caught = sum(1 for _, pr in oth if pr < 0.5)
+        groups.append((caught / len(oth), -len(oth), tag, oth, caught))
+    groups.sort()
+
+    parts = [MISS_SHEET_CSS,
+             "<h1>Foreign hands the shipped checkpoint saw</h1>",
+             "<div class=sub>Red = called the wearer's, which renders as a "
+             "frame with nothing blurred. Green = caught. The number is "
+             "P(owner), so a red tile at 0.98 is a confident mistake and one "
+             "at 0.52 is a boundary case. Worst recording first.</div>"]
+
+    n_miss = 0
+    for _, _, tag, oth, caught in groups:
+        cls = " class=blind" if caught == 0 else ""
+        note = "  &mdash; NEVER FIRED ON THIS RECORDING" if not caught else ""
+        parts.append(f"<h2{cls}>{_html.escape(tag)}</h2>"
+                     f"<div class=sub>{caught}/{len(oth)} foreign hands "
+                     f"caught{note}</div><div class=row>")
+        for r, pr in sorted(oth, key=lambda x: -x[1]):
+            missed = pr >= 0.5
+            n_miss += missed
+            pkg = os.path.dirname(os.path.dirname(r["_crop"]))
+            ctx = _tile(os.path.join(pkg, "context", r["stem"] + ".jpg"),
+                        ctx_width)
+            crop = _tile(r["_crop"], crop_width)
+            parts.append(f'<div class="t {"miss" if missed else "ok"}">')
+            if ctx:
+                parts.append(f'<img class=ctx src="{ctx}">')
+            if crop:
+                parts.append(f'<img class=crop src="{crop}">')
+            parts.append(f'<div class=cap>f{r["frame"]} &middot; '
+                         f'<b class="{"m" if missed else "o"}">'
+                         f'{"MISSED" if missed else "caught"}</b> &middot; '
+                         f'P(owner) {pr:.2f}</div></div>')
+        parts.append("</div>")
+
+    with open(out, "w", encoding="utf-8") as f:
+        f.write("\n".join(parts))
+    n_oth = sum(1 for r in rows if r["y"] == 0)
+    print(f"\n  {n_miss} missed / {n_oth} foreign hands -> {out} "
+          f"({os.path.getsize(out) / 1e6:.1f} MB)")
+    print("  Open it and ask one question: do the red crops look different "
+          "from the green\n  ones in the same recording? If they do not, the "
+          "crop does not carry the answer.")
+    return n_miss
+
+
 def check(rows, path, verbose=True):
     """Run a saved model over crops that already carry a label. -> misses
 
@@ -643,6 +773,10 @@ def main():
     ap.add_argument("--min_rec_hands", type=int, default=5,
                     help="recordings smaller than this are not spent on the "
                          "holdout")
+    ap.add_argument("--miss_sheet",
+                    help="with --check: an HTML page of every foreign hand "
+                         "the checkpoint saw, missed ones marked, the "
+                         "recordings it never fired on first")
     ap.add_argument("--self_test", action="store_true")
     a = ap.parse_args()
 
@@ -659,7 +793,11 @@ def main():
         raise SystemExit(0)
     if a.check:
         check(rows, a.check)
+        if a.miss_sheet:
+            miss_sheet(rows, a.check, a.miss_sheet)
         raise SystemExit(0)
+    if a.miss_sheet:
+        raise SystemExit("--miss_sheet needs --check <checkpoint>")
     hold = set(a.holdout) if a.holdout else choose_holdout(
         rows, min_rec_hands=a.min_rec_hands)
     res = train(rows, hold, epochs=a.epochs, seed=a.seed,
