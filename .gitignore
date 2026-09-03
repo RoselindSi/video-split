@@ -2,6 +2,8 @@
 *.pyc
 .DS_Store
 __pycache__/
+artifacts/stabstitch_pair/
+third_party/StabStitch2/
 docs/architecture-plan.md
 docs/background-rl-video.md
 docs/dataset_audit.md
