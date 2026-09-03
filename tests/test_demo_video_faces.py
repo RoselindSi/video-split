@@ -225,19 +225,40 @@ class FaceCoverRenderTest(unittest.TestCase):
                 _detail(src[y0:y1, x0:x1]), delta=1e-6,
                 msg="the wearer's own hand was mosaicked")
 
-    def test_an_implausibly_large_detection_is_refused(self):
-        """Nobody's face but the wearer's could fill this much of the frame,
-        and the wearer's is behind the camera."""
+    def test_a_large_face_is_covered_now_that_the_cap_is_off(self):
+        """The close colleague is the one worth covering, and the size cap
+        was refusing exactly them.
+
+        This test asserted the opposite until the cap came off. It was fitted
+        on detections harvested at a 0.30 score floor, in a corpus where a
+        face near the camera is rare, so it learned `too big to be a face`
+        from a sample with no big faces -- and then refused the largest,
+        nearest, most identifiable face in the recording. A face this size is
+        not implausible; it is a person standing close."""
         n = 2
         _w, _faces, clean, panels = _run(
             [[FACE_TOO_BIG + (0.99,)]],
             [list(self.own) for _ in range(n)], n)
         x0, y0, x1, y1 = FACE_TOO_BIG
         for panel, src in zip(panels, clean):
-            self.assertAlmostEqual(
+            self.assertLess(
                 _detail(_output_panel(panel)[y0:y1, x0:x1]),
-                _detail(src[y0:y1, x0:x1]), delta=1e-6,
-                msg="an oversized detection was covered")
+                _detail(src[y0:y1, x0:x1]) * 0.5,
+                msg="a large face was left uncovered")
+
+    def test_the_size_cap_still_works_when_a_caller_sets_one(self):
+        """Removing the default is not removing the mechanism. A caller with
+        a value measured on their own data can still pass one, so this keeps
+        the code path alive that the default no longer exercises."""
+        hold = face_mask.Hold(frames=1, max_frac=0.055)
+        big = [FACE_TOO_BIG + (0.99,)]
+        small = [FACE + (0.99,)]
+        shape = (WIDTH, WIDTH, 3)
+        self.assertEqual(hold.update(big, shape=shape), [],
+                         "an explicit cap did not refuse an oversized box")
+        self.assertEqual(len(face_mask.Hold(frames=1, max_frac=0.055)
+                             .update(small, shape=shape)), 1,
+                         "an explicit cap refused a plausible box")
 
     def test_a_drifting_face_does_not_inflate_the_covered_region(self):
         """One 84x84 face once grew into a 350x420 region over fifty frames,

@@ -172,6 +172,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     from src.rig.seam_fix import ClipReader, Prefetch
     from src.rig.hand_detect import detect, masks_from, OwnHold
     from src.rig.hand_track import (Tracker, FlipCount, MAX_LOST,
+                                    duplicate_pairs, IgnoredHands,
                                     MAX_ASSOC_COST, UNMATCHED_COST)
     from src.rig.suppress_other import suppress
     from src.rig import own_cnn
@@ -213,6 +214,10 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     ownhold = OwnHold(geom=geom, geom_w=geom_w, max_owner=max_owner,
                       state_ttl=tracker.max_lost)
     flips = FlipCount()
+    # Three quantities the architecture argument turns on and
+    # nothing has ever recorded. They decide nothing.
+    ignored = IgnoredHands()
+    n_dup = n_dropped = n_demoted = 0
     vcam = VirtualWideCamera.from_rig(rig)
     panorama = None
     panorama_fit = {}
@@ -270,6 +275,17 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
                                  new_track_conf=new_track_conf,
                                  continue_conf=continue_conf)
         keep_i = [i for i, tid in enumerate(raw_ids) if tid is not None]
+        # A detection with no id is not passed on: no box, no classification,
+        # no cover. Measure the wait that creates before changing it.
+        dup = duplicate_pairs(raw_dets)
+        dropped_boxes = [raw_dets[i]["box"] for i, tid in enumerate(raw_ids)
+                         if tid is None]
+        ignored.dropped(k, dropped_boxes)
+        started = ignored.started(k, [raw_dets[i]["box"]
+                                      for i, tid in enumerate(raw_ids)
+                                      if tid in tracker.new_ids])
+        n_dup += len(dup)
+        n_dropped += len(dropped_boxes)
         dets = [raw_dets[i] for i in keep_i]
         tids = [raw_ids[i] for i in keep_i]
         provenance = [tracker.provenance[i] for i in keep_i]
@@ -300,6 +316,8 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
             dets, flags, shape=rgb.shape, ids=tids,
             reacquired=tracker.reacquired if safe_reacquire else ())
         flips.update(tids, [o for o, _ in flags])
+        demoted = list(ownhold.last_demoted)
+        n_demoted += len(demoted)
         own = [d for d, (o, _) in zip(dets, flags) if o]
         oth = [d for d, (o, _) in zip(dets, flags) if not o]
         # A track the detector lost for a few frames is still a hand. Its box
@@ -342,6 +360,12 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
                     pano_stats.get("depth_coverage", float("nan"))), 6),
                 "pano_gated_frac": round(float(
                     pano_stats.get("gated_frac", float("nan"))), 6),
+                "n_dup_pairs": len(dup),
+                "n_dropped_no_id": len(dropped_boxes),
+                "wait_frames": max(started, default=0),
+                "n_demoted": len(demoted),
+                "demoted_p_max": round(max([p for _, p in demoted],
+                                           default=float("nan")), 4),
                 "n_low_match": sum(p == "matched_low" for p in provenance),
                 "n_new_track": sum(p == "new_high" for p in provenance),
                 "n_predicted": n_predicted_frame,
@@ -386,6 +410,20 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
               f"{tracker.n_lost} ended")
         print(f"    predicted covers: {n_predicted} hand-frames, horizon "
               f"{max_prediction_age}")
+        print(f"\n  SAME-FRAME DUPLICATE PAIRS: {n_dup} over {n} frames "
+              f"(IoU >= 0.70).\n    An upper bound on how much of the flicker "
+              f"one hand found twice could\n    explain. Two hands really do "
+              f"overlap, so this is not a duplicate count.")
+        print(f"\n  CAP DEMOTIONS: {n_demoted} hand-frames were called "
+              f"foreign by the two-hand\n    cap rather than by the "
+              f"classifier or the prior. Against "
+              f"{fr['hand_frames']} hand-frames\n    seen. If this is most "
+              f"of the `other` verdicts then the cap is the decision maker.")
+        print(f"\n  DETECTIONS DROPPED FOR HAVING NO ID: {n_dropped} over "
+              f"{n} frames.")
+        lat = ignored.report()
+        if lat:
+            print(lat)
         print("  A flip is one hand changing its own verdict between two "
               "frames it was seen\n  in. The frame-level `drop` count above "
               "cannot see a flip that happens\n  while another hand keeps "

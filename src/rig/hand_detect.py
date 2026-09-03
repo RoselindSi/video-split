@@ -409,6 +409,9 @@ class OwnHold:
         # up on is state nobody will ask for again.
         self.state_ttl = int(state_ttl)
         self.self_reconfirm_frames = max(1, int(self_reconfirm_frames))
+        # [(track id, smoothed P(owner))] the cap turned over on the last
+        # frame. Read by callers that keep a trace; never read by this class.
+        self.last_demoted = []
 
     def update(self, dets, flags, shape=None, ids=None, reacquired=None):
         """-> [(is_owner, smoothed_p)] aligned with `dets`.
@@ -483,6 +486,13 @@ class OwnHold:
         # every frame and 257 hands were called foreign; the release that
         # accidentally dropped it called 67. The classifier and the prior are
         # not what was carrying that clip -- the anatomy was.
+        # INSTRUMENTATION ONLY. The comment above says this constraint was
+        # producing most of the `other` verdicts on the clip that prompted
+        # it -- 257 hands against 67 without it. If that is still true then
+        # the cap, not the classifier and not the prior, is this system's
+        # decision maker, and replacing it is a bigger change than it looks.
+        # Nothing has recorded it since. This does, and decides nothing.
+        self.last_demoted = []
         if self.max_owner is not None:
             own_i = [i for i, (o, _) in enumerate(out) if o]
             if len(own_i) > self.max_owner:
@@ -490,6 +500,7 @@ class OwnHold:
                            [:self.max_owner])
                 for i in own_i:
                     if i not in keep:
+                        self.last_demoted.append((ids[i], float(out[i][1])))
                         out[i] = (False, out[i][1])
                         self.state[ids[i]][1] = False
                         self.state[ids[i]][3] = 0

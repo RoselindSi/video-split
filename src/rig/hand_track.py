@@ -211,6 +211,95 @@ def hungarian(cost):
     return out
 
 
+DUP_IOU = 0.70
+
+
+def duplicate_pairs(dets, iou_min=DUP_IOU):
+    """-> [(i, j, iou)] for detections that plausibly cover the same hand.
+
+    WHY THIS IS COUNTED BEFORE ANYTHING IS DONE ABOUT IT. The two-hand cap
+    downstream counts DETECTIONS, so a hand found twice reads as two owners
+    and can push a real one over the limit. That is a plausible story for the
+    flicker and it is currently only a story: nothing in this pipeline has
+    ever recorded how often one hand arrives as two boxes. A deduplication
+    step written against an unmeasured rate would be a fix aimed at a number
+    nobody has.
+
+    A pair here is not proof of a duplicate -- two hands really can overlap,
+    and a hand crossing in front of another is the ordinary case in this
+    corpus. It is an upper bound on how much of the problem duplicates could
+    possibly explain."""
+    out = []
+    for i in range(len(dets)):
+        for j in range(i + 1, len(dets)):
+            v = box_iou(dets[i]["box"], dets[j]["box"])
+            if v >= iou_min:
+                out.append((i, j, float(v)))
+    return out
+
+
+class IgnoredHands:
+    """How long a visible hand goes unprocessed before it is given an id.
+
+    THE LATENCY IS NOT THE DETECTOR'S. A hand entering the frame is found at
+    a low score long before it is found at a confident one, and this pipeline
+    drops every low-score detection that does not match an existing track: no
+    box, no classification, no cover. The hand is on screen, the detector can
+    see it, and the system behaves as though it were not there.
+
+    This measures that interval directly. Every dropped detection is
+    remembered for a few frames; when a track is finally created, its first
+    box is matched back against those memories and the run of consecutive
+    frames it was ignored for is reported. It records; it changes nothing."""
+
+    def __init__(self, window=90, iou_min=0.30):
+        self.window = int(window)
+        self.iou_min = float(iou_min)
+        self._pending = []          # [(frame_index, box)]
+        self.latencies = []         # frames each track waited before existing
+
+    def dropped(self, k, boxes):
+        """Remember the detections frame `k` threw away."""
+        for b in boxes:
+            self._pending.append((k, list(b)))
+        self._pending = [(i, b) for i, b in self._pending
+                         if k - i <= self.window]
+
+    def started(self, k, boxes):
+        """A track was created at frame `k`. -> its wait, in frames.
+
+        Walks BACKWARDS one frame at a time and stops at the first gap. A
+        hand ignored on frames 10-14 and again on 20-24 waited five frames
+        for the track that started at 25, not fifteen: the earlier run
+        belongs to something else, or to an appearance this one is not
+        continuous with."""
+        out = []
+        for box in boxes:
+            n, want = 0, k - 1
+            while want >= 0:
+                hit = any(i == want
+                          and box_iou(box, b) >= self.iou_min
+                          for i, b in self._pending)
+                if not hit:
+                    break
+                n += 1
+                want -= 1
+            self.latencies.append(n)
+            out.append(n)
+        return out
+
+    def report(self):
+        """-> a line about the distribution, or None when nothing started."""
+        if not self.latencies:
+            return None
+        v = sorted(self.latencies)
+        waited = [x for x in v if x > 0]
+        med = v[len(v) // 2]
+        return (f"  TENTATIVE LATENCY: {len(waited)} of {len(v)} tracks were "
+                f"visible before they existed;\n    median {med} frames, "
+                f"worst {v[-1]}. A hand in this interval is on screen, found "
+                f"by the\n    detector, and neither classified nor covered.")
+
 class Tracker:
     """Hand identities across frames. Knows nothing about ownership.
 

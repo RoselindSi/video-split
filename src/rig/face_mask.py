@@ -81,10 +81,29 @@ MODEL = "/workspace/models/yolov8n-face-lindevs.onnx"
 MODEL_ALT = "/workspace/models/face_detection_yunet_2023mar.onnx"
 MODEL_FALLBACK = "/workspace/models/face_detection_full_range.tflite"
 
-# Read together with MAX_FACE_FRAC below: the two were swept jointly on 173
-# labelled detections and this is the low-score half of that operating point.
-# Raising it costs recall along every row of the sweep and buys almost nothing,
-# because what separates a real face from a false one here is size, not score.
+# WITH NO SIZE CAP, THE THRESHOLD IS DOING THE WHOLE JOB, AND 0.35 IS WHERE IT
+# WAS MEASURED TO SIT. Swept alone on the 173 labelled detections:
+#
+#     0.60   precision 0.987   recall 0.529    66 faces missed
+#     0.50   precision 0.941   recall 0.679    45 missed
+#     0.35   precision 0.833   recall 0.929    10 missed, 26 false
+#     0.31   precision 0.818   recall 0.993     1 missed  <- F1 optimum
+#
+# The F1 optimum is not taken. 0.30 was the floor the labels were sampled at,
+# so 0.31 is measured against the edge of the sample rather than against data,
+# and a point estimate there says more about the harvest than the detector.
+#
+# 0.35 over 0.50 because the errors are not equal and the expensive one is
+# already handled elsewhere. A missed face is a recognisable person in the
+# output. A false positive used to be worse than that -- at 0.30 this detector
+# fired on skin and mosaicked the wearer's own hands, destroying the pixels
+# the pipeline exists to deliver -- but that is now HAND_OVERLAP_VETO's job,
+# and it is a structural veto that does not weaken as the score falls. What a
+# false positive costs today is a mosaicked patch of bench.
+#
+# The recall figures count faces THE DETECTOR PROPOSED at 0.30 or better. A
+# face it never proposed at any score is in nobody's denominator, so the true
+# recall is lower than these numbers and unmeasured.
 MIN_CONF = 0.35
 
 # A "face" covering this much of a detected hand is that hand. The hand
@@ -98,28 +117,20 @@ HAND_OVERLAP_VETO = 0.45
 # 10-15 fps these demos render, this is roughly a second.
 HOLD_FRAMES = 12
 
-# SIZE TURNED OUT TO BE THE BETTER DISCRIMINATOR, AND 0.12 WAS A GUESS. It was
-# set from "nobody's face but the wearer's could fill that much of the frame",
-# which is true and far too loose. On 173 labelled detections the false ones
-# have a median width of 6.2% of the frame against 3.5% for real faces, so the
-# cap separates the two classes better than the score does: sweeping both
-# together, tightening the cap raises precision down every column while
-# raising the threshold only costs recall along every row.
+# THE SIZE CAP IS OFF, AND IT WAS FITTED ON A SAMPLE THAT COULD NOT SEE ITS
+# OWN FAILURE. 173 labelled detections said false faces are wider than real
+# ones -- 6.2% of the frame against 3.5% -- so a cap of 0.055 bought recall
+# 0.821 at precision 0.966 and looked like the better instrument. It was not.
+# Those labels were harvested at a score floor of 0.30, and a close face
+# clears that floor easily and is RARE in a corpus of bench work, so the fit
+# saw almost no large real faces. Watched back, the cap refused exactly the
+# case that matters most: a colleague near the camera, the most identifiable
+# face in the recording, is the widest box in the frame.
 #
-#     threshold  cap     precision  recall  missed  false
-#     0.60       0.12    0.987      0.529      66      1     <- was
-#     0.35       0.055   0.966      0.821      25      4     <- is
-#
-# Forty-one more faces covered for three more mosaicked patches. On this line
-# the asymmetry runs the other way from the hand line: a missed face is a
-# recognisable person in the output, a false positive is a mosaicked patch of
-# bench, so recall is what the operating point should buy.
-#
-# THE THRESHOLD IS 0.35 RATHER THAN THE 0.30 THE SWEEP PREFERRED, because 0.30
-# was the SAMPLING floor: nothing below it was labelled, so a point estimate
-# there is measured against a boundary rather than against data. 0.35 keeps the
-# operating point inside the range that was actually observed.
-MAX_FACE_FRAC = 0.055
+# A rule for "too big to be a face" cannot be learned from a sample with no
+# big faces in it. `Hold` still takes `max_frac`, so a caller with a measured
+# value can pass one; the default asserts nothing.
+MAX_FACE_FRAC = None
 
 # The detector bounds a face from brow to chin. Ears, hairline and jaw are
 # outside that and carry identity, so the box is grown before it is used.
@@ -453,8 +464,10 @@ def harvest(pkgs, out_dir, model_path=MODEL, min_conf=0.50, crop_px=192,
             if img is None:
                 continue
             H, W = img.shape[:2]
-            faces = [x for x in detect_faces(det, img)
-                     if (x[2] - x[0]) <= MAX_FACE_FRAC * W]
+            faces = detect_faces(det, img)
+            if MAX_FACE_FRAC:
+                faces = [x for x in faces
+                         if (x[2] - x[0]) <= MAX_FACE_FRAC * W]
             for j, (x0, y0, x1, y1, sc) in enumerate(faces):
                 stem = f"{tag}f{int(frame):06d}_h{j}"
                 px = int(max(x1 - x0, y1 - y0) * 0.6)
