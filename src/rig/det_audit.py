@@ -337,8 +337,9 @@ def main():
 
     from ultralytics import YOLO
     from src.rig.hand_detect import detect
-    from src.rig.render_wide import (RigCalibration, VirtualWideCamera,
-                                     render)
+    from src.rig.calibration import RigCalibration
+    from src.rig.geometry import VirtualWideCamera
+    from src.rig.render_wide import render
     from src.rig.seam_fix import ClipReader, Prefetch
     from src.rig.panorama import DepthAwarePanorama
 
