@@ -108,6 +108,41 @@ def load(pkgs, verbose=True):
     return rows
 
 
+def strip_overlay(img):
+    """Remove the marks the labelling tool drew on the stored frame. -> img
+
+    THE CONTEXT ARM WOULD OTHERWISE BE READING THE GEOMETRY ARM'S FEATURES.
+    `own_label._write_sample` saves the context frame with a yellow box on the
+    hand and a MAGENTA LINE FROM THE WRIST TO WHERE THE FORE ARM LEAVES THE
+    FRAME. That line is `dir_x`, `dir_y`, `exit_x` and `exit_y` drawn in
+    paint. Leaving it in makes `context` a picture of the geometry features
+    rather than a picture of the scene, so a win for the context branch could
+    not be attributed to the forearm or the torso -- the very thing the
+    experiment exists to test -- and `both_geom` would receive the same cue
+    twice in two forms.
+
+    The yellow box is a different case and it also goes. It marks WHICH hand
+    is the subject, which is legitimate information the crop already carries
+    by being centred, but it is drawn from the same box the geometry features
+    are computed from, so it is the same leak in a weaker form.
+
+    Colour-keyed and inpainted rather than re-extracted from video: the two
+    marks cover under one percent of the frame, and re-decoding a thousand
+    scattered frames off network storage costs more than this measurement is
+    worth. What is left is an inpainted streak, not clean pixels -- so this
+    reduces the leak, it does not prove it gone."""
+    import cv2
+    b = img[:, :, 0].astype(np.int16)
+    g = img[:, :, 1].astype(np.int16)
+    r = img[:, :, 2].astype(np.int16)
+    drawn = (((b > 150) & (r > 150) & (g < 90))       # magenta line
+             | ((g > 150) & (r > 150) & (b < 90)))    # yellow box
+    if not drawn.any():
+        return img
+    m = cv2.dilate(drawn.astype(np.uint8), np.ones((3, 3), np.uint8))
+    return cv2.inpaint(img, m, 4, cv2.INPAINT_TELEA)
+
+
 def context_crop(img, box, scale=CTX_SCALE):
     """-> the region `scale` times the hand box, clipped to the frame."""
     import cv2
@@ -126,10 +161,12 @@ def context_crop(img, box, scale=CTX_SCALE):
 class Pairs:
     """(hand, context, geometry, label) for one labelled hand."""
 
-    def __init__(self, rows, augment=False, ctx_scale=CTX_SCALE):
+    def __init__(self, rows, augment=False, ctx_scale=CTX_SCALE,
+                 strip=True):
         self.rows = rows
         self.augment = bool(augment)
         self.ctx_scale = float(ctx_scale)
+        self.strip = bool(strip)
 
     def __len__(self):
         return len(self.rows)
@@ -150,6 +187,8 @@ class Pairs:
         r = self.rows[i]
         hand = cv2.imread(r["_crop"])
         ctx_img = cv2.imread(r["_ctx"])
+        if ctx_img is not None and self.strip:
+            ctx_img = strip_overlay(ctx_img)
         ctx = (context_crop(ctx_img, r["box"], self.ctx_scale)
                if ctx_img is not None else None)
         if hand is None:
@@ -286,7 +325,7 @@ def run_epoch(model, ds, device, opt=None, batch=32, weight=None):
 
 
 def train_arm(arm, tr, dv, epochs=12, seed=0, lr=3e-4, ctx_scale=CTX_SCALE,
-              verbose=True):
+              strip=True, verbose=True):
     """-> (model, best dev scores). Selection is on dev `other` F1."""
     import torch
     torch.manual_seed(seed)
@@ -295,8 +334,8 @@ def train_arm(arm, tr, dv, epochs=12, seed=0, lr=3e-4, ctx_scale=CTX_SCALE,
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model = build(arm).to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
-    dtr = Pairs(tr, augment=True, ctx_scale=ctx_scale)
-    ddv = Pairs(dv, augment=False, ctx_scale=ctx_scale)
+    dtr = Pairs(tr, augment=True, ctx_scale=ctx_scale, strip=strip)
+    ddv = Pairs(dv, augment=False, ctx_scale=ctx_scale, strip=strip)
     best, best_state = None, None
     for e in range(epochs):
         _, _, tl = run_epoch(model, dtr, device, opt)
@@ -314,11 +353,12 @@ def train_arm(arm, tr, dv, epochs=12, seed=0, lr=3e-4, ctx_scale=CTX_SCALE,
     return model, best
 
 
-def evaluate(model, rows, ctx_scale=CTX_SCALE):
+def evaluate(model, rows, ctx_scale=CTX_SCALE, strip=True):
     import torch
     device = next(model.parameters()).device
     p, y, _ = run_epoch(model, Pairs(rows, augment=False,
-                                     ctx_scale=ctx_scale), device)
+                                     ctx_scale=ctx_scale,
+                                     strip=strip), device)
     return scores(p, y), p, y
 
 
@@ -343,6 +383,10 @@ def main():
                          "initialisation on a set this size")
     ap.add_argument("--dev_frac", type=float, default=0.25)
     ap.add_argument("--ctx_scale", type=float, default=CTX_SCALE)
+    ap.add_argument("--keep_overlay", action="store_true",
+                    help="do NOT remove the labelling tool's drawn box and "
+                         "wrist-to-exit line from the context frame. Only "
+                         "for measuring how much those marks were worth.")
     ap.add_argument("--out", help="save the best arm's checkpoint here")
     ap.add_argument("--self_test", action="store_true")
     a = ap.parse_args()
@@ -365,7 +409,8 @@ def main():
         for s in range(a.seeds):
             print(f"  seed {s}")
             m, best = train_arm(arm, tr, dv, epochs=a.epochs, seed=s,
-                                ctx_scale=a.ctx_scale)
+                                ctx_scale=a.ctx_scale,
+                                strip=not a.keep_overlay)
             devs.append(best)
             models.append(m)
         f1 = [d["f1"] for d in devs]
@@ -394,7 +439,8 @@ def main():
               "not computed:\n  four numbers on a frozen set is a selection "
               "set with extra steps.")
         for i, m in enumerate(results[best_arm][1]):
-            s, _, _ = evaluate(m, test, a.ctx_scale)
+            s, _, _ = evaluate(m, test, a.ctx_scale,
+                               strip=not a.keep_overlay)
             print(f"    seed {i}  n {s['n']}  other {s['other']}  "
                   f"prec {s['prec']:.3f}  rec {s['rec']:.3f}  "
                   f"f1 {s['f1']:.3f}  acc {s['acc']:.3f}")
@@ -432,6 +478,19 @@ def _self_test():
         "no recording appears on both sides of the split")
     chk(any(r["y"] == 0 for r in dv),
         "the dev side carries at least one `other`, or recall is undefined")
+
+    drawn = np.full((60, 60, 3), 120, np.uint8)
+    drawn[10:14, 5:55] = (255, 0, 255)
+    drawn[40:44, 5:55] = (0, 255, 255)
+    clean = strip_overlay(drawn)
+    b, g, r = (clean[:, :, i].astype(int) for i in range(3))
+    left = int((((b > 150) & (r > 150) & (g < 90))
+                | ((g > 150) & (r > 150) & (b < 90))).sum())
+    chk(left == 0,
+        "the drawn wrist-to-exit line and hand box are gone from the "
+        "context frame")
+    chk(strip_overlay(np.full((20, 20, 3), 100, np.uint8)).shape == (20, 20, 3),
+        "a frame with no marks on it is returned unchanged in shape")
 
     chk("rel_size" not in GEOM,
         "the detection-set-dependent cue is not among the geometry features")

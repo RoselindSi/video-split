@@ -9,6 +9,8 @@ import numpy as np
 from src.rig.stabstitch_pair import (find_module, pair_key, run_official,
                                      valid_fraction)
 from src.rig.stabstitch_pair_eval import edge_chamfer
+from src.rig.fast_foundation_stereo import (FastFoundationStereo,
+                                             disparity_to_depth)
 
 
 class _Camera:
@@ -20,6 +22,32 @@ class _Module:
     def __init__(self, left, right):
         self.left = _Camera(left)
         self.right = _Camera(right)
+
+
+class _IO:
+    def __init__(self, name, shape):
+        self.name = name
+        self.shape = shape
+
+
+class _StereoSession:
+    def __init__(self, providers=None):
+        self.feed = None
+        self._providers = providers or ["FakeExecutionProvider"]
+
+    def get_inputs(self):
+        return [_IO("left_image", [1, 3, 8, 12]),
+                _IO("right_image", [1, 3, 8, 12])]
+
+    def get_outputs(self):
+        return [_IO("disparity", [1, 1, 8, 12])]
+
+    def get_providers(self):
+        return self._providers
+
+    def run(self, names, feed):
+        self.feed = feed
+        return [np.full((1, 1, 8, 12), 6.0, np.float32)]
 
 
 class StabStitchPairTest(unittest.TestCase):
@@ -48,6 +76,36 @@ class StabStitchPairTest(unittest.TestCase):
         self.assertEqual(aligned["ghost_risk_gt3_fraction"], 0.0)
         self.assertGreater(displaced["chamfer_p90_px"], 5.0)
         self.assertGreater(displaced["ghost_risk_gt3_fraction"], 0.5)
+
+    def test_fast_foundation_stereo_restores_input_disparity_scale(self):
+        session = _StereoSession()
+        model = FastFoundationStereo(session=session)
+        left = np.zeros((4, 6, 3), np.uint8)
+        left[..., 2] = 255  # BGR red must become normalized RGB channel zero.
+        disparity = model.disparity(left, left)
+        self.assertEqual(disparity.shape, (4, 6))
+        np.testing.assert_allclose(disparity, 3.0)
+        expected_red = (1.0 - 0.485) / 0.229
+        self.assertAlmostEqual(
+            float(session.feed["left_image"][0, 0, 0, 0]), expected_red,
+            places=5)
+        self.assertEqual(model.providers, ["FakeExecutionProvider"])
+
+    def test_fast_foundation_stereo_rejects_silent_cpu_fallback(self):
+        with self.assertRaisesRegex(RuntimeError, "did not load"):
+            FastFoundationStereo(
+                session=_StereoSession(["CPUExecutionProvider"]),
+                require_cuda=True)
+
+    def test_disparity_to_depth_keeps_only_calibrated_range(self):
+        disparity = np.array([[0.0, 10.0, 100.0]], np.float32)
+        depth, valid = disparity_to_depth(
+            disparity, focal_px=100.0, baseline_m=0.1,
+            min_depth=0.2, max_depth=2.0)
+        self.assertEqual(valid.tolist(), [[False, True, False]])
+        self.assertAlmostEqual(float(depth[0, 1]), 1.0)
+        self.assertTrue(np.isnan(depth[0, 0]))
+        self.assertTrue(np.isnan(depth[0, 2]))
 
     @mock.patch("src.rig.stabstitch_pair.subprocess.run")
     def test_official_runner_contains_upstream_path_quirks(self, run):
