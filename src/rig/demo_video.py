@@ -172,7 +172,8 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     from src.rig.seam_fix import ClipReader, Prefetch
     from src.rig.hand_detect import detect, masks_from, OwnHold
     from src.rig.hand_track import (Tracker, FlipCount, MAX_LOST,
-                                    duplicate_pairs, IgnoredHands,
+                                    duplicate_pairs, LowConfRuns,
+                                    Fragmentation,
                                     MAX_ASSOC_COST, UNMATCHED_COST)
     from src.rig.suppress_other import suppress
     from src.rig import own_cnn
@@ -216,7 +217,8 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     flips = FlipCount()
     # Three quantities the architecture argument turns on and
     # nothing has ever recorded. They decide nothing.
-    ignored = IgnoredHands()
+    runs = LowConfRuns()
+    frag = Fragmentation()
     n_dup = n_dropped = n_demoted = 0
     vcam = VirtualWideCamera.from_rig(rig)
     panorama = None
@@ -280,10 +282,8 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         dup = duplicate_pairs(raw_dets)
         dropped_boxes = [raw_dets[i]["box"] for i, tid in enumerate(raw_ids)
                          if tid is None]
-        ignored.dropped(k, dropped_boxes)
-        started = ignored.started(k, [raw_dets[i]["box"]
-                                      for i, tid in enumerate(raw_ids)
-                                      if tid in tracker.new_ids])
+        runs.update(k, raw_dets, raw_ids, tracker.new_ids)
+        frag.update(k, raw_dets, raw_ids)
         n_dup += len(dup)
         n_dropped += len(dropped_boxes)
         dets = [raw_dets[i] for i in keep_i]
@@ -362,7 +362,6 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
                     pano_stats.get("gated_frac", float("nan"))), 6),
                 "n_dup_pairs": len(dup),
                 "n_dropped_no_id": len(dropped_boxes),
-                "wait_frames": max(started, default=0),
                 "n_demoted": len(demoted),
                 "demoted_p_max": round(max([p for _, p in demoted],
                                            default=float("nan")), 4),
@@ -421,9 +420,9 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
               f"of the `other` verdicts then the cap is the decision maker.")
         print(f"\n  DETECTIONS DROPPED FOR HAVING NO ID: {n_dropped} over "
               f"{n} frames.")
-        lat = ignored.report()
-        if lat:
-            print(lat)
+        for block in (runs.report(fps=fps), frag.report()):
+            if block:
+                print(block)
         print("  A flip is one hand changing its own verdict between two "
               "frames it was seen\n  in. The frame-level `drop` count above "
               "cannot see a flip that happens\n  while another hand keeps "

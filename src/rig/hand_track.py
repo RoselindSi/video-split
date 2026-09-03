@@ -238,67 +238,198 @@ def duplicate_pairs(dets, iou_min=DUP_IOU):
     return out
 
 
-class IgnoredHands:
-    """How long a visible hand goes unprocessed before it is given an id.
+def _pct(v, q):
+    """-> the q-th percentile of a sorted list, without importing numpy."""
+    if not v:
+        return float("nan")
+    i = min(len(v) - 1, int(round(q * (len(v) - 1))))
+    return v[i]
 
-    THE LATENCY IS NOT THE DETECTOR'S. A hand entering the frame is found at
-    a low score long before it is found at a confident one, and this pipeline
-    drops every low-score detection that does not match an existing track: no
-    box, no classification, no cover. The hand is on screen, the detector can
-    see it, and the system behaves as though it were not there.
 
-    This measures that interval directly. Every dropped detection is
-    remembered for a few frames; when a track is finally created, its first
-    box is matched back against those memories and the run of consecutive
-    frames it was ignored for is reported. It records; it changes nothing."""
+class LowConfRuns:
+    """How long a hand is visible, found, and treated as absent.
 
-    def __init__(self, window=90, iou_min=0.30):
-        self.window = int(window)
+    THE FIRST VERSION OF THIS MEASURED THE WRONG POPULATION. It timed the wait
+    only for detections that eventually became tracks, and reported a median
+    of one to three frames -- which is survivorship. A hand that is found at a
+    low score for forty frames and never clears the bar to start a track
+    contributes nothing to that average, and it is the entire failure being
+    looked for. The uncovered hand in the render is by definition one that was
+    never promoted.
+
+    So this follows RUNS rather than tracks. Every detection the tracker
+    refused an id is chained frame to frame by overlap; a chain ends when
+    nothing continues it, or when a real track takes it over. Whether it was
+    ever promoted is an OUTCOME of the run, not the condition for counting it.
+
+    A run is not proof of a hand. The detector fires at 0.25 on things that
+    are not hands, and a run of two frames on a wrench looks like a run of two
+    frames on a fingertip. What separates them is length: junk does not
+    persist coherently in the same place for a second."""
+
+    def __init__(self, iou_min=0.30):
         self.iou_min = float(iou_min)
-        self._pending = []          # [(frame_index, box)]
-        self.latencies = []         # frames each track waited before existing
+        self.open = []
+        self.done = []
 
-    def dropped(self, k, boxes):
-        """Remember the detections frame `k` threw away."""
-        for b in boxes:
-            self._pending.append((k, list(b)))
-        self._pending = [(i, b) for i, b in self._pending
-                         if k - i <= self.window]
+    def update(self, k, dets, ids, new_ids=()):
+        dropped = [(d["box"], float(d.get("conf", 1.0)))
+                   for d, t in zip(dets, ids) if t is None]
+        started = [d["box"] for d, t in zip(dets, ids)
+                   if t is not None and t in new_ids]
 
-    def started(self, k, boxes):
-        """A track was created at frame `k`. -> its wait, in frames.
+        live = [r for r in self.open if r["last_k"] == k - 1]
+        # Promotion first: a run that a real track continues ENDED by being
+        # promoted, and must not also be extended as an ignored detection.
+        for box in started:
+            best, best_v = None, self.iou_min
+            for r in live:
+                v = box_iou(r["box"], box)
+                if v >= best_v:
+                    best, best_v = r, v
+            if best is not None:
+                best["promoted"] = True
+                live.remove(best)
+                self.open.remove(best)
+                self.done.append(best)
 
-        Walks BACKWARDS one frame at a time and stops at the first gap. A
-        hand ignored on frames 10-14 and again on 20-24 waited five frames
-        for the track that started at 25, not fifteen: the earlier run
-        belongs to something else, or to an appearance this one is not
-        continuous with."""
-        out = []
-        for box in boxes:
-            n, want = 0, k - 1
-            while want >= 0:
-                hit = any(i == want
-                          and box_iou(box, b) >= self.iou_min
-                          for i, b in self._pending)
-                if not hit:
-                    break
-                n += 1
-                want -= 1
-            self.latencies.append(n)
-            out.append(n)
-        return out
+        used, fresh = set(), []
+        for box, conf in dropped:
+            best, best_v = None, self.iou_min
+            for r in live:
+                if id(r) in used:
+                    continue
+                v = box_iou(r["box"], box)
+                if v >= best_v:
+                    best, best_v = r, v
+            if best is None:
+                fresh.append({"last_k": k, "n": 1, "confs": [conf],
+                              "box": list(box), "promoted": False})
+            else:
+                used.add(id(best))
+                best.update(last_k=k, n=best["n"] + 1, box=list(box))
+                best["confs"].append(conf)
+        # Anything not extended and not promoted is over.
+        for r in list(self.open):
+            if r["last_k"] < k:
+                self.open.remove(r)
+                self.done.append(r)
+        self.open.extend(fresh)
+
+    def runs(self):
+        return self.done + self.open
+
+    def report(self, fps=12.0):
+        """-> a block about the run-length distribution, or None."""
+        rs = self.runs()
+        if not rs:
+            return None
+        n = sorted(r["n"] for r in rs)
+        never = [r for r in rs if not r["promoted"]]
+        long_never = sorted((r["n"] for r in never), reverse=True)
+
+        def over(t):
+            return sum(1 for x in n if x >= t)
+
+        def over_never(t):
+            return sum(1 for x in long_never if x >= t)
+        out = [
+            "\n  LOW-CONFIDENCE RUNS: a hand found by the detector, refused "
+            "an id, and so\n    neither classified nor covered. Chained by "
+            "overlap; length in frames.",
+            f"    {len(rs)} runs   median {_pct(n, 0.5)}   p90 "
+            f"{_pct(n, 0.9)}   max {n[-1]}",
+            f"    >= 6 frames: {over(6)}    >= 12: {over(12)}    "
+            f">= 24: {over(24)}    >= 36: {over(36)}",
+            f"    never promoted: {len(never)} of {len(rs)}   "
+            f"of those >= 12 frames: {over_never(12)}   "
+            f">= 24: {over_never(24)}"]
+        if long_never[:1]:
+            worst = max(never, key=lambda r: r["n"])
+            out.append(
+                f"    longest unpromoted run {worst['n']} frames "
+                f"({worst['n'] / fps:.1f}s on screen at {fps:g} fps), "
+                f"peak conf {max(worst['confs']):.2f}")
+        out.append(
+            "    A run is not proof of a hand -- the detector fires on other "
+            "things at this\n    score. Length is what separates them: junk "
+            "does not persist in one place.")
+        return "\n".join(out)
+
+
+class Fragmentation:
+    """Whether one physical hand keeps one id.
+
+    EVERYTHING BUILT ON TOP OF A TRACK ASSUMES THIS. A smoothed ownership
+    score, a hysteresis, a slot: each accumulates evidence per id and is
+    worth exactly as much as the id is stable. Twenty-seven tracks over five
+    hundred hand-frames is twenty frames per track, and a hysteresis that
+    resets every twenty frames is not a hysteresis.
+
+    A HANDOFF IS THE SIGNATURE. A track that ends and a new one that starts
+    a frame or two later, in the same place, is one hand that lost its name.
+    Counted against tracks that start with nothing behind them, which is what
+    a hand genuinely entering the frame looks like."""
+
+    def __init__(self, iou_min=0.20, max_gap=3):
+        self.iou_min = float(iou_min)
+        self.max_gap = int(max_gap)
+        self.tracks = {}
+        self.handoffs = []
+        self.gaps = []
+
+    def update(self, k, dets, ids):
+        for d, t in zip(dets, ids):
+            if t is None:
+                continue
+            r = self.tracks.get(t)
+            if r is None:
+                best, best_v = None, self.iou_min
+                for ot, o in self.tracks.items():
+                    gap = k - o["last"]
+                    if not 1 <= gap <= self.max_gap:
+                        continue
+                    v = box_iou(o["last_box"], d["box"])
+                    if v >= best_v:
+                        best, best_v = (ot, gap), v
+                if best is not None:
+                    self.handoffs.append((best[0], t, best[1], float(best_v)))
+                self.tracks[t] = {"first": k, "last": k, "n": 1,
+                                  "last_box": list(d["box"])}
+            else:
+                if k - r["last"] > 1:
+                    self.gaps.append(k - r["last"] - 1)
+                r.update(last=k, n=r["n"] + 1, last_box=list(d["box"]))
 
     def report(self):
-        """-> a line about the distribution, or None when nothing started."""
-        if not self.latencies:
+        if not self.tracks:
             return None
-        v = sorted(self.latencies)
-        waited = [x for x in v if x > 0]
-        med = v[len(v) // 2]
-        return (f"  TENTATIVE LATENCY: {len(waited)} of {len(v)} tracks were "
-                f"visible before they existed;\n    median {med} frames, "
-                f"worst {v[-1]}. A hand in this interval is on screen, found "
-                f"by the\n    detector, and neither classified nor covered.")
+        life = sorted(r["n"] for r in self.tracks.values())
+        span = sorted(r["last"] - r["first"] + 1
+                      for r in self.tracks.values())
+        g = sorted(self.gaps)
+        out = [
+            "\n  IDENTITY FRAGMENTATION: whether one physical hand keeps one "
+            "id. Everything\n    accumulated per track -- the smoothed score, "
+            "the hysteresis -- is worth what\n    this is worth.",
+            f"    {len(self.tracks)} tracks   frames seen: median "
+            f"{_pct(life, 0.5)}  p90 {_pct(life, 0.9)}  max {life[-1]}",
+            f"    lifespan first-to-last: median {_pct(span, 0.5)}  "
+            f"max {span[-1]}   under 10 frames: "
+            f"{sum(1 for x in life if x < 10)}",
+            f"    HANDOFFS: {len(self.handoffs)} of {len(self.tracks)} tracks "
+            f"started within {self.max_gap} frames\n      of another ending "
+            f"in the same place. Those are one hand renamed, not a\n      "
+            f"hand arriving."]
+        if g:
+            out.append(f"    within-track gaps: {len(g)}   median "
+                       f"{_pct(g, 0.5)}   max {g[-1]}")
+        if self.handoffs:
+            w = sorted(self.handoffs, key=lambda h: -h[3])[:4]
+            out.append("    worst by overlap: " + ", ".join(
+                f"{a}->{b} gap {gp} IoU {v:.2f}" for a, b, gp, v in w))
+        return "\n".join(out)
+
 
 class Tracker:
     """Hand identities across frames. Knows nothing about ownership.

@@ -501,9 +501,16 @@ class OwnHold:
                 for i in own_i:
                     if i not in keep:
                         self.last_demoted.append((ids[i], float(out[i][1])))
+                        # THIS FRAME'S VERDICT ONLY. It used to write the
+                        # demotion back into the track's state, which made a
+                        # structural constraint -- how many hands are in this
+                        # frame -- into that hand's OWN history: the belief
+                        # said 0.99 and the stored label said foreign, and
+                        # getting the label back took a fresh crossing of
+                        # `hi` rather than the third hand simply leaving.
+                        # A hand's evidence about itself is not changed by
+                        # how many other hands were detected beside it.
                         out[i] = (False, out[i][1])
-                        self.state[ids[i]][1] = False
-                        self.state[ids[i]][3] = 0
         # STATE SURVIVES A FRAME THE TRACKER SAW NOTHING IN. It used to be
         # rebuilt from scratch every frame, so a track the detector missed for
         # one frame lost its smoothed score AND its verdict. Two things broke
@@ -675,7 +682,24 @@ def _self_test():
     again = ohc.update(three, [(True, 0.95), (True, 0.90), (True, 0.55)],
                        ids=[0, 1, 2])
     chk(not again[2][0],
-        "...and writes the demotion back, so the hysteresis cannot undo it")
+        "...and keeps demoting it while the third hand is still there")
+
+    # AND THE DEMOTION MUST NOT OUTLIVE THE FRAME THAT CAUSED IT. This
+    # asserted the opposite until the writeback came out. The cap answers a
+    # question about the FRAME -- how many hands are in it -- and the old
+    # code stored that answer in the HAND, so a hand demoted once carried a
+    # stored verdict of `foreign` that the departure of the third hand could
+    # not undo: recovery needed the smoothed score to cross `hi` again, and
+    # a hand sitting at 0.55 never does. Here hand 2 is demoted by hand 1,
+    # hand 1 leaves, and hand 2 is its own evidence again on the next frame.
+    ohl = OwnHold(max_owner=2)
+    ohl.update(three, [(True, 0.95), (True, 0.90), (True, 0.55)],
+               ids=[0, 1, 2])
+    gone = ohl.update([three[0], three[2]], [(True, 0.95), (True, 0.55)],
+                      ids=[0, 2])
+    chk(gone[1][0],
+        "a hand the cap demoted stayed foreign after the hand that "
+        "displaced it left")
 
     # masks_from now cuts on a window round the box instead of the frame. The
     # thing to prove is that the answer did not move, not merely that it is
