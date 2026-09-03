@@ -384,6 +384,12 @@ def main():
     ap.add_argument("--clip_pad", type=int, default=12)
     ap.add_argument("--clip_fps", type=float, default=6.0)
     ap.add_argument("--clip_dir", default="/workspace")
+    ap.add_argument("--span_mp4",
+                    help="write the WHOLE audited span with every candidate "
+                         "drawn, floor included. A census cannot tell a "
+                         "recording with no hands in it from a detector that "
+                         "cannot see the hands that are there; both come back "
+                         "as frames with no candidate. This shows which.")
     ap.add_argument("--panorama", choices=("depth", "baseline"),
                     default="baseline")
     a = ap.parse_args()
@@ -414,6 +420,7 @@ def main():
     rd = Prefetch(ClipReader(rig, vids, a.start), skip=max(0, a.stride - 1))
     runs, blind, seen = Runs(), 0, 0
     frames = {}
+    span = None
     # Full-resolution frames are kept only for the windows a clip was asked
     # for. Keeping every frame at full size costs most of a gigabyte.
     want_clip = set()
@@ -435,6 +442,29 @@ def main():
         dets = detect(model, rgb, min_conf=a.floor)
         if not dets:
             blind += 1
+        if a.span_mp4:
+            import cv2
+            if span is None:
+                h, w = rgb.shape[:2]
+                span = cv2.VideoWriter(
+                    a.span_mp4, cv2.VideoWriter_fourcc(*"mp4v"), 8.0, (w, h))
+            img = rgb.copy()
+            for d in dets:
+                x0, y0, x1, y1 = [int(v) for v in d["box"]]
+                c = float(d.get("conf", 1.0))
+                # Coloured by band, so a frame full of 0.1 boxes and a frame
+                # with one 0.9 box do not look alike.
+                col = ((120, 120, 120) if c < 0.25 else
+                       (60, 180, 240) if c < 0.50 else
+                       (60, 240, 240) if c < 0.60 else (60, 240, 120))
+                cv2.rectangle(img, (x0, y0), (x1, y1), col, 2)
+                cv2.putText(img, f"{c:.2f}", (x0, max(14, y0 - 5)),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, col, 2)
+            cv2.putText(img, f"f{a.start + k}  {len(dets)} cand"
+                             + ("   NO CANDIDATE" if not dets else ""),
+                        (8, 24), cv2.FONT_HERSHEY_SIMPLEX, 0.7,
+                        (40, 40, 240) if not dets else (235, 235, 235), 2)
+            span.write(img)
         runs.update(k, dets)
         # HALF SIZE, AND ONLY WHEN A SHEET IS WANTED. Two hundred panorama
         # frames at full resolution is most of a gigabyte held for the sake
@@ -448,6 +478,9 @@ def main():
         if (k + 1) % 25 == 0:
             print(f"    [{k + 1}/{a.n}]", flush=True)
     rd.close()
+    if span is not None:
+        span.release()
+        print(f"  span -> {a.span_mp4}")
 
     all_runs = runs.all()
     census(all_runs, seen, blind, a.new_track_conf)
