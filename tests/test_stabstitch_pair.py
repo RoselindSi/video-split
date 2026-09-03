@@ -8,6 +8,7 @@ import numpy as np
 
 from src.rig.stabstitch_pair import (find_module, pair_key, run_official,
                                      valid_fraction)
+from src.rig.stabstitch_pair_eval import edge_chamfer
 
 
 class _Camera:
@@ -34,6 +35,19 @@ class StabStitchPairTest(unittest.TestCase):
         mx = np.array([[0.0, 9.0], [-1.0, 5.0]], np.float32)
         my = np.array([[0.0, 5.0], [2.0, 7.0]], np.float32)
         self.assertEqual(valid_fraction((mx, my), (10, 8)), 0.25)
+
+    def test_edge_chamfer_increases_when_a_hard_edge_is_displaced(self):
+        import cv2
+        image = np.zeros((100, 120, 3), np.uint8)
+        cv2.line(image, (40, 10), (40, 90), (255, 255, 255), 3)
+        shifted = np.zeros_like(image)
+        cv2.line(shifted, (48, 10), (48, 90), (255, 255, 255), 3)
+        aligned = edge_chamfer(image, image)
+        displaced = edge_chamfer(image, shifted)
+        self.assertLess(aligned["chamfer_p90_px"], 0.1)
+        self.assertEqual(aligned["ghost_risk_gt3_fraction"], 0.0)
+        self.assertGreater(displaced["chamfer_p90_px"], 5.0)
+        self.assertGreater(displaced["ghost_risk_gt3_fraction"], 0.5)
 
     @mock.patch("src.rig.stabstitch_pair.subprocess.run")
     def test_official_runner_contains_upstream_path_quirks(self, run):

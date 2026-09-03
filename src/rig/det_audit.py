@@ -292,7 +292,13 @@ def sheet(runs, keep, out, tag, max_tiles=8):
                               "conf": round(r["confs"][i], 2)})
         if not tiles:
             continue
-        items.append({"id": f"{tag}_r{r['first_k']:05d}",
+        # THE ID CARRIES WHERE THE RUN STARTED, NOT ONLY WHEN. Two hands
+        # entering on the same frame produced two runs with the same id, and
+        # the sheet keys its labels on the id: judging one silently labelled
+        # the other, and the CSV wrote both. Two of thirty-six rows in the
+        # first batch were never actually looked at.
+        x0, y0 = int(r["boxes"][0][0]), int(r["boxes"][0][1])
+        items.append({"id": f"{tag}_r{r['first_k']:05d}_{x0:04d}x{y0:04d}",
                       "first": r["first_k"], "last": r["last_k"],
                       "n": r["n"], "min": round(r["min_conf"], 2),
                       "med": round(r["median_conf"], 2),
@@ -313,6 +319,45 @@ def sheet(runs, keep, out, tag, max_tiles=8):
     return len(items)
 
 
+def write_clip(run, frames, a, tag):
+    """An mp4 of one run, its box drawn, padded either side. -> path or None
+
+    WHY A CLIP AND NOT MORE STILLS. Two of the first thirty-six runs came
+    back `uncertain`, and both were long ones -- sixteen and twenty-five
+    frames. A filmstrip shows what a thing looks like; whether it moves like
+    a hand needs the motion itself, and those are exactly the runs where the
+    appearance did not settle it."""
+    import cv2
+    lo = max(0, run["first_k"] - a.clip_pad)
+    hi = run["last_k"] + a.clip_pad
+    have = [k for k in range(lo, hi + 1) if k in frames]
+    if not have:
+        print(f"    !! no frames kept for run at {run['first_k']}")
+        return None
+    h, w = frames[have[0]].shape[:2]
+    out = os.path.join(a.clip_dir,
+                       f"clip_{tag}_r{run['first_k']:05d}.mp4")
+    vw = cv2.VideoWriter(out, cv2.VideoWriter_fourcc(*"mp4v"),
+                         float(a.clip_fps), (w, h))
+    at = dict(zip(run["frames"], run["boxes"]))
+    for k in have:
+        img = frames[k].copy()
+        box = at.get(k)
+        if box is not None:
+            x0, y0, x1, y1 = [int(v) for v in box]
+            cv2.rectangle(img, (x0, y0), (x1, y1), (60, 220, 255), 3)
+            i = run["frames"].index(k)
+            cv2.putText(img, f"{run['confs'][i]:.2f}", (x0, max(14, y0 - 6)),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (60, 220, 255), 2)
+        cv2.putText(img, f"src frame {a.start + k}", (8, 22),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (230, 230, 230), 2)
+        vw.write(img)
+    vw.release()
+    print(f"    run at {run['first_k']} ({run['n']} frames, peak "
+          f"{run['peak']:.2f}) -> {out}")
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__,
@@ -331,6 +376,14 @@ def main():
     ap.add_argument("--new_track_conf", type=float, default=0.60)
     ap.add_argument("--min_len", type=int, default=MIN_AUDIT_LEN)
     ap.add_argument("--sheet")
+    ap.add_argument("--clip_at", type=int, action="append", default=[],
+                    help="write an mp4 around the run starting at this "
+                         "frame index, boxes drawn. For the runs a filmstrip "
+                         "cannot settle: a still cannot show whether a shape "
+                         "moves like a limb.")
+    ap.add_argument("--clip_pad", type=int, default=12)
+    ap.add_argument("--clip_fps", type=float, default=6.0)
+    ap.add_argument("--clip_dir", default="/workspace")
     ap.add_argument("--panorama", choices=("depth", "baseline"),
                     default="baseline")
     a = ap.parse_args()
@@ -361,6 +414,12 @@ def main():
     rd = Prefetch(ClipReader(rig, vids, a.start), skip=max(0, a.stride - 1))
     runs, blind, seen = Runs(), 0, 0
     frames = {}
+    # Full-resolution frames are kept only for the windows a clip was asked
+    # for. Keeping every frame at full size costs most of a gigabyte.
+    want_clip = set()
+    for c in a.clip_at:
+        want_clip.update(range(c - a.clip_pad, c + 200 + a.clip_pad))
+    clip_frames = {}
     for k in range(a.n):
         src = rd.next()
         if not src:
@@ -384,12 +443,18 @@ def main():
             import cv2
             frames[k] = cv2.resize(rgb, None, fx=SHEET_SCALE, fy=SHEET_SCALE,
                                    interpolation=cv2.INTER_AREA)
+        if k in want_clip:
+            clip_frames[k] = rgb.copy()
         if (k + 1) % 25 == 0:
             print(f"    [{k + 1}/{a.n}]", flush=True)
     rd.close()
 
     all_runs = runs.all()
     census(all_runs, seen, blind, a.new_track_conf)
+    for c in a.clip_at:
+        for r in all_runs:
+            if r["first_k"] == c:
+                write_clip(r, clip_frames, a, tag)
     if a.sheet:
         for r in all_runs:
             r["_frames"] = [frames.get(f) for f in r["frames"]]
