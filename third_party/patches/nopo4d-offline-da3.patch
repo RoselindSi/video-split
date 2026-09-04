@@ -1,0 +1,25 @@
+diff --git a/src/model/encoder/backbone/backbone_da3.py b/src/model/encoder/backbone/backbone_da3.py
+index 8eb24c1..2cf04ee 100644
+--- a/src/model/encoder/backbone/backbone_da3.py
++++ b/src/model/encoder/backbone/backbone_da3.py
+@@ -5,6 +5,7 @@ sinusoidal timestamp injection.
+ BackboneDA3 loads the pretrained DA3 model and exposes its sub-modules
+ (ViT, camera encoder/decoder, DPT depth head) through the Backbone interface.
+ """
++import os
+ from dataclasses import dataclass, field
+ from typing import Literal
+ 
+@@ -135,8 +136,10 @@ class BackboneDA3(Backbone):
+ 
+     def __init__(self, cfg: BackboneDA3Cfg) -> None:
+         super().__init__(cfg)
+-        model_full = DepthAnything3.from_pretrained(
+-            f"depth-anything/{cfg.backbone_checkpoint_name.upper()}"
++        checkpoint = os.environ.get(
++            "NOPO4D_DA3_MODEL",
++            f"depth-anything/{cfg.backbone_checkpoint_name.upper()}")
++        model_full = DepthAnything3.from_pretrained(checkpoint
+         )
+         TemporalVisionTransformer.from_vit(model_full.model.backbone.pretrained)
+         self._aggregator = model_full.model.backbone.to(torch.bfloat16)
