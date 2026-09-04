@@ -1,28 +1,10 @@
 diff --git a/Full_model_inference/Codes/test_online_tra_threeview.py b/Full_model_inference/Codes/test_online_tra_threeview.py
 --- a/Full_model_inference/Codes/test_online_tra_threeview.py
 +++ b/Full_model_inference/Codes/test_online_tra_threeview.py
-@@ -465,6 +465,8 @@ def test(args):
-     norm_rigid_mesh = get_norm_mesh(rigid_mesh, img_h, img_w)
- 
-     stable_list = []
+@@ -466,0 +467,2 @@
 +    warped_layer_list = []
 +    warped_mask_list = []
-     print("warping and blending")
-     # warp
-     for i in range(warp12_mesh1.shape[1]):
-@@ -483,7 +485,7 @@ def test(args):
-         norm_mesh3 = get_norm_mesh(mesh_trans3, out_height, out_width)
-         img3 = img3_list[i].cuda()
- 
--        if args.fusion_mode == 'AVERAGE':
-+        if args.fusion_mode == 'AVERAGE':
-             img_warp = torch_tps_transform.transformer(torch.cat([img1, img2, img3], 0), torch.cat([norm_mesh1, norm_mesh2, norm_mesh3], 0), torch.cat([norm_rigid_mesh, norm_rigid_mesh, norm_rigid_mesh], 0), (out_height.int(), out_width.int()), mode = args.warp_mode)
- 
-             img12_fusion = img_warp[0] * (img_warp[0]/ (img_warp[0]+img_warp[1]+1e-6)) + img_warp[1] * (img_warp[1]/ (img_warp[0]+img_warp[1]+1e-6))
-@@ -497,23 +499,55 @@ def test(args):
-             mask1 = img_warp[0,3,...].unsqueeze(0).unsqueeze(0)
-             mask2 = img_warp[1,3,...].unsqueeze(0).unsqueeze(0)
-             mask3 = img_warp[2,3,...].unsqueeze(0).unsqueeze(0)
+@@ -500,3 +502,28 @@
 -            img12_fusion = linear_blender(img_warp[0,0:3,...].unsqueeze(0), img_warp[1,0:3,...].unsqueeze(0), mask1, mask2)
 -            mask12 = mask1 + mask2 - mask1*mask2
 -            fusion = linear_blender(img12_fusion, img_warp[2,0:3,...].unsqueeze(0), mask12, mask3)
@@ -46,8 +28,7 @@ diff --git a/Full_model_inference/Codes/test_online_tra_threeview.py b/Full_mode
 +                fusion = torch.zeros_like(rgb2)
 +                fusion = torch.where(take1.expand_as(fusion), rgb1, fusion)
 +                fusion = torch.where(take3.expand_as(fusion), rgb3, fusion)
-+                # The middle camera is the texture authority wherever its
-+                # learned warp reaches. This removes blend ghosts from hands.
++                # The middle camera owns the whole work area when available.
 +                fusion = torch.where(valid2.expand_as(fusion), rgb2, fusion)
 +            else:
 +                img12_fusion = linear_blender(
@@ -55,18 +36,12 @@ diff --git a/Full_model_inference/Codes/test_online_tra_threeview.py b/Full_mode
 +                mask12 = mask1 + mask2 - mask1*mask2
 +                fusion = linear_blender(
 +                    img12_fusion, rgb3, mask12, mask3)
-             fusion = fusion[0]
- 
-         stable_list.append(fusion.cpu())
- 
-     print("begin to write into video")
-     # save video
+@@ -509 +536,3 @@
 -    save_path = '../out.mp4'
 +    save_path = args.output_path
 +    output_dir = os.path.dirname(os.path.abspath(save_path))
 +    os.makedirs(output_dir, exist_ok=True)
-     fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
-     fps = 30
+@@ -512 +541,9 @@
 -    media_writer = cv2.VideoWriter(save_path, fourcc, fps, (out_width.int(), out_height.int()))
 +    output_size = (int(out_width.item()), int(out_height.item()))
 +    media_writer = cv2.VideoWriter(save_path, fourcc, fps, output_size)
@@ -77,28 +52,17 @@ diff --git a/Full_model_inference/Codes/test_online_tra_threeview.py b/Full_mode
 +    mask_writer = cv2.VideoWriter(
 +        stem + '_masks.mp4', fourcc, fps,
 +        (output_size[0] * 3, output_size[1]))
-     for k in range(len(stable_list)):
-         ave_fusion = stable_list[k].cpu().numpy().transpose(1,2,0)
-         media_writer.write(ave_fusion.astype(np.uint8 ))
+@@ -515,0 +553,5 @@
 +        if warped_layer_list:
 +            layer = warped_layer_list[k].numpy().transpose(1,2,0)
 +            layer_writer.write(layer.astype(np.uint8))
 +            mask = warped_mask_list[k].numpy().transpose(1,2,0)
 +            mask_writer.write((mask * 255).astype(np.uint8))
-     media_writer.release()
+@@ -516,0 +559,2 @@
 +    layer_writer.release()
 +    mask_writer.release()
-@@ -528,6 +562,7 @@ if __name__=="__main__":
-     parser.add_argument('--video1_path', type=str, default='/opt/data/private/nl/Data/Tra-Dataset2/case5_2/video1/')
-     parser.add_argument('--video2_path', type=str, default='/opt/data/private/nl/Data/Tra-Dataset2/case5_2/video2/')
-     parser.add_argument('--video3_path', type=str, default='/opt/data/private/nl/Data/Tra-Dataset2/case5_3/video2/')
+@@ -532,0 +577 @@
 +    parser.add_argument('--output_path', type=str, default='../out.mp4')
- 
-     # optional parameter: 'NORMAL' or 'FAST'
-     # FAST: use F.grid_sample to interpolate. It's fast, but may produce thin black boundary.
-@@ -538,7 +573,7 @@ if __name__=="__main__":
-     # optional parameter: 'AVERAGE' or 'LINEAR'
-     # AVERAGE: faster but more artifacts
-     # LINEAR: slower but less artifacts
+@@ -541 +586 @@
 -    parser.add_argument('--fusion_mode', type=str, default='LINEAR')
 +    parser.add_argument('--fusion_mode', type=str, default='LINEAR', choices=['AVERAGE', 'LINEAR', 'HARD'])

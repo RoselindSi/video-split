@@ -157,25 +157,49 @@ def main():
     print(f"\n=== ③b 同帧、归属相反的一对，context 嵌入有多像 ===")
     print(f"  同帧成对 {len(pairs)}   其中归属相反 {len(opp)}   相同 {len(same)}")
 
+    def wov(i, j):
+        """Overlap of the two context WINDOWS, not the distance between the
+        two hands.
+
+        Centre distance was the first cut and it measured the wrong thing:
+        the pairs it called `opposite ownership` were mostly hands at
+        opposite ends of the frame, whose windows do not intersect at all, so
+        a low cosine between them says they look different rather than that
+        the encoder can tell them apart. Ambiguity only exists where the two
+        windows SHOW THE SAME THING, and that is an overlap question. It also
+        scales correctly: a near hand has a large window, so two near hands
+        can overlap heavily while their centres sit far apart in frame
+        fractions."""
+        a1 = window(rows[i]["box"], a.ctx_scale)
+        b1 = window(rows[j]["box"], a.ctx_scale)
+        ix = max(0.0, min(a1[2], b1[2]) - max(a1[0], b1[0]))
+        iy = max(0.0, min(a1[3], b1[3]) - max(a1[1], b1[1]))
+        inter = ix * iy
+        if inter <= 0:
+            return 0.0
+        ua = (a1[2] - a1[0]) * (a1[3] - a1[1])
+        ub = (b1[2] - b1[0]) * (b1[3] - b1[1])
+        return inter / (ua + ub - inter)
+
     def show(v, name):
         if not v:
             print(f"  {name:<28} 无")
             return
         c = np.array([float(E[i] @ E[j]) for i, j in v])
-        d = np.array([float(np.hypot(rows[i]["box"][0] - rows[j]["box"][0],
-                                     rows[i]["box"][1] - rows[j]["box"][1]))
-                      for i, j in v])
+        d = np.array([wov(i, j) for i, j in v])
         print(f"  {name:<28} n={len(v):<5} cosine 中位 {np.median(c):.3f}  "
               f"p90 {np.percentile(c, 90):.3f}  >0.9 的比例 "
-              f"{np.mean(c > 0.9):.1%}   中心距中位 {np.median(d):.3f}")
+              f"{np.mean(c > 0.9):.1%}   窗口重叠中位 {np.median(d):.3f}")
         return c, d
 
     show(opp, "归属相反")
     show(same, "归属相同")
-    near = [(i, j) for i, j in opp
-            if np.hypot(rows[i]["box"][0] - rows[j]["box"][0],
-                        rows[i]["box"][1] - rows[j]["box"][1]) < 0.10]
-    show(near, "归属相反且靠得近(<0.10)")
+    for t in (0.10, 0.30, 0.50):
+        show([(i, j) for i, j in opp if wov(i, j) >= t],
+             f"归属相反且窗口重叠>={t:.2f}")
+    for t in (0.10, 0.30, 0.50):
+        show([(i, j) for i, j in same if wov(i, j) >= t],
+             f"归属相同且窗口重叠>={t:.2f}")
 
     wrong_k = set(q["both_wrong"] + q["context_hurts"])
     bad = [(i, j) for i, j in opp
