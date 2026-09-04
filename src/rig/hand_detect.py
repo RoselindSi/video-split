@@ -40,7 +40,35 @@ WRIST = 0
 FINGERS = list(range(1, 21))
 
 DETECTOR = "/shared/models/HaWoR/weights/external/detector.pt"
-IMGSZ = 512
+# 1024 AND NOT 512, ON TWO VALIDATIONS RATHER THAN ON PRINCIPLE. A colleague's
+# hand across the bench is about fifteen pixels wide once a 2000px panorama is
+# resized to 512, and it scored 0.53-0.58 for up to sixty-seven frames without
+# ever clearing the 0.60 a new track needs. It was found on every one of those
+# frames and dropped on every one of them.
+#
+# Larger input, same admission policy, same tracker, same ownership model:
+#
+#   38 tracks that 512 never admitted, judged by a person
+#     real hands            37/38 = 0.974 [0.87, 1.00]
+#     of those, foreign     27/31 = 0.871
+#     not a hand             1/38 = 0.031
+#
+#   end to end, same hands, same frames
+#                            512      1024
+#     foreign frames covered  0.316    0.892
+#     wearer frames covered   0.018    0.020
+#     foreign tracks reached  0.509    1.000
+#     median delay to cover   3        0 frames
+#
+# The cost is one frame of extra false cover and no measurable inference time:
+# 768 and 1024 both run in 4-5s per 200 frames against 512's 4.4s.
+#
+# WHAT THIS DOES NOT SAY. Six recordings, and one of them supplied the only
+# false rescue. The 0.60 admission asymmetry is still there -- an existing
+# track continues at 0.25 while a new one needs 0.60 -- and it will still
+# strand a hand that stays under the bar at this size too. Raising resolution
+# removed the failure from the population measured, not from the design.
+IMGSZ = 1024
 # Real hands on this corpus come in at 0.83-0.87. A pink box came in as a
 # hand at the old floor of 0.35 and was blurred, which is the first false
 # positive this pipeline has had that arrives with a NUMBER attached -- every
@@ -501,16 +529,31 @@ class OwnHold:
                 for i in own_i:
                     if i not in keep:
                         self.last_demoted.append((ids[i], float(out[i][1])))
-                        # THIS FRAME'S VERDICT ONLY. It used to write the
-                        # demotion back into the track's state, which made a
-                        # structural constraint -- how many hands are in this
-                        # frame -- into that hand's OWN history: the belief
-                        # said 0.99 and the stored label said foreign, and
-                        # getting the label back took a fresh crossing of
-                        # `hi` rather than the third hand simply leaving.
-                        # A hand's evidence about itself is not changed by
-                        # how many other hands were detected beside it.
                         out[i] = (False, out[i][1])
+                        # KNOWN DEBT, DELIBERATELY LEFT IN. Writing the
+                        # demotion back puts a decision about the FRAME --
+                        # how many hands are in it -- into this hand's own
+                        # history, so the belief can say 0.99 while the
+                        # stored label says foreign, and the third hand
+                        # leaving does not undo it: recovery needs a fresh
+                        # crossing of `hi`, which a hand sitting at 0.55
+                        # never makes.
+                        #
+                        # It was removed on that reasoning and MEASURED
+                        # WORSE. Track-level flips went 3.5 -> 4.9 and
+                        # 3.4 -> 4.1 per 100 hand-frames on two clips,
+                        # because the cap's own per-frame verdict is
+                        # unstable -- it depends on how many detections the
+                        # detector happened to return -- and the writeback
+                        # was latching that instability rather than causing
+                        # it. Latched-and-wrong beat oscillating.
+                        #
+                        # The fix is a hysteresis on the cap's structural
+                        # state, kept separate from the belief. That is not
+                        # written and not tested, so what ships is the
+                        # behaviour that has numbers behind it.
+                        self.state[ids[i]][1] = False
+                        self.state[ids[i]][3] = 0
         # STATE SURVIVES A FRAME THE TRACKER SAW NOTHING IN. It used to be
         # rebuilt from scratch every frame, so a track the detector missed for
         # one frame lost its smoothed score AND its verdict. Two things broke
@@ -684,22 +727,21 @@ def _self_test():
     chk(not again[2][0],
         "...and keeps demoting it while the third hand is still there")
 
-    # AND THE DEMOTION MUST NOT OUTLIVE THE FRAME THAT CAUSED IT. This
-    # asserted the opposite until the writeback came out. The cap answers a
-    # question about the FRAME -- how many hands are in it -- and the old
-    # code stored that answer in the HAND, so a hand demoted once carried a
-    # stored verdict of `foreign` that the departure of the third hand could
-    # not undo: recovery needed the smoothed score to cross `hi` again, and
-    # a hand sitting at 0.55 never does. Here hand 2 is demoted by hand 1,
-    # hand 1 leaves, and hand 2 is its own evidence again on the next frame.
+    # THE DEMOTION OUTLIVES THE FRAME, AND THAT IS THE MEASURED BEHAVIOUR.
+    # This asserted the opposite for one revision. Removing the writeback is
+    # the principled change -- a structural decision does not belong in a
+    # hand's belief about itself -- and it made track-level flips worse on
+    # both clips it was measured on, because the cap's per-frame verdict is
+    # itself unstable and the writeback was latching that. The test guards
+    # what ships; the debt is recorded at the write site.
     ohl = OwnHold(max_owner=2)
     ohl.update(three, [(True, 0.95), (True, 0.90), (True, 0.55)],
                ids=[0, 1, 2])
     gone = ohl.update([three[0], three[2]], [(True, 0.95), (True, 0.55)],
                       ids=[0, 2])
-    chk(gone[1][0],
-        "a hand the cap demoted stayed foreign after the hand that "
-        "displaced it left")
+    chk(not gone[1][0],
+        "the cap's demotion survives into the next frame, which is the "
+        "behaviour that was measured")
 
     # masks_from now cuts on a window round the box instead of the frame. The
     # thing to prove is that the answer did not move, not merely that it is
