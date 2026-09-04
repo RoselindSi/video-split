@@ -64,7 +64,10 @@ b{color:#ffd33d}
 .tk.skip{border-left:5px solid #444}
 .strip{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .strip figure{margin:0;text-align:center}
-.strip img{border-radius:3px;display:block}
+.strip img.ctx{border-radius:3px;display:block}
+.strip .wrap{position:relative;display:inline-block}
+.strip img.zoom{position:absolute;right:3px;bottom:3px;width:58px;
+  border:2px solid #000;border-radius:3px}
 .strip figcaption{font-size:10px;color:#999;margin-top:2px}
 .meta{color:#9ab;font-size:12px}
 </style>
@@ -88,8 +91,9 @@ D.tracks.forEach((t, i) => {
   d.innerHTML = '<div class=meta><b>track ' + t.tid + '</b> &nbsp; frames ' +
     t.first + '-' + t.last + ' (' + t.n + ') &nbsp; conf ' + t.cmin + '/' +
     t.cmed + '/' + t.cmax + '</div><div class=strip>' +
-    t.tiles.map(x => '<figure><img src="' + x.img + '">' +
-      '<figcaption>f' + x.frame + ' &middot; ' + x.conf +
+    t.tiles.map(x => '<figure><span class=wrap><img class=ctx src="' +
+      x.img + '">' + (x.zoom ? '<img class=zoom src="' + x.zoom + '">' : '') +
+      '</span><figcaption>f' + x.frame + ' &middot; ' + x.conf +
       '</figcaption></figure>').join('') + '</div>';
   d.onclick = () => { cur = i; draw(); };
   list.appendChild(d);
@@ -142,6 +146,102 @@ function dl(){
 """
 
 
+# WHOSE HAND IT IS IS NOT VISIBLE IN A CROP OF THE HAND. The first version of
+# this sheet showed the 192px crops and nothing else, which is the same
+# mistake the ownership classifier makes: a colleague's hand and the wearer's
+# hand look identical close up. What separates them is where the forearm goes
+# -- off the bottom edge with nothing attached, or across the bench to a
+# torso -- and that is only in the whole frame. So the tile is the CONTEXT
+# frame with the box drawn, and the crop rides along as an inset for detail.
+CTX_TILE_W = 300
+ZOOM_W = 116
+
+
+def _b64(img, quality=78):
+    import cv2
+    ok, buf = cv2.imencode(".jpg", img, [int(cv2.IMWRITE_JPEG_QUALITY),
+                                         quality])
+    return ("data:image/jpeg;base64," + base64.b64encode(buf).decode()
+            if ok else None)
+
+
+def _context_tile(path, box, width=CTX_TILE_W):
+    """The whole frame with this hand boxed. -> data URI, or None.
+
+    `box` is (cx, cy, w, h) as fractions of the frame, so it survives the
+    resize the context frame was stored at."""
+    import cv2
+    img = cv2.imread(path)
+    if img is None:
+        return None
+    H, W = img.shape[:2]
+    cx, cy, bw, bh = box
+    x0, y0 = int((cx - bw / 2) * W), int((cy - bh / 2) * H)
+    x1, y1 = int((cx + bw / 2) * W), int((cy + bh / 2) * H)
+    img = img.copy()
+    cv2.rectangle(img, (x0, y0), (x1, y1), (60, 220, 255), 3)
+    h = int(round(H * width / W))
+    return _b64(cv2.resize(img, (width, h), interpolation=cv2.INTER_AREA))
+
+
+def rebuild_sheet(pkg, tiles=6, min_track=MIN_TRACK):
+    """Regenerate sheet.html from a package already on disk. -> n tracks
+
+    Detection is the expensive part and it is already done; only the page was
+    wrong. This re-reads `hands.csv` and the stored frames and writes a new
+    sheet, so a layout mistake costs a second rather than another pass over
+    the video."""
+    import cv2
+    rows = list(csv.DictReader(open(os.path.join(pkg, "hands.csv"),
+                                    encoding="utf-8-sig")))
+    by = {}
+    for r in rows:
+        by.setdefault(int(r["tid"]), []).append(r)
+    meta = {int(r["tid"]): r
+            for r in csv.DictReader(open(os.path.join(pkg, "tracks.csv"),
+                                         encoding="utf-8-sig"))}
+    tag = os.path.basename(pkg).replace("trackpkg_", "")
+    items = []
+    for tid, rs in sorted(by.items()):
+        m = meta.get(tid)
+        if m is None:
+            continue
+        rs.sort(key=lambda r: int(r["frame"]))
+        idx = (list(range(len(rs))) if len(rs) <= tiles else
+               [int(round(i * (len(rs) - 1) / (tiles - 1)))
+                for i in range(tiles)])
+        got = []
+        for i in idx:
+            r = rs[i]
+            box = (float(r["box_cx"]), float(r["box_cy"]),
+                   float(r["box_w"]), float(r["box_h"]))
+            ctx = _context_tile(os.path.join(pkg, "context",
+                                             r["stem"] + ".jpg"), box)
+            if ctx is None:
+                continue
+            crop = cv2.imread(os.path.join(pkg, "crops", r["stem"] + ".jpg"))
+            got.append({"img": ctx,
+                        "zoom": (_b64(cv2.resize(crop, (ZOOM_W, ZOOM_W)))
+                                 if crop is not None else None),
+                        "frame": int(r["frame"]),
+                        "conf": round(float(r["conf"]), 2)})
+        if not got:
+            continue
+        items.append({"tid": tid, "n": int(m["n_frames"]),
+                      "first": int(m["first_frame"]),
+                      "last": int(m["last_frame"]),
+                      "cmin": float(m["conf_min"]),
+                      "cmed": float(m["conf_med"]),
+                      "cmax": float(m["conf_max"]), "tiles": got})
+    out = os.path.join(pkg, "sheet.html")
+    with open(out, "w", encoding="utf-8") as f:
+        f.write(SHEET.replace("__PAYLOAD__",
+                              json.dumps({"tag": tag, "tracks": items})))
+    print(f"  {tag}: {len(items)} tracks -> {out} "
+          f"({os.path.getsize(out) / 1e6:.1f} MB)")
+    return len(items)
+
+
 def _med(v):
     s = sorted(v)
     return s[len(s) // 2] if s else float("nan")
@@ -151,7 +251,10 @@ def main():
     ap = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--databag", required=True)
+    ap.add_argument("--rebuild_sheet", action="append", default=[],
+                    help="regenerate an existing package's sheet with the "
+                         "context frames, without re-running the detector")
+    ap.add_argument("--databag")
     ap.add_argument("--start", type=int, default=0)
     ap.add_argument("--n", type=int, default=200)
     ap.add_argument("--stride", type=int, default=1)
@@ -165,6 +268,12 @@ def main():
     ap.add_argument("--crop_stride", type=int, default=CROP_STRIDE)
     ap.add_argument("--min_track", type=int, default=MIN_TRACK)
     a = ap.parse_args()
+    if a.rebuild_sheet:
+        for pkg in a.rebuild_sheet:
+            rebuild_sheet(pkg)
+        raise SystemExit(0)
+    if not a.databag:
+        ap.error("give --databag, or --rebuild_sheet on an existing package")
 
     import cv2
     from ultralytics import YOLO
