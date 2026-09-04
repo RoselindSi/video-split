@@ -195,6 +195,27 @@ class FastFoundationStereoProvider:
             matcher=self.stereo.disparity,
             depth_tie_m=self.depth_tie_m)
 
+    def owned_rgbd(self, rig, vcam, sources, photometric=None):
+        """Forward RGBD using the same fixed module owner as the panorama."""
+        from src.rig.wide_depth import wide_rgbd_owned
+
+        self._prepare_rectification(rig)
+        return wide_rgbd_owned(
+            rig, vcam, sources, self.owner_map(rig, vcam),
+            rect_cache=self.rect_cache, stride=self.stride,
+            splat=self.splat, matcher=self.stereo.disparity,
+            photometric=photometric)
+
+    def owner_map(self, rig, vcam):
+        """Return the clip-constant texture owner used by direct RGBD."""
+        from src.rig.wide_depth import fixed_module_owner
+
+        if self._fixed_owner is None:
+            self._fixed_owner = fixed_module_owner(
+                rig, vcam, depth_m=self.owner_depth_m,
+                mid_authority_deg=self.owner_mid_authority_deg)
+        return self._fixed_owner
+
 
 def disparity_to_depth(disparity, focal_px, baseline_m,
                        min_depth=MIN_DEPTH_M, max_depth=MAX_DEPTH_M):

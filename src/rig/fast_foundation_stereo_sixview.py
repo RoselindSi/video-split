@@ -162,13 +162,17 @@ def run(databag, model_path, out_path, comparison_path, metrics_path,
             frame_started = time.perf_counter()
             baseline, baseline_owner, _, _ = render_baseline(
                 rig, vcam, sources, depth_m, map_cache=baseline_cache)
-            rgb, owner, stats, _ = renderer.render(sources)
+            forward = provider.owned_rgbd(
+                rig, vcam, sources, photometric=renderer.photo)
+            rgb = forward.rgb.copy()
+            rgb[~forward.valid] = baseline[~forward.valid]
+            owner = provider.owner_map(rig, vcam)
             render_seconds = time.perf_counter() - frame_started
             writer.write(rgb)
             if comparison is not None:
                 comparison.write(np.vstack((
                     _label(baseline, "constant-depth baseline"),
-                    _label(rgb, "Fast-FoundationStereo six-view"))))
+                    _label(rgb, "Fast-FoundationStereo forward six-view"))))
 
             first_owners.setdefault("baseline", baseline_owner.copy())
             first_owners.setdefault("ffs", owner.copy())
@@ -178,8 +182,9 @@ def run(databag, model_path, out_path, comparison_path, metrics_path,
             rows.append({
                 "frame": frame_number,
                 "render_seconds": render_seconds,
-                "depth_coverage": float(stats["depth_coverage"]),
-                "gated_fraction": float(stats["gated_frac"]),
+                "depth_coverage": forward.coverage(),
+                "fallback_fraction": float(np.mean(
+                    (~forward.valid) & (owner >= 0))),
                 "baseline_seam_ratio": float(base_edge["ratio"]),
                 "baseline_seam_excess": float(base_edge["excess"]),
                 "ffs_seam_ratio": float(ffs_edge["ratio"]),
@@ -202,12 +207,12 @@ def run(databag, model_path, out_path, comparison_path, metrics_path,
             comparison.release()
 
     summary_keys = (
-        "render_seconds", "depth_coverage", "gated_fraction",
+        "render_seconds", "depth_coverage", "fallback_fraction",
         "baseline_seam_ratio", "baseline_seam_excess", "ffs_seam_ratio",
         "ffs_seam_excess", "baseline_owner_change", "ffs_owner_change",
         "skin_on_ffs_seam_fraction")
     result = {
-        "schema": "video-split.ffs-six-view.v1",
+        "schema": "video-split.ffs-six-view.v2",
         "databag": os.fspath(Path(databag).resolve()),
         "calibration": os.fspath(calibration),
         "videos": videos,
@@ -221,6 +226,7 @@ def run(databag, model_path, out_path, comparison_path, metrics_path,
         "mid_authority_deg": float(mid_authority_deg),
         "texture_sources": [module.left.name for module in rig.modules],
         "geometry_sources": sorted(rig.cameras),
+        "render_mode": "fixed-owner-forward-rgbd-with-plane-fallback",
         "fit": {**fit, "seconds": fit_seconds},
         "summary": {key: _distribution(rows, key) for key in summary_keys},
         "per_frame": rows,

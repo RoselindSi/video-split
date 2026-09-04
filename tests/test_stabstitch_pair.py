@@ -117,6 +117,29 @@ class StabStitchPairTest(unittest.TestCase):
         self.assertIs(render.call_args.kwargs["matcher"].__self__,
                       provider.stereo)
 
+    def test_fast_foundation_provider_reuses_owner_for_forward_rgbd(self):
+        provider = FastFoundationStereoProvider(
+            session=_StereoSession(["CUDAExecutionProvider"]),
+            require_cuda=True)
+        owner = np.array([[1]], np.int8)
+        photo = {0: (np.ones(3), np.zeros(3))}
+        expected = object()
+        with mock.patch("src.rig.wide_depth.fixed_module_owner",
+                        return_value=owner) as make_owner, mock.patch(
+                "src.rig.wide_depth.wide_rgbd_owned",
+                return_value=expected) as render:
+            first = provider.owned_rgbd(
+                "rig", "vcam", {"cam1": "image"}, photometric=photo)
+            second_owner = provider.owner_map("rig", "vcam")
+
+        self.assertIs(first, expected)
+        self.assertIs(second_owner, owner)
+        make_owner.assert_called_once()
+        self.assertIs(render.call_args.args[3], owner)
+        self.assertIs(render.call_args.kwargs["photometric"], photo)
+        self.assertIs(render.call_args.kwargs["matcher"].__self__,
+                      provider.stereo)
+
     def test_six_view_runner_wires_learned_depth_to_left_eye_texture(self):
         provider = object()
         renderer = object()

@@ -347,6 +347,53 @@ def wide_rgbd(rig, vcam, sources, rect_cache=None, stride=1, splat=SPLAT,
                           depth_tie_m=depth_tie_m)
 
 
+def wide_rgbd_owned(rig, vcam, sources, owner, rect_cache=None, stride=1,
+                    splat=SPLAT, matcher=None, photometric=None):
+    """Forward-render colour from the fixed owner module, without RGB warps."""
+    from src.rig.depth import module_depth, rectify_maps, to_reference_points
+
+    owner = np.asarray(owner, np.int8)
+    expected = (vcam.height, vcam.width)
+    if owner.shape != expected:
+        raise ValueError(f"owner shape {owner.shape} does not match {expected}")
+    rect_cache = {} if rect_cache is None else rect_cache
+    photometric = photometric or {}
+    maps = {}
+    n_points = 0
+    names = tuple(module.name for module in rig.modules)
+    for index, module in enumerate(rig.modules):
+        if (module.left.name not in sources or
+                module.right.name not in sources):
+            continue
+        if module.name not in rect_cache:
+            rect_cache[module.name] = rectify_maps(rig, module)
+        measured = module_depth(
+            rig, module, sources[module.left.name], sources[module.right.name],
+            rect_cache[module.name], matcher=matcher)
+        points, colour = to_reference_points(
+            rig, module, measured, stride=stride)
+        gain, bias = photometric.get(
+            index, (np.ones(3, np.float32), np.zeros(3, np.float32)))
+        colour = np.clip(
+            colour.astype(np.float32) * np.asarray(gain) + np.asarray(bias),
+            0, 255).astype(np.uint8)
+        module_map = composite_rgbd(
+            vcam, [(module.name, points, colour)], splat=splat)
+        maps[index] = module_map
+        n_points += module_map.n_points
+
+    rgb = np.zeros((*expected, 3), np.uint8)
+    output_range = np.full(expected, np.nan, np.float32)
+    output_module = np.full(expected, -1, np.int8)
+    for index, module_map in maps.items():
+        selected = (owner == index) & module_map.valid
+        rgb[selected] = module_map.rgb[selected]
+        output_range[selected] = module_map.range_m[selected]
+        output_module[selected] = index
+    valid = np.isfinite(output_range)
+    return WideRGBD(rgb, output_range, valid, output_module, n_points, names)
+
+
 def _self_test():
     """Each case is a way this gets silently wrong."""
     from src.rig.geometry import VirtualWideCamera
