@@ -550,6 +550,13 @@ def main():
                          "initialisation on a set this size")
     ap.add_argument("--dev_frac", type=float, default=0.25)
     ap.add_argument("--ctx_scale", type=float, default=CTX_SCALE)
+    ap.add_argument("--letterbox", action="store_true",
+                    help="pad the context window to square instead of "
+                         "stretching it. One axis of the 2x2.")
+    ap.add_argument("--target_mask", action="store_true",
+                    help="give the context branch a fourth channel marking "
+                         "which hand is being asked about. The other axis.")
+    ap.add_argument("--tag", default="", help="label for this arm in output")
     ap.add_argument("--keep_overlay", action="store_true",
                     help="do NOT remove the labelling tool's drawn box and "
                          "wrist-to-exit line from the context frame. Only "
@@ -577,7 +584,9 @@ def main():
             print(f"  seed {s}")
             m, best = train_arm(arm, tr, dv, epochs=a.epochs, seed=s,
                                 ctx_scale=a.ctx_scale,
-                                strip=not a.keep_overlay)
+                                strip=not a.keep_overlay,
+                                letterbox=a.letterbox,
+                                target_mask=a.target_mask)
             devs.append(best)
             models.append(m)
         f1 = [d["f1"] for d in devs]
@@ -586,6 +595,9 @@ def main():
               + f"   median {sorted(f1)[len(f1) // 2]:.3f}")
         results[arm] = (devs, models)
 
+    if a.tag:
+        print(f"\n  ARM {a.tag}   letterbox={a.letterbox}  "
+              f"target_mask={a.target_mask}")
     print(f"\n  {'arm':<12} {'dev f1 median':>14} {'dev prec':>9} "
           f"{'dev rec':>8}")
     for arm in arms:
@@ -607,7 +619,9 @@ def main():
               "set with extra steps.")
         for i, m in enumerate(results[best_arm][1]):
             s, _, _ = evaluate(m, test, a.ctx_scale,
-                               strip=not a.keep_overlay)
+                               strip=not a.keep_overlay,
+                               letterbox=a.letterbox,
+                               target_mask=a.target_mask)
             print(f"    seed {i}  n {s['n']}  other {s['other']}  "
                   f"prec {s['prec']:.3f}  rec {s['rec']:.3f}  "
                   f"f1 {s['f1']:.3f}  acc {s['acc']:.3f}")
@@ -616,7 +630,8 @@ def main():
               "against this experiment's 1014, so a tie here is not a tie.")
         if a.out:
             import torch
-            torch.save({"arm": best_arm,
+            torch.save({"arm": best_arm, "letterbox": a.letterbox,
+                        "target_mask": a.target_mask,
                         "state": results[best_arm][1][0].state_dict()},
                        a.out)
             print(f"  checkpoint -> {a.out}")
