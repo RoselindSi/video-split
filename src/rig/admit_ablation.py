@@ -66,6 +66,15 @@ CONFIRM_N = (3, 6, 12)
 # Matching an admitted detection to a labelled run.
 HIT_IOU = 0.30
 
+# THE CACHE MUST GO DOWN TO THE AUDIT'S FLOOR, NOT THE PIPELINE'S. `det_audit`
+# built the runs a person labelled by chaining detections from 0.05; caching
+# from 0.25 instead rebuilt DIFFERENT chains, and thirty-four of thirty-six
+# labels failed to rejoin -- silently, leaving an ablation with n=2 that still
+# printed a full table. The cache is a superset now, and the tracker is fed
+# the 0.25 subset the deployed pipeline actually sees.
+AUDIT_FLOOR = 0.05
+PIPELINE_FLOOR = 0.25
+
 
 def cache_detections(databag, start, n, stride, weights, imgszs, out):
     """Decode once, detect at every input size, write them all to disk.
@@ -103,7 +112,7 @@ def cache_detections(databag, start, n, stride, weights, imgszs, out):
         shape = list(rgb.shape)
         for s in imgszs:
             t0 = time.time()
-            dets = detect(model, rgb, imgsz=int(s), min_conf=0.25)
+            dets = detect(model, rgb, imgsz=int(s), min_conf=AUDIT_FLOOR)
             cost[int(s)] += time.time() - t0
             got[int(s)].append([
                 {"box": [float(v) for v in d["box"]],
@@ -124,7 +133,7 @@ def cache_detections(databag, start, n, stride, weights, imgszs, out):
               f"{cost[int(s)]:.0f}s of inference")
 
 
-def _run_tracker(frames, shape, new_conf, continue_conf=0.25):
+def _run_tracker(frames, shape, new_conf, continue_conf=PIPELINE_FLOOR):
     """Replay one policy's association. -> (ids per frame, tracker)
 
     The real `Tracker`, not a reimplementation: association, gating and the
@@ -134,10 +143,20 @@ def _run_tracker(frames, shape, new_conf, continue_conf=0.25):
     tr = Tracker()
     out = []
     for dets in frames:
+        # The deployed detector is called at the pipeline floor. Anything
+        # below it never existed as far as tracking is concerned, so it must
+        # not reach the tracker here either -- the cache is deeper only so
+        # the audited runs can be rebuilt.
+        dets = [d for d in dets if d["conf"] >= continue_conf]
         ids = tr.update(dets, shape, new_track_conf=new_conf,
                         continue_conf=continue_conf)
         out.append(list(ids))
     return out, tr
+
+
+def pipeline_boxes(frames, floor=PIPELINE_FLOOR):
+    """The box list the policy indices refer to, after the floor."""
+    return [[d["box"] for d in f if d["conf"] >= floor] for f in frames]
 
 
 def policy_baseline(frames, shape, high=0.60):
@@ -220,8 +239,14 @@ def load_runs(cache_frames, audit_csv, tag, chain_iou=0.25):
         x["label"] = row["label"]
         out.append(x)
     if unmatched:
-        print(f"    !! {unmatched} audited rows in {os.path.basename(audit_csv)}"
-              f" did not rejoin a run")
+        print(f"    !! {unmatched} of {unmatched + len(out)} audited rows in "
+              f"{os.path.basename(audit_csv)} did not rejoin a run")
+        if unmatched > len(out):
+            raise SystemExit(
+                "  more audit rows failed to rejoin than succeeded. The "
+                "cache was almost\n  certainly built at a different "
+                "detector floor from the audit, so the chains\n  are not the "
+                "same chains. Rebuild the cache at AUDIT_FLOOR.")
     return out
 
 
@@ -310,7 +335,7 @@ def main():
         if not runs:
             print(f"  !! no audited runs rejoined for {tag}")
             continue
-        bx = [[d["box"] for d in f] for f in base]
+        bx = pipeline_boxes(base)
         arms = [("P0 baseline .60", policy_baseline(base, shape), bx)]
         for nc in CONFIRM_N:
             arms.append((f"P1 offline N={nc}",
@@ -327,7 +352,7 @@ def main():
             # different ones. Matching is by overlap, so a box that moved a
             # little with the resolution still counts.
             arms.append((f"P3 imgsz {sz}", policy_baseline(hi, shape),
-                         [[d["box"] for d in f] for f in hi]))
+                         pipeline_boxes(hi)))
 
         print(f"\n=== {tag} ===  {len(runs)} audited runs "
               f"({sum(1 for r in runs if r['label'].startswith('hand'))} real, "
