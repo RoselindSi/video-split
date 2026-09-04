@@ -260,7 +260,7 @@ def main():
     ap.add_argument("--stride", type=int, default=1)
     ap.add_argument("--weights",
                     default="/shared/models/HaWoR/weights/external/detector.pt")
-    ap.add_argument("--out", required=True,
+    ap.add_argument("--out",
                     help="package directory: crops/, context/, hands.csv, "
                          "tracks.csv and the sheet")
     ap.add_argument("--new_track_conf", type=float, default=0.60)
@@ -272,8 +272,9 @@ def main():
         for pkg in a.rebuild_sheet:
             rebuild_sheet(pkg)
         raise SystemExit(0)
-    if not a.databag:
-        ap.error("give --databag, or --rebuild_sheet on an existing package")
+    if not a.databag or not a.out:
+        ap.error("give --databag and --out, or --rebuild_sheet on an "
+                 "existing package")
 
     import cv2
     from ultralytics import YOLO
