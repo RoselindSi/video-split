@@ -15,6 +15,8 @@ from src.rig.fast_foundation_stereo import (FastFoundationStereo,
 from src.rig.fast_foundation_stereo_eval import temporal_disparity_error
 from src.rig.fast_foundation_stereo_sixview import (build_renderer,
                                                      videos_from_databag)
+from src.rig.depth import ModuleDepth
+from src.rig.wide_depth import plane_fallback
 
 
 class _Camera:
@@ -137,8 +139,36 @@ class StabStitchPairTest(unittest.TestCase):
         make_owner.assert_called_once()
         self.assertIs(render.call_args.args[3], owner)
         self.assertIs(render.call_args.kwargs["photometric"], photo)
+        self.assertEqual(render.call_args.kwargs["fallback_depth_m"], 0.6)
         self.assertIs(render.call_args.kwargs["matcher"].__self__,
                       provider.stereo)
+
+    def test_plane_fallback_does_not_fill_outside_rectified_sensor(self):
+        measured = ModuleDepth(
+            module="module_A",
+            depth_m=np.array([[0.4, np.nan], [np.nan, np.nan]], np.float32),
+            disparity=np.array([[10.0, 0.0], [0.0, 0.0]], np.float32),
+            valid=np.array([[True, False], [False, False]]),
+            Q=np.eye(4), R_rect=np.eye(3),
+            left_rect=np.zeros((2, 2, 3), np.uint8), size=(2, 2))
+        map_x = np.array([[0.0, 1.0], [0.0, 3.0]], np.float32)
+        map_y = np.array([[0.0, 0.0], [1.0, 1.0]], np.float32)
+        rect = {
+            "maps": ((map_x, map_y), (map_x, map_y)),
+            "P1": np.diag([100.0, 100.0, 1.0, 1.0]),
+            "baseline_m": 0.1,
+        }
+
+        measured_only, filled = plane_fallback(
+            measured, rect, (3, 3, 3), depth_m=0.5)
+
+        self.assertEqual(measured_only.valid.tolist(),
+                         [[True, False], [False, False]])
+        self.assertEqual(filled.valid.tolist(),
+                         [[True, True], [True, False]])
+        self.assertAlmostEqual(float(filled.disparity[0, 1]), 20.0)
+        self.assertAlmostEqual(float(filled.depth_m[1, 0]), 0.5)
+        self.assertTrue(np.isnan(filled.depth_m[1, 1]))
 
     def test_six_view_runner_wires_learned_depth_to_left_eye_texture(self):
         provider = object()

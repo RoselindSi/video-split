@@ -204,7 +204,7 @@ class FastFoundationStereoProvider:
             rig, vcam, sources, self.owner_map(rig, vcam),
             rect_cache=self.rect_cache, stride=self.stride,
             splat=self.splat, matcher=self.stereo.disparity,
-            photometric=photometric)
+            photometric=photometric, fallback_depth_m=self.owner_depth_m)
 
     def owner_map(self, rig, vcam):
         """Return the clip-constant texture owner used by direct RGBD."""

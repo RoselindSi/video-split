@@ -39,7 +39,7 @@ at the cost of the same holes.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import numpy as np
 
@@ -85,9 +85,14 @@ class WideRGBD:
     module: np.ndarray           # [H,W] int8, winning module or -1
     n_points: int
     module_names: tuple
+    measured: np.ndarray | None = None  # [H,W] bool; true stereo geometry
 
     def coverage(self):
         return float(self.valid.mean())
+
+    def measured_coverage(self):
+        mask = self.valid if self.measured is None else self.measured
+        return float(mask.mean())
 
 
 def project(vcam, p_ref):
@@ -347,9 +352,41 @@ def wide_rgbd(rig, vcam, sources, rect_cache=None, stride=1, splat=SPLAT,
                           depth_tie_m=depth_tie_m)
 
 
+def plane_fallback(measured, rect, source_shape, depth_m):
+    """Keep measured disparity and fill only rectified sensor support."""
+    if depth_m <= 0:
+        raise ValueError("fallback depth must be positive")
+    (map_x, map_y), _ = rect["maps"]
+    source_h, source_w = source_shape[:2]
+    sensor_valid = (
+        np.isfinite(map_x) & np.isfinite(map_y)
+        & (map_x >= 0) & (map_x < source_w - 1)
+        & (map_y >= 0) & (map_y < source_h - 1))
+    measured_valid = np.asarray(measured.valid, bool) & sensor_valid
+    measured_only = replace(
+        measured,
+        depth_m=np.where(
+            measured_valid, measured.depth_m, np.nan).astype(np.float32),
+        valid=measured_valid)
+    fallback_disparity = (
+        float(rect["P1"][0, 0]) * float(rect["baseline_m"])
+        / float(depth_m))
+    filled = replace(
+        measured,
+        depth_m=np.where(
+            sensor_valid & ~measured_valid, float(depth_m),
+            measured_only.depth_m).astype(np.float32),
+        disparity=np.where(
+            sensor_valid & ~measured_valid, fallback_disparity,
+            measured.disparity).astype(np.float32),
+        valid=sensor_valid)
+    return measured_only, filled
+
+
 def wide_rgbd_owned(rig, vcam, sources, owner, rect_cache=None, stride=1,
-                    splat=SPLAT, matcher=None, photometric=None):
-    """Forward-render colour from the fixed owner module, without RGB warps."""
+                    splat=SPLAT, matcher=None, photometric=None,
+                    fallback_depth_m=0.6):
+    """Forward-render fixed-owner RGBD, using a plane for stereo holes."""
     from src.rig.depth import module_depth, rectify_maps, to_reference_points
 
     owner = np.asarray(owner, np.int8)
@@ -359,6 +396,7 @@ def wide_rgbd_owned(rig, vcam, sources, owner, rect_cache=None, stride=1,
     rect_cache = {} if rect_cache is None else rect_cache
     photometric = photometric or {}
     maps = {}
+    measured_maps = {}
     n_points = 0
     names = tuple(module.name for module in rig.modules)
     for index, module in enumerate(rig.modules):
@@ -370,8 +408,13 @@ def wide_rgbd_owned(rig, vcam, sources, owner, rect_cache=None, stride=1,
         measured = module_depth(
             rig, module, sources[module.left.name], sources[module.right.name],
             rect_cache[module.name], matcher=matcher)
-        points, colour = to_reference_points(
+        measured, filled = plane_fallback(
+            measured, rect_cache[module.name],
+            sources[module.left.name].shape, fallback_depth_m)
+        measured_points, _ = to_reference_points(
             rig, module, measured, stride=stride)
+        points, colour = to_reference_points(
+            rig, module, filled, stride=stride)
         gain, bias = photometric.get(
             index, (np.ones(3, np.float32), np.zeros(3, np.float32)))
         colour = np.clip(
@@ -380,18 +423,25 @@ def wide_rgbd_owned(rig, vcam, sources, owner, rect_cache=None, stride=1,
         module_map = composite_rgbd(
             vcam, [(module.name, points, colour)], splat=splat)
         maps[index] = module_map
+        measured_maps[index] = composite(
+            vcam, [(module.name, measured_points)], splat=splat)
         n_points += module_map.n_points
 
     rgb = np.zeros((*expected, 3), np.uint8)
     output_range = np.full(expected, np.nan, np.float32)
     output_module = np.full(expected, -1, np.int8)
+    output_measured = np.zeros(expected, bool)
     for index, module_map in maps.items():
         selected = (owner == index) & module_map.valid
         rgb[selected] = module_map.rgb[selected]
         output_range[selected] = module_map.range_m[selected]
         output_module[selected] = index
+        measured_map = measured_maps[index]
+        output_measured[(owner == index) & measured_map.valid] = True
     valid = np.isfinite(output_range)
-    return WideRGBD(rgb, output_range, valid, output_module, n_points, names)
+    output_measured &= valid
+    return WideRGBD(rgb, output_range, valid, output_module, n_points, names,
+                    measured=output_measured)
 
 
 def _self_test():

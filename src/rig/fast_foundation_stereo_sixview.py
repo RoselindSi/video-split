@@ -182,8 +182,10 @@ def run(databag, model_path, out_path, comparison_path, metrics_path,
             rows.append({
                 "frame": frame_number,
                 "render_seconds": render_seconds,
-                "depth_coverage": forward.coverage(),
-                "fallback_fraction": float(np.mean(
+                "depth_coverage": forward.measured_coverage(),
+                "plane_fallback_fraction": float(np.mean(
+                    forward.valid & ~forward.measured & (owner >= 0))),
+                "output_fallback_fraction": float(np.mean(
                     (~forward.valid) & (owner >= 0))),
                 "baseline_seam_ratio": float(base_edge["ratio"]),
                 "baseline_seam_excess": float(base_edge["excess"]),
@@ -207,12 +209,13 @@ def run(databag, model_path, out_path, comparison_path, metrics_path,
             comparison.release()
 
     summary_keys = (
-        "render_seconds", "depth_coverage", "fallback_fraction",
+        "render_seconds", "depth_coverage", "plane_fallback_fraction",
+        "output_fallback_fraction",
         "baseline_seam_ratio", "baseline_seam_excess", "ffs_seam_ratio",
         "ffs_seam_excess", "baseline_owner_change", "ffs_owner_change",
         "skin_on_ffs_seam_fraction")
     result = {
-        "schema": "video-split.ffs-six-view.v2",
+        "schema": "video-split.ffs-six-view.v3",
         "databag": os.fspath(Path(databag).resolve()),
         "calibration": os.fspath(calibration),
         "videos": videos,
@@ -226,7 +229,7 @@ def run(databag, model_path, out_path, comparison_path, metrics_path,
         "mid_authority_deg": float(mid_authority_deg),
         "texture_sources": [module.left.name for module in rig.modules],
         "geometry_sources": sorted(rig.cameras),
-        "render_mode": "fixed-owner-forward-rgbd-with-plane-fallback",
+        "render_mode": "fixed-owner-forward-rgbd-with-source-plane-fill",
         "fit": {**fit, "seconds": fit_seconds},
         "summary": {key: _distribution(rows, key) for key in summary_keys},
         "per_frame": rows,
