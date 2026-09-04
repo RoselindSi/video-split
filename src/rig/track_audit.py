@@ -244,12 +244,19 @@ def rebuild_sheet(pkg, tiles=6, min_track=MIN_TRACK):
                         "conf": round(float(r["conf"]), 2)})
         if not got:
             continue
+        cmp = m.get("cmp_seen_frac", "")
         items.append({"tid": tid, "n": int(m["n_frames"]),
                       "first": int(m["first_frame"]),
                       "last": int(m["last_frame"]),
                       "cmin": float(m["conf_min"]),
                       "cmed": float(m["conf_med"]),
-                      "cmax": float(m["conf_max"]), "tiles": got})
+                      "cmax": float(m["conf_max"]),
+                      "cmp": (None if cmp in ("", "None") else float(cmp)),
+                      "tiles": got})
+    # Rescues first: they are the population whose precision decides the
+    # question, and a labeller reaching them last labels them tired.
+    items.sort(key=lambda it: (1.0 if it["cmp"] is None else it["cmp"],
+                               it["tid"]))
     out = os.path.join(pkg, "sheet.html")
     with open(out, "w", encoding="utf-8") as f:
         f.write(SHEET.replace("__PAYLOAD__",
@@ -391,52 +398,26 @@ def main():
             print(f"    [{k + 1}/{a.n}]", flush=True)
     rd.close()
 
-    # The filmstrip is built from the crops already on disk rather than from
-    # frames held in memory: two hundred panorama frames at full size is most
-    # of a gigabyte, and the crops are what the tiles show anyway.
+    # ONE SHEET BUILDER, NOT TWO. This function used to assemble its own
+    # tiles from the 192px crops while `rebuild_sheet` assembled them from
+    # the context frames. The two drifted, and the run that mattered shipped
+    # the version a person cannot label from: whose hand it is lives in where
+    # the forearm goes, and a crop of the hand does not contain it. The csv
+    # is written here and the page is built by the one function that builds
+    # pages.
     items = []
-    # RESCUES FIRST. They are the population whose precision decides whether
-    # the resolution change is safe, and a labeller reaching them last labels
-    # them tired.
-    def _order(kv):
-        t = kv[1]
-        c = t.get("cmp") or []
-        return ((sum(c) / len(c)) if c else 1.0, kv[0])
-    for tid, t in sorted(tracks.items(), key=_order):
-        n = len(t["frames"])
-        if n < a.min_track:
-            continue
-        idx = (list(range(n)) if n <= TILES else
-               [int(round(i * (n - 1) / (TILES - 1))) for i in range(TILES)])
-        tiles = []
-        for i in idx:
-            stem = f"{tag}_f{a.start + t['frames'][i] * a.stride:06d}_h{tid}"
-            p = os.path.join(a.out, "crops", stem + ".jpg")
-            if not os.path.exists(p):
-                continue
-            img = cv2.imread(p)
-            if img is None:
-                continue
-            ok, buf = cv2.imencode(".jpg", cv2.resize(img, (140, 140)),
-                                   [int(cv2.IMWRITE_JPEG_QUALITY), 78])
-            if ok:
-                tiles.append({
-                    "img": "data:image/jpeg;base64,"
-                           + base64.b64encode(buf).decode(),
-                    "frame": a.start + t["frames"][i] * a.stride,
-                    "conf": round(t["confs"][i], 2)})
-        if not tiles:
+    for tid, t in sorted(tracks.items()):
+        if len(t["frames"]) < a.min_track:
             continue
         cmp = t.get("cmp", [])
-        seen_small = (sum(cmp) / len(cmp)) if cmp else float("nan")
-        items.append({"tid": int(tid), "n": n,
-                      "cmp": (None if not cmp else round(seen_small, 3)),
+        items.append({"tid": int(tid), "n": len(t["frames"]),
                       "first": a.start + t["frames"][0] * a.stride,
                       "last": a.start + t["frames"][-1] * a.stride,
                       "cmin": round(min(t["confs"]), 2),
                       "cmed": round(_med(t["confs"]), 2),
                       "cmax": round(max(t["confs"]), 2),
-                      "tiles": tiles})
+                      "cmp": (None if not cmp
+                              else round(sum(cmp) / len(cmp), 3))})
 
     with open(os.path.join(a.out, "tracks.csv"), "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=["tid", "recording", "first_frame",
@@ -459,13 +440,9 @@ def main():
             w.writeheader()
             for r in rows:
                 w.writerow({**r, "label": ""})
-    sheet = os.path.join(a.out, "sheet.html")
-    with open(sheet, "w", encoding="utf-8") as f:
-        f.write(SHEET.replace("__PAYLOAD__",
-                              json.dumps({"tag": tag, "tracks": items})))
     print(f"\n  {len(tracks)} tracks, {len(items)} at least "
           f"{a.min_track} frames, {len(rows)} crops")
-    print(f"  sheet -> {sheet} ({os.path.getsize(sheet) / 1e6:.1f} MB)")
+    rebuild_sheet(a.out)
     print("  1 佩戴者  2 别人  3 不是手  4 中途换手/混了  5 说不准")
     print("\n  `mixed` is a real answer and not a cop-out: a track that "
           "starts on one hand\n  and ends on another is an identity failure, "
