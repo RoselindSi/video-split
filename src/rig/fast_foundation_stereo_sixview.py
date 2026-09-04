@@ -40,7 +40,9 @@ def build_renderer(rig, vcam, model_path, cuda_lib_dir=None,
     provider = FastFoundationStereoProvider(
         model_path=model_path, cuda_lib_dir=cuda_lib_dir,
         cudnn_lib_dir=cudnn_lib_dir, require_cuda=require_cuda,
-        rectified_size=rectified_size)
+        rectified_size=rectified_size, owner_aligned=True,
+        owner_depth_m=depth_m,
+        owner_mid_authority_deg=mid_authority_deg)
     renderer = DepthAwarePanorama(
         rig, vcam, depth_m=depth_m, depth_provider=provider,
         texture_mode="module_left", use_depth=True,

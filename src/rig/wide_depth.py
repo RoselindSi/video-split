@@ -254,6 +254,68 @@ def wide_depth(rig, vcam, sources, rect_cache=None, stride=1, splat=SPLAT,
     return composite(vcam, per_module, splat=splat)
 
 
+def fixed_module_owner(rig, vcam, depth_m=0.6, mid_authority_deg=72.0):
+    """Geometry-only module owner used by both RGB and its depth guide."""
+    from src.rig.geometry import source_maps
+    from src.rig.render_wide import off_axis_deg
+
+    height, width = vcam.height, vcam.width
+    scores = []
+    mid_index = len(rig.modules) // 2
+    for index, module in enumerate(rig.modules):
+        valid = source_maps(
+            rig, module.left.name, vcam, depth_m=depth_m)[2]
+        score = np.where(
+            valid, off_axis_deg(rig, module.left.name, vcam), 1e6)
+        if index == mid_index and mid_authority_deg > 0:
+            trusted = valid & (score <= float(mid_authority_deg))
+            score = np.where(trusted, -1000.0 + score, score)
+        scores.append(score)
+    if not scores:
+        return np.full((height, width), -1, np.int8)
+    stack = np.stack(scores)
+    reachable = stack.min(0) < 1e5
+    return np.where(reachable, stack.argmin(0), -1).astype(np.int8)
+
+
+def wide_depth_owned(rig, vcam, sources, owner, rect_cache=None, stride=1,
+                     splat=SPLAT, matcher=None):
+    """Depth from the same module that owns RGB at each output pixel."""
+    from src.rig.depth import module_depth, rectify_maps, to_reference_points
+
+    rect_cache = {} if rect_cache is None else rect_cache
+    maps = {}
+    names = tuple(module.name for module in rig.modules)
+    n_points = 0
+    for index, module in enumerate(rig.modules):
+        if (module.left.name not in sources or
+                module.right.name not in sources):
+            continue
+        if module.name not in rect_cache:
+            rect_cache[module.name] = rectify_maps(rig, module)
+        measured = module_depth(
+            rig, module, sources[module.left.name], sources[module.right.name],
+            rect_cache[module.name], matcher=matcher)
+        points, _ = to_reference_points(
+            rig, module, measured, stride=stride)
+        module_map = composite(
+            vcam, [(module.name, points)], splat=splat)
+        maps[index] = module_map
+        n_points += module_map.n_points
+
+    owner = np.asarray(owner, np.int8)
+    if owner.shape != (vcam.height, vcam.width):
+        raise ValueError("module owner shape differs from virtual camera")
+    output_range = np.full(owner.shape, np.nan, np.float32)
+    output_module = np.full(owner.shape, -1, np.int8)
+    for index, module_map in maps.items():
+        selected = (owner == index) & module_map.valid
+        output_range[selected] = module_map.range_m[selected]
+        output_module[selected] = index
+    valid = np.isfinite(output_range)
+    return WideDepth(output_range, valid, output_module, n_points, names)
+
+
 def wide_rgbd(rig, vcam, sources, rect_cache=None, stride=1, splat=SPLAT,
               matcher=None, depth_tie_m=0.02):
     """Stereo pairs -> left-eye coloured points -> one-owner RGBD panorama."""

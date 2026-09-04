@@ -136,7 +136,9 @@ class FastFoundationStereoProvider:
     def __init__(self, model_path=None, providers=None, session=None,
                  cuda_lib_dir=None, cudnn_lib_dir=None,
                  require_cuda=False, stride=1, splat=2,
-                 depth_tie_m=0.02, rectified_size=None):
+                 depth_tie_m=0.02, rectified_size=None,
+                 owner_aligned=False, owner_depth_m=0.6,
+                 owner_mid_authority_deg=72.0):
         self.stereo = FastFoundationStereo(
             model_path=model_path, providers=providers, session=session,
             cuda_lib_dir=cuda_lib_dir, cudnn_lib_dir=cudnn_lib_dir,
@@ -146,7 +148,11 @@ class FastFoundationStereoProvider:
         self.depth_tie_m = float(depth_tie_m)
         self.rectified_size = (tuple(int(v) for v in rectified_size)
                                if rectified_size is not None else None)
+        self.owner_aligned = bool(owner_aligned)
+        self.owner_depth_m = float(owner_depth_m)
+        self.owner_mid_authority_deg = float(owner_mid_authority_deg)
         self.rect_cache = {}
+        self._fixed_owner = None
 
     def _prepare_rectification(self, rig):
         if self.rectified_size is None:
@@ -160,9 +166,19 @@ class FastFoundationStereoProvider:
 
     def __call__(self, rig, vcam, sources):
         """Return virtual-camera metric range for ``DepthAwarePanorama``."""
-        from src.rig.wide_depth import wide_depth
+        from src.rig.wide_depth import (fixed_module_owner, wide_depth,
+                                        wide_depth_owned)
 
         self._prepare_rectification(rig)
+        if self.owner_aligned:
+            if self._fixed_owner is None:
+                self._fixed_owner = fixed_module_owner(
+                    rig, vcam, depth_m=self.owner_depth_m,
+                    mid_authority_deg=self.owner_mid_authority_deg)
+            return wide_depth_owned(
+                rig, vcam, sources, self._fixed_owner,
+                rect_cache=self.rect_cache, stride=self.stride,
+                splat=self.splat, matcher=self.stereo.disparity)
         return wide_depth(
             rig, vcam, sources, rect_cache=self.rect_cache,
             stride=self.stride, splat=self.splat,

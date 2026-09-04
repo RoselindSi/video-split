@@ -131,6 +131,9 @@ class StabStitchPairTest(unittest.TestCase):
         self.assertEqual(got, (renderer, provider))
         self.assertEqual(provider_class.call_args.kwargs["rectified_size"],
                          (960, 720))
+        self.assertTrue(provider_class.call_args.kwargs["owner_aligned"])
+        self.assertEqual(
+            provider_class.call_args.kwargs["owner_mid_authority_deg"], 72.0)
         self.assertIs(renderer_class.call_args.kwargs["depth_provider"],
                       provider)
         self.assertEqual(renderer_class.call_args.kwargs["texture_mode"],
