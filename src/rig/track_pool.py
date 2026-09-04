@@ -182,6 +182,19 @@ def report(rows, p, name):
         s = scores(pred, tt)
         print(f"  {lab:<22} {s['n']:>4} {s['other']:>6} {s['acc']:>7.3f} "
               f"{s['prec']:>7.3f} {s['rec']:>7.3f} {s['f1']:>7.3f}")
+    # APPLES TO APPLES. The frame line weights a track by how long it is;
+    # the track lines weight every track the same. Neither is wrong but they
+    # are not comparable, and reading them against each other was the first
+    # thing this printed. So the pooled verdict is expanded back over the
+    # frames it would govern and scored on the same 648 rows -- that is what
+    # the rendered video would actually deliver.
+    at = {k: v for k, v in zip(tids, med)}
+    exp = [at[(r["tag"], r["tid"])] for r in rows]
+    e = scores(exp, fr_true)
+    print(f"  {'pooled -> frames':<22} {e['n']:>4} {e['other']:>6} "
+          f"{e['acc']:>7.3f} {e['prec']:>7.3f} {e['rec']:>7.3f} "
+          f"{e['f1']:>7.3f}   <- 同一批帧，可与第一行直接比")
+
     print(f"\n  {len(split)} of {len(tids)} tracks answered BOTH ways across "
           f"their own frames.")
     print(f"    Pooling can only act on those; on the rest it repeats the "
@@ -196,6 +209,92 @@ def report(rows, p, name):
             for t, i in worst))
 
 
+WORST_SHEET = """<meta charset=utf-8><title>consistently wrong</title><style>
+body{font:13px/1.5 system-ui;margin:0;background:#111;color:#ddd}
+h1{font-size:16px;margin:14px}
+.hd{margin:14px;color:#888;max-width:60em}
+.tk{padding:12px 14px;border-bottom:1px solid #262626}
+.tk h2{font-size:14px;margin:0 0 6px}
+.strip{display:flex;gap:6px;flex-wrap:wrap}
+.strip figure{margin:0;text-align:center}
+.strip img{border-radius:3px;display:block}
+.strip figcaption{font-size:10px;margin-top:2px;color:#999}
+.bad{color:#f66}.good{color:#5c8}
+.lab{color:#ffd33d}
+</style>
+<h1>Tracks both models get wrong on most of their frames</h1>
+<div class=hd>The yellow box is the hand. Under each frame: what the person
+called this track, then each model's P(owner) on that frame -- red when the
+model's verdict disagrees with the label. A track that is red almost
+everywhere is not a flicker and no amount of smoothing or pooling will fix
+it; whatever separates it from the tracks the models get is not in what they
+are being shown.</div>
+__BODY__
+"""
+
+
+def worst_sheet(rows, by_model, out, n=6, tiles=10):
+    """The tracks a model is wrong about on most of their frames. -> n
+
+    NOT THE SAME QUESTION AS THE FLICKER. A track whose frames disagree is a
+    stability problem and pooling answers it. A track whose frames AGREE and
+    are wrong is a representation problem: it is the model's considered
+    opinion, held steadily, and being wrong. Those are what this page shows,
+    because the first kind is already solved and the second is not."""
+    import base64
+    import cv2
+    from src.rig.track_audit import _context_tile, _b64
+
+    key = list(by_model)
+    grouped = {}
+    for i, r in enumerate(rows):
+        g = grouped.setdefault((r["tag"], r["tid"]), {"y": r["y"], "i": []})
+        g["i"].append(i)
+    frac = {}
+    for k, g in grouped.items():
+        acc = [np.mean([(by_model[m][i] >= 0.5) == g["y"] for i in g["i"]])
+               for m in key]
+        frac[k] = float(np.mean(acc))
+    order = sorted(grouped, key=lambda k: frac[k])[:n]
+
+    body = []
+    for k in order:
+        g = grouped[k]
+        idx = g["i"]
+        if len(idx) > tiles:
+            idx = [idx[int(round(i * (len(idx) - 1) / (tiles - 1)))]
+                   for i in range(tiles)]
+        lab = "佩戴者 owner" if g["y"] == 1 else "别人 other"
+        body.append(f'<div class=tk><h2>{k[0]} track {k[1]} &nbsp; '
+                    f'<span class=lab>{lab}</span> &nbsp; '
+                    f'{len(g["i"])} frames &nbsp; mean correct '
+                    f'{frac[k]:.2f}</h2><div class=strip>')
+        for i in idx:
+            r = rows[i]
+            box = tuple(float(r["raw"][c]) for c in
+                        ("box_cx", "box_cy", "box_w", "box_h"))
+            tile = _context_tile(os.path.join(r["pkg"], "context",
+                                              r["stem"] + ".jpg"), box)
+            if tile is None:
+                continue
+            cap = [f'f{r["raw"]["frame"]}',
+                   f'conf {float(r["raw"]["conf"]):.2f}']
+            for m in key:
+                v = float(by_model[m][i])
+                ok = (v >= 0.5) == r["y"]
+                cap.append(f'<span class="{"good" if ok else "bad"}">'
+                           f'{m} {v:.2f}</span>')
+            body.append(f'<figure><img src="{tile}">'
+                        f'<figcaption>{"<br>".join(cap)}</figcaption>'
+                        f'</figure>')
+        body.append("</div></div>")
+    with open(out, "w", encoding="utf-8") as f:
+        f.write(WORST_SHEET.replace("__BODY__", "\n".join(body)))
+    print(f"\n  {len(order)} worst tracks -> {out} "
+          f"({os.path.getsize(out) / 1e6:.1f} MB)")
+    return len(order)
+
+
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__,
@@ -205,6 +304,10 @@ def main():
                     help="pkg=csv, to write a downloaded sheet back first")
     ap.add_argument("--clf")
     ap.add_argument("--clf_ctx")
+    ap.add_argument("--worst_sheet",
+                    help="write a page of the tracks both models are wrong "
+                         "about on most of their frames")
+    ap.add_argument("--worst_n", type=int, default=6)
     a = ap.parse_args()
 
     for spec in a.merge:
@@ -221,11 +324,15 @@ def main():
     print(f"  {tracks} labelled tracks, {len(rows)} crops, "
           f"{sum(1 for r in rows if r['y'] == 0)} crops on foreign hands")
 
+    got = {}
     if a.clf:
-        report(rows, frame_scores(rows, clf=a.clf), "hand-only CNN")
+        got["hand"] = frame_scores(rows, clf=a.clf)
+        report(rows, got["hand"], "hand-only CNN")
     if a.clf_ctx:
-        report(rows, frame_scores(rows, clf_ctx=a.clf_ctx),
-               "hand+context+geometry")
+        got["ctx"] = frame_scores(rows, clf_ctx=a.clf_ctx)
+        report(rows, got["ctx"], "hand+context+geometry")
+    if a.worst_sheet and got:
+        worst_sheet(rows, got, a.worst_sheet, a.worst_n)
     print("\n  Track rows are the unit a person judged, so the track lines "
           "are measured\n  against ground truth directly. The frame line is "
           "the SAME truth spread over\n  that track's frames -- it is what "
