@@ -13,6 +13,8 @@ from src.rig.fast_foundation_stereo import (FastFoundationStereo,
                                              FastFoundationStereoProvider,
                                              disparity_to_depth)
 from src.rig.fast_foundation_stereo_eval import temporal_disparity_error
+from src.rig.fast_foundation_stereo_sixview import (build_renderer,
+                                                     videos_from_databag)
 
 
 class _Camera:
@@ -114,6 +116,33 @@ class StabStitchPairTest(unittest.TestCase):
         self.assertEqual(render.call_args.kwargs["depth_tie_m"], 0.02)
         self.assertIs(render.call_args.kwargs["matcher"].__self__,
                       provider.stereo)
+
+    def test_six_view_runner_wires_learned_depth_to_left_eye_texture(self):
+        provider = object()
+        renderer = object()
+        with mock.patch(
+                "src.rig.fast_foundation_stereo.FastFoundationStereoProvider",
+                return_value=provider) as provider_class, mock.patch(
+                "src.rig.panorama.DepthAwarePanorama",
+                return_value=renderer) as renderer_class:
+            got = build_renderer(
+                "rig", "vcam", "model.onnx", rectified_size=(960, 720))
+
+        self.assertEqual(got, (renderer, provider))
+        self.assertEqual(provider_class.call_args.kwargs["rectified_size"],
+                         (960, 720))
+        self.assertIs(renderer_class.call_args.kwargs["depth_provider"],
+                      provider)
+        self.assertEqual(renderer_class.call_args.kwargs["texture_mode"],
+                         "module_left")
+        self.assertTrue(renderer_class.call_args.kwargs["use_depth"])
+
+    def test_six_view_runner_refuses_an_incomplete_databag(self):
+        with tempfile.TemporaryDirectory() as directory:
+            for name in ("calibration.yaml", "cam12.mp4", "cam34.mp4"):
+                open(os.path.join(directory, name), "w").close()
+            with self.assertRaisesRegex(FileNotFoundError, "cam56.mp4"):
+                videos_from_databag(directory)
 
     def test_disparity_to_depth_keeps_only_calibrated_range(self):
         disparity = np.array([[0.0, 10.0, 100.0]], np.float32)

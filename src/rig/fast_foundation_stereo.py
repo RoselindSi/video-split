@@ -136,7 +136,7 @@ class FastFoundationStereoProvider:
     def __init__(self, model_path=None, providers=None, session=None,
                  cuda_lib_dir=None, cudnn_lib_dir=None,
                  require_cuda=False, stride=1, splat=2,
-                 depth_tie_m=0.02):
+                 depth_tie_m=0.02, rectified_size=None):
         self.stereo = FastFoundationStereo(
             model_path=model_path, providers=providers, session=session,
             cuda_lib_dir=cuda_lib_dir, cudnn_lib_dir=cudnn_lib_dir,
@@ -144,12 +144,25 @@ class FastFoundationStereoProvider:
         self.stride = int(stride)
         self.splat = int(splat)
         self.depth_tie_m = float(depth_tie_m)
+        self.rectified_size = (tuple(int(v) for v in rectified_size)
+                               if rectified_size is not None else None)
         self.rect_cache = {}
+
+    def _prepare_rectification(self, rig):
+        if self.rectified_size is None:
+            return
+        from src.rig.depth import rectify_maps
+
+        for module in rig.modules:
+            if module.name not in self.rect_cache:
+                self.rect_cache[module.name] = rectify_maps(
+                    rig, module, size=self.rectified_size)
 
     def __call__(self, rig, vcam, sources):
         """Return virtual-camera metric range for ``DepthAwarePanorama``."""
         from src.rig.wide_depth import wide_depth
 
+        self._prepare_rectification(rig)
         return wide_depth(
             rig, vcam, sources, rect_cache=self.rect_cache,
             stride=self.stride, splat=self.splat,
@@ -159,6 +172,7 @@ class FastFoundationStereoProvider:
         """Return the stricter forward-rendered, one-owner RGBD panorama."""
         from src.rig.wide_depth import wide_rgbd
 
+        self._prepare_rectification(rig)
         return wide_rgbd(
             rig, vcam, sources, rect_cache=self.rect_cache,
             stride=self.stride, splat=self.splat,

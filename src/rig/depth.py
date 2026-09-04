@@ -75,16 +75,17 @@ class ModuleDepth:
 def rectify_maps(rig, module, size=None, balance=0.0, fov_scale=1.0):
     """Fisheye rectification for one module. Cached by the caller if needed."""
     import cv2
-    K1, D1, K2, D2, sz, R, T = rig.stereo_pair(module)
-    size = tuple(size or sz)
+    K1, D1, K2, D2, sensor_size, R, T = rig.stereo_pair(module)
+    output_size = tuple(size or sensor_size)
     R1, R2, P1, P2, Q = cv2.fisheye.stereoRectify(
-        K1, D1, K2, D2, size, R, T, cv2.CALIB_ZERO_DISPARITY,
-        newImageSize=size, balance=balance, fov_scale=fov_scale)
-    m1 = cv2.fisheye.initUndistortRectifyMap(K1, D1, R1, P1, size,
+        K1, D1, K2, D2, sensor_size, R, T, cv2.CALIB_ZERO_DISPARITY,
+        newImageSize=output_size, balance=balance, fov_scale=fov_scale)
+    m1 = cv2.fisheye.initUndistortRectifyMap(K1, D1, R1, P1, output_size,
                                              cv2.CV_32FC1)
-    m2 = cv2.fisheye.initUndistortRectifyMap(K2, D2, R2, P2, size,
+    m2 = cv2.fisheye.initUndistortRectifyMap(K2, D2, R2, P2, output_size,
                                              cv2.CV_32FC1)
-    return {"maps": (m1, m2), "Q": Q, "P1": P1, "R1": R1, "size": size,
+    return {"maps": (m1, m2), "Q": Q, "P1": P1, "R1": R1,
+            "size": output_size,
             "baseline_m": float(np.linalg.norm(T))}
 
 
