@@ -217,7 +217,12 @@ def rebuild_sheet(pkg, tiles=6, min_track=MIN_TRACK):
     meta = {int(r["tid"]): r
             for r in csv.DictReader(open(os.path.join(pkg, "tracks.csv"),
                                          encoding="utf-8-sig"))}
-    tag = os.path.basename(pkg).replace("trackpkg_", "")
+    # rstrip THE SLASH FIRST. `os.path.basename("/a/b/")` is the empty
+    # string, so a caller looping over `dir/*/` produced sheets whose tag was
+    # blank -- and the downloaded CSV then carried no recording name at all.
+    # Three of six files came back unattributable.
+    tag = (os.path.basename(pkg.rstrip("/\\"))
+           .replace("trackpkg_", "").replace("rescue_", ""))
     items = []
     for tid, rs in sorted(by.items()):
         m = meta.get(tid)
