@@ -675,8 +675,8 @@ def main():
                          f"incumbent under the replacement's name.")
     print(f"  {a.n} frames from {a.start}, stride {a.stride}, {a.fps} fps")
     print(f"  ownership by "
-          f"{('hand+context+geometry (' + str(ctx_arm) + ')') if ctx_model else ('the hand-only CNN' if cnn else 'the geometric RULE')}"
-          f"{'' if cnn else '   <- not the shipped path'}")
+          f"{('hand+context+geometry (' + str(ctx_arm) + ')  <- V1') if ctx_model else ('the hand-only CNN  <- V1 baseline' if cnn else 'the geometric RULE')}"
+          f"{'' if cnn else ''}")
     print(f"  prior: {'fitted geometry, ' + str(len(geom['cues'])) + ' cues'
                     if geom else 'the single exit-height rule'}")
     print(f"  detector: new>={a.new_track_conf:.2f}, "
