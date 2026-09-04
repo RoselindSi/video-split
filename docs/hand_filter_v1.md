@@ -114,6 +114,120 @@ representation change, though it does take precision to 1.000. It is not part
 of V1: it cannot help the `both_wrong` tracks, which are steadily wrong rather
 than flickering, and pooling would make them more stable.
 
+## E. An independent test sampled the way the system now runs
+
+Every earlier test package was collected with the detector at 512, so none of
+them contains a hand that only a 1024 input proposes -- and the rescue audit
+showed those are half the tracks and 87% of them foreign. Measuring V1 on a
+512-sampled package measures a different system.
+
+`testpkg_3` is 228 labelled hands over 43 recordings, sampled at 1024, with
+**zero** overlap with training: 115 owner, 102 other, 11 skipped, 217
+decisive.
+
+```
+                        n   other   precision  recall   f1     recall 95% CI
+shipped hand-only      217    102     0.831    0.578   0.682  [0.481, 0.670]
+V1 hand+context+geom   217    102     0.914    0.833   0.872  [0.749, 0.893]
++ target mask          217    102     0.925    0.843   0.882  [0.760, 0.901]
+```
+
+Both precision and recall improve, and the recall intervals do not overlap.
+This reproduces on fresh, deployment-matched data what `testpkg_2` said, and
+it is the number V1 is frozen on.
+
+The target-mask model is **not** adopted. Its +0.010 f1 here is about one
+positive example at this sample size, and development does not support it
+(below). `testpkg_3` has now been read and must not be used for selection.
+
+## F. What was tried against the near-hand failure, and did not work
+
+The residue after V1 is close-range: the wearer's hand and a colleague's hand
+in the same part of the image, the colleague's called the wearer's with high
+confidence. Four explanations were testable and were tested.
+
+**The owner mask eating the other mask.** Excluded by measurement: over 200
+frames of the hardest clip, `veto_px / oth_px` has a median of 0.0000, a 95th
+percentile of 0.0017 and no frame where the cover was fully cancelled.
+
+**The two-hand cap.** It fired zero times on that clip, and the owner count
+was below two on 157 of 200 frames -- so the second slot was simply free and
+the cap could not detect a contradiction. The cap does not cause this error;
+it fails to catch it. That distinction matters: it can only turn `owner` into
+`other`, never the reverse.
+
+**The context window not saying which hand is being asked about.** Two
+statistics supported this before it was tested. The two `both_wrong` tracks
+have a median of two hands inside their context window against one for every
+other group; and among same-frame pairs with opposite ownership whose windows
+actually overlap, the context encoder's embeddings have a median cosine of
+0.600 with 21% above 0.9, against 0.274 for opposite-ownership pairs overall.
+Both are small samples (2 tracks, 14 pairs).
+
+**The window being clipped at the frame edge and stretched to a square.**
+20.5% of samples lose more than a tenth of their intended window and 13.0%
+come out past an aspect ratio of 1.3 -- and the two `both_wrong` tracks are
+clipped 31.7% at ratio 1.46 against 0.0% and 1.00 for every other group.
+
+The last two were separated by a 2x2, three seeds each, everything else held:
+
+```
+arm                             seeds              median   vs A
+A  stretch + no target      0.868 0.860 0.835      0.860      —
+B  letterbox + no target    0.766 0.729 0.777      0.766   -0.094
+C  stretch + target mask    0.876 0.813 0.851      0.835   -0.025
+D  letterbox + target mask  0.791 0.691 0.796      0.791   -0.069
+   target mask as its own branch                   0.819   -0.041
+```
+
+**Letterboxing is harmful**, and not marginally: A's seed range [0.835, 0.868]
+and B's [0.729, 0.777] do not overlap. The arithmetic that motivated it was
+correct and the conclusion drawn from it was wrong. The most likely reading is
+that the distortion carries real signal rather than a shortcut -- a window is
+clipped precisely when the hand is against a frame edge, and the wearer's own
+hands enter from the bottom edge.
+
+**The target indicator does not help**, in any of three forms, and it fails
+where it was aimed:
+
+```
+A's category            n    under C
+both right             52    52 retained
+context rescues        18    17 retained
+context hurts           3     2 repaired
+both wrong              2     0 repaired
+```
+
+Zero of the two tracks it was designed for. Read together with the geometry
+attribution -- replacing the geometry vector with a neutral one barely moves
+any output on these tracks -- the crop, the window, the marker and the
+geometry have all now been eliminated as the missing ingredient.
+
+## G. What is left, stated as a hypothesis rather than a plan
+
+V1 answers "does this hand look like the wearer's". The hard cases need a
+different question: "is this hand attached to a body that is visible in the
+frame". Those are not the same question, and nothing in V1 asks the second.
+
+The shape of an answer would be a relation rather than a better classifier --
+
+```
+target hand -> its forearm -> a shoulder -> a visible person
+```
+
+-- used as an asymmetric veto: leave `owner` alone unless the hand connects to
+somebody else's visible arm. That form survives the case the cap cannot
+handle, where only one of the wearer's hands is in frame and the second owner
+slot is free, because it never counts hands at all.
+
+This is a hypothesis with no measurement behind it. Before any of it is built,
+the thing to establish is whether the relation is even present in the data:
+take V1's false-owner cases and matched correctly-classified owners, run a
+pose detector, and ask how often each associates to a visible person's
+wrist-elbow-shoulder chain. If both groups associate at similar rates the
+relation is not discriminative here and something heavier is needed. That
+probe touches no production code.
+
 ## The frozen configuration
 
 ```
@@ -128,7 +242,11 @@ faces             YOLOv8-face at 0.35, no size cap
 privacy           other -> blur
 ```
 
-`imgsz=512` stays as the baseline to compare against.
+`imgsz=512` stays as the baseline to compare against, and `target_mask` and
+`letterbox` are both off.
+
+The remaining close-range ownership errors are treated as a known residual
+failure mode rather than patched with additional unvalidated heuristics.
 
 ## Owed
 
