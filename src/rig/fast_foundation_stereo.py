@@ -153,6 +153,7 @@ class FastFoundationStereoProvider:
         self.owner_mid_authority_deg = float(owner_mid_authority_deg)
         self.rect_cache = {}
         self._fixed_owner = None
+        self._fallback_costs = None
 
     def _prepare_rectification(self, rig):
         if self.rectified_size is None:
@@ -204,7 +205,8 @@ class FastFoundationStereoProvider:
             rig, vcam, sources, self.owner_map(rig, vcam),
             rect_cache=self.rect_cache, stride=self.stride,
             splat=self.splat, matcher=self.stereo.disparity,
-            photometric=photometric, fallback_depth_m=self.owner_depth_m)
+            photometric=photometric, fallback_depth_m=self.owner_depth_m,
+            fallback_costs=self.fallback_costs(rig, vcam))
 
     def owner_map(self, rig, vcam):
         """Return the clip-constant texture owner used by direct RGBD."""
@@ -215,6 +217,18 @@ class FastFoundationStereoProvider:
                 rig, vcam, depth_m=self.owner_depth_m,
                 mid_authority_deg=self.owner_mid_authority_deg)
         return self._fixed_owner
+
+    def fallback_costs(self, rig, vcam):
+        """Cache clip-constant off-axis costs for secondary ownership."""
+        from src.rig.render_wide import off_axis_deg
+
+        if self._fallback_costs is None:
+            self._fallback_costs = {
+                index: off_axis_deg(
+                    rig, module.left.name, vcam).astype(np.float32)
+                for index, module in enumerate(rig.modules)
+            }
+        return self._fallback_costs
 
 
 def disparity_to_depth(disparity, focal_px, baseline_m,

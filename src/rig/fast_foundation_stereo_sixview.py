@@ -166,7 +166,9 @@ def run(databag, model_path, out_path, comparison_path, metrics_path,
                 rig, vcam, sources, photometric=renderer.photo)
             rgb = forward.rgb.copy()
             rgb[~forward.valid] = baseline[~forward.valid]
-            owner = provider.owner_map(rig, vcam)
+            owner = np.where(
+                forward.valid, forward.module,
+                provider.owner_map(rig, vcam)).astype(np.int8)
             render_seconds = time.perf_counter() - frame_started
             writer.write(rgb)
             if comparison is not None:

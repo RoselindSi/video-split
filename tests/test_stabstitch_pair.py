@@ -125,6 +125,7 @@ class StabStitchPairTest(unittest.TestCase):
             require_cuda=True)
         owner = np.array([[1]], np.int8)
         photo = {0: (np.ones(3), np.zeros(3))}
+        provider._fallback_costs = {0: np.zeros((1, 1), np.float32)}
         expected = object()
         with mock.patch("src.rig.wide_depth.fixed_module_owner",
                         return_value=owner) as make_owner, mock.patch(
@@ -140,6 +141,8 @@ class StabStitchPairTest(unittest.TestCase):
         self.assertIs(render.call_args.args[3], owner)
         self.assertIs(render.call_args.kwargs["photometric"], photo)
         self.assertEqual(render.call_args.kwargs["fallback_depth_m"], 0.6)
+        self.assertIs(render.call_args.kwargs["fallback_costs"],
+                      provider._fallback_costs)
         self.assertIs(render.call_args.kwargs["matcher"].__self__,
                       provider.stereo)
 

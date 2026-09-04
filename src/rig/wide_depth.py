@@ -385,8 +385,8 @@ def plane_fallback(measured, rect, source_shape, depth_m):
 
 def wide_rgbd_owned(rig, vcam, sources, owner, rect_cache=None, stride=1,
                     splat=SPLAT, matcher=None, photometric=None,
-                    fallback_depth_m=0.6):
-    """Forward-render fixed-owner RGBD, using a plane for stereo holes."""
+                    fallback_depth_m=0.6, fallback_costs=None):
+    """Forward RGBD with a preferred owner and single-source fallback."""
     from src.rig.depth import module_depth, rectify_maps, to_reference_points
 
     owner = np.asarray(owner, np.int8)
@@ -438,6 +438,36 @@ def wide_rgbd_owned(rig, vcam, sources, owner, rect_cache=None, stride=1,
         output_module[selected] = index
         measured_map = measured_maps[index]
         output_measured[(owner == index) & measured_map.valid] = True
+
+    # A real-depth point can move across the constant-depth ownership edge.
+    # Refusing it there produced a dense stipple of plane-rendered pixels at
+    # hands and box edges. Keep the preferred owner whenever it reaches the
+    # pixel, then let the best on-axis available module own only the holes.
+    unresolved = ~np.isfinite(output_range)
+    if unresolved.any() and maps:
+        indices = sorted(maps)
+        if fallback_costs is None:
+            from src.rig.render_wide import off_axis_deg
+            fallback_costs = {
+                index: off_axis_deg(
+                    rig, rig.modules[index].left.name, vcam)
+                for index in indices
+            }
+        costs = []
+        for index in indices:
+            cost = np.asarray(fallback_costs[index], np.float32)
+            costs.append(np.where(maps[index].valid, cost, 1e6))
+        stack = np.stack(costs)
+        pick = stack.argmin(0)
+        reachable = stack.min(0) < 1e5
+        for position, index in enumerate(indices):
+            selected = unresolved & reachable & (pick == position)
+            module_map = maps[index]
+            rgb[selected] = module_map.rgb[selected]
+            output_range[selected] = module_map.range_m[selected]
+            output_module[selected] = index
+            output_measured[
+                selected & measured_maps[index].valid] = True
     valid = np.isfinite(output_range)
     output_measured &= valid
     return WideRGBD(rgb, output_range, valid, output_module, n_points, names,
