@@ -143,8 +143,13 @@ def strip_overlay(img):
     return cv2.inpaint(img, m, 4, cv2.INPAINT_TELEA)
 
 
-def context_crop(img, box, scale=CTX_SCALE):
-    """-> the region `scale` times the hand box, clipped to the frame."""
+def context_crop(img, box, scale=CTX_SCALE, with_box=False):
+    """-> the region `scale` times the hand box, clipped to the frame.
+
+    With `with_box`, also returns where the hand sits INSIDE that region, in
+    pixels of the returned crop, which is what a target-indicator channel
+    needs. The crop is clipped at the frame edge, so the hand is not
+    necessarily centred in it."""
     import cv2
     H, W = img.shape[:2]
     cx, cy, bw, bh = box
@@ -154,32 +159,89 @@ def context_crop(img, box, scale=CTX_SCALE):
     x1 = int(min(W, cx * W + half))
     y1 = int(min(H, cy * H + half))
     if x1 <= x0 or y1 <= y0:
-        return None
-    return img[y0:y1, x0:x1]
+        return (None, None) if with_box else None
+    crop = img[y0:y1, x0:x1]
+    if not with_box:
+        return crop
+    return crop, (int(cx * W - bw * W / 2) - x0, int(cy * H - bh * H / 2) - y0,
+                  int(cx * W + bw * W / 2) - x0, int(cy * H + bh * H / 2) - y0)
 
 
 class Pairs:
     """(hand, context, geometry, label) for one labelled hand."""
 
     def __init__(self, rows, augment=False, ctx_scale=CTX_SCALE,
-                 strip=True):
+                 strip=True, letterbox=False, target_mask=False):
         self.rows = rows
         self.augment = bool(augment)
         self.ctx_scale = float(ctx_scale)
         self.strip = bool(strip)
+        self.letterbox = bool(letterbox)
+        self.target_mask = bool(target_mask)
 
     def __len__(self):
         return len(self.rows)
 
-    def _prep(self, img, px):
+    def _fit(self, img, px, boxes=None):
+        """Square `px` image. -> (img, scale, x offset, y offset)
+
+        THE DEFAULT STRETCHES AND THAT IS MEASURABLE. A context window that
+        reaches the frame edge is clipped to a non-square rectangle and then
+        forced to a square, so its aspect ratio is destroyed. On the labelled
+        tracks 20.5% of samples lose more than a tenth of their intended
+        window and 13.0% come out with an aspect ratio past 1.3 -- and the
+        two tracks both models get wrong are clipped 31.7% at ratio 1.46
+        against 0.0% and 1.00 for every other group. Since the wearer's own
+        hands enter from the bottom edge, the distortion is correlated with
+        ownership, which is the shape of a shortcut.
+
+        `letterbox` keeps the ratio and pads. It changes what the network
+        sees; whether it changes what the network concludes is the point of
+        the ablation."""
         import cv2
+        import numpy as _np
+        if not self.letterbox:
+            return cv2.resize(img, (px, px), interpolation=cv2.INTER_AREA), \
+                (px / img.shape[1], px / img.shape[0]), 0, 0
+        h, w = img.shape[:2]
+        s = px / max(h, w)
+        rw, rh = max(1, int(round(w * s))), max(1, int(round(h * s)))
+        out = _np.full((px, px, img.shape[2]), 128, img.dtype)
+        xo, yo = (px - rw) // 2, (px - rh) // 2
+        out[yo:yo + rh, xo:xo + rw] = cv2.resize(
+            img, (rw, rh), interpolation=cv2.INTER_AREA)
+        return out, (s, s), xo, yo
+
+    def _prep(self, img, px, box_in_crop=None):
+        import cv2
+        import numpy as _np
         import torch
-        img = cv2.resize(img, (px, px), interpolation=cv2.INTER_AREA)
+        img, (sx, sy), xo, yo = self._fit(img, px)
         x = torch.from_numpy(img[:, :, ::-1].copy()).float().permute(2, 0, 1)
         x = x / 255.0
         mean = torch.tensor([0.485, 0.456, 0.406]).view(3, 1, 1)
         std = torch.tensor([0.229, 0.224, 0.225]).view(3, 1, 1)
-        return (x - mean) / std
+        x = (x - mean) / std
+        if box_in_crop is None:
+            return x
+        # THE INDICATOR SAYS WHICH HAND IS BEING ASKED ABOUT AND NOTHING
+        # ELSE. One channel, one inside the box and zero outside. Not the
+        # drawn yellow rectangle the labelling tool used: that was painted
+        # into RGB, where it competes with real colour, and it came with a
+        # wrist-to-exit line that is the geometry features in pixels. This
+        # carries no direction, no entry edge and no verdict -- only "this
+        # one", which is exactly what a window holding two hands cannot say.
+        m = torch.zeros(1, x.shape[1], x.shape[2])
+        bx0, by0, bx1, by1 = box_in_crop
+        bx0 = int(round(bx0 * sx)) + xo
+        bx1 = int(round(bx1 * sx)) + xo
+        by0 = int(round(by0 * sy)) + yo
+        by1 = int(round(by1 * sy)) + yo
+        bx0, by0 = max(0, bx0), max(0, by0)
+        bx1, by1 = min(x.shape[2], bx1), min(x.shape[1], by1)
+        if bx1 > bx0 and by1 > by0:
+            m[0, by0:by1, bx0:bx1] = 1.0
+        return torch.cat([x, m], 0)
 
     def __getitem__(self, i):
         import cv2
@@ -189,12 +251,13 @@ class Pairs:
         ctx_img = cv2.imread(r["_ctx"])
         if ctx_img is not None and self.strip:
             ctx_img = strip_overlay(ctx_img)
-        ctx = (context_crop(ctx_img, r["box"], self.ctx_scale)
-               if ctx_img is not None else None)
+        ctx, cbox = ((context_crop(ctx_img, r["box"], self.ctx_scale,
+                                   with_box=True))
+                     if ctx_img is not None else (None, None))
         if hand is None:
             hand = np.zeros((HAND_PX, HAND_PX, 3), np.uint8)
         if ctx is None or ctx.size == 0:
-            ctx = hand
+            ctx, cbox = hand, (0, 0, hand.shape[1], hand.shape[0])
         if self.augment:
             # APPEARANCE ONLY, AND NO HALF TURN. Brightness, contrast and
             # colour are where a model can learn a shortcut to the recording
@@ -209,11 +272,12 @@ class Pairs:
                 np.uint8)
             ctx = np.clip(ctx.astype(np.float32) * a + b, 0, 255).astype(
                 np.uint8)
-        return (self._prep(hand, HAND_PX), self._prep(ctx, CTX_PX),
+        return (self._prep(hand, HAND_PX),
+                self._prep(ctx, CTX_PX, cbox if self.target_mask else None),
                 torch.from_numpy(r["g"]), int(r["y"]))
 
 
-def build(arm, n_geom=len(GEOM)):
+def build(arm, n_geom=len(GEOM), target_mask=False):
     """-> a model for one arm of the ablation.
 
     Two trunks and not one shared trunk. The hand crop and a 2.5x window are
@@ -224,9 +288,24 @@ def build(arm, n_geom=len(GEOM)):
     import torch.nn as nn
     from torchvision.models import resnet18
 
-    def trunk():
+
+    def trunk(in_ch=3):
         m = resnet18(weights="IMAGENET1K_V1")
         m.fc = nn.Identity()
+        if in_ch != 3:
+            # THE EXTRA CHANNEL STARTS AT ZERO SO THE ARMS BEGIN IDENTICAL.
+            # A freshly initialised fourth channel would make the masked arm
+            # a different model at step zero, and any gap could then be the
+            # initialisation rather than the indicator. At zero the forward
+            # pass is bit-for-bit the three-channel one until training gives
+            # the channel a reason to exist.
+            old = m.conv1
+            new = nn.Conv2d(in_ch, old.out_channels, old.kernel_size,
+                            old.stride, old.padding, bias=False)
+            with torch.no_grad():
+                new.weight.zero_()
+                new.weight[:, :3] = old.weight
+            m.conv1 = new
         return m
 
     class Net(nn.Module):
@@ -236,7 +315,8 @@ def build(arm, n_geom=len(GEOM)):
             self.use_ctx = arm in ("context", "both", "both_geom")
             self.use_geom = arm in ("both_geom", "geom")
             self.hand = trunk() if self.use_hand else None
-            self.ctx = trunk() if self.use_ctx else None
+            self.ctx = (trunk(4 if target_mask else 3) if self.use_ctx
+                        else None)
             d = 512 * (int(self.use_hand) + int(self.use_ctx))
             if self.use_geom:
                 self.gmlp = nn.Sequential(
@@ -279,7 +359,7 @@ def load_model(path, device=None):
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
     ck = torch.load(path, map_location=device, weights_only=False)
     arm = ck.get("arm", "both_geom")
-    m = build(arm).to(device)
+    m = build(arm, target_mask=bool(ck.get("target_mask"))).to(device)
     m.load_state_dict(ck["state"])
     m.eval()
     return m, device, arm
@@ -408,17 +488,19 @@ def run_epoch(model, ds, device, opt=None, batch=32, weight=None):
 
 
 def train_arm(arm, tr, dv, epochs=12, seed=0, lr=3e-4, ctx_scale=CTX_SCALE,
-              strip=True, verbose=True):
+              strip=True, letterbox=False, target_mask=False, verbose=True):
     """-> (model, best dev scores). Selection is on dev `other` F1."""
     import torch
     torch.manual_seed(seed)
     random.seed(seed)
     np.random.seed(seed)
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model = build(arm).to(device)
+    model = build(arm, target_mask=target_mask).to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
-    dtr = Pairs(tr, augment=True, ctx_scale=ctx_scale, strip=strip)
-    ddv = Pairs(dv, augment=False, ctx_scale=ctx_scale, strip=strip)
+    kw = dict(ctx_scale=ctx_scale, strip=strip, letterbox=letterbox,
+              target_mask=target_mask)
+    dtr = Pairs(tr, augment=True, **kw)
+    ddv = Pairs(dv, augment=False, **kw)
     best, best_state = None, None
     for e in range(epochs):
         _, _, tl = run_epoch(model, dtr, device, opt)
@@ -436,12 +518,14 @@ def train_arm(arm, tr, dv, epochs=12, seed=0, lr=3e-4, ctx_scale=CTX_SCALE,
     return model, best
 
 
-def evaluate(model, rows, ctx_scale=CTX_SCALE, strip=True):
+def evaluate(model, rows, ctx_scale=CTX_SCALE, strip=True, letterbox=False,
+             target_mask=False):
     import torch
     device = next(model.parameters()).device
     p, y, _ = run_epoch(model, Pairs(rows, augment=False,
-                                     ctx_scale=ctx_scale,
-                                     strip=strip), device)
+                                     ctx_scale=ctx_scale, strip=strip,
+                                     letterbox=letterbox,
+                                     target_mask=target_mask), device)
     return scores(p, y), p, y
 
 
