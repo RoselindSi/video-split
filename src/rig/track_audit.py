@@ -33,6 +33,8 @@ import csv
 import json
 import os
 
+from src.rig.hand_track import box_iou
+
 # Frames of a track between saved crops. Every frame's box goes in the csv;
 # crops are what cost disk and decode time, and a verdict pooled over every
 # third frame of a sixty-frame track has twenty samples, which is plenty.
@@ -46,6 +48,11 @@ MIN_TRACK = 5
 
 CROP_PX = 192
 TILES = 10
+
+# Overlap at which the comparison input is credited with having admitted the
+# same hand. Loose on purpose: a box found at two detector resolutions moves
+# a little, and calling that a miss would inflate the rescue set.
+CMP_IOU = 0.30
 
 
 SHEET = """<meta charset=utf-8><title>track ownership</title><style>
@@ -62,6 +69,9 @@ b{color:#ffd33d}
 .tk.nothand{border-left:5px solid #666}
 .tk.mixed{border-left:5px solid #c8a}
 .tk.skip{border-left:5px solid #444}
+.badge{background:#733;color:#fff;padding:1px 6px;border-radius:3px;
+  font-size:11px;margin-left:8px}
+.badge.part{background:#763}
 .strip{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .strip figure{margin:0;text-align:center}
 .strip img.ctx{border-radius:3px;display:block}
@@ -88,7 +98,12 @@ const list = document.getElementById("list");
 D.tracks.forEach((t, i) => {
   const d = document.createElement("div");
   d.className = "tk"; d.id = "k" + i;
-  d.innerHTML = '<div class=meta><b>track ' + t.tid + '</b> &nbsp; frames ' +
+  const badge = (t.cmp === null || t.cmp === undefined) ? '' :
+    (t.cmp === 0 ? '<span class=badge>小图完全没看到</span>' :
+     (t.cmp < 0.5 ? '<span class="badge part">小图只看到 ' +
+        Math.round(t.cmp*100) + '%</span>' : ''));
+  d.innerHTML = '<div class=meta><b>track ' + t.tid + '</b>' + badge +
+    ' &nbsp; frames ' +
     t.first + '-' + t.last + ' (' + t.n + ') &nbsp; conf ' + t.cmin + '/' +
     t.cmed + '/' + t.cmax + '</div><div class=strip>' +
     t.tiles.map(x => '<figure><span class=wrap><img class=ctx src="' +
@@ -133,10 +148,12 @@ document.onkeydown = e => {
 };
 draw();
 function dl(){
-  let s = "tid,label,recording,first_frame,last_frame,n_frames,conf_max\\n";
+  let s = "tid,label,recording,first_frame,last_frame,n_frames,conf_max," +
+          "cmp_seen_frac\\n";
   for(const t of D.tracks) if(lab[t.tid])
     s += t.tid + "," + lab[t.tid] + "," + D.tag + "," + t.first + "," +
-         t.last + "," + t.n + "," + t.cmax + "\\n";
+         t.last + "," + t.n + "," + t.cmax + "," +
+         (t.cmp === null || t.cmp === undefined ? "" : t.cmp) + "\\n";
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([s], {type:"text/csv"}));
   a.download = "trackaudit_" + D.tag + ".csv";
@@ -263,6 +280,17 @@ def main():
     ap.add_argument("--out",
                     help="package directory: crops/, context/, hands.csv, "
                          "tracks.csv and the sheet")
+    ap.add_argument("--imgsz", type=int, default=512,
+                    help="the detector input this package's tracks come from")
+    ap.add_argument("--compare_imgsz", type=int,
+                    help="also detect at this size and record, per frame, "
+                         "whether it admitted an overlapping hand. A track "
+                         "the smaller input never admitted is the RESCUE "
+                         "population, and its precision is the number the "
+                         "resolution change actually turns on -- the "
+                         "negatives audited so far were all selected at 512 "
+                         "and cannot say anything about detections only the "
+                         "larger input proposes.")
     ap.add_argument("--new_track_conf", type=float, default=0.60)
     ap.add_argument("--continue_conf", type=float, default=0.25)
     ap.add_argument("--crop_stride", type=int, default=CROP_STRIDE)
@@ -299,6 +327,7 @@ def main():
     print(f"  {a.n} frames from {a.start}, real pipeline settings "
           f"(new>={a.new_track_conf:.2f}, continue>={a.continue_conf:.2f})")
     tracker = Tracker()
+    cmp_tracker = Tracker() if a.compare_imgsz else None
     rd = Prefetch(ClipReader(rig, vids, a.start), skip=max(0, a.stride - 1))
     mc = {}
     tracks, rows = {}, []
@@ -310,10 +339,21 @@ def main():
             rgb, _, _, _ = render(rig, vcam, src, 0.6, map_cache=mc)
         except TypeError:
             rgb, _, _, _ = render(rig, vcam, src, 0.6)
-        dets = detect(model, rgb, min_conf=a.continue_conf)
+        dets = detect(model, rgb, imgsz=a.imgsz, min_conf=a.continue_conf)
         ids = tracker.update(dets, rgb.shape,
                              new_track_conf=a.new_track_conf,
                              continue_conf=a.continue_conf)
+        # The comparison input runs the SAME admission policy on its own
+        # detections, so what differs between them is evidence quality and
+        # nothing else.
+        cmp_boxes = []
+        if cmp_tracker is not None:
+            cd = detect(model, rgb, imgsz=a.compare_imgsz,
+                        min_conf=a.continue_conf)
+            cid = cmp_tracker.update(cd, rgb.shape,
+                                     new_track_conf=a.new_track_conf,
+                                     continue_conf=a.continue_conf)
+            cmp_boxes = [d["box"] for d, t in zip(cd, cid) if t is not None]
         for d, tid in zip(dets, ids):
             if tid is None:
                 continue
@@ -322,6 +362,9 @@ def main():
             t["frames"].append(k)
             t["boxes"].append([int(v) for v in d["box"]])
             t["confs"].append(float(d.get("conf", 1.0)))
+            t.setdefault("cmp", []).append(
+                1 if any(box_iou(d["box"], b) >= CMP_IOU for b in cmp_boxes)
+                else 0)
             # Crops on a stride, and the frame is written UNMARKED.
             if len(t["frames"]) % a.crop_stride == 1:
                 stem = f"{tag}_f{a.start + k * a.stride:06d}_h{tid}"
@@ -339,6 +382,8 @@ def main():
                             [cv2.IMWRITE_JPEG_QUALITY, 82])
                 f = own_label.features(d, rgb.shape)
                 rows.append({"stem": stem, "tid": tid,
+                             "cmp_admitted": (t["cmp"][-1]
+                                              if cmp_tracker else ""),
                              "frame": a.start + k * a.stride,
                              **{c: float(v) for c, v in
                                 zip(own_label.FEATURES, f)}})
@@ -350,7 +395,14 @@ def main():
     # frames held in memory: two hundred panorama frames at full size is most
     # of a gigabyte, and the crops are what the tiles show anyway.
     items = []
-    for tid, t in sorted(tracks.items()):
+    # RESCUES FIRST. They are the population whose precision decides whether
+    # the resolution change is safe, and a labeller reaching them last labels
+    # them tired.
+    def _order(kv):
+        t = kv[1]
+        c = t.get("cmp") or []
+        return ((sum(c) / len(c)) if c else 1.0, kv[0])
+    for tid, t in sorted(tracks.items(), key=_order):
         n = len(t["frames"])
         if n < a.min_track:
             continue
@@ -375,7 +427,10 @@ def main():
                     "conf": round(t["confs"][i], 2)})
         if not tiles:
             continue
+        cmp = t.get("cmp", [])
+        seen_small = (sum(cmp) / len(cmp)) if cmp else float("nan")
         items.append({"tid": int(tid), "n": n,
+                      "cmp": (None if not cmp else round(seen_small, 3)),
                       "first": a.start + t["frames"][0] * a.stride,
                       "last": a.start + t["frames"][-1] * a.stride,
                       "cmin": round(min(t["confs"]), 2),
@@ -387,16 +442,18 @@ def main():
         w = csv.DictWriter(f, fieldnames=["tid", "recording", "first_frame",
                                           "last_frame", "n_frames",
                                           "conf_min", "conf_med", "conf_max",
-                                          "label"])
+                                          "cmp_seen_frac", "label"])
         w.writeheader()
         for it in items:
             w.writerow({"tid": it["tid"], "recording": tag,
+                        "cmp_seen_frac": it.get("cmp"),
                         "first_frame": it["first"], "last_frame": it["last"],
                         "n_frames": it["n"], "conf_min": it["cmin"],
                         "conf_med": it["cmed"], "conf_max": it["cmax"],
                         "label": ""})
     if rows:
-        cols = ["stem", "tid", "frame"] + list(own_label.FEATURES)
+        cols = ["stem", "tid", "cmp_admitted", "frame"] \
+            + list(own_label.FEATURES)
         with open(os.path.join(a.out, "hands.csv"), "w", newline="") as f:
             w = csv.DictWriter(f, fieldnames=cols + ["label"])
             w.writeheader()
