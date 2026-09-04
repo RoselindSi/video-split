@@ -53,6 +53,14 @@ def central_camera(c2w, central_index):
     return target
 
 
+def shared_centre_camera_fan(c2w, camera_indexes):
+    poses = np.asarray(c2w, dtype=np.float32)
+    indexes = tuple(int(index) for index in camera_indexes)
+    targets = poses[list(indexes)].copy()
+    targets[:, :3, 3] = np.median(poses[:, :3, 3], axis=0)
+    return targets
+
+
 def rotation_angle_deg(a, b):
     relative = a[:3, :3].T @ b[:3, :3]
     cosine = np.clip((np.trace(relative) - 1.0) / 2.0, -1.0, 1.0)
@@ -83,6 +91,17 @@ def save_tensor_frames(frames, root, prefix):
             root / f"{prefix}_{index:03d}.png")
 
 
+def save_camera_major_frames(frames, root, camera_indexes, num_frames):
+    from torchvision.transforms.functional import to_pil_image
+
+    root.mkdir(parents=True, exist_ok=True)
+    for index, frame in enumerate(frames):
+        camera = camera_indexes[index // num_frames]
+        time = index % num_frames
+        to_pil_image(frame.detach().float().cpu().clamp(0, 1)).save(
+            root / f"cam{camera}_t{time}.png")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--nopo_root", required=True)
@@ -96,6 +115,9 @@ def main():
     parser.add_argument("--vfov", type=float, default=90.0)
     parser.add_argument("--gpu", default="0")
     parser.add_argument("--render_inputs", action="store_true")
+    parser.add_argument(
+        "--fan_cameras", default="0,2,4",
+        help="Comma-separated learned camera directions rendered at one centre")
     args = parser.parse_args()
 
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
@@ -121,6 +143,12 @@ def main():
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+    fan_cameras = tuple(int(value) for value in args.fan_cameras.split(",")
+                        if value.strip())
+    if (not fan_cameras or len(set(fan_cameras)) != len(fan_cameras)
+            or min(fan_cameras) < 0 or max(fan_cameras) >= args.num_cameras):
+        raise ValueError(
+            f"fan cameras {fan_cameras} outside {args.num_cameras} cameras")
     model = NoPo4D.from_pretrained(
         os.fspath(Path(args.model).resolve())).to(device).eval()
     with torch.inference_mode():
@@ -128,6 +156,8 @@ def main():
             images=images, timestamps=timestamps,
             num_cameras=args.num_cameras)
         camera_c2w = encoded.camera_pose["extrinsic_c2w"][
+            0, ::num_frames].float().cpu().numpy()
+        camera_k = encoded.camera_pose["intrinsic"][
             0, ::num_frames].float().cpu().numpy()
         target_pose = central_camera(camera_c2w, args.central_camera)
         target_k = wide_intrinsics(
@@ -143,6 +173,17 @@ def main():
             intrinsics=target_intrinsics,
             image_shape=(height, width),
             timestamps=render_times)
+        fan_pose = shared_centre_camera_fan(camera_c2w, fan_cameras)
+        fan_pose = np.repeat(fan_pose, num_frames, axis=0)
+        fan_k = np.repeat(camera_k[list(fan_cameras)], num_frames, axis=0)
+        fan_times = torch.linspace(0, 1, num_frames, device=device)
+        fan_times = fan_times.repeat(len(fan_cameras))[None]
+        fan = model.render(
+            gaussians=encoded.gaussians,
+            extrinsics=torch.from_numpy(fan_pose).to(device)[None],
+            intrinsics=torch.from_numpy(fan_k).to(device)[None],
+            image_shape=(height, width),
+            timestamps=fan_times)
         if args.render_inputs:
             input_poses = encoded.camera_pose["extrinsic_c2w"]
             input_k = encoded.camera_pose["intrinsic"]
@@ -156,9 +197,17 @@ def main():
     save_tensor_frames(wide.color[0], output_dir / "wide", "wide")
     save_tensor_frames(wide.alpha[0].unsqueeze(1).repeat(1, 3, 1, 1),
                        output_dir / "alpha", "alpha")
+    save_camera_major_frames(
+        fan.color[0], output_dir / "fan", fan_cameras, num_frames)
+    save_camera_major_frames(
+        fan.alpha[0].unsqueeze(1).repeat(1, 3, 1, 1),
+        output_dir / "fan_alpha", fan_cameras, num_frames)
     if args.render_inputs:
         save_tensor_frames(reconstructed.color[0],
                            output_dir / "reconstruction", "view")
+        save_tensor_frames(
+            reconstructed.alpha[0].unsqueeze(1).repeat(1, 3, 1, 1),
+            output_dir / "reconstruction_alpha", "alpha")
 
     report = {
         "schema": "video-split.nopo4d-validation.v1",
@@ -175,6 +224,13 @@ def main():
         "low_alpha_fraction": [float(value) for value in
                                (wide.alpha[0] < 0.5).float()
                                .mean(dim=(-2, -1)).cpu()],
+        "learned_intrinsics": camera_k.tolist(),
+        "fan_cameras": list(fan_cameras),
+        "fan_mean_alpha": fan.alpha[0].mean(dim=(-2, -1)).cpu()
+        .reshape(len(fan_cameras), num_frames).tolist(),
+        "fan_low_alpha_fraction": (fan.alpha[0] < 0.5).float()
+        .mean(dim=(-2, -1)).cpu()
+        .reshape(len(fan_cameras), num_frames).tolist(),
         **geometry_report(camera_c2w),
     }
     with open(output_dir / "report.json", "w", encoding="utf-8") as stream:

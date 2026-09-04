@@ -11,6 +11,7 @@ from src.rig.nopo4d_validation import (
     inspect_image_grid,
     resize_without_camera_parameters,
     run_command,
+    shared_centre_camera_fan,
     split_module_frames,
     videos_from_databag,
     wide_intrinsics,
@@ -71,6 +72,22 @@ class NoPo4DValidationTest(unittest.TestCase):
         k = wide_intrinsics(448, 336, hfov_deg=90, vfov_deg=90)
         self.assertAlmostEqual(float(k[0, 0]), 224.0, places=4)
         self.assertAlmostEqual(float(k[1, 1]), 168.0, places=4)
+
+    def test_camera_fan_shares_centre_but_keeps_learned_directions(self):
+        poses = np.repeat(np.eye(4, dtype=np.float32)[None], 6, axis=0)
+        poses[:, 0, 3] = np.array([-3, -2, -1, 1, 2, 30], np.float32)
+        poses[2, :3, :3] = np.array(
+            [[0, 0, 1], [0, 1, 0], [-1, 0, 0]], np.float32)
+        poses[4, :3, :3] = np.array(
+            [[0, 0, -1], [0, 1, 0], [1, 0, 0]], np.float32)
+
+        fan = shared_centre_camera_fan(poses, camera_indexes=(0, 2, 4))
+
+        self.assertEqual(fan.shape, (3, 4, 4))
+        np.testing.assert_array_equal(fan[:, :3, :3], poses[[0, 2, 4], :3, :3])
+        np.testing.assert_array_equal(fan[:, 0, 3], np.zeros(3, np.float32))
+        with self.assertRaisesRegex(ValueError, "unique"):
+            shared_centre_camera_fan(poses, camera_indexes=(0, 0))
 
     def test_databag_requires_all_three_packed_videos_not_calibration(self):
         with tempfile.TemporaryDirectory() as directory:

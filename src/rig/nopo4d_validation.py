@@ -241,6 +241,21 @@ def central_camera(c2w, central_index=2):
     return target
 
 
+def shared_centre_camera_fan(c2w, camera_indexes=(0, 2, 4)):
+    """Keep learned viewing directions and move them to one learned centre."""
+    poses = np.asarray(c2w, dtype=np.float32)
+    if poses.ndim != 3 or poses.shape[1:] != (4, 4):
+        raise ValueError(f"expected [camera,4,4] c2w poses, got {poses.shape}")
+    indexes = tuple(int(index) for index in camera_indexes)
+    if not indexes or len(set(indexes)) != len(indexes):
+        raise ValueError("camera fan indexes must be non-empty and unique")
+    if min(indexes) < 0 or max(indexes) >= len(poses):
+        raise ValueError(f"camera fan indexes {indexes} outside {len(poses)} poses")
+    targets = poses[list(indexes)].copy()
+    targets[:, :3, 3] = np.median(poses[:, :3, 3], axis=0)
+    return targets
+
+
 def run_command(python, runner, nopo_root, image_dir, output_dir,
                 model_dir, da3_model_dir, extra=()):
     command = [
