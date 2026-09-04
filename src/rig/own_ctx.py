@@ -277,7 +277,7 @@ class Pairs:
                 torch.from_numpy(r["g"]), int(r["y"]))
 
 
-def build(arm, n_geom=len(GEOM), target_mask=False):
+def build(arm, n_geom=len(GEOM), target_mask=False, mask_branch=False):
     """-> a model for one arm of the ablation.
 
     Two trunks and not one shared trunk. The hand crop and a 2.5x window are
@@ -315,9 +315,27 @@ def build(arm, n_geom=len(GEOM), target_mask=False):
             self.use_ctx = arm in ("context", "both", "both_geom")
             self.use_geom = arm in ("both_geom", "geom")
             self.hand = trunk() if self.use_hand else None
-            self.ctx = (trunk(4 if target_mask else 3) if self.use_ctx
-                        else None)
+            # THE INDICATOR GETS ITS OWN BRANCH, NOT A FOURTH CONV CHANNEL.
+            # Folding it into `conv1` makes the query part of the image, so
+            # every ImageNet filter has to relearn around it and the trunk
+            # that already works is disturbed. As a separate branch the RGB
+            # path is untouched and the head is simply also told which
+            # instance is being asked about -- the `interaction pattern` of
+            # HO-RCNN reduced to one mask, because there is only one query
+            # here and no object to pair it with.
+            self.mask_branch = bool(mask_branch and target_mask)
+            self.ctx = (trunk(4 if (target_mask and not self.mask_branch)
+                              else 3)
+                        if self.use_ctx else None)
+            if self.mask_branch:
+                self.mnet = nn.Sequential(
+                    nn.AvgPool2d(4),                       # 128 -> 32
+                    nn.Conv2d(1, 8, 3, 2, 1), nn.ReLU(),
+                    nn.Conv2d(8, 16, 3, 2, 1), nn.ReLU(),
+                    nn.AdaptiveAvgPool2d(1), nn.Flatten())
             d = 512 * (int(self.use_hand) + int(self.use_ctx))
+            if self.mask_branch:
+                d += 16
             if self.use_geom:
                 self.gmlp = nn.Sequential(
                     nn.Linear(n_geom, 64), nn.ReLU(), nn.Linear(64, 64),
@@ -331,8 +349,13 @@ def build(arm, n_geom=len(GEOM), target_mask=False):
             parts = []
             if self.use_hand:
                 parts.append(self.hand(h))
+            m = None
+            if self.mask_branch and c.shape[1] == 4:
+                c, m = c[:, :3], c[:, 3:4]
             if self.use_ctx:
                 parts.append(self.ctx(c))
+            if m is not None:
+                parts.append(self.mnet(m))
             if self.use_geom:
                 parts.append(self.gmlp(g))
             return self.head(torch.cat(parts, 1))
@@ -359,7 +382,8 @@ def load_model(path, device=None):
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
     ck = torch.load(path, map_location=device, weights_only=False)
     arm = ck.get("arm", "both_geom")
-    m = build(arm, target_mask=bool(ck.get("target_mask"))).to(device)
+    m = build(arm, target_mask=bool(ck.get("target_mask")),
+              mask_branch=bool(ck.get("mask_branch"))).to(device)
     m.load_state_dict(ck["state"])
     m.eval()
     return m, device, arm
@@ -488,14 +512,16 @@ def run_epoch(model, ds, device, opt=None, batch=32, weight=None):
 
 
 def train_arm(arm, tr, dv, epochs=12, seed=0, lr=3e-4, ctx_scale=CTX_SCALE,
-              strip=True, letterbox=False, target_mask=False, verbose=True):
+              strip=True, letterbox=False, target_mask=False,
+              mask_branch=False, verbose=True):
     """-> (model, best dev scores). Selection is on dev `other` F1."""
     import torch
     torch.manual_seed(seed)
     random.seed(seed)
     np.random.seed(seed)
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model = build(arm, target_mask=target_mask).to(device)
+    model = build(arm, target_mask=target_mask,
+                  mask_branch=mask_branch).to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
     kw = dict(ctx_scale=ctx_scale, strip=strip, letterbox=letterbox,
               target_mask=target_mask)
@@ -556,6 +582,10 @@ def main():
     ap.add_argument("--target_mask", action="store_true",
                     help="give the context branch a fourth channel marking "
                          "which hand is being asked about. The other axis.")
+    ap.add_argument("--mask_branch", action="store_true",
+                    help="with --target_mask: feed the indicator through a "
+                         "tiny separate conv instead of a fourth channel of "
+                         "the RGB trunk, leaving the pretrained path intact")
     ap.add_argument("--tag", default="", help="label for this arm in output")
     ap.add_argument("--keep_overlay", action="store_true",
                     help="do NOT remove the labelling tool's drawn box and "
@@ -586,7 +616,8 @@ def main():
                                 ctx_scale=a.ctx_scale,
                                 strip=not a.keep_overlay,
                                 letterbox=a.letterbox,
-                                target_mask=a.target_mask)
+                                target_mask=a.target_mask,
+                                mask_branch=a.mask_branch)
             devs.append(best)
             models.append(m)
         f1 = [d["f1"] for d in devs]
@@ -632,6 +663,7 @@ def main():
             import torch
             torch.save({"arm": best_arm, "letterbox": a.letterbox,
                         "target_mask": a.target_mask,
+                        "mask_branch": a.mask_branch,
                         "state": results[best_arm][1][0].state_dict()},
                        a.out)
             print(f"  checkpoint -> {a.out}")
