@@ -106,6 +106,18 @@ class PanoramaRendererTest(unittest.TestCase):
         self.assertEqual(stats["texture_mode"], "module_left")
         self.assertEqual(set(seen), {"cam1", "cam3", "cam5"})
 
+    def test_middle_authority_keeps_work_area_on_one_texture(self):
+        renderer = self._renderer(
+            use_depth=False, use_residual_flow=False,
+            disagreement_gate=0.0, texture_mode="module_left",
+            mid_authority_deg=72.0)
+        with mock.patch("src.rig.panorama.source_maps_perpixel",
+                        side_effect=_maps):
+            _, owner, stats, _ = renderer.render(_sources())
+
+        self.assertTrue(np.all(owner == 1))
+        self.assertEqual(stats["mid_authority_deg"], 72.0)
+
     def test_rgbd_composite_selects_one_colour_after_z_buffer(self):
         vcam = SimpleNamespace(
             width=20, height=10, eye=np.zeros(3), R=np.eye(3),

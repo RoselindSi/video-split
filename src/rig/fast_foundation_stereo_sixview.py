@@ -33,7 +33,7 @@ def videos_from_databag(databag):
 def build_renderer(rig, vcam, model_path, cuda_lib_dir=None,
                    cudnn_lib_dir=None, require_cuda=True,
                    rectified_size=DEFAULT_RECTIFIED_SIZE, depth_m=0.6,
-                   disagreement_gate=40.0):
+                   disagreement_gate=40.0, mid_authority_deg=72.0):
     from src.rig.fast_foundation_stereo import FastFoundationStereoProvider
     from src.rig.panorama import DepthAwarePanorama
 
@@ -45,7 +45,8 @@ def build_renderer(rig, vcam, model_path, cuda_lib_dir=None,
         rig, vcam, depth_m=depth_m, depth_provider=provider,
         texture_mode="module_left", use_depth=True,
         use_residual_flow=False, stabilize_depth=True,
-        disagreement_gate=disagreement_gate)
+        disagreement_gate=disagreement_gate,
+        mid_authority_deg=mid_authority_deg)
     return renderer, provider
 
 
@@ -108,7 +109,8 @@ def run(databag, model_path, out_path, comparison_path, metrics_path,
         start=3000, n=120, stride=1, fit_frames=6, output_fps=None,
         hfov=150.0, vfov=90.0, depth_m=0.6,
         disagreement_gate=40.0, rectified_size=DEFAULT_RECTIFIED_SIZE,
-        cuda_lib_dir=None, cudnn_lib_dir=None, require_cuda=True):
+        mid_authority_deg=72.0, cuda_lib_dir=None, cudnn_lib_dir=None,
+        require_cuda=True):
     import cv2
     from src.rig.calibration import RigCalibration
     from src.rig.geometry import VirtualWideCamera
@@ -124,7 +126,8 @@ def run(databag, model_path, out_path, comparison_path, metrics_path,
         rig, vcam, model_path, cuda_lib_dir=cuda_lib_dir,
         cudnn_lib_dir=cudnn_lib_dir, require_cuda=require_cuda,
         rectified_size=rectified_size, depth_m=depth_m,
-        disagreement_gate=disagreement_gate)
+        disagreement_gate=disagreement_gate,
+        mid_authority_deg=mid_authority_deg)
 
     fit_started = time.perf_counter()
     fit = renderer.fit(_fit_samples(
@@ -213,6 +216,7 @@ def run(databag, model_path, out_path, comparison_path, metrics_path,
         "source_fps": source_fps, "output_fps": float(output_fps),
         "output_size": [vcam.width, vcam.height],
         "rectified_size": list(rectified_size),
+        "mid_authority_deg": float(mid_authority_deg),
         "texture_sources": [module.left.name for module in rig.modules],
         "geometry_sources": sorted(rig.cameras),
         "fit": {**fit, "seconds": fit_seconds},
@@ -248,6 +252,7 @@ def main():
     parser.add_argument("--vfov", type=float, default=90.0)
     parser.add_argument("--depth_m", type=float, default=0.6)
     parser.add_argument("--gate", type=float, default=40.0)
+    parser.add_argument("--mid_authority", type=float, default=72.0)
     parser.add_argument("--rectified_width", type=int, default=960)
     parser.add_argument("--rectified_height", type=int, default=720)
     parser.add_argument("--cuda_lib_dir")
@@ -261,6 +266,7 @@ def main():
         hfov=args.hfov, vfov=args.vfov, depth_m=args.depth_m,
         disagreement_gate=args.gate,
         rectified_size=(args.rectified_width, args.rectified_height),
+        mid_authority_deg=args.mid_authority,
         cuda_lib_dir=args.cuda_lib_dir, cudnn_lib_dir=args.cudnn_lib_dir,
         require_cuda=not args.allow_cpu)
 

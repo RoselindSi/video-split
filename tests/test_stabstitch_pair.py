@@ -136,6 +136,8 @@ class StabStitchPairTest(unittest.TestCase):
         self.assertEqual(renderer_class.call_args.kwargs["texture_mode"],
                          "module_left")
         self.assertTrue(renderer_class.call_args.kwargs["use_depth"])
+        self.assertEqual(renderer_class.call_args.kwargs["mid_authority_deg"],
+                         72.0)
 
     def test_six_view_runner_refuses_an_incomplete_databag(self):
         with tempfile.TemporaryDirectory() as directory:

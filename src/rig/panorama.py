@@ -102,7 +102,8 @@ class DepthAwarePanorama:
     def __init__(self, rig, vcam, depth_m=DEFAULT_DEPTH_M, use_depth=True,
                  use_residual_flow=False, depth_provider=None, blend_temp=6.0,
                  disagreement_gate=40.0, flow_scale=FLOW_SCALE,
-                 stabilize_depth=True, texture_mode="all"):
+                 stabilize_depth=True, texture_mode="all",
+                 mid_authority_deg=0.0):
         self.rig = rig
         self.vcam = vcam
         self.depth_m = float(depth_m)
@@ -113,6 +114,7 @@ class DepthAwarePanorama:
         self.disagreement_gate = float(disagreement_gate)
         self.flow_scale = float(flow_scale)
         self.stabilize_depth = bool(stabilize_depth)
+        self.mid_authority_deg = float(mid_authority_deg)
         if texture_mode == "all":
             self.camera_names = tuple(sorted(rig.cameras))
         elif texture_mode == "module_left":
@@ -290,7 +292,9 @@ class DepthAwarePanorama:
         # has put the views on one surface; off-axis quality now decides the
         # hard fallback, while agreeing views share a soft transition.
         weights, hard, reach = blend_weights(
-            valid, cost, mid_i=None, mid_authority_deg=0.0,
+            valid, cost,
+            mid_i=self.reference if self.mid_authority_deg > 0 else None,
+            mid_authority_deg=self.mid_authority_deg,
             temp=self.blend_temp)
         rgb, owner, gated = _detail_preserving_compose(
             warped, valid, weights, hard, reach,
@@ -302,5 +306,6 @@ class DepthAwarePanorama:
             "gated_frac": float(gated.mean()),
             "flow_views": len(self.flows),
             "texture_mode": self.texture_mode,
+            "mid_authority_deg": self.mid_authority_deg,
         }
         return rgb, owner, self.last_stats, range_m
