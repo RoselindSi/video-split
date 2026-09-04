@@ -659,14 +659,22 @@ def main():
         print("\n  The shipped hand-only classifier on this same set: "
               "prec 0.889  rec 0.644  f1 0.747.\n  It trained on 2533 hands "
               "against this experiment's 1014, so a tie here is not a tie.")
-        if a.out:
-            import torch
-            torch.save({"arm": best_arm, "letterbox": a.letterbox,
-                        "target_mask": a.target_mask,
-                        "mask_branch": a.mask_branch,
-                        "state": results[best_arm][1][0].state_dict()},
-                       a.out)
-            print(f"  checkpoint -> {a.out}")
+
+    # SAVING MUST NOT DEPEND ON THERE BEING A TEST SET. This block used to sit
+    # inside `if test:`, so an ablation run deliberately WITHOUT `--test` --
+    # which is every arm whose point is that the frozen set stays frozen --
+    # trained for an hour, printed its dev numbers and wrote nothing. The
+    # checkpoints for a whole 2x2 were lost that way and the per-track subset
+    # analysis could not be run at all.
+    if a.out:
+        import torch
+        pick = max(arms, key=lambda k: np.median(
+            [d["f1"] for d in results[k][0]]))
+        torch.save({"arm": pick, "letterbox": a.letterbox,
+                    "target_mask": a.target_mask,
+                    "mask_branch": getattr(a, "mask_branch", False),
+                    "state": results[pick][1][0].state_dict()}, a.out)
+        print(f"  checkpoint ({pick}, seed 0) -> {a.out}")
 
 
 def _self_test():
