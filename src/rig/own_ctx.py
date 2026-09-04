@@ -260,6 +260,89 @@ def build(arm, n_geom=len(GEOM)):
     return Net()
 
 
+# The width the labelling tool wrote its context frames at. Inference has the
+# full panorama, which is more than twice as wide, and a 2.5x window cut from
+# it and then squeezed to 128px would carry detail the training crops never
+# had. Matching the training resize is not cosmetic: it is the difference
+# between the distribution the weights were fitted to and a sharper one.
+CONTEXT_STORE_W = 900
+
+
+def load_model(path, device=None):
+    """-> (model, device, arm), or (None, None, None) when absent.
+
+    A missing checkpoint is not an error here any more than in `own_cnn`:
+    the hand-only classifier is the incumbent and stays the fallback."""
+    import torch
+    if not path or not os.path.exists(path):
+        return None, None, None
+    device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+    ck = torch.load(path, map_location=device, weights_only=False)
+    arm = ck.get("arm", "both_geom")
+    m = build(arm).to(device)
+    m.load_state_dict(ck["state"])
+    m.eval()
+    return m, device, arm
+
+
+def _geom_vector(det, shape):
+    """own_label's feature vector, reordered to GEOM. -> np.float32
+
+    Reordered by NAME and not by position. `own_label.FEATURES` has seventeen
+    entries in its own order and GEOM has fourteen in another; indexing one
+    with the other's positions would feed `wrist_y` where `box_cx` belongs and
+    the model would still run, silently, at chance."""
+    from src.rig import own_label
+    f = own_label.features(det, shape)
+    at = {name: i for i, name in enumerate(own_label.FEATURES)}
+    return np.array([float(f[at[c]]) for c in GEOM], np.float32)
+
+
+def predict(model, device, rgb, dets, ctx_scale=CTX_SCALE):
+    """-> [(is_owner, p_owner)] one per detection, matching own_cnn.predict.
+
+    The context window is cut from the frame AT THE STORED WIDTH, and no
+    overlay is stripped: nothing drew on this frame. `strip_overlay` exists
+    for the training crops only, and calling it here would inpaint whatever
+    magenta or yellow the bench actually contains."""
+    import cv2
+    import torch
+    if not dets:
+        return []
+    from src.rig.own_cnn import crop_of
+    H, W = rgb.shape[:2]
+    small = (cv2.resize(rgb, (CONTEXT_STORE_W,
+                              int(CONTEXT_STORE_W * H / W)),
+                        interpolation=cv2.INTER_AREA)
+             if W > CONTEXT_STORE_W else rgb)
+    ds = Pairs([], ctx_scale=ctx_scale)
+    hs, cs, gs, keep = [], [], [], []
+    for i, d in enumerate(dets):
+        hand = crop_of(rgb, d)
+        if hand is None:
+            continue
+        x0, y0, x1, y1 = [float(v) for v in d["box"]]
+        box = ((x0 + x1) / 2.0 / W, (y0 + y1) / 2.0 / H,
+               (x1 - x0) / W, (y1 - y0) / H)
+        ctx = context_crop(small, box, ctx_scale)
+        if ctx is None or ctx.size == 0:
+            ctx = hand
+        hs.append(ds._prep(hand, HAND_PX))
+        cs.append(ds._prep(ctx, CTX_PX))
+        gs.append(torch.from_numpy(_geom_vector(d, rgb.shape)))
+        keep.append(i)
+    out = [(True, 1.0)] * len(dets)
+    if not hs:
+        return out
+    with torch.no_grad():
+        pr = torch.softmax(
+            model(torch.stack(hs).to(device), torch.stack(cs).to(device),
+                  torch.stack(gs).to(device)), 1)[:, 1]
+    for i, p in zip(keep, pr.cpu().numpy().tolist()):
+        out[i] = (p >= 0.5, float(p))
+    return out
+
+
 def scores(pred, true):
     """`other` is the positive class."""
     pred, true = np.asarray(pred), np.asarray(true)
@@ -491,6 +574,28 @@ def _self_test():
         "context frame")
     chk(strip_overlay(np.full((20, 20, 3), 100, np.uint8)).shape == (20, 20, 3),
         "a frame with no marks on it is returned unchanged in shape")
+
+    # THE ORDER OF THE GEOMETRY VECTOR IS THE FAILURE THAT WOULD NOT SHOW.
+    # `own_label.FEATURES` has seventeen names in one order, GEOM has fourteen
+    # in another. Index one with the other's positions and the model receives
+    # `wrist_y` where it learned `box_cx`; nothing raises, nothing looks
+    # wrong, and ownership is decided at chance.
+    from src.rig import own_label
+    kp = np.zeros((21, 2), float)
+    kp[0] = (300.0, 400.0)
+    kp[1:] = (300.0, 250.0)
+    det = {"box": (250, 350, 350, 450), "kp": kp, "conf": 0.77,
+           "edge": "bottom", "exit": np.array([300.0, 480.0])}
+    shape = (480, 800, 3)
+    ref = own_label.features(det, shape)
+    at = {n: i for i, n in enumerate(own_label.FEATURES)}
+    got = _geom_vector(det, shape)
+    chk(len(got) == len(GEOM),
+        "the geometry vector has one entry per GEOM name")
+    chk(all(abs(float(got[i]) - float(ref[at[c]])) < 1e-6
+            for i, c in enumerate(GEOM)),
+        "every geometry entry is the feature of the SAME NAME, not the same "
+        "position")
 
     chk("rel_size" not in GEOM,
         "the detection-set-dependent cue is not among the geometry features")

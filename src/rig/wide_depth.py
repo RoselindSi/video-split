@@ -76,6 +76,20 @@ class WideDepth:
         return r, self.valid.astype(np.float32)
 
 
+@dataclass
+class WideRGBD:
+    """One-owner RGB and range rendered from measured 3D points."""
+    rgb: np.ndarray              # [H,W,3] uint8; never colour-averaged
+    range_m: np.ndarray          # [H,W] float32, NaN where unmeasured
+    valid: np.ndarray            # [H,W] bool
+    module: np.ndarray           # [H,W] int8, winning module or -1
+    n_points: int
+    module_names: tuple
+
+    def coverage(self):
+        return float(self.valid.mean())
+
+
 def project(vcam, p_ref):
     """Reference-frame points -> (x, y, range) in the virtual camera.
 
@@ -137,7 +151,89 @@ def composite(vcam, per_module, splat=SPLAT):
                      valid, mod, int(len(r)), tuple(names))
 
 
-def wide_depth(rig, vcam, sources, rect_cache=None, stride=1, splat=SPLAT):
+def composite_rgbd(vcam, per_module, splat=SPLAT, depth_tie_m=0.02):
+    """Forward-render coloured point clouds with one texture owner per pixel.
+
+    ``per_module`` contains ``(name, points, colours, quality)`` tuples, where
+    lower quality values mean a more on-axis sample.  Depth differences over
+    ``depth_tie_m`` are true visibility decisions and the nearer point wins.
+    Candidates on the same surface use quality with a deterministic module
+    tiebreak.  RGB values are selected, never averaged.
+    """
+    H, W = vcam.height, vcam.width
+    names, flats, ranges, modules, colours, qualities = [], [], [], [], [], []
+    n_points = 0
+    for module_index, item in enumerate(per_module):
+        if len(item) == 3:
+            name, points, colour = item
+            quality = np.zeros(len(points), np.float32)
+        else:
+            name, points, colour, quality = item
+        names.append(name)
+        points = np.asarray(points)
+        colour = np.asarray(colour, np.uint8)
+        quality = np.asarray(quality, np.float32)
+        if len(points) != len(colour) or len(points) != len(quality):
+            raise ValueError(f"{name}: point, colour and quality counts differ")
+        if not len(points):
+            continue
+        x, y, radius, inside = project(vcam, points)
+        x, y, radius = x[inside], y[inside], radius[inside]
+        colour, quality = colour[inside], quality[inside]
+        n_points += len(radius)
+        xi, yi = np.floor(x).astype(np.int32), np.floor(y).astype(np.int32)
+        for dy in range(splat):
+            for dx in range(splat):
+                px, py = xi + dx, yi + dy
+                keep = (px >= 0) & (px < W) & (py >= 0) & (py < H)
+                flats.append(py[keep] * W + px[keep])
+                ranges.append(radius[keep].astype(np.float32))
+                modules.append(np.full(int(keep.sum()), module_index,
+                                       np.int8))
+                colours.append(colour[keep])
+                qualities.append(quality[keep] + module_index * 1e-6)
+
+    rgb = np.zeros((H * W, 3), np.uint8)
+    output_range = np.full(H * W, np.inf, np.float32)
+    output_module = np.full(H * W, -1, np.int8)
+    if not flats:
+        return WideRGBD(rgb.reshape(H, W, 3),
+                        np.full((H, W), np.nan, np.float32),
+                        np.zeros((H, W), bool), output_module.reshape(H, W),
+                        0, tuple(names))
+
+    flat = np.concatenate(flats)
+    radius = np.concatenate(ranges)
+    module = np.concatenate(modules)
+    colour = np.concatenate(colours)
+    quality = np.concatenate(qualities)
+    nearest = np.full(H * W, np.inf, np.float32)
+    np.minimum.at(nearest, flat, radius)
+    same_surface = radius <= nearest[flat] + float(depth_tie_m)
+    best_quality = np.full(H * W, np.inf, np.float32)
+    np.minimum.at(best_quality, flat[same_surface], quality[same_surface])
+    eligible = same_surface & (quality <= best_quality[flat] + 1e-7)
+
+    indices = np.flatnonzero(eligible)
+    order = np.lexsort((radius[indices], flat[indices]))
+    indices = indices[order]
+    ordered_pixels = flat[indices]
+    first = np.r_[True, ordered_pixels[1:] != ordered_pixels[:-1]]
+    winners = indices[first]
+    pixels = flat[winners]
+    rgb[pixels] = colour[winners]
+    output_range[pixels] = radius[winners]
+    output_module[pixels] = module[winners]
+    valid = np.isfinite(output_range)
+    return WideRGBD(
+        rgb.reshape(H, W, 3),
+        np.where(valid, output_range, np.nan).reshape(H, W).astype(np.float32),
+        valid.reshape(H, W), output_module.reshape(H, W), n_points,
+        tuple(names))
+
+
+def wide_depth(rig, vcam, sources, rect_cache=None, stride=1, splat=SPLAT,
+               matcher=None):
     """Full path: module images -> stereo -> points -> composite.
 
     `sources` is {camera_name: image}, the same dict `render_wide.render`
@@ -152,10 +248,41 @@ def wide_depth(rig, vcam, sources, rect_cache=None, stride=1, splat=SPLAT):
         if m.name not in rect_cache:
             rect_cache[m.name] = rectify_maps(rig, m)
         md = module_depth(rig, m, sources[m.left.name], sources[m.right.name],
-                          rect_cache[m.name])
+                          rect_cache[m.name], matcher=matcher)
         pts, _ = to_reference_points(rig, m, md, stride=stride)
         per_module.append((m.name, pts))
     return composite(vcam, per_module, splat=splat)
+
+
+def wide_rgbd(rig, vcam, sources, rect_cache=None, stride=1, splat=SPLAT,
+              matcher=None, depth_tie_m=0.02):
+    """Stereo pairs -> left-eye coloured points -> one-owner RGBD panorama."""
+    from src.rig.depth import module_depth, rectify_maps, to_reference_points
+
+    rect_cache = {} if rect_cache is None else rect_cache
+    per_module = []
+    for module in rig.modules:
+        if (module.left.name not in sources or
+                module.right.name not in sources):
+            continue
+        if module.name not in rect_cache:
+            rect_cache[module.name] = rectify_maps(rig, module)
+        measured = module_depth(
+            rig, module, sources[module.left.name], sources[module.right.name],
+            rect_cache[module.name], matcher=matcher)
+        points, colour = to_reference_points(
+            rig, module, measured, stride=stride)
+        camera = rig.cameras[module.left.name]
+        rays = points - camera.t
+        lengths = np.linalg.norm(rays, axis=1)
+        cosine = np.divide(
+            rays @ camera.axis, lengths,
+            out=np.zeros_like(lengths), where=lengths > 1e-9)
+        quality = np.degrees(np.arccos(np.clip(cosine, -1.0, 1.0)))
+        per_module.append((module.name, points, colour,
+                           quality.astype(np.float32)))
+    return composite_rgbd(vcam, per_module, splat=splat,
+                          depth_tie_m=depth_tie_m)
 
 
 def _self_test():

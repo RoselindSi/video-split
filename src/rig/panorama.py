@@ -102,7 +102,7 @@ class DepthAwarePanorama:
     def __init__(self, rig, vcam, depth_m=DEFAULT_DEPTH_M, use_depth=True,
                  use_residual_flow=False, depth_provider=None, blend_temp=6.0,
                  disagreement_gate=40.0, flow_scale=FLOW_SCALE,
-                 stabilize_depth=True):
+                 stabilize_depth=True, texture_mode="all"):
         self.rig = rig
         self.vcam = vcam
         self.depth_m = float(depth_m)
@@ -113,7 +113,13 @@ class DepthAwarePanorama:
         self.disagreement_gate = float(disagreement_gate)
         self.flow_scale = float(flow_scale)
         self.stabilize_depth = bool(stabilize_depth)
-        self.camera_names = tuple(sorted(rig.cameras))
+        if texture_mode == "all":
+            self.camera_names = tuple(sorted(rig.cameras))
+        elif texture_mode == "module_left":
+            self.camera_names = tuple(module.left.name for module in rig.modules)
+        else:
+            raise ValueError(f"unknown texture mode: {texture_mode}")
+        self.texture_mode = texture_mode
         mid = rig.modules[len(rig.modules) // 2].left.name
         self.reference = self.camera_names.index(mid)
         self.photo = {self.reference: (np.ones(3), np.zeros(3))}
@@ -295,5 +301,6 @@ class DepthAwarePanorama:
             "depth_coverage": depth_coverage,
             "gated_frac": float(gated.mean()),
             "flow_views": len(self.flows),
+            "texture_mode": self.texture_mode,
         }
         return rgb, owner, self.last_stats, range_m

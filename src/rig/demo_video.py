@@ -164,7 +164,8 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         continue_conf=CONTINUE_TRACK_CONF,
         predict_motion=True, safe_association=True, safe_reacquire=True,
         min_conf=None, bridge=None, panorama_mode="baseline",
-        panorama_fit_frames=0, panorama_depth=True, panorama_flow=False):
+        panorama_fit_frames=0, panorama_depth=True, panorama_flow=False,
+        ctx=None):
     import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
@@ -302,7 +303,15 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
             n_face += len(faces)
             rgb, _ = face_mask.cover(clean, hold.update(faces,
                                                         shape=clean.shape))
-        if cnn is not None:
+        if ctx is not None:
+            # HAND + SURROUNDING WINDOW + GEOMETRY, one head. The hand-only
+            # classifier recalls 0.644 of foreign hands on the frozen set and
+            # this recalls 0.83 at equal or better precision, having trained
+            # on 1014 hands against its 2533: what was missing was the
+            # forearm and where it goes, not more examples of hands.
+            from src.rig import own_ctx
+            flags = own_ctx.predict(ctx[0], ctx[1], clean, dets)
+        elif cnn is not None:
             flags = own_cnn.predict(cnn, device, clean, dets)
         else:
             flags = [(bool(d.get("owner")), float(d.get("owner_p", 1.0)))
@@ -568,6 +577,12 @@ def main():
                     help="most hands one frame may call the wearer's")
     ap.add_argument("--no_cap", action="store_true",
                     help="lift the two-hand cap")
+    ap.add_argument("--clf_ctx",
+                    help="an own_ctx checkpoint: ownership from the hand, "
+                         "the surrounding window and the geometry together. "
+                         "Takes precedence over --clf. On the frozen test "
+                         "set this lifted foreign-hand recall from 0.644 to "
+                         "0.83 at equal or better precision.")
     ap.add_argument("--clf", help="own_cnn.pt. Without it the demo shows the "
                                   "geometric RULE, which is not the thing "
                                   "being demonstrated.")
@@ -647,13 +662,20 @@ def main():
     geom = geom_prior.load_model(a.geom)
     if a.geom and geom is None:
         raise SystemExit(f"--geom {a.geom} not found")
+    ctx_model = ctx_arm = None
+    if a.clf_ctx:
+        from src.rig import own_ctx
+        ctx_model, ctx_device, ctx_arm = own_ctx.load_model(a.clf_ctx)
+        if ctx_model is None:
+            raise SystemExit(f"--clf_ctx {a.clf_ctx} not found")
     cnn, device = own_cnn.load_model(a.clf)
     if a.clf and cnn is None:
         raise SystemExit(f"--clf {a.clf} not found. Refusing to fall back to "
                          f"the rule\n  silently: the demo would show the "
                          f"incumbent under the replacement's name.")
     print(f"  {a.n} frames from {a.start}, stride {a.stride}, {a.fps} fps")
-    print(f"  ownership by {'the CNN' if cnn else 'the geometric RULE'}"
+    print(f"  ownership by "
+          f"{('hand+context+geometry (' + str(ctx_arm) + ')') if ctx_model else ('the hand-only CNN' if cnn else 'the geometric RULE')}"
           f"{'' if cnn else '   <- not the shipped path'}")
     print(f"  prior: {'fitted geometry, ' + str(len(geom['cues'])) + ' cues'
                     if geom else 'the single exit-height rule'}")
@@ -683,7 +705,9 @@ def main():
                      panorama_mode=a.panorama,
                      panorama_fit_frames=a.pano_fit_frames,
                      panorama_depth=not a.no_pano_depth,
-                     panorama_flow=a.pano_flow and not a.no_pano_flow)
+                     panorama_flow=a.pano_flow and not a.no_pano_flow,
+                     ctx=None if ctx_model is None
+                     else (ctx_model, ctx_device))
     if not n:
         raise SystemExit("no frames written")
     mb = os.path.getsize(a.out) / 1e6

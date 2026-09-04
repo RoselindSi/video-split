@@ -10,7 +10,9 @@ from src.rig.stabstitch_pair import (find_module, pair_key, run_official,
                                      valid_fraction)
 from src.rig.stabstitch_pair_eval import edge_chamfer
 from src.rig.fast_foundation_stereo import (FastFoundationStereo,
+                                             FastFoundationStereoProvider,
                                              disparity_to_depth)
+from src.rig.fast_foundation_stereo_eval import temporal_disparity_error
 
 
 class _Camera:
@@ -97,6 +99,22 @@ class StabStitchPairTest(unittest.TestCase):
                 session=_StereoSession(["CPUExecutionProvider"]),
                 require_cuda=True)
 
+    def test_fast_foundation_provider_reaches_one_owner_rgbd_path(self):
+        provider = FastFoundationStereoProvider(
+            session=_StereoSession(["CUDAExecutionProvider"]),
+            require_cuda=True)
+        expected = object()
+        with mock.patch("src.rig.wide_depth.wide_rgbd",
+                        return_value=expected) as render:
+            result = provider.rgbd("rig", "vcam", {"cam1": "image"})
+
+        self.assertIs(result, expected)
+        self.assertIs(render.call_args.kwargs["rect_cache"],
+                      provider.rect_cache)
+        self.assertEqual(render.call_args.kwargs["depth_tie_m"], 0.02)
+        self.assertIs(render.call_args.kwargs["matcher"].__self__,
+                      provider.stereo)
+
     def test_disparity_to_depth_keeps_only_calibrated_range(self):
         disparity = np.array([[0.0, 10.0, 100.0]], np.float32)
         depth, valid = disparity_to_depth(
@@ -106,6 +124,18 @@ class StabStitchPairTest(unittest.TestCase):
         self.assertAlmostEqual(float(depth[0, 1]), 1.0)
         self.assertTrue(np.isnan(depth[0, 0]))
         self.assertTrue(np.isnan(depth[0, 2]))
+
+    def test_temporal_disparity_error_is_motion_aligned(self):
+        image = np.zeros((64, 96, 3), np.uint8)
+        image[16:48, 24:72] = 255
+        disparity = np.full((64, 96), 12.0, np.float32)
+        stable = temporal_disparity_error(
+            image, image, disparity, disparity)
+        jumped = temporal_disparity_error(
+            image, image, disparity, disparity + 4.0)
+        self.assertLess(stable["p90_px"], 0.01)
+        self.assertGreater(jumped["median_px"], 3.9)
+        self.assertGreater(jumped["jump_gt3_fraction"], 0.99)
 
     @mock.patch("src.rig.stabstitch_pair.subprocess.run")
     def test_official_runner_contains_upstream_path_quirks(self, run):

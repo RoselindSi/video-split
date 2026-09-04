@@ -102,14 +102,14 @@ def disparity(left, right, num_disp=NUM_DISPARITIES, block=BLOCK_SIZE):
     return sg.compute(gl, gr).astype(np.float32) / 16.0
 
 
-def module_depth(rig, module, left, right, rect=None, **kw):
+def module_depth(rig, module, left, right, rect=None, matcher=None, **kw):
     """Rectify, match, and convert to metres. -> ModuleDepth."""
     import cv2
     rect = rect or rectify_maps(rig, module, **kw)
     (mx1, my1), (mx2, my2) = rect["maps"]
     lr = cv2.remap(left, mx1, my1, cv2.INTER_LINEAR)
     rr = cv2.remap(right, mx2, my2, cv2.INTER_LINEAR)
-    d = disparity(lr, rr)
+    d = (matcher or disparity)(lr, rr)
 
     fx = float(rect["P1"][0, 0])
     b = rect["baseline_m"]

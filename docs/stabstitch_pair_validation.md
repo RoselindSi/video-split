@@ -118,3 +118,75 @@ change the appearance of the two contours but do not choose which surface is
 visible. Subsequent experiments must render from one texture owner per pixel
 using depth and a z-buffer, and treat any multi-source color blend as a narrow
 photometric transition only after geometric visibility has been resolved.
+
+## Replacement experiment: Fast-FoundationStereo
+
+StabStitch++ is retired from the RGB path for this rig. The replacement pair
+experiment uses NVIDIA's official
+[Fast-FoundationStereo](https://github.com/NVlabs/Fast-FoundationStereo)
+implementation and the fixed-resolution 576x960, eight-iteration ONNX model.
+The source archive was pinned at
+`a290ba04c1b3ad1ec41a33974a157b2917b624d4`; the model SHA-256 is
+`5b6c41cf5677055216b9726a6e7dcf3cc3316fd257054bcb6110e8e56b45a45a`.
+The upstream code and weights are research-only/non-commercial; this is a
+technical validation, not a production licensing decision.
+
+Run dense disparity on the already rectified pair:
+
+```bash
+PYTHONPATH=/workspace/stabstitch_pair/ffs_runtime:/workspace/tr1/vs \
+/workspace/venv_rig/bin/python -m src.rig.fast_foundation_stereo \
+  --case /workspace/stabstitch_pair/input/cam12_f003000_n000120_s01 \
+  --model /workspace/stabstitch_pair/ffs/model/model.onnx \
+  --out /workspace/stabstitch_pair/ffs/output_full_v1 \
+  --cuda_lib_dir /workspace/tr1/venv_cpu/lib/python3.12/site-packages/nvidia/cu13/lib \
+  --cudnn_lib_dir /workspace/tr1/venv_cpu/lib/python3.12/site-packages/nvidia/cudnn/lib
+```
+
+GPU mode is strict: if CUDA fails to load, the runner raises instead of
+silently falling back to the 15-second-per-frame CPU path. On the 120 frames,
+after warm-up, inference ran at 96.4 ms median and 126.1 ms p90 per stereo
+pair. Valid metric depth was 99.56% median and 98.04% in the worst frame.
+
+Temporal stability is scored after transporting the previous disparity into
+the current left image with backward optical flow and rejecting pixels whose
+forward/backward flow is inconsistent:
+
+```bash
+python -m src.rig.fast_foundation_stereo_eval \
+  --case /workspace/stabstitch_pair/input/cam12_f003000_n000120_s01 \
+  --disparity_dir /workspace/stabstitch_pair/ffs/output_full_v1/disparity \
+  --out_json /workspace/stabstitch_pair/ffs/output_full_v1/temporal_metrics.json
+```
+
+```text
+flow-consistent support, median                    99.38%
+aligned disparity change, median                   0.114 px
+aligned disparity change p90, median over pairs    0.705 px
+pixels changing more than 3 px, median              1.92%
+pixels changing more than 3 px, p90                  3.39%
+pixels changing more than 3 px, worst                5.70%
+worst current frames                 60,64,30,45,62,48,46,90
+```
+
+The worst frames coincide with real hand/finger motion and changing
+occlusions; sampled depth boundaries remain attached to the arm and hand.
+This passes the geometry-layer gate, but it does not by itself prove a
+seamless panorama.
+
+The render contract is therefore now explicit:
+
+1. Each module's right eye is correspondence evidence only.
+2. Only the three module-left images may supply RGB texture.
+3. Their measured coloured points are forward-projected into the virtual
+   camera.
+4. A z-buffer resolves different surfaces; candidates within 2 cm of the
+   nearest surface use the most on-axis camera with a deterministic tie-break.
+5. Every output pixel copies one physical camera colour. RGB averaging is not
+   permitted.
+
+`depth.module_depth(..., matcher=...)` and `wide_depth.wide_rgbd(...)` carry
+this path. `DepthAwarePanorama(texture_mode="module_left")` also prevents
+cam2/cam4/cam6 from re-entering the legacy inverse-warp compositor. A complete
+six-view video test still requires synchronized `cam12.mp4`, `cam34.mp4`, and
+`cam56.mp4`; the current validation host only has the exported cam12 pair.

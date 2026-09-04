@@ -17,6 +17,7 @@ if str(ROOT) not in sys.path:
 from src.rig.panorama import (DepthAwarePanorama,
                               _detail_preserving_compose)  # noqa: E402
 from src.rig.seam_fix import blend_weights, densify_range  # noqa: E402
+from src.rig.wide_depth import composite_rgbd  # noqa: E402
 
 
 H, W = 48, 120
@@ -86,6 +87,51 @@ class PanoramaRendererTest(unittest.TestCase):
         self.assertEqual(stats["n_views"], 6)
         self.assertEqual(set(np.unique(owner)), set(range(6)))
         self.assertGreater(int(image.sum()), 0)
+
+    def test_stereo_right_eyes_can_be_geometry_only(self):
+        renderer = self._renderer(
+            use_depth=False, use_residual_flow=False,
+            disagreement_gate=0.0, texture_mode="module_left")
+        seen = []
+
+        def maps(rig, name, vcam, range_m):
+            seen.append(name)
+            return _maps(rig, name, vcam, range_m)
+
+        with mock.patch("src.rig.panorama.source_maps_perpixel",
+                        side_effect=maps):
+            _, _, stats, _ = renderer.render(_sources())
+
+        self.assertEqual(stats["n_views"], 3)
+        self.assertEqual(stats["texture_mode"], "module_left")
+        self.assertEqual(set(seen), {"cam1", "cam3", "cam5"})
+
+    def test_rgbd_composite_selects_one_colour_after_z_buffer(self):
+        vcam = SimpleNamespace(
+            width=20, height=10, eye=np.zeros(3), R=np.eye(3),
+            hfov=np.radians(90), vfov=np.radians(60))
+        point_near = np.array([[0.0, 0.0, 0.5]])
+        point_far = np.array([[0.0, 0.0, 1.0]])
+        red = np.array([[0, 0, 255]], np.uint8)
+        blue = np.array([[255, 0, 0]], np.uint8)
+        result = composite_rgbd(
+            vcam,
+            [("far", point_far, blue, np.array([0.0])),
+             ("near", point_near, red, np.array([20.0]))],
+            splat=1)
+        self.assertEqual(result.rgb[5, 10].tolist(), red[0].tolist())
+        self.assertEqual(int(result.module[5, 10]), 1)
+        self.assertAlmostEqual(float(result.range_m[5, 10]), 0.5)
+
+        same_surface = composite_rgbd(
+            vcam,
+            [("less_on_axis", point_near, red, np.array([10.0])),
+             ("more_on_axis", point_near * 1.02, blue, np.array([1.0]))],
+            splat=1, depth_tie_m=0.03)
+        pixel = same_surface.rgb[5, 10]
+        self.assertIn(pixel.tolist(), (red[0].tolist(), blue[0].tolist()))
+        self.assertEqual(pixel.tolist(), blue[0].tolist())
+        self.assertNotEqual(pixel.tolist(), [127, 0, 127])
 
     def test_depth_provider_controls_the_warp_range(self):
         calls = []

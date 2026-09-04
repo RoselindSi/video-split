@@ -130,6 +130,42 @@ class FastFoundationStereo:
         return disparity.astype(np.float32, copy=False)
 
 
+class FastFoundationStereoProvider:
+    """Reusable matcher plus rectification cache for wide RGBD rendering."""
+
+    def __init__(self, model_path=None, providers=None, session=None,
+                 cuda_lib_dir=None, cudnn_lib_dir=None,
+                 require_cuda=False, stride=1, splat=2,
+                 depth_tie_m=0.02):
+        self.stereo = FastFoundationStereo(
+            model_path=model_path, providers=providers, session=session,
+            cuda_lib_dir=cuda_lib_dir, cudnn_lib_dir=cudnn_lib_dir,
+            require_cuda=require_cuda)
+        self.stride = int(stride)
+        self.splat = int(splat)
+        self.depth_tie_m = float(depth_tie_m)
+        self.rect_cache = {}
+
+    def __call__(self, rig, vcam, sources):
+        """Return virtual-camera metric range for ``DepthAwarePanorama``."""
+        from src.rig.wide_depth import wide_depth
+
+        return wide_depth(
+            rig, vcam, sources, rect_cache=self.rect_cache,
+            stride=self.stride, splat=self.splat,
+            matcher=self.stereo.disparity)
+
+    def rgbd(self, rig, vcam, sources):
+        """Return the stricter forward-rendered, one-owner RGBD panorama."""
+        from src.rig.wide_depth import wide_rgbd
+
+        return wide_rgbd(
+            rig, vcam, sources, rect_cache=self.rect_cache,
+            stride=self.stride, splat=self.splat,
+            matcher=self.stereo.disparity,
+            depth_tie_m=self.depth_tie_m)
+
+
 def disparity_to_depth(disparity, focal_px, baseline_m,
                        min_depth=MIN_DEPTH_M, max_depth=MAX_DEPTH_M):
     disparity = np.asarray(disparity, dtype=np.float32)
