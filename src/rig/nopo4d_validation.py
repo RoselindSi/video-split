@@ -21,6 +21,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import sys
 
 import numpy as np
 
@@ -276,7 +277,7 @@ def main():
     run_parser.add_argument("--out", required=True)
     run_parser.add_argument("--model", required=True)
     run_parser.add_argument("--da3_model", required=True)
-    run_parser.add_argument("--python", default="python3")
+    run_parser.add_argument("--python", default=sys.executable)
     run_parser.add_argument(
         "--runner",
         default=Path(__file__).resolve().parents[2] /

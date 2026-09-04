@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+from unittest import mock
 
 import numpy as np
 
@@ -102,6 +103,22 @@ class NoPo4DValidationTest(unittest.TestCase):
                          os.fspath(model.resolve()))
         self.assertEqual(command[command.index("--da3_model") + 1],
                          os.fspath(da3.resolve()))
+
+    @mock.patch("src.rig.nopo4d_validation.subprocess.run")
+    @mock.patch("src.rig.nopo4d_validation.inspect_image_grid")
+    def test_cli_keeps_the_calling_virtual_environment(self, inspect, run):
+        from src.rig import nopo4d_validation
+
+        argv = [
+            "nopo4d_validation.py", "run",
+            "--nopo_root", "/nopo", "--images", "/images",
+            "--out", "/output", "--model", "/model",
+            "--da3_model", "/da3",
+        ]
+        with mock.patch.object(nopo4d_validation.sys, "argv", argv):
+            nopo4d_validation.main()
+
+        self.assertEqual(run.call_args.args[0][0], nopo4d_validation.sys.executable)
 
 
 if __name__ == "__main__":
