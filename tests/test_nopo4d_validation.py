@@ -16,9 +16,48 @@ from src.rig.nopo4d_validation import (
     videos_from_databag,
     wide_intrinsics,
 )
+from third_party.nopo4d.panorama import (
+    camera_projection_map,
+    compose_panorama,
+    spherical_rays,
+)
 
 
 class NoPo4DValidationTest(unittest.TestCase):
+    def test_spherical_projection_centres_the_reference_camera(self):
+        rays = spherical_rays(3, 3, hfov_deg=90, vfov_deg=60)
+        np.testing.assert_allclose(rays[1, 1], [0, 0, 1], atol=1e-6)
+        pose = np.eye(4, dtype=np.float32)
+        intrinsic = np.array(
+            [[100, 0, 20], [0, 120, 15], [0, 0, 1]], np.float32)
+
+        grid, forward = camera_projection_map(
+            rays, pose, pose, intrinsic, image_shape=(31, 41))
+
+        np.testing.assert_allclose(grid[1, 1], [0, 0], atol=1e-6)
+        self.assertAlmostEqual(float(forward[1, 1]), 1.0)
+
+    def test_panorama_compositor_preserves_a_single_constant_view(self):
+        try:
+            import torch
+        except ModuleNotFoundError:
+            self.skipTest("torch is installed in the remote NoPo4D environment")
+
+        colors = torch.full((1, 2, 3, 32, 32), 0.25)
+        alphas = torch.ones((1, 2, 32, 32))
+        poses = np.eye(4, dtype=np.float32)[None]
+        intrinsic = np.array(
+            [[[60, 0, 15.5], [0, 60, 15.5], [0, 0, 1]]], np.float32)
+
+        panorama, coverage, overlap, disagreement = compose_panorama(
+            colors, alphas, poses, intrinsic, poses[0],
+            output_shape=(8, 12), hfov_deg=20, vfov_deg=12)
+
+        np.testing.assert_allclose(panorama.numpy(), 0.25, atol=1e-5)
+        np.testing.assert_allclose(coverage.numpy(), 1.0, atol=1e-5)
+        self.assertTrue(np.all(overlap.numpy() == 1))
+        np.testing.assert_allclose(disagreement.numpy(), 0.0, atol=1e-5)
+
     def test_split_preserves_hardware_camera_order(self):
         packed = {}
         for module_index, module in enumerate(("cam12", "cam34", "cam56")):

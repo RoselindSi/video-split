@@ -15,6 +15,8 @@ import sys
 
 import numpy as np
 
+from panorama import compose_panorama
+
 
 IMAGE_NAME = re.compile(r"cam(?P<camera>\d+)_t(?P<time>\d+)\.png")
 
@@ -118,6 +120,10 @@ def main():
     parser.add_argument(
         "--fan_cameras", default="0,2,4",
         help="Comma-separated learned camera directions rendered at one centre")
+    parser.add_argument("--pano_width", type=int, default=896)
+    parser.add_argument("--pano_height", type=int, default=336)
+    parser.add_argument("--pano_hfov", type=float, default=135.0)
+    parser.add_argument("--pano_vfov", type=float, default=60.0)
     args = parser.parse_args()
 
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
@@ -184,6 +190,16 @@ def main():
             intrinsics=torch.from_numpy(fan_k).to(device)[None],
             image_shape=(height, width),
             timestamps=fan_times)
+        fan_colors = fan.color[0].reshape(
+            len(fan_cameras), num_frames, 3, height, width)
+        fan_alphas = fan.alpha[0].reshape(
+            len(fan_cameras), num_frames, height, width)
+        panorama, panorama_alpha, overlap_count, disagreement = compose_panorama(
+            fan_colors, fan_alphas,
+            shared_centre_camera_fan(camera_c2w, fan_cameras),
+            camera_k[list(fan_cameras)], camera_c2w[args.central_camera],
+            output_shape=(args.pano_height, args.pano_width),
+            hfov_deg=args.pano_hfov, vfov_deg=args.pano_vfov)
         if args.render_inputs:
             input_poses = encoded.camera_pose["extrinsic_c2w"]
             input_k = encoded.camera_pose["intrinsic"]
@@ -202,6 +218,10 @@ def main():
     save_camera_major_frames(
         fan.alpha[0].unsqueeze(1).repeat(1, 3, 1, 1),
         output_dir / "fan_alpha", fan_cameras, num_frames)
+    save_tensor_frames(panorama, output_dir / "panorama", "pano")
+    save_tensor_frames(
+        panorama_alpha.unsqueeze(1).repeat(1, 3, 1, 1),
+        output_dir / "panorama_alpha", "alpha")
     if args.render_inputs:
         save_tensor_frames(reconstructed.color[0],
                            output_dir / "reconstruction", "view")
@@ -231,6 +251,18 @@ def main():
         "fan_low_alpha_fraction": (fan.alpha[0] < 0.5).float()
         .mean(dim=(-2, -1)).cpu()
         .reshape(len(fan_cameras), num_frames).tolist(),
+        "panorama_size": [args.pano_width, args.pano_height],
+        "panorama_hfov_deg": args.pano_hfov,
+        "panorama_vfov_deg": args.pano_vfov,
+        "panorama_mean_alpha": panorama_alpha.mean(dim=(-2, -1)).cpu().tolist(),
+        "panorama_low_alpha_fraction": (panorama_alpha < 0.5).float()
+        .mean(dim=(-2, -1)).cpu().tolist(),
+        "panorama_overlap_fraction": (overlap_count >= 2).float()
+        .mean(dim=(-2, -1)).cpu().tolist(),
+        "panorama_overlap_l1": [
+            float(values[mask].mean().cpu()) if bool(mask.any()) else None
+            for values, mask in zip(disagreement, overlap_count >= 2)
+        ],
         **geometry_report(camera_c2w),
     }
     with open(output_dir / "report.json", "w", encoding="utf-8") as stream:
