@@ -11,6 +11,10 @@ from src.rig.seam360_validation import (
     parse_rig_image_name,
     resize_full_frame,
 )
+from third_party.self_cali_gs.prepare_rig import (
+    select_reconstruction,
+    six_camera_rig_config,
+)
 
 
 def _yaw_pose(angle, translation=(0, 0, 0)):
@@ -29,6 +33,7 @@ class Seam360ValidationTest(unittest.TestCase):
     def test_names_retain_physical_camera_and_time(self):
         self.assertEqual(parse_rig_image_name("cam5_t019.png"), (5, 19))
         self.assertEqual(parse_rig_image_name("cam0_t000.jpg"), (0, 0))
+        self.assertEqual(parse_rig_image_name("cam3/t041.jpg"), (3, 41))
         with self.assertRaisesRegex(ValueError, "six-camera"):
             parse_rig_image_name("frame_001.png")
 
@@ -45,6 +50,46 @@ class Seam360ValidationTest(unittest.TestCase):
             (root / "cam3_t001.png").unlink()
             with self.assertRaisesRegex(ValueError, "missing"):
                 inspect_rig_grid(root)
+
+    def test_grid_accepts_native_rig_folders(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for camera in range(6):
+                camera_dir = root / f"cam{camera}"
+                camera_dir.mkdir()
+                (camera_dir / "t000.jpg").touch()
+            paths = inspect_rig_grid(root)
+            self.assertEqual(
+                [path.relative_to(root).as_posix() for path in paths],
+                [f"cam{camera}/t000.jpg" for camera in range(6)])
+
+    def test_colmap_rig_configuration_has_six_fixed_sensors(self):
+        config = six_camera_rig_config()
+        self.assertEqual(len(config), 1)
+        self.assertEqual(len(config[0]["cameras"]), 6)
+        self.assertEqual(config[0]["cameras"][0]["image_prefix"], "cam0/")
+        self.assertEqual(
+            [camera["ref_sensor"] for camera in config[0]["cameras"]],
+            [True, False, False, False, False, False])
+
+    def test_selects_the_most_complete_colmap_model(self):
+        class Reconstruction:
+            def __init__(self, images, points):
+                self.images = images
+                self.points = points
+
+            def num_reg_images(self):
+                return self.images
+
+            def num_points3D(self):
+                return self.points
+
+        selected = select_reconstruction({
+            0: Reconstruction(20, 1000),
+            1: Reconstruction(30, 500),
+            2: Reconstruction(30, 800),
+        })
+        self.assertEqual((selected.images, selected.points), (30, 800))
 
     def test_resize_keeps_the_complete_frame(self):
         image = np.zeros((10, 20, 3), np.uint8)

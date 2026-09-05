@@ -17,13 +17,19 @@ import numpy as np
 from src.rig.nopo4d_validation import MODULES, split_module_frames, videos_from_databag
 
 
-IMAGE_NAME = re.compile(r"cam(?P<camera>[0-5])_t(?P<time>\d{3,})\.(?:jpg|png)")
+FLAT_IMAGE_NAME = re.compile(
+    r"cam(?P<camera>[0-5])_t(?P<time>\d{3,})\.(?:jpg|png)")
+RIG_IMAGE_NAME = re.compile(
+    r"cam(?P<camera>[0-5])/t(?P<time>\d{3,})\.(?:jpg|png)")
 DEFAULT_SIZE = (768, 608)
 
 
 def parse_rig_image_name(name):
     """Return zero-based physical camera and timestamp indexes."""
-    match = IMAGE_NAME.fullmatch(Path(name).name)
+    normalized = os.fspath(name).replace("\\", "/")
+    match = RIG_IMAGE_NAME.fullmatch(normalized)
+    if not match:
+        match = FLAT_IMAGE_NAME.fullmatch(Path(normalized).name)
     if not match:
         raise ValueError(f"not a six-camera image name: {name}")
     return int(match.group("camera")), int(match.group("time"))
@@ -46,11 +52,11 @@ def inspect_rig_grid(image_dir, expected_cameras=6):
     """Validate a complete time-major six-camera image grid."""
     root = Path(image_dir)
     grid = {}
-    for path in root.iterdir():
+    for path in root.rglob("*"):
         if not path.is_file():
             continue
         try:
-            key = parse_rig_image_name(path.name)
+            key = parse_rig_image_name(path.relative_to(root))
         except ValueError:
             continue
         if key in grid:
@@ -72,7 +78,7 @@ def inspect_rig_grid(image_dir, expected_cameras=6):
 
 
 def export_clip(databag, output_dir, start=3000, frames=12, stride=2,
-                size=DEFAULT_SIZE, extension="png"):
+                size=DEFAULT_SIZE, extension="png", layout="rig"):
     """Export synchronized raw eyes while preserving camera/time identity."""
     import cv2
 
@@ -80,6 +86,8 @@ def export_clip(databag, output_dir, start=3000, frames=12, stride=2,
         raise ValueError("start must be non-negative; frames and stride positive")
     if extension not in ("jpg", "png"):
         raise ValueError("extension must be jpg or png")
+    if layout not in ("rig", "flat"):
+        raise ValueError("layout must be rig or flat")
     size = tuple(int(value) for value in size)
     resize_full_frame(np.zeros((4, 4, 3), np.uint8), size)
 
@@ -116,7 +124,11 @@ def export_clip(databag, output_dir, start=3000, frames=12, stride=2,
             cameras = split_module_frames(packed)
             for camera_index, camera_name in enumerate(sorted(cameras)):
                 image = resize_full_frame(cameras[camera_name], size)
-                path = image_dir / f"cam{camera_index}_t{time_index:03d}.{extension}"
+                if layout == "rig":
+                    path = image_dir / f"cam{camera_index}" / f"t{time_index:03d}.{extension}"
+                    path.parent.mkdir(exist_ok=True)
+                else:
+                    path = image_dir / f"cam{camera_index}_t{time_index:03d}.{extension}"
                 options = ([int(cv2.IMWRITE_JPEG_QUALITY), 95]
                            if extension == "jpg" else [])
                 if not cv2.imwrite(os.fspath(path), image, options):
@@ -134,13 +146,14 @@ def export_clip(databag, output_dir, start=3000, frames=12, stride=2,
         "uses_camera_parameters": False,
         "camera_model": "learned-per-camera",
         "rig_model": "one-pose-per-time+one-fixed-transform-per-camera",
+        "layout": layout,
         "start_frame": int(start),
         "frames": int(frames),
         "stride": int(stride),
         "source_fps": fps,
         "frame_indexes": [int(start + time * stride) for time in range(frames)],
         "image_size": list(size),
-        "files": [path.name for path in ordered],
+        "files": [path.relative_to(image_dir).as_posix() for path in ordered],
     }
     with open(root / "manifest.json", "w", encoding="utf-8") as stream:
         json.dump(manifest, stream, indent=2)
@@ -201,11 +214,12 @@ def main():
     parser.add_argument("--width", type=int, default=DEFAULT_SIZE[0])
     parser.add_argument("--height", type=int, default=DEFAULT_SIZE[1])
     parser.add_argument("--extension", choices=("jpg", "png"), default="png")
+    parser.add_argument("--layout", choices=("rig", "flat"), default="rig")
     args = parser.parse_args()
     manifest = export_clip(
         args.databag, args.out, start=args.start, frames=args.frames,
         stride=args.stride, size=(args.width, args.height),
-        extension=args.extension)
+        extension=args.extension, layout=args.layout)
     print(json.dumps(manifest, indent=2))
 
 
