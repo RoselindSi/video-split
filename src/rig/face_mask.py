@@ -432,6 +432,107 @@ def cover(rgb, boxes, pad=PAD, block_frac=BLOCK_FRAC):
 
 
 
+def harvest_clip(specs, out_dir, model_path=MODEL, min_conf=MIN_CONF,
+                 n=200, stride=1, crop_px=192,
+                 weights="/shared/models/HaWoR/weights/external/detector.pt",
+                 imgsz=None, verbose=True):
+    """Harvest faces from the SAME CONTINUOUS FRAMES a demo rendered. -> n
+
+    WHY NOT REUSE THE PACKAGES. `harvest` reads the `context/` frames a
+    labelling package already stores, and those were sampled at a stride of
+    nineteen. The false positives a person notices while watching are in the
+    frames between them: a mosaic that appears for half a second occupies
+    fifteen consecutive frames and has about a one-in-nineteen chance of
+    landing on a stored one. Measuring the false-positive rate on the sampled
+    frames and reporting it as the rate in the video is a sampling error, and
+    the first pass at this produced 6.5% from a population that had almost
+    none of what was actually complained about.
+
+    So this renders the clip exactly as `demo_video` does -- same start, same
+    count, same detector settings -- and harvests every frame. The population
+    is then the one that was watched.
+
+    THE HAND DETECTOR RUNS TOO, because `drop_on_hands` is part of what ships
+    and a candidate it would have vetoed is not a candidate. Harvesting
+    without it would measure a filter nobody uses."""
+    import cv2
+    from ultralytics import YOLO
+    from src.rig.calibration import RigCalibration
+    from src.rig.geometry import VirtualWideCamera
+    from src.rig.render_wide import render
+    from src.rig.seam_fix import ClipReader, Prefetch
+    from src.rig.hand_detect import detect as hand_detect
+
+    det = load_detector(model_path, min_conf)
+    if det is None:
+        raise SystemExit(f"no face model at {model_path}")
+    hands = YOLO(weights)
+    for sub in ("crops", "context"):
+        os.makedirs(os.path.join(out_dir, sub), exist_ok=True)
+    rows = []
+    for databag, start in specs:
+        tag = os.path.basename(databag.rstrip("/")).replace("databag-26_", "R")
+        rig = RigCalibration(os.path.join(databag, "calibration.yaml"))
+        vcam = VirtualWideCamera.from_rig(rig)
+        vids = {k: os.path.join(databag, f"{k}.mp4")
+                for k in ("cam12", "cam34", "cam56")}
+        rd = Prefetch(ClipReader(rig, vids, start), skip=max(0, stride - 1))
+        mc = {}
+        if verbose:
+            print(f"  {tag} from {start}, {n} frames")
+        for k in range(n):
+            src = rd.next()
+            if not src:
+                break
+            try:
+                rgb, _, _, _ = render(rig, vcam, src, 0.6, map_cache=mc)
+            except TypeError:
+                rgb, _, _, _ = render(rig, vcam, src, 0.6)
+            H, W = rgb.shape[:2]
+            kw = {} if imgsz is None else {"imgsz": int(imgsz)}
+            hd = hand_detect(hands, rgb, min_conf=0.25, **kw)
+            faces = detect_faces(det, rgb)
+            if MAX_FACE_FRAC:
+                faces = [x for x in faces
+                         if (x[2] - x[0]) <= MAX_FACE_FRAC * W]
+            faces = drop_on_hands(faces, hd)
+            frame = start + k * stride
+            small = cv2.resize(rgb, (900, int(900 * H / W)))
+            for j, (x0, y0, x1, y1, sc) in enumerate(faces):
+                stem = f"{tag}_f{frame:06d}_h{j}"
+                px = int(max(x1 - x0, y1 - y0) * 0.6)
+                cx0, cy0 = max(0, x0 - px), max(0, y0 - px)
+                cx1, cy1 = min(W, x1 + px), min(H, y1 + px)
+                if cx1 <= cx0 or cy1 <= cy0:
+                    continue
+                cv2.imwrite(os.path.join(out_dir, "crops", stem + ".jpg"),
+                            cv2.resize(rgb[cy0:cy1, cx0:cx1],
+                                       (crop_px, crop_px)),
+                            [cv2.IMWRITE_JPEG_QUALITY, 90])
+                cv2.imwrite(os.path.join(out_dir, "context", stem + ".jpg"),
+                            small, [cv2.IMWRITE_JPEG_QUALITY, 82])
+                rows.append({"stem": stem, "frame": frame, "hand": j,
+                             "conf": round(float(sc), 4),
+                             "w_frac": round((x1 - x0) / W, 5),
+                             "h_frac": round((y1 - y0) / H, 5),
+                             "cx_frac": round((x0 + x1) / 2 / W, 5),
+                             "cy_frac": round((y0 + y1) / 2 / H, 5),
+                             "model": os.path.basename(model_path),
+                             "label": "", "label_mode": ""})
+            if verbose and (k + 1) % 50 == 0:
+                print(f"    [{k + 1}/{n}] {len(rows)} faces", flush=True)
+        rd.close()
+    if rows:
+        import csv as _csv
+        with open(os.path.join(out_dir, "hands.csv"), "w", newline="") as f:
+            w = _csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+            w.writeheader()
+            w.writerows(rows)
+    if verbose:
+        print(f"\n  {len(rows)} face candidates -> {out_dir}")
+    return len(rows)
+
+
 def harvest(pkgs, out_dir, model_path=MODEL, min_conf=0.50, crop_px=192,
             verbose=True):
     """Save every surviving face detection as a labellable crop. -> n
@@ -616,11 +717,26 @@ def main():
                     metavar="PKG", help="packages whose context/ frames to "
                                         "scan for faces")
     ap.add_argument("--out_pkg", help="where to write the harvested crops")
+    ap.add_argument("--harvest_clip", action="append", default=[],
+                    metavar="DATABAG:START",
+                    help="harvest from a clip's CONTINUOUS frames instead of "
+                         "a package's sampled ones, so the population is the "
+                         "one that was watched")
+    ap.add_argument("--n", type=int, default=200)
+    ap.add_argument("--stride", type=int, default=1)
     ap.add_argument("--out", help="write the covered frame here")
     ap.add_argument("--model", default=MODEL)
     ap.add_argument("--min_conf", type=float, default=MIN_CONF)
     a = ap.parse_args()
 
+    if a.harvest_clip:
+        if not a.out_pkg:
+            raise SystemExit("--harvest_clip needs --out_pkg")
+        specs = [(x.rsplit(":", 1)[0], int(x.rsplit(":", 1)[1]))
+                 for x in a.harvest_clip]
+        harvest_clip(specs, a.out_pkg, a.model, a.min_conf,
+                     n=a.n, stride=a.stride)
+        raise SystemExit(0)
     if a.harvest:
         if not a.out_pkg:
             raise SystemExit("--harvest needs --out_pkg")
