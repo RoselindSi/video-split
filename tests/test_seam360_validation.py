@@ -12,6 +12,7 @@ from src.rig.seam360_validation import (
     resize_full_frame,
 )
 from third_party.self_cali_gs.prepare_rig import (
+    load_best_reconstruction,
     select_reconstruction,
     six_camera_rig_config,
 )
@@ -90,6 +91,29 @@ class Seam360ValidationTest(unittest.TestCase):
             2: Reconstruction(30, 800),
         })
         self.assertEqual((selected.images, selected.points), (30, 800))
+
+    def test_resume_selects_the_best_model_on_disk(self):
+        class Reconstruction:
+            def __init__(self, path):
+                self.path = Path(path)
+                self.images = int(self.path.name)
+
+            def num_reg_images(self):
+                return self.images
+
+            def num_points3D(self):
+                return 0
+
+        pycolmap = type("Pycolmap", (), {"Reconstruction": Reconstruction})
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name in ("3", "9"):
+                model = root / name
+                model.mkdir()
+                (model / "images.bin").touch()
+            selected = load_best_reconstruction(pycolmap, root)
+            self.assertEqual(selected.images, 9)
 
     def test_resize_keeps_the_complete_frame(self):
         image = np.zeros((10, 20, 3), np.uint8)

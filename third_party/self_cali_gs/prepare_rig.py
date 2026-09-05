@@ -31,6 +31,19 @@ def select_reconstruction(reconstructions):
             reconstruction.num_reg_images(), reconstruction.num_points3D()))
 
 
+def load_best_reconstruction(pycolmap, root):
+    models = []
+    for path in Path(root).iterdir():
+        if path.is_dir() and (path / "images.bin").is_file():
+            models.append(pycolmap.Reconstruction(path))
+    if not models:
+        raise RuntimeError(f"no completed COLMAP models in {root}")
+    return max(
+        models,
+        key=lambda reconstruction: (
+            reconstruction.num_reg_images(), reconstruction.num_points3D()))
+
+
 def reconstruction_report(reconstruction):
     images = {}
     for image_id, image in reconstruction.images.items():
@@ -63,7 +76,7 @@ def reconstruction_report(reconstruction):
     }
 
 
-def prepare(scene_root, device="auto"):
+def prepare(scene_root, device="auto", resume=False):
     import pycolmap
 
     root = Path(scene_root).resolve()
@@ -79,32 +92,40 @@ def prepare(scene_root, device="auto"):
     unrigged_path = work / "unrigged"
     rigged_path = work / "rigged"
     prepared_path = root / "self_cali"
-    occupied = [path for path in (database_path, unrigged_path, rigged_path,
-                                  prepared_path) if path.exists()]
-    if occupied:
-        raise FileExistsError(f"initializer output already exists: {occupied}")
-    work.mkdir(parents=True)
-    unrigged_path.mkdir()
-    rigged_path.mkdir()
+    if resume:
+        if not database_path.is_file() or not unrigged_path.is_dir():
+            raise FileNotFoundError("resume requires database.db and unrigged models")
+        if prepared_path.exists() or any(rigged_path.iterdir()):
+            raise FileExistsError("rigged or Self-Cali output already exists")
+        reconstruction = load_best_reconstruction(
+            pycolmap, unrigged_path)
+    else:
+        occupied = [path for path in (database_path, unrigged_path, rigged_path,
+                                      prepared_path) if path.exists()]
+        if occupied:
+            raise FileExistsError(f"initializer output already exists: {occupied}")
+        work.mkdir(parents=True)
+        unrigged_path.mkdir()
+        rigged_path.mkdir()
 
-    device_value = getattr(pycolmap.Device, device)
-    pycolmap.extract_features(
-        database_path, image_dir,
-        camera_mode=pycolmap.CameraMode.PER_FOLDER,
-        camera_model="OPENCV_FISHEYE", device=device_value)
-    pycolmap.match_exhaustive(database_path, device=device_value)
+        device_value = getattr(pycolmap.Device, device)
+        pycolmap.extract_features(
+            database_path, image_dir,
+            camera_mode=pycolmap.CameraMode.PER_FOLDER,
+            camera_model="OPENCV_FISHEYE", device=device_value)
+        pycolmap.match_exhaustive(database_path, device=device_value)
 
-    options = pycolmap.IncrementalPipelineOptions()
-    options.multiple_models = True
-    options.min_model_size = 6
-    options.min_num_matches = 12
-    options.ba_refine_sensor_from_rig = True
-    options.mapper.init_min_num_inliers = 50
-    options.mapper.abs_pose_min_num_inliers = 15
-    reconstructions = pycolmap.incremental_mapping(
-        database_path, image_dir, unrigged_path, options=options)
-    reconstruction = select_reconstruction(reconstructions)
-    reconstruction.write(unrigged_path / "best")
+        options = pycolmap.IncrementalPipelineOptions()
+        options.multiple_models = True
+        options.min_model_size = 6
+        options.min_num_matches = 12
+        options.ba_refine_sensor_from_rig = True
+        options.mapper.init_min_num_inliers = 50
+        options.mapper.abs_pose_min_num_inliers = 15
+        reconstructions = pycolmap.incremental_mapping(
+            database_path, image_dir, unrigged_path, options=options)
+        reconstruction = select_reconstruction(reconstructions)
+        reconstruction.write(unrigged_path / "best")
 
     config_path = work / "rig_config.json"
     with open(config_path, "w", encoding="utf-8") as stream:
@@ -159,8 +180,9 @@ def main():
     parser.add_argument("--scene", required=True)
     parser.add_argument("--device", choices=("auto", "cpu", "cuda"),
                         default="auto")
+    parser.add_argument("--resume", action="store_true")
     args = parser.parse_args()
-    print(json.dumps(prepare(args.scene, args.device), indent=2))
+    print(json.dumps(prepare(args.scene, args.device, args.resume), indent=2))
 
 
 if __name__ == "__main__":
