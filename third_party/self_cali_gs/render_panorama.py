@@ -25,6 +25,12 @@ from src.rig.learned_panorama import (
     cube_face_rotations,
     equirectangular_cube_lookup,
 )
+from src.rig.dynamic_panorama import (
+    DynamicOwnershipConfig,
+    DynamicSingleSourceCompositor,
+    compose_single_source,
+    geometric_owner,
+)
 
 
 CAMERA_NAME = re.compile(r"^cam([0-5])_t(\d+)$")
@@ -99,6 +105,112 @@ def compose_equirectangular(
     return panorama, panorama_alpha
 
 
+def surface_world_points(view, depth, alpha, alignment):
+    """Convert alpha-weighted raster depth into one world point per pixel."""
+    device = depth.device
+    height, width = depth.shape[-2:]
+    surface_depth = depth[:1] / alpha[:1].clamp_min(1e-6)
+    y, x = torch.meshgrid(
+        torch.arange(height, device=device, dtype=torch.float32) + 0.5,
+        torch.arange(width, device=device, dtype=torch.float32) + 0.5,
+        indexing="ij")
+    focal_x = width / (2.0 * torch.tan(view.learnable_fovx / 2.0))
+    focal_y = height / (2.0 * torch.tan(view.learnable_fovy / 2.0))
+    camera_points = torch.stack([
+        (x - width / 2.0) * surface_depth[0] / focal_x,
+        (y - height / 2.0) * surface_depth[0] / focal_y,
+        surface_depth[0],
+        torch.ones_like(surface_depth[0]),
+    ], dim=-1)
+    world_view = view.get_world_view_transform(alignment[0], alignment[1])
+    camera_to_world = torch.linalg.inv(world_view.transpose(0, 1))
+    world = camera_points @ camera_to_world.transpose(0, 1)
+    return world[..., :3].permute(2, 0, 1)
+
+
+def _normalized_surface_depth(result):
+    alpha = result["weights"][:1].clamp(0.0, 1.0)
+    return result["depth"][:1] / alpha.clamp_min(1e-6), alpha
+
+
+def warp_current_sources(world_points, world_valid, cameras, gaussians,
+                         pipeline, background, shift, iteration, alignment):
+    """Project learned world surfaces into synchronized current RGB views."""
+    points = world_points.permute(1, 2, 0)
+    height, width = points.shape[:2]
+    homogeneous = torch.cat(
+        [points, torch.ones((height, width, 1), device=points.device)],
+        dim=-1)
+    warped, valid, cost = {}, {}, {}
+    with torch.no_grad():
+        for index, camera in enumerate(cameras):
+            world_view = camera.get_world_view_transform(
+                alignment[0], alignment[1])
+            camera_points = homogeneous @ world_view
+            xyz = camera_points[..., :3]
+            z = xyz[..., 2]
+            source = camera.original_image.to(points.device)
+            source_height, source_width = source.shape[-2:]
+            focal_x = source_width / (
+                2.0 * torch.tan(camera.learnable_fovx / 2.0))
+            focal_y = source_height / (
+                2.0 * torch.tan(camera.learnable_fovy / 2.0))
+            u = focal_x * xyz[..., 0] / z.clamp_min(1e-6) \
+                + source_width / 2.0
+            v = focal_y * xyz[..., 1] / z.clamp_min(1e-6) \
+                + source_height / 2.0
+            grid = torch.stack([
+                2.0 * u / max(source_width - 1, 1) - 1.0,
+                2.0 * v / max(source_height - 1, 1) - 1.0,
+            ], dim=-1)
+            image = functional.grid_sample(
+                source.unsqueeze(0), grid.unsqueeze(0), mode="bilinear",
+                padding_mode="zeros", align_corners=True)[0]
+
+            source_result = render(
+                camera, gaussians, pipeline, background, 0, shift,
+                iteration=iteration, hybrid=False,
+                global_alignment=alignment)
+            source_depth, source_alpha = _normalized_surface_depth(
+                source_result)
+            sampled_depth = functional.grid_sample(
+                source_depth.unsqueeze(0), grid.unsqueeze(0),
+                mode="bilinear", padding_mode="zeros",
+                align_corners=True)[0, 0]
+            sampled_alpha = functional.grid_sample(
+                source_alpha.unsqueeze(0), grid.unsqueeze(0),
+                mode="bilinear", padding_mode="zeros",
+                align_corners=True)[0, 0]
+            behind_static_surface = (
+                (sampled_alpha > 0.05)
+                & (z > sampled_depth * 1.05 + 0.02)
+            )
+            inside = (
+                world_valid & (z > 1e-5)
+                & (u >= 0.0) & (u <= source_width - 1)
+                & (v >= 0.0) & (v <= source_height - 1)
+                & ~behind_static_surface
+            )
+            ray_length = torch.linalg.norm(xyz, dim=-1).clamp_min(1e-6)
+            angle = torch.rad2deg(torch.acos(
+                (z / ray_length).clamp(-1.0, 1.0)))
+            warped[index] = image.permute(1, 2, 0).cpu().numpy()
+            valid[index] = inside.cpu().numpy()
+            cost[index] = angle.cpu().numpy().astype(np.float32)
+    return warped, valid, cost
+
+
+def owner_diagnostic(owner):
+    palette = np.asarray([
+        [230, 25, 75], [60, 180, 75], [255, 225, 25],
+        [0, 130, 200], [245, 130, 48], [145, 30, 180],
+    ], np.uint8)
+    output = np.zeros((*owner.shape, 3), np.uint8)
+    for index, colour in enumerate(palette):
+        output[owner == index] = colour
+    return output
+
+
 def crop_to_content(image, alpha, threshold=0.01, margin=8):
     valid = alpha[0] > threshold
     rows = torch.where(valid.any(dim=1))[0]
@@ -125,6 +237,9 @@ def main():
     parser.add_argument("--face-size", type=int, default=768)
     parser.add_argument("--face-fov", type=float, default=100.0)
     parser.add_argument("--erp-width", type=int, default=2048)
+    parser.add_argument("--dynamic-threshold", type=float, default=40.0)
+    parser.add_argument("--dynamic-close", type=int, default=20)
+    parser.add_argument("--dynamic-dilate", type=int, default=6)
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
     if args.erp_width % 2:
@@ -157,6 +272,7 @@ def main():
     alignment = scene.getGlobalAlignment()
     face_images = []
     face_alpha = []
+    face_world = []
     with torch.no_grad():
         for name, relative_rotation in zip(
                 FACE_NAMES, cube_face_rotations()):
@@ -173,23 +289,60 @@ def main():
                 alpha = alpha.unsqueeze(0)
             face_images.append(image)
             face_alpha.append(alpha[:1])
+            face_world.append(surface_world_points(
+                view, result["depth"], alpha[:1], alignment))
             torchvision.utils.save_image(image, output / f"face_{name}.png")
             torchvision.utils.save_image(alpha[:1], output / f"alpha_{name}.png")
 
     erp_height = args.erp_width // 2
     panorama, alpha = compose_equirectangular(
         face_images, face_alpha, erp_height, args.erp_width, args.face_fov)
+    world_points, _ = compose_equirectangular(
+        face_world, face_alpha, erp_height, args.erp_width, args.face_fov)
+    world_valid = alpha[0] > 0.05
+    warped, valid, cost = warp_current_sources(
+        world_points, world_valid, source_cameras, gaussians, pipeline,
+        background, shift, scene.loaded_iter, alignment)
+    learned_background = panorama.permute(1, 2, 0).cpu().numpy()
+    learned_valid = world_valid.cpu().numpy()
+    base_owner = geometric_owner(valid, cost)
+    base_image, _, _ = compose_single_source(
+        warped, valid, base_owner, learned_background, learned_valid)
+    compositor = DynamicSingleSourceCompositor(DynamicOwnershipConfig(
+        disagreement=args.dynamic_threshold / 255.0,
+        close_px=args.dynamic_close,
+        dilate_px=args.dynamic_dilate,
+    ))
+    dynamic_image, owner, dynamic_mask, dynamic_stats = compositor.render(
+        warped, valid, cost, learned_background, learned_valid)
+    base_tensor = torch.from_numpy(base_image).permute(2, 0, 1)
+    dynamic_tensor = torch.from_numpy(dynamic_image).permute(2, 0, 1)
+    owner_tensor = torch.from_numpy(
+        owner_diagnostic(owner)).permute(2, 0, 1).float() / 255.0
+    mask_tensor = torch.from_numpy(dynamic_mask.astype(np.float32))[None]
     cropped, cropped_alpha, crop = crop_to_content(panorama, alpha)
+    left, top, right, bottom = crop
+    dynamic_cropped = dynamic_tensor[:, top:bottom, left:right]
     torchvision.utils.save_image(panorama, output / "panorama.png")
     torchvision.utils.save_image(alpha, output / "panorama_alpha.png")
     torchvision.utils.save_image(cropped, output / "panorama_cropped.png")
     torchvision.utils.save_image(
         cropped_alpha, output / "panorama_cropped_alpha.png")
+    torchvision.utils.save_image(
+        base_tensor, output / "panorama_current_hard.png")
+    torchvision.utils.save_image(
+        dynamic_tensor, output / "panorama_dynamic.png")
+    torchvision.utils.save_image(
+        dynamic_cropped, output / "panorama_dynamic_cropped.png")
+    torchvision.utils.save_image(owner_tensor, output / "dynamic_owner.png")
+    torchvision.utils.save_image(mask_tensor, output / "dynamic_mask.png")
 
     report = {
         "schema": "video-split.learned-panorama.v1",
         "uses_hardware_calibration": False,
-        "composition": "single learned 3D Gaussian scene at one virtual center",
+        "composition": (
+            "learned geometry with one physical source per dynamic region"
+        ),
         "iteration": int(scene.loaded_iter),
         "time": args.time,
         "source_views": [camera.image_name for camera in source_cameras],
@@ -199,6 +352,16 @@ def main():
         "erp_size": [args.erp_width, erp_height],
         "content_crop": crop,
         "valid_fraction": float((alpha > 0.01).float().mean().item()),
+        "dynamic": {
+            "threshold_rgb_255": args.dynamic_threshold,
+            "close_px": args.dynamic_close,
+            "dilate_px": args.dynamic_dilate,
+            **dynamic_stats,
+        },
+        "source_valid_fraction": {
+            source_cameras[index].image_name: float(mask.mean())
+            for index, mask in valid.items()
+        },
     }
     with open(output / "report.json", "w", encoding="utf-8") as stream:
         json.dump(report, stream, indent=2)
