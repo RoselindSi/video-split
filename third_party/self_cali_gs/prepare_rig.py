@@ -97,8 +97,8 @@ def observation_error_report(reconstruction):
                 xyz = reconstruction.points3D[point2D.point3D_id].xyz
                 projected = image.project_point(xyz)
                 error = math.hypot(
-                    float(projected[0]) - float(point2D.x),
-                    float(projected[1]) - float(point2D.y),
+                    float(projected[0]) - float(point2D.x()),
+                    float(projected[1]) - float(point2D.y()),
                 )
             except (IndexError, KeyError, OverflowError, TypeError, ValueError):
                 error = math.inf
