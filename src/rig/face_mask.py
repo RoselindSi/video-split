@@ -153,6 +153,7 @@ class _YuNet:
     frame shape changes."""
 
     kind = "yunet"
+    last_landmarks = ()
 
     def __init__(self, path, min_conf):
         import cv2
@@ -169,8 +170,20 @@ class _YuNet:
             self.det.setInputSize(self.size)
         _, faces = self.det.detect(bgr)
         out = []
+        self.last_landmarks = []
         for f in (faces if faces is not None else []):
             x, y, w, h = [float(v) for v in f[:4]]
+            # COLUMNS 4..13 ARE FIVE LANDMARKS AND THEY WERE BEING DISCARDED.
+            # right eye, left eye, nose, right mouth corner, left mouth corner,
+            # as (x, y) pairs. A box says something is there; five points in a
+            # plausible arrangement say it is a face. RetinaFace reports that
+            # landmark supervision is what suppresses high-scoring false
+            # positives, and the failure this is wanted for -- a large patch
+            # of skin-coloured background scoring 0.45 -- is exactly a box
+            # with no face geometry inside it.
+            self.last_landmarks.append(
+                [(float(f[4 + 2 * i]), float(f[5 + 2 * i]))
+                 for i in range(5)])
             out.append((max(0, int(x)), max(0, int(y)),
                         min(W, int(x + w)), min(H, int(y + h)), float(f[-1])))
         return out
