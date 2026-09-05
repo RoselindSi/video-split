@@ -20,10 +20,12 @@ import numpy as np
 @dataclass(frozen=True)
 class DynamicOwnershipConfig:
     disagreement: float = 40.0 / 255.0
+    foreground_disagreement: float = 48.0 / 255.0
     max_pair_cost_gap: float = 35.0
     close_px: int = 20
     dilate_px: int = 6
     min_component_px: int = 24
+    max_component_fraction: float = 0.10
     min_source_coverage: float = 0.55
     invalid_cost: float = 90.0
     history_overlap: float = 0.08
@@ -67,8 +69,25 @@ def _owner_image(images, owner):
     return output
 
 
-def disagreement_mask(warped, valid, cost, config=DynamicOwnershipConfig()):
-    """Find pixels where the two best overlapping views show different RGB."""
+def _owner_value(values, owner):
+    output = np.zeros(owner.shape, np.float32)
+    for key, value in values.items():
+        selected = owner == key
+        output[selected] = np.asarray(value, np.float32)[selected]
+    return output
+
+
+def disagreement_mask(warped, valid, cost, config=DynamicOwnershipConfig(),
+                      foreground=None):
+    """Find foreground pixels where the best overlapping views disagree.
+
+    Cross-view RGB difference alone is not a motion detector.  A small depth
+    error makes every textured static edge disagree, which can connect a
+    complete tabletop into one component.  ``foreground`` is each current
+    source's residual against the learned static scene at the same viewpoint;
+    when supplied, at least one of the compared sources must also disagree
+    with that learned background.
+    """
     keys = sorted(warped)
     if keys != sorted(valid) or keys != sorted(cost):
         raise ValueError("warped, valid and cost must contain the same cameras")
@@ -93,6 +112,15 @@ def disagreement_mask(warped, valid, cost, config=DynamicOwnershipConfig()):
     np.subtract(second_cost, best_cost, out=cost_gap, where=comparable)
     comparable &= cost_gap <= config.max_pair_cost_gap
     mask = comparable & (difference >= config.disagreement)
+    if foreground is not None:
+        if keys != sorted(foreground):
+            raise ValueError(
+                "foreground must contain the same cameras as warped")
+        foreground_difference = np.maximum(
+            _owner_value(foreground, best_owner),
+            _owner_value(foreground, second_owner),
+        )
+        mask &= foreground_difference >= config.foreground_disagreement
 
     if config.close_px > 0 or config.dilate_px > 0:
         import cv2
@@ -149,6 +177,8 @@ def regularize_dynamic_owner(
     for label in range(1, count):
         area = int(stats[label, cv2.CC_STAT_AREA])
         if area < config.min_component_px:
+            continue
+        if area / dynamic.size > config.max_component_fraction:
             continue
         component = labels == label
         candidates = _component_candidate(component, valid, cost, config)
@@ -211,10 +241,12 @@ class DynamicSingleSourceCompositor:
         self.previous_owner = None
         self.previous_dynamic = None
 
-    def render(self, warped, valid, cost, background, background_valid=None):
+    def render(self, warped, valid, cost, background, background_valid=None,
+               foreground=None):
         base = geometric_owner(valid, cost)
         detected = disagreement_mask(
-            warped, valid, cost, config=self.config)
+            warped, valid, cost, config=self.config,
+            foreground=foreground)
         owner, dynamic, components = regularize_dynamic_owner(
             base, detected, valid, cost, config=self.config,
             previous_owner=self.previous_owner,
@@ -230,6 +262,7 @@ class DynamicSingleSourceCompositor:
         self.previous_owner = owner.copy()
         self.previous_dynamic = dynamic.copy()
         stats = {
+            "detected_fraction": float(detected.mean()),
             "dynamic_fraction": float(dynamic.mean()),
             "dynamic_components": components,
             "current_fraction": float(current.mean()),

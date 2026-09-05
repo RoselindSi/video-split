@@ -62,6 +62,36 @@ class DynamicPanoramaTest(unittest.TestCase):
                 DynamicOwnershipConfig(close_px=0, dilate_px=0))
         self.assertFalse(mask.any())
 
+    def test_static_cross_view_error_is_rejected_without_foreground_seed(self):
+        a = np.zeros((H, W, 3), np.float32)
+        b = np.ones_like(a)
+        foreground = {
+            0: np.zeros((H, W), np.float32),
+            1: np.zeros((H, W), np.float32),
+        }
+        config = DynamicOwnershipConfig(
+            disagreement=0.2, foreground_disagreement=0.2,
+            close_px=0, dilate_px=0)
+        mask = disagreement_mask(
+            {0: a, 1: b}, _valid(), _cost(), config,
+            foreground=foreground)
+        self.assertFalse(mask.any())
+
+    def test_foreground_seed_admits_cross_view_disagreement(self):
+        a = np.zeros((H, W, 3), np.float32)
+        b = np.ones_like(a)
+        foreground = {
+            0: np.full((H, W), 0.5, np.float32),
+            1: np.zeros((H, W), np.float32),
+        }
+        config = DynamicOwnershipConfig(
+            disagreement=0.2, foreground_disagreement=0.2,
+            close_px=0, dilate_px=0)
+        mask = disagreement_mask(
+            {0: a, 1: b}, _valid(), _cost(), config,
+            foreground=foreground)
+        self.assertTrue(mask.all())
+
     def test_connected_dynamic_region_gets_exactly_one_owner(self):
         base = np.zeros((H, W), np.int16)
         base[:, W // 2:] = 1
@@ -69,7 +99,8 @@ class DynamicPanoramaTest(unittest.TestCase):
         dynamic[10:30, 24:56] = True
         cost = _cost(5.0, 6.0)
         config = DynamicOwnershipConfig(
-            min_component_px=1, min_source_coverage=0.5)
+            min_component_px=1, min_source_coverage=0.5,
+            max_component_fraction=0.5)
         owner, accepted, components = regularize_dynamic_owner(
             base, dynamic, _valid(), cost, config)
         self.assertEqual(components, 1)
@@ -89,6 +120,17 @@ class DynamicPanoramaTest(unittest.TestCase):
             _valid(), _cost(0.0, 2.0), config,
             previous_owner=previous, previous_dynamic=dynamic)
         self.assertEqual(np.unique(owner[dynamic]).tolist(), [1])
+
+    def test_oversized_component_cannot_take_over_the_frame(self):
+        dynamic = np.ones((H, W), bool)
+        base = geometric_owner(_valid(), _cost())
+        config = DynamicOwnershipConfig(
+            min_component_px=1, max_component_fraction=0.25)
+        owner, accepted, components = regularize_dynamic_owner(
+            base, dynamic, _valid(), _cost(), config)
+        np.testing.assert_array_equal(owner, base)
+        self.assertFalse(accepted.any())
+        self.assertEqual(components, 0)
 
     def test_uncovered_dynamic_pixels_fall_back_to_learned_background(self):
         red = np.zeros((H, W, 3), np.float32)

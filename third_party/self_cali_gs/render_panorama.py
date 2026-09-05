@@ -134,14 +134,15 @@ def _normalized_surface_depth(result):
 
 
 def warp_current_sources(world_points, world_valid, cameras, gaussians,
-                         pipeline, background, shift, iteration, alignment):
+                         pipeline, background, shift, iteration, alignment,
+                         foreground_threshold):
     """Project learned world surfaces into synchronized current RGB views."""
     points = world_points.permute(1, 2, 0)
     height, width = points.shape[:2]
     homogeneous = torch.cat(
         [points, torch.ones((height, width, 1), device=points.device)],
         dim=-1)
-    warped, valid, cost = {}, {}, {}
+    warped, valid, cost, foreground = {}, {}, {}, {}
     with torch.no_grad():
         for index, camera in enumerate(cameras):
             world_view = camera.get_world_view_transform(
@@ -173,6 +174,13 @@ def warp_current_sources(world_points, world_valid, cameras, gaussians,
                 global_alignment=alignment)
             source_depth, source_alpha = _normalized_surface_depth(
                 source_result)
+            source_difference = torch.abs(
+                source - source_result["render"].clamp(0.0, 1.0)
+            ).mean(dim=0, keepdim=True)
+            sampled_difference = functional.grid_sample(
+                source_difference.unsqueeze(0), grid.unsqueeze(0),
+                mode="bilinear", padding_mode="zeros",
+                align_corners=True)[0, 0]
             sampled_depth = functional.grid_sample(
                 source_depth.unsqueeze(0), grid.unsqueeze(0),
                 mode="bilinear", padding_mode="zeros",
@@ -197,7 +205,10 @@ def warp_current_sources(world_points, world_valid, cameras, gaussians,
             warped[index] = image.permute(1, 2, 0).cpu().numpy()
             valid[index] = inside.cpu().numpy()
             cost[index] = angle.cpu().numpy().astype(np.float32)
-    return warped, valid, cost
+            foreground[index] = (
+                sampled_difference >= foreground_threshold
+            ).cpu().numpy().astype(np.float32)
+    return warped, valid, cost, foreground
 
 
 def owner_diagnostic(owner):
@@ -238,6 +249,7 @@ def main():
     parser.add_argument("--face-fov", type=float, default=100.0)
     parser.add_argument("--erp-width", type=int, default=2048)
     parser.add_argument("--dynamic-threshold", type=float, default=40.0)
+    parser.add_argument("--foreground-threshold", type=float, default=48.0)
     parser.add_argument("--dynamic-close", type=int, default=20)
     parser.add_argument("--dynamic-dilate", type=int, default=6)
     parser.add_argument("--output", required=True)
@@ -300,9 +312,10 @@ def main():
     world_points, _ = compose_equirectangular(
         face_world, face_alpha, erp_height, args.erp_width, args.face_fov)
     world_valid = alpha[0] > 0.05
-    warped, valid, cost = warp_current_sources(
+    warped, valid, cost, foreground = warp_current_sources(
         world_points, world_valid, source_cameras, gaussians, pipeline,
-        background, shift, scene.loaded_iter, alignment)
+        background, shift, scene.loaded_iter, alignment,
+        args.foreground_threshold / 255.0)
     learned_background = panorama.permute(1, 2, 0).cpu().numpy()
     learned_valid = world_valid.cpu().numpy()
     base_owner = geometric_owner(valid, cost)
@@ -310,11 +323,13 @@ def main():
         warped, valid, base_owner, learned_background, learned_valid)
     compositor = DynamicSingleSourceCompositor(DynamicOwnershipConfig(
         disagreement=args.dynamic_threshold / 255.0,
+        foreground_disagreement=0.5,
         close_px=args.dynamic_close,
         dilate_px=args.dynamic_dilate,
     ))
     dynamic_image, owner, dynamic_mask, dynamic_stats = compositor.render(
-        warped, valid, cost, learned_background, learned_valid)
+        warped, valid, cost, learned_background, learned_valid,
+        foreground=foreground)
     base_tensor = torch.from_numpy(base_image).permute(2, 0, 1)
     dynamic_tensor = torch.from_numpy(dynamic_image).permute(2, 0, 1)
     owner_tensor = torch.from_numpy(
@@ -354,6 +369,7 @@ def main():
         "valid_fraction": float((alpha > 0.01).float().mean().item()),
         "dynamic": {
             "threshold_rgb_255": args.dynamic_threshold,
+            "foreground_threshold_rgb_255": args.foreground_threshold,
             "close_px": args.dynamic_close,
             "dilate_px": args.dynamic_dilate,
             **dynamic_stats,
