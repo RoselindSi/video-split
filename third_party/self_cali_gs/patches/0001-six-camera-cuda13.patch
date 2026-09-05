@@ -1,0 +1,28 @@
+diff --git a/3dgs-pose/cuda_rasterizer/rasterizer_impl.h b/3dgs-pose/cuda_rasterizer/rasterizer_impl.h
+--- a/3dgs-pose/cuda_rasterizer/rasterizer_impl.h
++++ b/3dgs-pose/cuda_rasterizer/rasterizer_impl.h
+@@ -10,6 +10,7 @@
+ 
+ #pragma once
+ 
++#include <cstdint>
+ #include <iostream>
+ #include <vector>
+ #include "rasterizer.h"
+diff --git a/scene/dataset_readers.py b/scene/dataset_readers.py
+--- a/scene/dataset_readers.py
++++ b/scene/dataset_readers.py
+@@ -194,10 +194,11 @@ def readColmapCameras(cam_extrinsics, cam_intrinsics, images_folder):
+         else:
+             assert False, "Colmap camera model not handled: only undistorted datasets (PINHOLE or SIMPLE_PINHOLE cameras) supported!"
+ 
+-        image_path = os.path.join(images_folder, os.path.basename(extr.name))
++        relative_image_path = Path(extr.name)
++        image_path = os.path.join(images_folder, *relative_image_path.parts)
+         if not os.path.exists(image_path):
+             image_path = image_path.replace('png', 'jpg')
+-        image_name = os.path.basename(image_path).split(".")[0]
++        image_name = relative_image_path.with_suffix("").as_posix().replace("/", "_")
+         if 'paul_garden' in images_folder:
+             image = Image.open(image_path.replace('png', 'jpg'))
+         else:
