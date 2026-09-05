@@ -19,14 +19,14 @@ import numpy as np
 
 @dataclass(frozen=True)
 class DynamicOwnershipConfig:
-    disagreement: float = 40.0 / 255.0
-    foreground_disagreement: float = 48.0 / 255.0
+    disagreement: float = 48.0 / 255.0
+    foreground_disagreement: float = 72.0 / 255.0
     max_pair_cost_gap: float = 35.0
-    close_px: int = 20
-    dilate_px: int = 6
+    close_px: int = 8
+    dilate_px: int = 3
     min_component_px: int = 24
-    max_component_fraction: float = 0.10
-    min_source_coverage: float = 0.55
+    max_component_fraction: float = 0.05
+    min_source_coverage: float = 0.85
     invalid_cost: float = 90.0
     history_overlap: float = 0.08
     switch_margin: float = 4.0
@@ -183,9 +183,6 @@ def regularize_dynamic_owner(
         component = labels == label
         candidates = _component_candidate(component, valid, cost, config)
         if not candidates:
-            owner[component] = -1
-            accepted[component] = True
-            kept += 1
             continue
         winner = min(candidates, key=candidates.get)
 
@@ -202,7 +199,9 @@ def regularize_dynamic_owner(
                             candidates[winner] + config.switch_margin:
                         winner = previous
 
-        owner[component] = -1
+        # Keep the original owner in the small remainder the winner cannot
+        # see. A noisy visibility map must not punch learned-background holes
+        # through an otherwise sharp tabletop.
         selected = component & np.asarray(valid[winner], bool)
         owner[selected] = winner
         accepted[component] = True

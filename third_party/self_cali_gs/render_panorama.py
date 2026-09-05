@@ -190,18 +190,21 @@ def warp_current_sources(world_points, world_valid, cameras, gaussians,
                 mode="bilinear", padding_mode="zeros",
                 align_corners=True)[0, 0]
             behind_static_surface = (
-                (sampled_alpha > 0.05)
-                & (z > sampled_depth * 1.05 + 0.02)
+                (sampled_alpha > 0.20)
+                & (z > sampled_depth * 1.15 + 0.05)
             )
             inside = (
                 world_valid & (z > 1e-5)
                 & (u >= 0.0) & (u <= source_width - 1)
                 & (v >= 0.0) & (v <= source_height - 1)
-                & ~behind_static_surface
             )
             ray_length = torch.linalg.norm(xyz, dim=-1).clamp_min(1e-6)
             angle = torch.rad2deg(torch.acos(
                 (z / ray_length).clamp(-1.0, 1.0)))
+            # Raster depth is noisy around thin Gaussian surfaces. Treat a
+            # likely occlusion as a strong preference against this camera,
+            # not as an invalid pixel that fragments ownership into holes.
+            angle = angle + behind_static_surface.float() * 45.0
             warped[index] = image.permute(1, 2, 0).cpu().numpy()
             valid[index] = inside.cpu().numpy()
             cost[index] = angle.cpu().numpy().astype(np.float32)
@@ -248,10 +251,10 @@ def main():
     parser.add_argument("--face-size", type=int, default=768)
     parser.add_argument("--face-fov", type=float, default=100.0)
     parser.add_argument("--erp-width", type=int, default=2048)
-    parser.add_argument("--dynamic-threshold", type=float, default=40.0)
-    parser.add_argument("--foreground-threshold", type=float, default=48.0)
-    parser.add_argument("--dynamic-close", type=int, default=20)
-    parser.add_argument("--dynamic-dilate", type=int, default=6)
+    parser.add_argument("--dynamic-threshold", type=float, default=48.0)
+    parser.add_argument("--foreground-threshold", type=float, default=72.0)
+    parser.add_argument("--dynamic-close", type=int, default=8)
+    parser.add_argument("--dynamic-dilate", type=int, default=3)
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
     if args.erp_width % 2:

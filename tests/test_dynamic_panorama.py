@@ -132,6 +132,23 @@ class DynamicPanoramaTest(unittest.TestCase):
         self.assertFalse(accepted.any())
         self.assertEqual(components, 0)
 
+    def test_component_without_wide_source_coverage_keeps_base_owner(self):
+        dynamic = np.zeros((H, W), bool)
+        dynamic[10:30, 20:60] = True
+        base = np.zeros((H, W), np.int16)
+        base[:, W // 2:] = 1
+        valid = _valid()
+        valid[0][dynamic] = False
+        valid[1][dynamic] = False
+        config = DynamicOwnershipConfig(
+            min_component_px=1, max_component_fraction=0.5,
+            min_source_coverage=0.85)
+        owner, accepted, components = regularize_dynamic_owner(
+            base, dynamic, valid, _cost(), config)
+        np.testing.assert_array_equal(owner, base)
+        self.assertFalse(accepted.any())
+        self.assertEqual(components, 0)
+
     def test_uncovered_dynamic_pixels_fall_back_to_learned_background(self):
         red = np.zeros((H, W, 3), np.float32)
         red[..., 0] = 1.0
