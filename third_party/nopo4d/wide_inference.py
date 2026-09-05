@@ -15,7 +15,7 @@ import sys
 
 import numpy as np
 
-from panorama import compose_panorama
+from panorama import camera_angles_deg, compose_panorama, fit_panorama_reference
 
 
 IMAGE_NAME = re.compile(r"cam(?P<camera>\d+)_t(?P<time>\d+)\.png")
@@ -194,10 +194,11 @@ def main():
             len(fan_cameras), num_frames, 3, height, width)
         fan_alphas = fan.alpha[0].reshape(
             len(fan_cameras), num_frames, height, width)
+        fan_camera_c2w = shared_centre_camera_fan(camera_c2w, fan_cameras)
+        panorama_reference = fit_panorama_reference(fan_camera_c2w)
         panorama, panorama_alpha, overlap_count, disagreement = compose_panorama(
             fan_colors, fan_alphas,
-            shared_centre_camera_fan(camera_c2w, fan_cameras),
-            camera_k[list(fan_cameras)], camera_c2w[args.central_camera],
+            fan_camera_c2w, camera_k[list(fan_cameras)], panorama_reference,
             output_shape=(args.pano_height, args.pano_width),
             hfov_deg=args.pano_hfov, vfov_deg=args.pano_vfov)
         if args.render_inputs:
@@ -254,6 +255,9 @@ def main():
         "panorama_size": [args.pano_width, args.pano_height],
         "panorama_hfov_deg": args.pano_hfov,
         "panorama_vfov_deg": args.pano_vfov,
+        "panorama_reference_c2w": panorama_reference.tolist(),
+        "panorama_fan_yaw_pitch_deg": camera_angles_deg(
+            fan_camera_c2w, panorama_reference).tolist(),
         "panorama_mean_alpha": panorama_alpha.mean(dim=(-2, -1)).cpu().tolist(),
         "panorama_low_alpha_fraction": (panorama_alpha < 0.5).float()
         .mean(dim=(-2, -1)).cpu().tolist(),

@@ -17,13 +17,32 @@ from src.rig.nopo4d_validation import (
     wide_intrinsics,
 )
 from third_party.nopo4d.panorama import (
+    camera_angles_deg,
     camera_projection_map,
     compose_panorama,
+    fit_panorama_reference,
     spherical_rays,
 )
 
 
 class NoPo4DValidationTest(unittest.TestCase):
+    def test_panorama_reference_levels_a_horizontal_camera_fan(self):
+        poses = np.repeat(np.eye(4, dtype=np.float32)[None], 3, axis=0)
+        for pose, angle in zip(poses, (-30, 0, 30)):
+            radians = np.radians(angle)
+            pose[:3, :3] = np.array([
+                [np.cos(radians), 0, np.sin(radians)],
+                [0, 1, 0],
+                [-np.sin(radians), 0, np.cos(radians)],
+            ], np.float32)
+
+        reference = fit_panorama_reference(poses)
+        angles = camera_angles_deg(poses, reference)
+
+        np.testing.assert_allclose(reference[:3, :3], np.eye(3), atol=1e-6)
+        np.testing.assert_allclose(angles[:, 0], [-30, 0, 30], atol=1e-5)
+        np.testing.assert_allclose(angles[:, 1], 0, atol=1e-5)
+
     def test_spherical_projection_centres_the_reference_camera(self):
         rays = spherical_rays(3, 3, hfov_deg=90, vfov_deg=60)
         np.testing.assert_allclose(rays[1, 1], [0, 0, 1], atol=1e-6)

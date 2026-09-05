@@ -4,6 +4,41 @@ from __future__ import annotations
 import numpy as np
 
 
+def fit_panorama_reference(camera_c2w):
+    """Fit a level panorama frame to the learned camera optical axes."""
+    poses = np.asarray(camera_c2w, np.float32)
+    if poses.ndim != 3 or poses.shape[1:] != (4, 4) or len(poses) < 2:
+        raise ValueError("expected at least two [4,4] camera poses")
+    forward_axes = poses[:, :3, 2]
+    _, _, basis = np.linalg.svd(forward_axes, full_matrices=True)
+    down = basis[-1]
+    mean_down = poses[:, :3, 1].mean(axis=0)
+    if float(np.dot(down, mean_down)) < 0:
+        down = -down
+    forward = forward_axes.mean(axis=0)
+    forward = forward - down * np.dot(forward, down)
+    forward /= np.linalg.norm(forward)
+    right = np.cross(down, forward)
+    right /= np.linalg.norm(right)
+    down = np.cross(forward, right)
+    target = np.eye(4, dtype=np.float32)
+    target[:3, :3] = np.stack((right, down, forward), axis=1)
+    target[:3, 3] = np.median(poses[:, :3, 3], axis=0)
+    return target
+
+
+def camera_angles_deg(camera_c2w, reference_c2w):
+    """Return learned optical-axis yaw and pitch in a panorama frame."""
+    poses = np.asarray(camera_c2w, np.float32)
+    reference_r = np.asarray(reference_c2w, np.float32)[:3, :3]
+    directions = poses[:, :3, 2] @ reference_r
+    yaw = np.degrees(np.arctan2(directions[:, 0], directions[:, 2]))
+    pitch = np.degrees(np.arctan2(
+        -directions[:, 1],
+        np.sqrt(directions[:, 0] ** 2 + directions[:, 2] ** 2)))
+    return np.stack((yaw, pitch), axis=1).astype(np.float32)
+
+
 def spherical_rays(width, height, hfov_deg, vfov_deg):
     """Return camera-space rays for a cropped equirectangular projection."""
     if width < 2 or height < 2:
