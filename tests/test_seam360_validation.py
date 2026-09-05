@@ -11,6 +11,11 @@ from src.rig.seam360_validation import (
     parse_rig_image_name,
     resize_full_frame,
 )
+from src.rig.learned_panorama import (
+    classify_cube_rays,
+    cube_face_rotations,
+    equirectangular_rays,
+)
 from third_party.self_cali_gs.prepare_rig import (
     camera_model_name,
     load_best_reconstruction,
@@ -167,6 +172,27 @@ class Seam360ValidationTest(unittest.TestCase):
         np.testing.assert_allclose(recovered_rig, poses[:, 0], atol=1e-8)
         np.testing.assert_allclose(recovered_cameras, expected_cameras, atol=1e-8)
         np.testing.assert_allclose(reconstructed, poses, atol=1e-8)
+
+    def test_cube_face_rotations_are_rigid(self):
+        rotations = cube_face_rotations()
+        np.testing.assert_allclose(
+            rotations.transpose(0, 2, 1) @ rotations,
+            np.broadcast_to(np.eye(3), (6, 3, 3)))
+        np.testing.assert_allclose(np.linalg.det(rotations), np.ones(6))
+
+    def test_cardinal_rays_hit_cube_face_centers(self):
+        rays = np.asarray([
+            [0, 0, 1], [1, 0, 0], [0, 0, -1],
+            [-1, 0, 0], [0, -1, 0], [0, 1, 0],
+        ])
+        faces, grid = classify_cube_rays(rays)
+        np.testing.assert_array_equal(faces, np.arange(6))
+        np.testing.assert_allclose(grid, np.zeros((6, 2)))
+
+    def test_equirectangular_rays_are_unit_length(self):
+        rays = equirectangular_rays(32, 64)
+        self.assertEqual(rays.shape, (32, 64, 3))
+        np.testing.assert_allclose(np.linalg.norm(rays, axis=-1), 1.0)
 
 
 if __name__ == "__main__":
