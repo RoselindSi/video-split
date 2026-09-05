@@ -8,9 +8,12 @@ hardware calibration file are read.
 from __future__ import annotations
 
 import argparse
+from collections import defaultdict
 import json
+import math
 from pathlib import Path
 import shutil
+import statistics
 
 
 def six_camera_rig_config():
@@ -44,6 +47,90 @@ def load_best_reconstruction(pycolmap, root):
             reconstruction.num_reg_images(), reconstruction.num_points3D()))
 
 
+def camera_model_name(camera):
+    model_name = getattr(camera, "model_name", None)
+    if model_name is not None:
+        return str(model_name)
+    model = camera.model
+    return str(getattr(model, "name", model))
+
+
+def summarize_errors(errors):
+    finite = sorted(error for error in errors if math.isfinite(error))
+
+    def percentile(fraction):
+        if not finite:
+            return None
+        position = fraction * (len(finite) - 1)
+        lower = math.floor(position)
+        upper = math.ceil(position)
+        if lower == upper:
+            return finite[lower]
+        weight = position - lower
+        return finite[lower] * (1.0 - weight) + finite[upper] * weight
+
+    return {
+        "observations": len(errors),
+        "finite_observations": len(finite),
+        "nonfinite_observations": len(errors) - len(finite),
+        "mean_px": statistics.fmean(finite) if finite else None,
+        "median_px": percentile(0.5),
+        "p90_px": percentile(0.9),
+        "p99_px": percentile(0.99),
+        "max_px": finite[-1] if finite else None,
+        "over_10px": sum(error > 10.0 for error in finite),
+        "over_100px": sum(error > 100.0 for error in finite),
+    }
+
+
+def observation_error_report(reconstruction):
+    by_camera = defaultdict(list)
+    all_errors = []
+    for image in reconstruction.images.values():
+        if not image.has_pose:
+            continue
+        camera_errors = by_camera[int(image.camera_id)]
+        for point2D in image.points2D:
+            if not point2D.has_point3D():
+                continue
+            try:
+                xyz = reconstruction.points3D[point2D.point3D_id].xyz
+                projected = image.project_point(xyz)
+                error = math.hypot(
+                    float(projected[0]) - float(point2D.x),
+                    float(projected[1]) - float(point2D.y),
+                )
+            except (IndexError, KeyError, OverflowError, TypeError, ValueError):
+                error = math.inf
+            camera_errors.append(error)
+            all_errors.append(error)
+    return {
+        "all": summarize_errors(all_errors),
+        "by_camera_id": {
+            str(camera_id): summarize_errors(errors)
+            for camera_id, errors in sorted(by_camera.items())
+        },
+    }
+
+
+def rig_report(rig):
+    sensors = []
+    for sensor in sorted(rig.sensor_ids(), key=lambda item: int(item.id)):
+        entry = {
+            "type": str(sensor.type).split(".")[-1],
+            "id": int(sensor.id),
+            "reference": bool(rig.is_ref_sensor(sensor)),
+        }
+        if not entry["reference"]:
+            entry["sensor_from_rig"] = rig.sensor_from_rig(
+                sensor).matrix().tolist()
+        sensors.append(entry)
+    return {
+        "num_sensors": int(rig.num_sensors()),
+        "sensors": sensors,
+    }
+
+
 def reconstruction_report(reconstruction):
     images = {}
     for image_id, image in reconstruction.images.items():
@@ -55,7 +142,7 @@ def reconstruction_report(reconstruction):
             }
     cameras = {
         str(camera_id): {
-            "model": camera.model_name,
+            "model": camera_model_name(camera),
             "width": int(camera.width),
             "height": int(camera.height),
             "params": camera.params.tolist(),
@@ -63,7 +150,7 @@ def reconstruction_report(reconstruction):
         for camera_id, camera in reconstruction.cameras.items()
     }
     rigs = {
-        str(rig_id): rig.todict(recursive=True)
+        str(rig_id): rig_report(rig)
         for rig_id, rig in reconstruction.rigs.items()
     }
     return {
@@ -73,10 +160,26 @@ def reconstruction_report(reconstruction):
         "cameras": cameras,
         "rigs": rigs,
         "images": images,
+        "observation_errors": observation_error_report(reconstruction),
     }
 
 
-def prepare(scene_root, device="auto", resume=False):
+def write_report(root, reconstruction):
+    report = {
+        "schema": "video-split.seam360-colmap-rig.v1",
+        "uses_camera_parameters": False,
+        "camera_grouping": "one-intrinsic-model-per-physical-camera",
+        "pose_grouping": "one-rig-pose-per-synchronized-time",
+        "rig_config": six_camera_rig_config(),
+        **reconstruction_report(reconstruction),
+    }
+    with open(root / "colmap_report.json", "w", encoding="utf-8") as stream:
+        json.dump(report, stream, indent=2)
+        stream.write("\n")
+    return report
+
+
+def prepare(scene_root, device="auto", resume=False, report_only=False):
     import pycolmap
 
     root = Path(scene_root).resolve()
@@ -92,6 +195,10 @@ def prepare(scene_root, device="auto", resume=False):
     unrigged_path = work / "unrigged"
     rigged_path = work / "rigged"
     prepared_path = root / "self_cali"
+    if report_only:
+        if not (rigged_path / "images.bin").is_file():
+            raise FileNotFoundError("report-only requires a completed rigged model")
+        return write_report(root, pycolmap.Reconstruction(rigged_path))
     if resume:
         if not database_path.is_file() or not unrigged_path.is_dir():
             raise FileNotFoundError("resume requires database.db and unrigged models")
@@ -161,18 +268,7 @@ def prepare(scene_root, device="auto", resume=False):
     raw_target = prepared_path / "fish" / "images"
     shutil.copytree(image_dir, raw_target)
 
-    report = {
-        "schema": "video-split.seam360-colmap-rig.v1",
-        "uses_camera_parameters": False,
-        "camera_grouping": "one-intrinsic-model-per-physical-camera",
-        "pose_grouping": "one-rig-pose-per-synchronized-time",
-        "rig_config": six_camera_rig_config(),
-        **reconstruction_report(reconstruction),
-    }
-    with open(root / "colmap_report.json", "w", encoding="utf-8") as stream:
-        json.dump(report, stream, indent=2)
-        stream.write("\n")
-    return report
+    return write_report(root, reconstruction)
 
 
 def main():
@@ -181,8 +277,12 @@ def main():
     parser.add_argument("--device", choices=("auto", "cpu", "cuda"),
                         default="auto")
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument("--report-only", action="store_true")
     args = parser.parse_args()
-    print(json.dumps(prepare(args.scene, args.device, args.resume), indent=2))
+    if args.resume and args.report_only:
+        parser.error("--resume and --report-only are mutually exclusive")
+    print(json.dumps(prepare(
+        args.scene, args.device, args.resume, args.report_only), indent=2))
 
 
 if __name__ == "__main__":

@@ -12,9 +12,11 @@ from src.rig.seam360_validation import (
     resize_full_frame,
 )
 from third_party.self_cali_gs.prepare_rig import (
+    camera_model_name,
     load_best_reconstruction,
     select_reconstruction,
     six_camera_rig_config,
+    summarize_errors,
 )
 
 
@@ -114,6 +116,22 @@ class Seam360ValidationTest(unittest.TestCase):
                 (model / "images.bin").touch()
             selected = load_best_reconstruction(pycolmap, root)
             self.assertEqual(selected.images, 9)
+
+    def test_camera_model_name_supports_current_pycolmap(self):
+        old_camera = type("Camera", (), {"model_name": "FISHEYE"})()
+        model = type("Model", (), {"name": "OPENCV_FISHEYE"})()
+        current_camera = type("Camera", (), {"model": model})()
+        self.assertEqual(camera_model_name(old_camera), "FISHEYE")
+        self.assertEqual(
+            camera_model_name(current_camera), "OPENCV_FISHEYE")
+
+    def test_reprojection_summary_keeps_outliers_visible(self):
+        summary = summarize_errors([0.5, 1.0, 2.0, 20.0, float("inf")])
+        self.assertEqual(summary["observations"], 5)
+        self.assertEqual(summary["finite_observations"], 4)
+        self.assertEqual(summary["nonfinite_observations"], 1)
+        self.assertEqual(summary["median_px"], 1.5)
+        self.assertEqual(summary["over_10px"], 1)
 
     def test_resize_keeps_the_complete_frame(self):
         image = np.zeros((10, 20, 3), np.uint8)
