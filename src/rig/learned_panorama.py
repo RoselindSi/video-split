@@ -58,5 +58,9 @@ def classify_cube_rays(rays):
     return faces, grid
 
 
-def equirectangular_cube_lookup(height, width):
-    return classify_cube_rays(equirectangular_rays(height, width))
+def equirectangular_cube_lookup(height, width, face_fov_degrees=90.0):
+    if not 90.0 <= face_fov_degrees < 180.0:
+        raise ValueError("cube face FOV must be in [90, 180) degrees")
+    faces, grid = classify_cube_rays(equirectangular_rays(height, width))
+    overscan = np.tan(np.radians(face_fov_degrees) / 2.0)
+    return faces, grid / overscan

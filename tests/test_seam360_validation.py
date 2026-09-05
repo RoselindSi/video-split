@@ -14,6 +14,7 @@ from src.rig.seam360_validation import (
 from src.rig.learned_panorama import (
     classify_cube_rays,
     cube_face_rotations,
+    equirectangular_cube_lookup,
     equirectangular_rays,
 )
 from third_party.self_cali_gs.prepare_rig import (
@@ -193,6 +194,13 @@ class Seam360ValidationTest(unittest.TestCase):
         rays = equirectangular_rays(32, 64)
         self.assertEqual(rays.shape, (32, 64, 3))
         np.testing.assert_allclose(np.linalg.norm(rays, axis=-1), 1.0)
+
+    def test_cube_overscan_samples_inside_face_edges(self):
+        _, base_grid = equirectangular_cube_lookup(32, 64, 90.0)
+        _, overscan_grid = equirectangular_cube_lookup(32, 64, 100.0)
+        self.assertLess(np.abs(overscan_grid).max(), np.abs(base_grid).max())
+        with self.assertRaisesRegex(ValueError, "FOV"):
+            equirectangular_cube_lookup(32, 64, 89.0)
 
 
 if __name__ == "__main__":
