@@ -30,6 +30,7 @@ class DynamicOwnershipConfig:
     invalid_cost: float = 90.0
     history_overlap: float = 0.08
     switch_margin: float = 4.0
+    owner_smooth_px: int = 0
 
 
 def _float_rgb(image):
@@ -59,6 +60,31 @@ def geometric_owner(valid, cost):
     reachable = np.isfinite(stack).any(axis=0)
     owner = np.asarray(keys, np.int16)[np.argmin(stack, axis=0)]
     return np.where(reachable, owner, -1).astype(np.int16)
+
+
+def regularize_spatial_owner(owner, valid, radius):
+    """Remove small ownership islands without assigning an invalid camera."""
+    import cv2
+
+    owner = np.asarray(owner, np.int16)
+    radius = int(radius)
+    if radius <= 0:
+        return owner.copy()
+    keys = sorted(valid)
+    kernel = 2 * radius + 1
+    support = np.stack([
+        cv2.boxFilter(
+            (owner == key).astype(np.float32), -1, (kernel, kernel),
+            normalize=False, borderType=cv2.BORDER_REPLICATE)
+        for key in keys
+    ])
+    winner_index = np.argmax(support, axis=0)
+    winner = np.asarray(keys, np.int16)[winner_index]
+    winner_valid = np.zeros(owner.shape, bool)
+    for index, key in enumerate(keys):
+        selected = winner_index == index
+        winner_valid[selected] = np.asarray(valid[key], bool)[selected]
+    return np.where((owner >= 0) & winner_valid, winner, owner).astype(np.int16)
 
 
 def _owner_image(images, owner):
@@ -232,6 +258,63 @@ def compose_single_source(warped, valid, owner, background,
     return output, filled, fallback
 
 
+def compose_gated_boundary_blend(
+        warped, valid, cost, owner, background, background_valid=None,
+        protected=None, temperature=6.0, gate=40.0 / 255.0,
+        boundary_px=8):
+    """Soften static owner boundaries while keeping disagreements single-source."""
+    import cv2
+
+    keys = sorted(warped)
+    owner = np.asarray(owner, np.int16)
+    hard, _, _ = compose_single_source(
+        warped, valid, owner, background, background_valid)
+    scores = np.stack([
+        np.where(valid[key], np.asarray(cost[key], np.float32), np.inf)
+        for key in keys
+    ])
+    order = np.argsort(scores, axis=0, kind="stable")
+    keep = np.zeros_like(scores, bool)
+    np.put_along_axis(keep, order[:min(2, len(keys))], True, axis=0)
+    finite = np.isfinite(scores) & keep
+    minimum = np.min(np.where(finite, scores, np.inf), axis=0)
+    minimum = np.where(np.isfinite(minimum), minimum, 0.0)
+    shifted = np.where(finite, scores - minimum[None], 0.0)
+    weights = np.where(
+        finite, np.exp(-shifted / max(float(temperature), 1e-6)), 0.0)
+    total = weights.sum(axis=0)
+    blended = np.zeros_like(hard)
+    for index, key in enumerate(keys):
+        blended += _float_rgb(warped[key]) * weights[index, ..., None]
+    blended = np.divide(
+        blended, total[..., None], out=np.zeros_like(blended),
+        where=total[..., None] > 1e-8)
+
+    boundary = np.zeros(owner.shape, bool)
+    horizontal = (owner[:, 1:] != owner[:, :-1]) \
+        & (owner[:, 1:] >= 0) & (owner[:, :-1] >= 0)
+    vertical = (owner[1:] != owner[:-1]) \
+        & (owner[1:] >= 0) & (owner[:-1] >= 0)
+    boundary[:, 1:] |= horizontal
+    boundary[:, :-1] |= horizontal
+    boundary[1:] |= vertical
+    boundary[:-1] |= vertical
+    radius = int(boundary_px)
+    if radius > 0:
+        kernel = cv2.getStructuringElement(
+            cv2.MORPH_ELLIPSE, (2 * radius + 1, 2 * radius + 1))
+        boundary = cv2.dilate(boundary.astype(np.uint8), kernel) > 0
+    disagreement = np.abs(blended - hard).mean(axis=2)
+    gated = disagreement > float(gate)
+    if protected is None:
+        protected = np.zeros(owner.shape, bool)
+    transition = boundary & ~gated & ~np.asarray(protected, bool) \
+        & (total > 1e-8)
+    output = hard.copy()
+    output[transition] = blended[transition]
+    return output, transition, gated & boundary
+
+
 class DynamicSingleSourceCompositor:
     """Stateful region ownership with bounded camera-switch hysteresis."""
 
@@ -243,6 +326,8 @@ class DynamicSingleSourceCompositor:
     def render(self, warped, valid, cost, background, background_valid=None,
                foreground=None):
         base = geometric_owner(valid, cost)
+        base = regularize_spatial_owner(
+            base, valid, self.config.owner_smooth_px)
         detected = disagreement_mask(
             warped, valid, cost, config=self.config,
             foreground=foreground)

@@ -8,10 +8,12 @@ import numpy as np
 from src.rig.dynamic_panorama import (
     DynamicOwnershipConfig,
     DynamicSingleSourceCompositor,
+    compose_gated_boundary_blend,
     compose_single_source,
     disagreement_mask,
     geometric_owner,
     regularize_dynamic_owner,
+    regularize_spatial_owner,
 )
 
 
@@ -36,6 +38,42 @@ class DynamicPanoramaTest(unittest.TestCase):
         owner = geometric_owner(valid, _cost(0.0, 1.0))
         self.assertTrue(np.all(owner[:, :W // 2] == 0))
         self.assertTrue(np.all(owner[:, W // 2:] == 1))
+
+    def test_spatial_owner_removes_small_valid_island(self):
+        owner = np.zeros((H, W), np.int16)
+        owner[18:22, 38:42] = 1
+        regularized = regularize_spatial_owner(owner, _valid(), radius=3)
+        self.assertFalse(np.any(regularized[18:22, 38:42] == 1))
+
+    def test_boundary_blend_is_soft_but_protected_content_stays_hard(self):
+        dark = np.zeros((H, W, 3), np.float32)
+        light = np.full_like(dark, 0.2)
+        owner = np.zeros((H, W), np.int16)
+        owner[:, W // 2:] = 1
+        protected = np.zeros((H, W), bool)
+        protected[10:20, W // 2 - 2:W // 2 + 2] = True
+        image, transition, gated = compose_gated_boundary_blend(
+            {0: dark, 1: light}, _valid(), _cost(0.0, 0.0), owner,
+            np.zeros_like(dark), protected=protected,
+            gate=0.5, boundary_px=3)
+        self.assertTrue(transition[25, W // 2])
+        self.assertAlmostEqual(float(image[25, W // 2, 0]), 0.1)
+        self.assertFalse(transition[15, W // 2])
+        self.assertAlmostEqual(float(image[15, W // 2, 0]), 0.2)
+        self.assertFalse(gated.any())
+
+    def test_boundary_blend_gates_cross_view_disagreement(self):
+        dark = np.zeros((H, W, 3), np.float32)
+        light = np.ones_like(dark)
+        owner = np.zeros((H, W), np.int16)
+        owner[:, W // 2:] = 1
+        image, transition, gated = compose_gated_boundary_blend(
+            {0: dark, 1: light}, _valid(), _cost(0.0, 0.0), owner,
+            np.zeros_like(dark), gate=0.2, boundary_px=3)
+        self.assertFalse(transition.any())
+        self.assertTrue(gated[:, W // 2 - 1:W // 2 + 1].all())
+        self.assertEqual(float(image[20, W // 2 - 1, 0]), 0.0)
+        self.assertEqual(float(image[20, W // 2, 0]), 1.0)
 
     def test_displaced_object_is_one_disagreement_region(self):
         a = np.zeros((H, W, 3), np.float32)

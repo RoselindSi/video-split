@@ -28,6 +28,7 @@ from src.rig.learned_panorama import (
 from src.rig.dynamic_panorama import (
     DynamicOwnershipConfig,
     DynamicSingleSourceCompositor,
+    compose_gated_boundary_blend,
     compose_single_source,
     geometric_owner,
 )
@@ -431,6 +432,10 @@ def main():
     parser.add_argument("--stereo-replacement-coverage", type=float,
                         default=0.75)
     parser.add_argument("--stereo-association-px", type=int, default=8)
+    parser.add_argument("--owner-smooth", type=int, default=8)
+    parser.add_argument("--static-transition", type=int, default=12)
+    parser.add_argument("--static-blend-temperature", type=float, default=6.0)
+    parser.add_argument("--static-blend-gate", type=float, default=40.0)
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
     if args.erp_width % 2:
@@ -509,12 +514,20 @@ def main():
         foreground_disagreement=0.5,
         close_px=args.dynamic_close,
         dilate_px=args.dynamic_dilate,
+        owner_smooth_px=args.owner_smooth,
     ))
     dynamic_image, owner, dynamic_mask, dynamic_stats = compositor.render(
         warped, valid, cost, learned_background, learned_valid,
         foreground=foreground)
+    seam_image, transition_mask, gated_transition = \
+        compose_gated_boundary_blend(
+            warped, valid, cost, owner, learned_background, learned_valid,
+            protected=dynamic_mask,
+            temperature=args.static_blend_temperature,
+            gate=args.static_blend_gate / 255.0,
+            boundary_px=args.static_transition)
     stereo_stats = None
-    depth_dynamic_image = dynamic_image
+    depth_dynamic_image = seam_image
     stereo_mask = np.zeros(dynamic_mask.shape, bool)
     if args.stereo_model:
         if panorama_camera_to_world is None:
@@ -541,7 +554,7 @@ def main():
             dynamic_mask, depth_visible,
             min_coverage=args.stereo_replacement_coverage,
             association_px=args.stereo_association_px)
-        depth_dynamic_image = dynamic_image.copy()
+        depth_dynamic_image = seam_image.copy()
         erase &= learned_valid
         depth_dynamic_image[erase] = learned_background[erase]
         depth_dynamic_image[stereo_mask] = stereo_layer.rgb[stereo_mask]
@@ -553,6 +566,7 @@ def main():
         stereo_stats["temporal_threshold_rgb_255"] = args.temporal_threshold
     base_tensor = torch.from_numpy(base_image).permute(2, 0, 1)
     dynamic_tensor = torch.from_numpy(dynamic_image).permute(2, 0, 1)
+    seam_tensor = torch.from_numpy(seam_image).permute(2, 0, 1)
     depth_dynamic_tensor = torch.from_numpy(
         depth_dynamic_image).permute(2, 0, 1)
     owner_tensor = torch.from_numpy(
@@ -563,6 +577,7 @@ def main():
     cropped, cropped_alpha, crop = crop_to_content(panorama, alpha)
     left, top, right, bottom = crop
     dynamic_cropped = dynamic_tensor[:, top:bottom, left:right]
+    seam_cropped = seam_tensor[:, top:bottom, left:right]
     depth_dynamic_cropped = depth_dynamic_tensor[:, top:bottom, left:right]
     torchvision.utils.save_image(panorama, output / "panorama.png")
     torchvision.utils.save_image(alpha, output / "panorama_alpha.png")
@@ -575,6 +590,10 @@ def main():
         dynamic_tensor, output / "panorama_dynamic.png")
     torchvision.utils.save_image(
         dynamic_cropped, output / "panorama_dynamic_cropped.png")
+    torchvision.utils.save_image(
+        seam_tensor, output / "panorama_static_transition.png")
+    torchvision.utils.save_image(
+        seam_cropped, output / "panorama_static_transition_cropped.png")
     torchvision.utils.save_image(
         depth_dynamic_tensor, output / "panorama_dynamic_depth.png")
     torchvision.utils.save_image(
@@ -606,6 +625,14 @@ def main():
             "close_px": args.dynamic_close,
             "dilate_px": args.dynamic_dilate,
             **dynamic_stats,
+        },
+        "static_transition": {
+            "owner_smooth_px": args.owner_smooth,
+            "boundary_px": args.static_transition,
+            "temperature_degrees": args.static_blend_temperature,
+            "gate_rgb_255": args.static_blend_gate,
+            "blended_fraction": float(transition_mask.mean()),
+            "gated_fraction": float(gated_transition.mean()),
         },
         "source_valid_fraction": {
             source_cameras[index].image_name: float(mask.mean())
