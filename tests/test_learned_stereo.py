@@ -9,6 +9,7 @@ from src.rig.learned_stereo import (
     camera_matrix_from_fov,
     rectified_world_points,
     rectify_learned_pair,
+    scale_camera_matrix,
     splat_world_points,
     world_to_equirectangular,
 )
@@ -20,6 +21,19 @@ class LearnedStereoTest(unittest.TestCase):
         self.assertAlmostEqual(float(K[0, 0]), 100.0)
         self.assertAlmostEqual(float(K[1, 1]), 50.0)
         self.assertEqual(K[:2, 2].tolist(), [100.0, 50.0])
+
+    def test_scale_camera_matrix_preserves_normalized_rays(self):
+        K = np.asarray([
+            [400.0, 0.0, 320.0],
+            [0.0, 360.0, 240.0],
+            [0.0, 0.0, 1.0],
+        ])
+        scaled = scale_camera_matrix(K, (640, 480), (960, 576))
+        np.testing.assert_allclose(
+            scaled,
+            [[600.0, 0.0, 480.0],
+             [0.0, 432.0, 288.0],
+             [0.0, 0.0, 1.0]])
 
     def test_rectified_constant_disparity_recovers_positive_depth(self):
         width, height = 80, 60

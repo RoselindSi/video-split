@@ -48,6 +48,20 @@ def camera_matrix_from_fov(width, height, fov_x, fov_y):
     ], np.float64)
 
 
+def scale_camera_matrix(camera_matrix, source_size, target_size):
+    """Scale pinhole intrinsics for an independently resized image."""
+    source_width, source_height = (float(value) for value in source_size)
+    target_width, target_height = (float(value) for value in target_size)
+    if min(source_width, source_height, target_width, target_height) <= 0.0:
+        raise ValueError("camera dimensions must be positive")
+    scaled = np.asarray(camera_matrix, np.float64).copy()
+    if scaled.shape != (3, 3):
+        raise ValueError("camera matrix must be 3x3")
+    scaled[0] *= target_width / source_width
+    scaled[1] *= target_height / source_height
+    return scaled
+
+
 def rectify_learned_pair(K_left, K_right, left_camera_to_world,
                          right_camera_to_world, size, alpha=0.0):
     """Build pinhole stereo maps from two image-estimated camera poses."""

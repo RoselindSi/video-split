@@ -35,6 +35,7 @@ from src.rig.learned_stereo import (
     camera_matrix_from_fov,
     rectified_world_points,
     rectify_learned_pair,
+    scale_camera_matrix,
     splat_world_points,
 )
 
@@ -253,6 +254,7 @@ def stereo_foreground_layer(
         cudnn_lib_dir=cudnn_lib_dir, require_cuda=True)
     layers = []
     pair_stats = []
+    rectified_size = (model.target_w, model.target_h)
     for left_index, right_index in ((0, 1), (2, 3), (4, 5)):
         left_camera = cameras[left_index]
         right_camera = cameras[right_index]
@@ -260,25 +262,33 @@ def stereo_foreground_layer(
         right = right_camera.original_image.permute(1, 2, 0).cpu().numpy()
         left = np.clip(left * 255.0, 0, 255).astype(np.uint8)
         right = np.clip(right * 255.0, 0, 255).astype(np.uint8)
-        source_height, source_width = left.shape[:2]
-        if right.shape[:2] != (source_height, source_width):
-            raise ValueError("learned stereo source dimensions differ")
+        left_height, left_width = left.shape[:2]
+        right_height, right_width = right.shape[:2]
 
         left_pose = actual_camera_to_world(
             left_camera, alignment).detach().cpu().numpy()
         right_pose = actual_camera_to_world(
             right_camera, alignment).detach().cpu().numpy()
         K_left = camera_matrix_from_fov(
-            source_width, source_height,
+            left_width, left_height,
             float(left_camera.learnable_fovx.detach().cpu()),
             float(left_camera.learnable_fovy.detach().cpu()))
         K_right = camera_matrix_from_fov(
-            source_width, source_height,
+            right_width, right_height,
             float(right_camera.learnable_fovx.detach().cpu()),
             float(right_camera.learnable_fovy.detach().cpu()))
+        K_left = scale_camera_matrix(
+            K_left, (left_width, left_height), rectified_size)
+        K_right = scale_camera_matrix(
+            K_right, (right_width, right_height), rectified_size)
+        left = cv2.resize(left, rectified_size, interpolation=cv2.INTER_LINEAR)
+        right = cv2.resize(right, rectified_size, interpolation=cv2.INTER_LINEAR)
+        foreground_left = cv2.resize(
+            native_foreground[left_index].astype(np.uint8), rectified_size,
+            interpolation=cv2.INTER_NEAREST)
         rectification = rectify_learned_pair(
             K_left, K_right, left_pose, right_pose,
-            (source_width, source_height))
+            rectified_size)
         left_rectified = cv2.remap(
             left, *rectification.map_left, cv2.INTER_LINEAR,
             borderMode=cv2.BORDER_CONSTANT)
@@ -286,8 +296,7 @@ def stereo_foreground_layer(
             right, *rectification.map_right, cv2.INTER_LINEAR,
             borderMode=cv2.BORDER_CONSTANT)
         foreground_rectified = cv2.remap(
-            native_foreground[left_index].astype(np.uint8),
-            *rectification.map_left, cv2.INTER_NEAREST,
+            foreground_left, *rectification.map_left, cv2.INTER_NEAREST,
             borderMode=cv2.BORDER_CONSTANT) > 0
         foreground_rectified = cv2.morphologyEx(
             foreground_rectified.astype(np.uint8), cv2.MORPH_CLOSE,
@@ -297,8 +306,8 @@ def stereo_foreground_layer(
             left_rectified[..., ::-1], right_rectified[..., ::-1])
         map_x, map_y = rectification.map_left
         support = (
-            (map_x >= 0.0) & (map_x < source_width - 1)
-            & (map_y >= 0.0) & (map_y < source_height - 1)
+            (map_x >= 0.0) & (map_x < rectified_size[0] - 1)
+            & (map_y >= 0.0) & (map_y < rectified_size[1] - 1)
         )
         points, point_valid = rectified_world_points(
             disparity, rectification,
@@ -307,6 +316,9 @@ def stereo_foreground_layer(
             left_index, points, left_rectified, point_valid))
         pair_stats.append({
             "pair": [left_index, right_index],
+            "native_sizes": [
+                [left_width, left_height], [right_width, right_height]],
+            "rectified_size": list(rectified_size),
             "baseline_learned_units": rectification.baseline,
             "foreground_fraction": float(foreground_rectified.mean()),
             "valid_foreground_points": int(point_valid.sum()),
