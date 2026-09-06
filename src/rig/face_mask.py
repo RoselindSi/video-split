@@ -253,7 +253,16 @@ def load_detector(model_path=MODEL, min_conf=MIN_CONF):
 
     Absent is not an error at import time; it is an error at the point a caller
     asks for faces to be covered and cannot have them covered, and that is
-    where it should be raised."""
+    where it should be raised.
+
+    `min_conf=None` MEANS `use the default`, NOT `no threshold`. A signature
+    default only fires when the argument is omitted, and `demo_video.run`
+    passes its own `face_conf` through positionally -- which is None unless
+    the CLI filled it in. Every caller that built the detector directly hit a
+    TypeError inside the ONNX wrapper instead of getting the shipped
+    threshold."""
+    if min_conf is None:
+        min_conf = MIN_CONF
     if not model_path or not os.path.exists(model_path):
         # Named model missing: fall back rather than silently covering nothing.
         if model_path == MODEL and os.path.exists(MODEL_FALLBACK):
