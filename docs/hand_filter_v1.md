@@ -203,30 +203,109 @@ attribution -- replacing the geometry vector with a neutral one barely moves
 any output on these tracks -- the crop, the window, the marker and the
 geometry have all now been eliminated as the missing ingredient.
 
-## G. What is left, stated as a hypothesis rather than a plan
+## G. Track-level body-relation veto — tested, not adopted
 
-V1 answers "does this hand look like the wearer's". The hard cases need a
-different question: "is this hand attached to a body that is visible in the
-frame". Those are not the same question, and nothing in V1 asks the second.
+A residual failure mode of V1 is that a close-range hand belonging to another
+person can occasionally be classified as `owner`, particularly when the
+wearer's own hand is absent or visually confounded.
 
-The shape of an answer would be a relation rather than a better classifier --
+A lightweight post-hoc relation veto was tested WITHOUT modifying the frozen
+V1 ownership model. For tracks V1 predicts as `owner`, pose estimation
+measures whether the target hand is persistently associated with a visible
+person's wrist-elbow-shoulder chain. The rule was frozen before independent
+validation existed:
 
 ```
-target hand -> its forearm -> a shoulder -> a visible person
+relation_veto = OTHER
+  if a complete arm chain is present in >= 60% of pose-evaluable frames
 ```
 
--- used as an asymmetric veto: leave `owner` alone unless the hand connects to
-somebody else's visible arm. That form survives the case the cap cannot
-handle, where only one of the wearer's hands is in frame and the second owner
-slot is free, because it never counts hands at all.
+The denominator is POSE-EVALUABLE frames: a frame the pose pass could not read
+is not evidence that the hand is unattached, and folding those in would
+depress every support ratio by however often the reader failed. The veto is
+asymmetric on purpose -- it may overturn `OWNER -> OTHER` and does nothing
+else.
 
-This is a hypothesis with no measurement behind it. Before any of it is built,
-the thing to establish is whether the relation is even present in the data:
-take V1's false-owner cases and matched correctly-classified owners, run a
-pose detector, and ask how often each associates to a visible person's
-wrist-elbow-shoulder chain. If both groups associate at similar rates the
-relation is not discriminative here and something heavier is needed. That
-probe touches no production code.
+### Development result
+
+```
+false-owner tracks rescued              6/17 = 0.353
+true-owner tracks incorrectly vetoed    0/19 = 0.000
+veto precision                          6/6  = 1.000
+```
+
+Frame-level pose evidence was not usable at all: it rescued 53 frames while
+damaging 109. Sustained arm-chain evidence was substantially more selective,
+which is the finding that made the rule worth freezing. The sample was small
+-- the Wilson 95% upper bound on the observed 0/19 owner false-veto rate was
+about 0.17.
+
+### Independent validation
+
+Eight further recordings were sampled and every admitted track judged once.
+Three `not_hand` tracks were EXCLUDED rather than folded into `other`.
+
+That exclusion matters and is easy to lose. `track_pool.load_pkg` maps every
+label that is not `owner` onto the same class, so `not_hand`, `mixed` and
+`skip` arrive indistinguishable from a colleague's hand. It was harmless while
+the corpus held one `not_hand` in a hundred tracks and wrong the moment it
+held three: a veto that fails to rescue a mislabelled bench object is not a
+veto failure, and counting it as one mixes PROPOSAL quality into a measurement
+of OWNERSHIP quality.
+
+```
+validation set    19 owner tracks
+                  14 other tracks
+                   3 not_hand, excluded
+```
+
+V1 itself classified 12 of the 14 `other` tracks correctly -- track-level
+recall 0.857, consistent with the 0.833 measured on `testpkg_3` -- leaving
+only two false-owner tracks for the veto to rescue.
+
+```
+                        development        independent validation
+false-owner rescue      6/17 = 0.353       0/2  = 0.000
+owner false veto        0/19 = 0.000       1/19 = 0.053
+veto precision          6/6  = 1.000       0/1  = 0.000
+
+combined                rescue    6/19 = 0.316  [0.15, 0.54]
+                        false veto 1/38 = 0.026  [0.00, 0.13]
+                        precision  6/7  = 0.857  [0.49, 0.97]
+```
+
+The predefined deployment criterion was veto precision > 0.95. It was not met
+under any of the three readings.
+
+### Interpretation
+
+The negative validation does NOT show that the arm/body relation is
+uninformative. The development experiment showed that a persistent
+wrist-elbow-shoulder relationship distinguishes some other-person hands from
+the wearer's, and 6 of 6 vetoes there were correct.
+
+The failure is operational rather than representational:
+
+1. residual V1 false-owner tracks are rare;
+2. so the veto has few opportunities to help;
+3. a low false-veto rate on true owner tracks can still outweigh those few;
+4. and the independent set did not reproduce development's zero owner damage.
+
+On the validation set the veto fired exactly once, and that once was on a
+hand that really was the wearer's. Net effect: minus one.
+
+**The relation signal is real. The current evidence does not support using it
+as an automatic production veto.** Establishing precision above 0.95 with a
+useful lower bound needs a much larger independent sample of the rare
+false-owner regime -- at roughly half a false-owner track per randomly drawn
+recording, of order eighty recordings.
+
+### Decision
+
+The relation veto is NOT part of V1. Close-range `other -> owner` errors are a
+documented residual failure mode. Future work here should collect more
+independent examples of the rare false-owner regime BEFORE introducing a more
+complex ownership model.
 
 ## The frozen configuration
 
@@ -236,6 +315,9 @@ admission         new track >= 0.60, continue >= 0.25
 tracker           Hungarian with gating, MAX_LOST 5, motion prediction on
 ownership         hand + context + geometry (own_ctx, --clf_ctx)
 two-hand cap      on, with the state writeback (see debt)
+relation veto     off (section G)
+target mask       off (section F)
+letterbox         off (section F)
 mask              GrabCut on a window round the box
 panorama          baseline three-view (the depth renderer is opt-in)
 faces             YOLOv8-face at 0.35, no size cap

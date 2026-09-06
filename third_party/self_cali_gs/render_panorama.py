@@ -31,6 +31,12 @@ from src.rig.dynamic_panorama import (
     compose_single_source,
     geometric_owner,
 )
+from src.rig.learned_stereo import (
+    camera_matrix_from_fov,
+    rectified_world_points,
+    rectify_learned_pair,
+    splat_world_points,
+)
 
 
 CAMERA_NAME = re.compile(r"^cam([0-5])_t(\d+)$")
@@ -138,6 +144,12 @@ def surface_world_points(view, depth, alpha, alignment):
     return world[..., :3].permute(2, 0, 1)
 
 
+def actual_camera_to_world(camera, alignment):
+    world_view = camera.get_world_view_transform(
+        alignment[0], alignment[1])
+    return torch.linalg.inv(world_view.transpose(0, 1))
+
+
 def _normalized_surface_depth(result):
     alpha = result["weights"][:1].clamp(0.0, 1.0)
     return result["depth"][:1] / alpha.clamp_min(1e-6), alpha
@@ -152,7 +164,7 @@ def warp_current_sources(world_points, world_valid, cameras, gaussians,
     homogeneous = torch.cat(
         [points, torch.ones((height, width, 1), device=points.device)],
         dim=-1)
-    warped, valid, cost, foreground = {}, {}, {}, {}
+    warped, valid, cost, foreground, native_foreground = {}, {}, {}, {}, {}
     with torch.no_grad():
         for index, camera in enumerate(cameras):
             world_view = camera.get_world_view_transform(
@@ -221,7 +233,93 @@ def warp_current_sources(world_points, world_valid, cameras, gaussians,
             foreground[index] = (
                 sampled_difference >= foreground_threshold
             ).cpu().numpy().astype(np.float32)
-    return warped, valid, cost, foreground
+            native_foreground[index] = (
+                source_difference[0] >= foreground_threshold
+            ).cpu().numpy()
+    return warped, valid, cost, foreground, native_foreground
+
+
+def stereo_foreground_layer(
+        cameras, native_foreground, center, rig_camera_to_world,
+        height, width, model_path, alignment, cuda_lib_dir=None,
+        cudnn_lib_dir=None, splat_radius=1):
+    """Depth-place current foreground from the three physical stereo pairs."""
+    import cv2
+
+    from src.rig.fast_foundation_stereo import FastFoundationStereo
+
+    model = FastFoundationStereo(
+        model_path=model_path, cuda_lib_dir=cuda_lib_dir,
+        cudnn_lib_dir=cudnn_lib_dir, require_cuda=True)
+    layers = []
+    pair_stats = []
+    for left_index, right_index in ((0, 1), (2, 3), (4, 5)):
+        left_camera = cameras[left_index]
+        right_camera = cameras[right_index]
+        left = left_camera.original_image.permute(1, 2, 0).cpu().numpy()
+        right = right_camera.original_image.permute(1, 2, 0).cpu().numpy()
+        left = np.clip(left * 255.0, 0, 255).astype(np.uint8)
+        right = np.clip(right * 255.0, 0, 255).astype(np.uint8)
+        source_height, source_width = left.shape[:2]
+        if right.shape[:2] != (source_height, source_width):
+            raise ValueError("learned stereo source dimensions differ")
+
+        left_pose = actual_camera_to_world(
+            left_camera, alignment).detach().cpu().numpy()
+        right_pose = actual_camera_to_world(
+            right_camera, alignment).detach().cpu().numpy()
+        K_left = camera_matrix_from_fov(
+            source_width, source_height,
+            float(left_camera.learnable_fovx.detach().cpu()),
+            float(left_camera.learnable_fovy.detach().cpu()))
+        K_right = camera_matrix_from_fov(
+            source_width, source_height,
+            float(right_camera.learnable_fovx.detach().cpu()),
+            float(right_camera.learnable_fovy.detach().cpu()))
+        rectification = rectify_learned_pair(
+            K_left, K_right, left_pose, right_pose,
+            (source_width, source_height))
+        left_rectified = cv2.remap(
+            left, *rectification.map_left, cv2.INTER_LINEAR,
+            borderMode=cv2.BORDER_CONSTANT)
+        right_rectified = cv2.remap(
+            right, *rectification.map_right, cv2.INTER_LINEAR,
+            borderMode=cv2.BORDER_CONSTANT)
+        foreground_rectified = cv2.remap(
+            native_foreground[left_index].astype(np.uint8),
+            *rectification.map_left, cv2.INTER_NEAREST,
+            borderMode=cv2.BORDER_CONSTANT) > 0
+        foreground_rectified = cv2.morphologyEx(
+            foreground_rectified.astype(np.uint8), cv2.MORPH_CLOSE,
+            cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))) > 0
+
+        disparity = model.disparity(
+            left_rectified[..., ::-1], right_rectified[..., ::-1])
+        map_x, map_y = rectification.map_left
+        support = (
+            (map_x >= 0.0) & (map_x < source_width - 1)
+            & (map_y >= 0.0) & (map_y < source_height - 1)
+        )
+        points, point_valid = rectified_world_points(
+            disparity, rectification,
+            mask=foreground_rectified & support)
+        layers.append((
+            left_index, points, left_rectified, point_valid))
+        pair_stats.append({
+            "pair": [left_index, right_index],
+            "baseline_learned_units": rectification.baseline,
+            "foreground_fraction": float(foreground_rectified.mean()),
+            "valid_foreground_points": int(point_valid.sum()),
+        })
+
+    layer = splat_world_points(
+        layers, center, rig_camera_to_world, height, width,
+        splat_radius=splat_radius)
+    return layer, {
+        "providers": model.providers,
+        "pairs": pair_stats,
+        "layer_fraction": float(layer.valid.mean()),
+    }
 
 
 def owner_diagnostic(owner):
@@ -265,6 +363,10 @@ def main():
     parser.add_argument("--foreground-threshold", type=float, default=72.0)
     parser.add_argument("--dynamic-close", type=int, default=8)
     parser.add_argument("--dynamic-dilate", type=int, default=3)
+    parser.add_argument("--stereo-model")
+    parser.add_argument("--stereo-cuda-lib-dir")
+    parser.add_argument("--stereo-cudnn-lib-dir")
+    parser.add_argument("--stereo-splat-radius", type=int, default=1)
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
     if args.erp_width % 2:
@@ -298,6 +400,7 @@ def main():
     face_images = []
     face_alpha = []
     face_world = []
+    panorama_camera_to_world = None
     with torch.no_grad():
         for name, relative_rotation in zip(
                 FACE_NAMES, cube_face_rotations()):
@@ -316,6 +419,9 @@ def main():
             face_alpha.append(alpha[:1])
             face_world.append(surface_world_points(
                 view, result["depth"], alpha[:1], alignment))
+            if name == "front":
+                panorama_camera_to_world = actual_camera_to_world(
+                    view, alignment).detach().cpu().numpy()
             torchvision.utils.save_image(image, output / f"face_{name}.png")
             torchvision.utils.save_image(alpha[:1], output / f"alpha_{name}.png")
 
@@ -325,7 +431,7 @@ def main():
     world_points, _ = compose_equirectangular(
         face_world, face_alpha, erp_height, args.erp_width, args.face_fov)
     world_valid = alpha[0] > 0.05
-    warped, valid, cost, foreground = warp_current_sources(
+    warped, valid, cost, foreground, native_foreground = warp_current_sources(
         world_points, world_valid, source_cameras, gaussians, pipeline,
         background, shift, scene.loaded_iter, alignment,
         args.foreground_threshold / 255.0)
@@ -343,14 +449,46 @@ def main():
     dynamic_image, owner, dynamic_mask, dynamic_stats = compositor.render(
         warped, valid, cost, learned_background, learned_valid,
         foreground=foreground)
+    stereo_stats = None
+    depth_dynamic_image = dynamic_image
+    stereo_mask = np.zeros(dynamic_mask.shape, bool)
+    if args.stereo_model:
+        if panorama_camera_to_world is None:
+            raise RuntimeError("front panorama camera pose was not created")
+        actual_center = panorama_camera_to_world[:3, 3]
+        stereo_layer, stereo_stats = stereo_foreground_layer(
+            source_cameras, native_foreground, actual_center,
+            panorama_camera_to_world[:3, :3], erp_height, args.erp_width,
+            args.stereo_model, alignment,
+            cuda_lib_dir=args.stereo_cuda_lib_dir,
+            cudnn_lib_dir=args.stereo_cudnn_lib_dir,
+            splat_radius=args.stereo_splat_radius)
+        learned_range = np.linalg.norm(
+            world_points.permute(1, 2, 0).cpu().numpy()
+            - actual_center, axis=2)
+        stereo_mask = stereo_layer.valid & (
+            ~learned_valid
+            | (stereo_layer.range_m <= learned_range * 1.25 + 0.10)
+        )
+        depth_dynamic_image = dynamic_image.copy()
+        erase = dynamic_mask & learned_valid
+        depth_dynamic_image[erase] = learned_background[erase]
+        depth_dynamic_image[stereo_mask] = stereo_layer.rgb[stereo_mask]
+        stereo_stats["visible_layer_fraction"] = float(stereo_mask.mean())
+        stereo_stats["erased_wrong_depth_fraction"] = float(erase.mean())
     base_tensor = torch.from_numpy(base_image).permute(2, 0, 1)
     dynamic_tensor = torch.from_numpy(dynamic_image).permute(2, 0, 1)
+    depth_dynamic_tensor = torch.from_numpy(
+        depth_dynamic_image).permute(2, 0, 1)
     owner_tensor = torch.from_numpy(
         owner_diagnostic(owner)).permute(2, 0, 1).float() / 255.0
     mask_tensor = torch.from_numpy(dynamic_mask.astype(np.float32))[None]
+    stereo_mask_tensor = torch.from_numpy(
+        stereo_mask.astype(np.float32))[None]
     cropped, cropped_alpha, crop = crop_to_content(panorama, alpha)
     left, top, right, bottom = crop
     dynamic_cropped = dynamic_tensor[:, top:bottom, left:right]
+    depth_dynamic_cropped = depth_dynamic_tensor[:, top:bottom, left:right]
     torchvision.utils.save_image(panorama, output / "panorama.png")
     torchvision.utils.save_image(alpha, output / "panorama_alpha.png")
     torchvision.utils.save_image(cropped, output / "panorama_cropped.png")
@@ -362,8 +500,15 @@ def main():
         dynamic_tensor, output / "panorama_dynamic.png")
     torchvision.utils.save_image(
         dynamic_cropped, output / "panorama_dynamic_cropped.png")
+    torchvision.utils.save_image(
+        depth_dynamic_tensor, output / "panorama_dynamic_depth.png")
+    torchvision.utils.save_image(
+        depth_dynamic_cropped,
+        output / "panorama_dynamic_depth_cropped.png")
     torchvision.utils.save_image(owner_tensor, output / "dynamic_owner.png")
     torchvision.utils.save_image(mask_tensor, output / "dynamic_mask.png")
+    torchvision.utils.save_image(
+        stereo_mask_tensor, output / "stereo_foreground_mask.png")
 
     report = {
         "schema": "video-split.learned-panorama.v1",
@@ -391,6 +536,7 @@ def main():
             source_cameras[index].image_name: float(mask.mean())
             for index, mask in valid.items()
         },
+        "stereo_foreground": stereo_stats,
     }
     with open(output / "report.json", "w", encoding="utf-8") as stream:
         json.dump(report, stream, indent=2)
