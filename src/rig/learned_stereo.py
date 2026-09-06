@@ -62,7 +62,7 @@ def rectify_learned_pair(K_left, K_right, left_camera_to_world,
     right_from_left = np.linalg.inv(right_camera_to_world) \
         @ left_camera_to_world
     rotation = right_from_left[:3, :3]
-    translation = right_from_left[:3, 3]
+    translation = right_from_left[:3, 3].reshape(3, 1)
     baseline = float(np.linalg.norm(translation))
     if baseline <= 1e-8:
         raise ValueError("learned stereo cameras have zero baseline")
