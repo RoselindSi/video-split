@@ -62,6 +62,99 @@ def scale_camera_matrix(camera_matrix, source_size, target_size):
     return scaled
 
 
+def temporal_change_mask(current, references, threshold=24.0 / 255.0):
+    """Detect current content absent from nearby frames of one camera."""
+    import cv2
+
+    current = np.asarray(current, np.float32)
+    if current.ndim != 3 or current.shape[2] != 3:
+        raise ValueError("current image must have shape [height, width, 3]")
+    if current.size and float(np.nanmax(current)) > 1.5:
+        current = current / 255.0
+    resized = []
+    for reference in references:
+        reference = np.asarray(reference, np.float32)
+        if reference.ndim != 3 or reference.shape[2] != 3:
+            raise ValueError("reference images must have three channels")
+        if reference.shape[:2] != current.shape[:2]:
+            reference = cv2.resize(
+                reference, (current.shape[1], current.shape[0]),
+                interpolation=cv2.INTER_LINEAR)
+        if reference.size and float(np.nanmax(reference)) > 1.5:
+            reference = reference / 255.0
+        resized.append(reference)
+    if not resized:
+        return np.ones(current.shape[:2], bool)
+    temporal_background = np.median(np.stack(resized), axis=0)
+    difference = np.abs(current - temporal_background).mean(axis=2)
+    return difference >= float(threshold)
+
+
+def regularize_component_disparity(disparity, mask, min_component_px=24,
+                                    min_disparity=0.5):
+    """Use one robust depth per foreground component to preserve silhouettes."""
+    import cv2
+
+    disparity = np.asarray(disparity, np.float32)
+    mask = np.asarray(mask, bool)
+    if disparity.shape != mask.shape:
+        raise ValueError("disparity and mask shapes differ")
+    labels_count, labels, stats, _ = cv2.connectedComponentsWithStats(
+        mask.astype(np.uint8), connectivity=8)
+    regularized = np.zeros_like(disparity)
+    accepted = np.zeros_like(mask)
+    components = 0
+    for label in range(1, labels_count):
+        area = int(stats[label, cv2.CC_STAT_AREA])
+        if area < int(min_component_px):
+            continue
+        component = labels == label
+        values = disparity[
+            component & np.isfinite(disparity)
+            & (disparity > float(min_disparity))]
+        if values.size < max(int(min_component_px), area // 3):
+            continue
+        median = float(np.median(values))
+        regularized[component] = median
+        accepted[component] = True
+        components += 1
+    return regularized, accepted, components
+
+
+def select_stereo_replacements(dynamic, stereo, min_coverage=0.75,
+                               min_component_px=24, association_px=8):
+    """Accept only dynamic regions with a nearly complete stereo rendering."""
+    import cv2
+
+    dynamic = np.asarray(dynamic, bool)
+    stereo = np.asarray(stereo, bool)
+    if dynamic.shape != stereo.shape:
+        raise ValueError("dynamic and stereo masks differ")
+    labels_count, labels, stats, _ = cv2.connectedComponentsWithStats(
+        dynamic.astype(np.uint8), connectivity=8)
+    erase = np.zeros_like(dynamic)
+    selected_stereo = np.zeros_like(stereo)
+    accepted = 0
+    radius = int(association_px)
+    kernel = cv2.getStructuringElement(
+        cv2.MORPH_ELLIPSE, (2 * radius + 1, 2 * radius + 1))
+    for label in range(1, labels_count):
+        area = int(stats[label, cv2.CC_STAT_AREA])
+        if area < int(min_component_px):
+            continue
+        component = labels == label
+        neighborhood = cv2.dilate(
+            component.astype(np.uint8), kernel) > 0
+        candidate = stereo & neighborhood
+        coverage = float(candidate.sum()) / max(area, 1)
+        if coverage < float(min_coverage):
+            continue
+        erase |= component
+        selected_stereo |= candidate
+        accepted += 1
+    return erase, selected_stereo, accepted
+
+
 def rectify_learned_pair(K_left, K_right, left_camera_to_world,
                          right_camera_to_world, size, alpha=0.0):
     """Build pinhole stereo maps from two image-estimated camera poses."""

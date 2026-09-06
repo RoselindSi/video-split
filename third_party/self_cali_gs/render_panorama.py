@@ -35,8 +35,11 @@ from src.rig.learned_stereo import (
     camera_matrix_from_fov,
     rectified_world_points,
     rectify_learned_pair,
+    regularize_component_disparity,
     scale_camera_matrix,
+    select_stereo_replacements,
     splat_world_points,
+    temporal_change_mask,
 )
 
 
@@ -54,6 +57,38 @@ def cameras_at_time(scene, time_index):
             f"time {time_index} does not contain all six cameras: "
             f"{sorted(cameras)}")
     return [cameras[index] for index in range(6)]
+
+
+def temporal_foreground_masks(scene, cameras, time_index, threshold,
+                              max_references=3):
+    """Find motion against nearby learned-input frames of each camera."""
+    import cv2
+
+    candidates = {index: [] for index in range(6)}
+    for camera in scene.getTrainCameras() + scene.getTestCameras():
+        match = CAMERA_NAME.fullmatch(camera.image_name)
+        if not match:
+            continue
+        index, reference_time = (int(value) for value in match.groups())
+        if reference_time != time_index:
+            candidates[index].append((abs(reference_time - time_index), camera))
+    masks = {}
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
+    for index, current_camera in enumerate(cameras):
+        current = current_camera.original_image.permute(
+            1, 2, 0).cpu().numpy()
+        nearby = sorted(candidates[index], key=lambda item: item[0])[
+            :int(max_references)]
+        references = [
+            camera.original_image.permute(1, 2, 0).cpu().numpy()
+            for _, camera in nearby
+        ]
+        changed = temporal_change_mask(
+            current, references, threshold=float(threshold))
+        changed = cv2.morphologyEx(
+            changed.astype(np.uint8), cv2.MORPH_CLOSE, kernel) > 0
+        masks[index] = changed
+    return masks
 
 
 def virtual_camera(
@@ -241,7 +276,8 @@ def warp_current_sources(world_points, world_valid, cameras, gaussians,
 
 
 def stereo_foreground_layer(
-        cameras, native_foreground, center, rig_camera_to_world,
+        cameras, native_foreground, temporal_foreground, center,
+        rig_camera_to_world,
         height, width, model_path, alignment, cuda_lib_dir=None,
         cudnn_lib_dir=None, splat_radius=1):
     """Depth-place current foreground from the three physical stereo pairs."""
@@ -283,8 +319,12 @@ def stereo_foreground_layer(
             K_right, (right_width, right_height), rectified_size)
         left = cv2.resize(left, rectified_size, interpolation=cv2.INTER_LINEAR)
         right = cv2.resize(right, rectified_size, interpolation=cv2.INTER_LINEAR)
+        qualified_foreground = (
+            native_foreground[left_index]
+            & temporal_foreground[left_index]
+        )
         foreground_left = cv2.resize(
-            native_foreground[left_index].astype(np.uint8), rectified_size,
+            qualified_foreground.astype(np.uint8), rectified_size,
             interpolation=cv2.INTER_NEAREST)
         rectification = rectify_learned_pair(
             K_left, K_right, left_pose, right_pose,
@@ -304,6 +344,9 @@ def stereo_foreground_layer(
 
         disparity = model.disparity(
             left_rectified[..., ::-1], right_rectified[..., ::-1])
+        disparity, foreground_rectified, component_count = \
+            regularize_component_disparity(
+                disparity, foreground_rectified, min_component_px=24)
         map_x, map_y = rectification.map_left
         support = (
             (map_x >= 0.0) & (map_x < rectified_size[0] - 1)
@@ -320,7 +363,12 @@ def stereo_foreground_layer(
                 [left_width, left_height], [right_width, right_height]],
             "rectified_size": list(rectified_size),
             "baseline_learned_units": rectification.baseline,
+            "static_residual_fraction": float(
+                native_foreground[left_index].mean()),
+            "temporal_fraction": float(
+                temporal_foreground[left_index].mean()),
             "foreground_fraction": float(foreground_rectified.mean()),
+            "foreground_components": component_count,
             "valid_foreground_points": int(point_valid.sum()),
         })
 
@@ -379,6 +427,10 @@ def main():
     parser.add_argument("--stereo-cuda-lib-dir")
     parser.add_argument("--stereo-cudnn-lib-dir")
     parser.add_argument("--stereo-splat-radius", type=int, default=1)
+    parser.add_argument("--temporal-threshold", type=float, default=24.0)
+    parser.add_argument("--stereo-replacement-coverage", type=float,
+                        default=0.75)
+    parser.add_argument("--stereo-association-px", type=int, default=8)
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
     if args.erp_width % 2:
@@ -468,26 +520,37 @@ def main():
         if panorama_camera_to_world is None:
             raise RuntimeError("front panorama camera pose was not created")
         actual_center = panorama_camera_to_world[:3, 3]
+        temporal_foreground = temporal_foreground_masks(
+            scene, source_cameras, args.time,
+            args.temporal_threshold / 255.0)
         stereo_layer, stereo_stats = stereo_foreground_layer(
-            source_cameras, native_foreground, actual_center,
-            panorama_camera_to_world[:3, :3], erp_height, args.erp_width,
-            args.stereo_model, alignment,
+            source_cameras, native_foreground, temporal_foreground,
+            actual_center, panorama_camera_to_world[:3, :3],
+            erp_height, args.erp_width, args.stereo_model, alignment,
             cuda_lib_dir=args.stereo_cuda_lib_dir,
             cudnn_lib_dir=args.stereo_cudnn_lib_dir,
             splat_radius=args.stereo_splat_radius)
         learned_range = np.linalg.norm(
             world_points.permute(1, 2, 0).cpu().numpy()
             - actual_center, axis=2)
-        stereo_mask = stereo_layer.valid & (
+        depth_visible = stereo_layer.valid & (
             ~learned_valid
             | (stereo_layer.range_m <= learned_range * 1.25 + 0.10)
         )
+        erase, stereo_mask, accepted_components = select_stereo_replacements(
+            dynamic_mask, depth_visible,
+            min_coverage=args.stereo_replacement_coverage,
+            association_px=args.stereo_association_px)
         depth_dynamic_image = dynamic_image.copy()
-        erase = dynamic_mask & learned_valid
+        erase &= learned_valid
         depth_dynamic_image[erase] = learned_background[erase]
         depth_dynamic_image[stereo_mask] = stereo_layer.rgb[stereo_mask]
         stereo_stats["visible_layer_fraction"] = float(stereo_mask.mean())
         stereo_stats["erased_wrong_depth_fraction"] = float(erase.mean())
+        stereo_stats["accepted_dynamic_components"] = accepted_components
+        stereo_stats["replacement_coverage"] = (
+            args.stereo_replacement_coverage)
+        stereo_stats["temporal_threshold_rgb_255"] = args.temporal_threshold
     base_tensor = torch.from_numpy(base_image).permute(2, 0, 1)
     dynamic_tensor = torch.from_numpy(dynamic_image).permute(2, 0, 1)
     depth_dynamic_tensor = torch.from_numpy(

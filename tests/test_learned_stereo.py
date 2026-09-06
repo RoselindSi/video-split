@@ -9,8 +9,11 @@ from src.rig.learned_stereo import (
     camera_matrix_from_fov,
     rectified_world_points,
     rectify_learned_pair,
+    regularize_component_disparity,
     scale_camera_matrix,
+    select_stereo_replacements,
     splat_world_points,
+    temporal_change_mask,
     world_to_equirectangular,
 )
 
@@ -49,6 +52,43 @@ class LearnedStereoTest(unittest.TestCase):
         self.assertGreater(float(points[height // 2, width // 2, 2]), 0.0)
         self.assertAlmostEqual(
             float(points[height // 2, width // 2, 2]), 0.4, places=2)
+
+    def test_temporal_change_rejects_static_pixels(self):
+        background = np.zeros((12, 16, 3), np.float32)
+        current = background.copy()
+        current[3:8, 5:11] = 1.0
+        changed = temporal_change_mask(
+            current, [background, background], threshold=0.2)
+        self.assertEqual(int(changed.sum()), 30)
+        self.assertTrue(changed[3:8, 5:11].all())
+
+    def test_component_disparity_is_rigid_and_drops_specks(self):
+        mask = np.zeros((12, 16), bool)
+        mask[2:8, 4:12] = True
+        mask[10, 15] = True
+        disparity = np.zeros(mask.shape, np.float32)
+        disparity[2:8, 4:12] = np.linspace(8.0, 12.0, 48).reshape(6, 8)
+        regularized, accepted, components = regularize_component_disparity(
+            disparity, mask, min_component_px=8)
+        self.assertEqual(components, 1)
+        self.assertTrue(accepted[2:8, 4:12].all())
+        self.assertFalse(accepted[10, 15])
+        self.assertEqual(np.unique(regularized[accepted]).size, 1)
+
+    def test_stereo_replacement_requires_component_coverage(self):
+        dynamic = np.zeros((20, 30), bool)
+        dynamic[2:8, 2:8] = True
+        dynamic[12:18, 20:26] = True
+        stereo = np.zeros_like(dynamic)
+        stereo[2:8, 2:8] = True
+        stereo[12:14, 20:22] = True
+        erase, selected, accepted = select_stereo_replacements(
+            dynamic, stereo, min_coverage=0.75,
+            min_component_px=8, association_px=0)
+        self.assertEqual(accepted, 1)
+        self.assertTrue(erase[2:8, 2:8].all())
+        self.assertFalse(erase[12:18, 20:26].any())
+        self.assertEqual(int(selected.sum()), 36)
 
     def test_cardinal_world_points_project_to_erp_quadrants(self):
         points = np.asarray([
