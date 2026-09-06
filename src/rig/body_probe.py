@@ -157,7 +157,19 @@ def main():
 
     rows = []
     for p in a.pkg:
-        rows += load_pkg(p)[1]
+        tracks, got = load_pkg(p)
+        # `load_pkg` maps every label that is not `owner` onto y=0, so
+        # `nothand`, `mixed` and `skip` all arrive indistinguishable from a
+        # colleague's hand. That was harmless while the corpus held one
+        # `nothand` in a hundred tracks and wrong the moment it held three:
+        # a veto that fails to rescue a mislabelled bench object is not a
+        # veto failure, and counting it as one puts noise in the denominator
+        # this experiment exists to measure. The raw label is read back here
+        # and anything that is not a hand leaves the populations entirely.
+        for r in got:
+            r["label_raw"] = tracks.get(r["tid"], "")
+        rows += [r for r in got
+                 if r["label_raw"] in ("owner", "other")]
     if not rows:
         raise SystemExit("no labelled tracks with crops")
     for r in rows:
@@ -171,6 +183,8 @@ def main():
     # The two populations a veto would act on.
     false_owner = [r for r in rows if r["pred_owner"] and r["y"] == 0]
     true_owner = [r for r in rows if r["pred_owner"] and r["y"] == 1]
+    print(f"  只保留标成 owner / other 的 track；nothand、mixed、skip "
+          f"已排除")
     print(f"  {len(rows)} 帧样本   V1 判成 owner 的 "
           f"{len(false_owner) + len(true_owner)}   其中错的 "
           f"{len(false_owner)}（真值是别人的手）")
