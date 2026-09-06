@@ -90,6 +90,97 @@ def temporal_change_mask(current, references, threshold=24.0 / 255.0):
     return difference >= float(threshold)
 
 
+def pose_guided_foreground_mask(image, boxes, keypoints=None, residual=None,
+                                keypoint_confidence=0.25):
+    """Turn person boxes and pose limbs into conservative GrabCut masks."""
+    import cv2
+
+    image = np.asarray(image)
+    if image.ndim != 3 or image.shape[2] != 3:
+        raise ValueError("image must have shape [height, width, 3]")
+    if image.dtype != np.uint8:
+        image = np.clip(
+            image * (255.0 if image.size and image.max() <= 1.5 else 1.0),
+            0, 255).astype(np.uint8)
+    boxes = np.asarray(boxes, np.float32).reshape(-1, 4)
+    if keypoints is None:
+        keypoints = np.zeros((len(boxes), 17, 3), np.float32)
+    keypoints = np.asarray(keypoints, np.float32)
+    if keypoints.shape != (len(boxes), 17, 3):
+        raise ValueError("keypoints must have shape [people, 17, 3]")
+    if residual is None:
+        residual = np.zeros(image.shape[:2], bool)
+    residual = np.asarray(residual, bool)
+    if residual.shape != image.shape[:2]:
+        raise ValueError("residual mask has the wrong shape")
+
+    height, width = image.shape[:2]
+    output = np.zeros((height, width), bool)
+    skeleton = (
+        (5, 6), (5, 7), (7, 9), (6, 8), (8, 10),
+        (5, 11), (6, 12), (11, 12), (11, 13), (13, 15),
+        (12, 14), (14, 16), (0, 1), (0, 2), (1, 3), (2, 4),
+    )
+    for box, pose in zip(boxes, keypoints):
+        x0, y0, x1, y1 = box
+        box_width = max(float(x1 - x0), 1.0)
+        box_height = max(float(y1 - y0), 1.0)
+        pad = int(round(0.04 * max(box_width, box_height)))
+        x0 = max(0, int(np.floor(x0)) - pad)
+        y0 = max(0, int(np.floor(y0)) - pad)
+        x1 = min(width, int(np.ceil(x1)) + pad)
+        y1 = min(height, int(np.ceil(y1)) + pad)
+        if x1 - x0 < 4 or y1 - y0 < 4:
+            continue
+        inside = np.zeros((height, width), bool)
+        inside[y0:y1, x0:x1] = True
+        grabcut = np.full((height, width), cv2.GC_BGD, np.uint8)
+        grabcut[inside] = cv2.GC_PR_BGD
+        grabcut[inside & residual] = cv2.GC_PR_FGD
+
+        seed = np.zeros((height, width), np.uint8)
+        thickness = max(3, int(round(0.04 * max(box_width, box_height))))
+        for first, second in skeleton:
+            if pose[first, 2] < keypoint_confidence or \
+                    pose[second, 2] < keypoint_confidence:
+                continue
+            cv2.line(
+                seed, tuple(np.rint(pose[first, :2]).astype(int)),
+                tuple(np.rint(pose[second, :2]).astype(int)), 1,
+                thickness=thickness)
+        for point in pose:
+            if point[2] >= keypoint_confidence:
+                cv2.circle(
+                    seed, tuple(np.rint(point[:2]).astype(int)),
+                    max(2, thickness // 2), 1, thickness=-1)
+        seed = ((seed > 0) & inside).astype(np.uint8)
+        if not seed.any():
+            center = (
+                int(round((x0 + x1) / 2.0)),
+                int(round(y0 + 0.45 * (y1 - y0))),
+            )
+            axes = (
+                max(2, int(round(0.12 * (x1 - x0)))),
+                max(2, int(round(0.18 * (y1 - y0)))),
+            )
+            cv2.ellipse(seed, center, axes, 0, 0, 360, 1, thickness=-1)
+            seed = ((seed > 0) & inside).astype(np.uint8)
+        seed = seed > 0
+        grabcut[seed] = cv2.GC_FGD
+        background_model = np.zeros((1, 65), np.float64)
+        foreground_model = np.zeros((1, 65), np.float64)
+        try:
+            cv2.grabCut(
+                image, grabcut, None, background_model, foreground_model,
+                3, cv2.GC_INIT_WITH_MASK)
+            person = ((grabcut == cv2.GC_FGD)
+                      | (grabcut == cv2.GC_PR_FGD)) & inside
+        except cv2.error:
+            person = (residual | seed) & inside
+        output |= person
+    return output
+
+
 def regularize_component_disparity(disparity, mask, min_component_px=24,
                                     min_disparity=0.5):
     """Use one robust depth per foreground component to preserve silhouettes."""

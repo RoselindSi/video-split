@@ -7,6 +7,7 @@ import numpy as np
 
 from src.rig.learned_stereo import (
     camera_matrix_from_fov,
+    pose_guided_foreground_mask,
     rectified_world_points,
     rectify_learned_pair,
     regularize_component_disparity,
@@ -61,6 +62,20 @@ class LearnedStereoTest(unittest.TestCase):
             current, [background, background], threshold=0.2)
         self.assertEqual(int(changed.sum()), 30)
         self.assertTrue(changed[3:8, 5:11].all())
+
+    def test_pose_guided_mask_keeps_person_and_rejects_box_exterior(self):
+        image = np.zeros((30, 40, 3), np.uint8)
+        image[5:26, 12:29] = 220
+        pose = np.zeros((1, 17, 3), np.float32)
+        pose[0, 5] = [16, 10, 1]
+        pose[0, 6] = [24, 10, 1]
+        pose[0, 11] = [17, 20, 1]
+        pose[0, 12] = [23, 20, 1]
+        mask = pose_guided_foreground_mask(
+            image, [[10, 3, 31, 28]], pose)
+        self.assertTrue(mask[15, 20])
+        self.assertGreater(int(mask[5:26, 12:29].sum()), 250)
+        self.assertFalse(mask[:, :8].any())
 
     def test_component_disparity_is_rigid_and_drops_specks(self):
         mask = np.zeros((12, 16), bool)

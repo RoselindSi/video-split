@@ -34,6 +34,7 @@ from src.rig.dynamic_panorama import (
 )
 from src.rig.learned_stereo import (
     camera_matrix_from_fov,
+    pose_guided_foreground_mask,
     rectified_world_points,
     rectify_learned_pair,
     regularize_component_disparity,
@@ -90,6 +91,79 @@ def temporal_foreground_masks(scene, cameras, time_index, threshold,
             changed.astype(np.uint8), cv2.MORPH_CLOSE, kernel) > 0
         masks[index] = changed
     return masks
+
+
+def semantic_foreground_masks(cameras, model_path, residual, confidence=0.15):
+    """Detect complete people and refine their boxes into source-view masks."""
+    from ultralytics import YOLO
+
+    images = []
+    for camera in cameras:
+        image = camera.original_image.permute(1, 2, 0).cpu().numpy()
+        images.append(np.clip(image * 255.0, 0, 255).astype(np.uint8))
+    model = YOLO(model_path)
+    results = model.predict(
+        [image[..., ::-1] for image in images], conf=float(confidence),
+        verbose=False)
+    masks = {}
+    stats = []
+    for index, (image, result) in enumerate(zip(images, results)):
+        boxes = (result.boxes.xyxy.cpu().numpy()
+                 if result.boxes is not None else np.zeros((0, 4)))
+        keypoints = (result.keypoints.data.cpu().numpy()
+                     if result.keypoints is not None
+                     else np.zeros((len(boxes), 17, 3)))
+        masks[index] = pose_guided_foreground_mask(
+            image, boxes, keypoints, residual=residual[index])
+        stats.append({
+            "camera": cameras[index].image_name,
+            "people": len(boxes),
+            "mask_fraction": float(masks[index].mean()),
+        })
+    return masks, stats
+
+
+def warp_native_masks(world_points, world_valid, cameras, alignment,
+                      native_masks):
+    """Inverse-project source masks only to locate the old wrong-depth layer."""
+    points = world_points.permute(1, 2, 0)
+    height, width = points.shape[:2]
+    homogeneous = torch.cat(
+        [points, torch.ones((height, width, 1), device=points.device)],
+        dim=-1)
+    warped = {}
+    with torch.no_grad():
+        for index, camera in enumerate(cameras):
+            world_view = camera.get_world_view_transform(
+                alignment[0], alignment[1])
+            xyz = (homogeneous @ world_view)[..., :3]
+            z = xyz[..., 2]
+            source_height, source_width = native_masks[index].shape
+            focal_x = source_width / (
+                2.0 * torch.tan(camera.learnable_fovx / 2.0))
+            focal_y = source_height / (
+                2.0 * torch.tan(camera.learnable_fovy / 2.0))
+            u = focal_x * xyz[..., 0] / z.clamp_min(1e-6) \
+                + source_width / 2.0
+            v = focal_y * xyz[..., 1] / z.clamp_min(1e-6) \
+                + source_height / 2.0
+            grid = torch.stack([
+                2.0 * u / max(source_width - 1, 1) - 1.0,
+                2.0 * v / max(source_height - 1, 1) - 1.0,
+            ], dim=-1)
+            mask = torch.from_numpy(
+                native_masks[index].astype(np.float32)).to(points.device)
+            sampled = functional.grid_sample(
+                mask[None, None], grid[None], mode="nearest",
+                padding_mode="zeros", align_corners=True)[0, 0]
+            inside = (
+                world_valid & (z > 1e-5)
+                & (u >= 0.0) & (u <= source_width - 1)
+                & (v >= 0.0) & (v <= source_height - 1)
+            )
+            warped[index] = (sampled > 0.5).cpu().numpy() & \
+                inside.cpu().numpy()
+    return warped
 
 
 def virtual_camera(
@@ -277,7 +351,8 @@ def warp_current_sources(world_points, world_valid, cameras, gaussians,
 
 
 def stereo_foreground_layer(
-        cameras, native_foreground, temporal_foreground, center,
+        cameras, native_foreground, temporal_foreground,
+        semantic_foreground, center,
         rig_camera_to_world, preferred_source,
         height, width, model_path, alignment, cuda_lib_dir=None,
         cudnn_lib_dir=None, splat_radius=1):
@@ -321,12 +396,14 @@ def stereo_foreground_layer(
         left = cv2.resize(left, rectified_size, interpolation=cv2.INTER_LINEAR)
         right = cv2.resize(right, rectified_size, interpolation=cv2.INTER_LINEAR)
         qualified_left = (
-            native_foreground[left_index]
-            & temporal_foreground[left_index]
+            (native_foreground[left_index]
+             & temporal_foreground[left_index])
+            | semantic_foreground[left_index]
         )
         qualified_right = (
-            native_foreground[right_index]
-            & temporal_foreground[right_index]
+            (native_foreground[right_index]
+             & temporal_foreground[right_index])
+            | semantic_foreground[right_index]
         )
         foreground_left_native = cv2.resize(
             qualified_left.astype(np.uint8), rectified_size,
@@ -480,6 +557,8 @@ def main():
     parser.add_argument("--static-transition", type=int, default=12)
     parser.add_argument("--static-blend-temperature", type=float, default=6.0)
     parser.add_argument("--static-blend-gate", type=float, default=40.0)
+    parser.add_argument("--pose-model")
+    parser.add_argument("--pose-confidence", type=float, default=0.15)
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
     if args.erp_width % 2:
@@ -563,10 +642,26 @@ def main():
     dynamic_image, owner, dynamic_mask, dynamic_stats = compositor.render(
         warped, valid, cost, learned_background, learned_valid,
         foreground=foreground)
+    semantic_stats = None
+    semantic_foreground = {
+        index: np.zeros(mask.shape, bool)
+        for index, mask in native_foreground.items()
+    }
+    semantic_old = np.zeros(dynamic_mask.shape, bool)
+    if args.pose_model:
+        semantic_foreground, semantic_stats = semantic_foreground_masks(
+            source_cameras, args.pose_model, native_foreground,
+            confidence=args.pose_confidence)
+        warped_semantic = warp_native_masks(
+            world_points, world_valid, source_cameras, alignment,
+            semantic_foreground)
+        for index, mask in warped_semantic.items():
+            semantic_old |= (owner == index) & mask
+    protected_mask = dynamic_mask | semantic_old
     seam_image, transition_mask, gated_transition = \
         compose_gated_boundary_blend(
             warped, valid, cost, owner, learned_background, learned_valid,
-            protected=dynamic_mask,
+            protected=protected_mask,
             temperature=args.static_blend_temperature,
             gate=args.static_blend_gate / 255.0,
             boundary_px=args.static_transition)
@@ -582,7 +677,8 @@ def main():
             args.temporal_threshold / 255.0)
         stereo_layer, stereo_stats = stereo_foreground_layer(
             source_cameras, native_foreground, temporal_foreground,
-            actual_center, panorama_camera_to_world[:3, :3], owner,
+            semantic_foreground, actual_center,
+            panorama_camera_to_world[:3, :3], owner,
             erp_height, args.erp_width, args.stereo_model, alignment,
             cuda_lib_dir=args.stereo_cuda_lib_dir,
             cudnn_lib_dir=args.stereo_cudnn_lib_dir,
@@ -595,7 +691,7 @@ def main():
             | (stereo_layer.range_m <= learned_range * 1.25 + 0.10)
         )
         erase, stereo_mask, accepted_components = select_stereo_replacements(
-            dynamic_mask, depth_visible,
+            protected_mask, depth_visible,
             min_coverage=args.stereo_replacement_coverage,
             association_px=args.stereo_association_px)
         depth_dynamic_image = seam_image.copy()
@@ -618,6 +714,8 @@ def main():
     mask_tensor = torch.from_numpy(dynamic_mask.astype(np.float32))[None]
     stereo_mask_tensor = torch.from_numpy(
         stereo_mask.astype(np.float32))[None]
+    semantic_mask_tensor = torch.from_numpy(
+        semantic_old.astype(np.float32))[None]
     cropped, cropped_alpha, crop = crop_to_content(panorama, alpha)
     left, top, right, bottom = crop
     dynamic_cropped = dynamic_tensor[:, top:bottom, left:right]
@@ -647,6 +745,8 @@ def main():
     torchvision.utils.save_image(mask_tensor, output / "dynamic_mask.png")
     torchvision.utils.save_image(
         stereo_mask_tensor, output / "stereo_foreground_mask.png")
+    torchvision.utils.save_image(
+        semantic_mask_tensor, output / "semantic_foreground_mask.png")
 
     report = {
         "schema": "video-split.learned-panorama.v1",
@@ -678,6 +778,12 @@ def main():
             "blended_fraction": float(transition_mask.mean()),
             "gated_fraction": float(gated_transition.mean()),
         },
+        "semantic_foreground": {
+            "model": args.pose_model,
+            "confidence": args.pose_confidence,
+            "panorama_fraction": float(semantic_old.mean()),
+            "sources": semantic_stats,
+        } if args.pose_model else None,
         "source_valid_fraction": {
             source_cameras[index].image_name: float(mask.mean())
             for index, mask in valid.items()
