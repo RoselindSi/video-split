@@ -165,7 +165,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         predict_motion=True, safe_association=True, safe_reacquire=True,
         min_conf=None, bridge=None, panorama_mode="baseline",
         panorama_fit_frames=0, panorama_depth=True, panorama_flow=False,
-        ctx=None):
+        ctx=None, frame_hook=None):
     import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
@@ -354,6 +354,13 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         m_own = masks_from(clean, own) if (own and m_oth.any()) \
             else np.zeros(clean.shape[:2], bool)
         sup, alpha = suppress(rgb, m_oth, dilate, 4, sigma, protect=m_own)
+        if frame_hook is not None:
+            # THE SOURCE FRAME AND WHAT THE PIPELINE MADE OF IT, and nothing
+            # else. `clean` is untouched; `sup` is the delivered picture with
+            # faces and foreign hands covered. No boxes, no scores, no panel:
+            # an auditor asked to find what the system MISSED must not be
+            # shown what it believes, or they will only check its work.
+            frame_hook(k, clean, sup)
         if trace is not None:
             # Every quantity between "a hand was called foreign" and "pixels
             # were suppressed", so a frame where the cover drops can be
@@ -388,6 +395,16 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
                                        default=float("nan")), 4),
                 "p_max_own": round(max([p for (o, p) in flags if o],
                                        default=float("nan")), 4)})
+        if out_path is None:
+            # A caller that only wants the frames -- the end-to-end auditor --
+            # passes no path. Composing and encoding a demo panel it will
+            # never look at is the most expensive part of the loop.
+            n_written += 1
+            if verbose and ((k + 1) % 20 == 0 or k + 1 == n):
+                el = time.time() - t0
+                print(f"    [{k+1}/{n}] {el:.0f}s, "
+                      f"{el/(k+1)*(n-k-1):.0f}s left", flush=True)
+            continue
         panel = compose(rgb, annotate(rgb, dets, flags, m_oth), sup,
                         len(own), len(oth), start + k * stride, dis,
                         float((alpha > 0.5).mean()), cfg=cfg)
