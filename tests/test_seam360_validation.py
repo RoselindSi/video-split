@@ -15,6 +15,7 @@ from src.rig.learned_panorama import (
     classify_cube_rays,
     cube_face_rotations,
     equirectangular_cube_lookup,
+    equirectangular_face_grids,
     equirectangular_rays,
 )
 from third_party.self_cali_gs.prepare_rig import (
@@ -201,6 +202,24 @@ class Seam360ValidationTest(unittest.TestCase):
         self.assertLess(np.abs(overscan_grid).max(), np.abs(base_grid).max())
         with self.assertRaisesRegex(ValueError, "FOV"):
             equirectangular_cube_lookup(32, 64, 89.0)
+
+    def test_overscanned_faces_overlap_without_uncovered_rays(self):
+        grids, support, weights = equirectangular_face_grids(64, 128, 100.0)
+        self.assertEqual(grids.shape, (6, 64, 128, 2))
+        self.assertTrue(np.all(support.sum(axis=0) >= 1))
+        self.assertTrue(np.any(support.sum(axis=0) >= 2))
+        self.assertTrue(np.all(weights.sum(axis=0) > 0.0))
+
+    def test_face_overlap_is_symmetric_at_front_right_boundary(self):
+        # Four half-pixel ERP samples land exactly at -135, -45, 45, 135 deg.
+        _, support, weights = equirectangular_face_grids(1, 4, 100.0)
+        row = 0
+        column = 2
+        self.assertTrue(support[0, row, column])
+        self.assertTrue(support[1, row, column])
+        self.assertAlmostEqual(
+            float(weights[0, row, column]),
+            float(weights[1, row, column]), places=5)
 
 
 if __name__ == "__main__":

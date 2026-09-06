@@ -23,7 +23,7 @@ from scene.cameras import Camera
 from src.rig.learned_panorama import (
     FACE_NAMES,
     cube_face_rotations,
-    equirectangular_cube_lookup,
+    equirectangular_face_grids,
 )
 from src.rig.dynamic_panorama import (
     DynamicOwnershipConfig,
@@ -85,23 +85,33 @@ def virtual_camera(
 
 def compose_equirectangular(
         faces, face_alpha, height, width, face_fov_degrees):
-    face_indices, grid = equirectangular_cube_lookup(
+    grids, support, edge_weights = equirectangular_face_grids(
         height, width, face_fov_degrees)
     device = faces[0].device
-    grid = torch.from_numpy(grid).to(device=device, dtype=torch.float32)
-    indices = torch.from_numpy(face_indices).to(device=device)
-    panorama = torch.zeros((3, height, width), device=device)
+    channels = faces[0].shape[0]
+    accumulated = torch.zeros((channels, height, width), device=device)
+    total_weight = torch.zeros((1, height, width), device=device)
     panorama_alpha = torch.zeros((1, height, width), device=device)
     for face_index, (face, alpha) in enumerate(zip(faces, face_alpha)):
+        grid = torch.from_numpy(grids[face_index]).to(
+            device=device, dtype=torch.float32)
         sampled = functional.grid_sample(
             face.unsqueeze(0), grid.unsqueeze(0), mode="bilinear",
             padding_mode="zeros", align_corners=True)[0]
         sampled_alpha = functional.grid_sample(
             alpha.unsqueeze(0), grid.unsqueeze(0), mode="bilinear",
             padding_mode="zeros", align_corners=True)[0]
-        mask = indices == face_index
-        panorama[:, mask] = sampled[:, mask]
-        panorama_alpha[:, mask] = sampled_alpha[:, mask]
+        geometry_weight = torch.from_numpy(edge_weights[face_index]).to(
+            device=device, dtype=torch.float32)[None]
+        face_support = torch.from_numpy(support[face_index]).to(
+            device=device)[None]
+        weight = geometry_weight * sampled_alpha * face_support
+        accumulated += sampled * weight
+        total_weight += weight
+        panorama_alpha = torch.maximum(
+            panorama_alpha, sampled_alpha * face_support)
+    panorama = accumulated / total_weight.clamp_min(1e-6)
+    panorama[:, total_weight[0] <= 1e-6] = 0.0
     return panorama, panorama_alpha
 
 
