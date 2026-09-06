@@ -115,6 +115,20 @@ class LearnedStereoTest(unittest.TestCase):
         self.assertEqual(int(result.source[10, 20]), 0)
         self.assertAlmostEqual(float(result.range_m[10, 20]), 1.0)
 
+    def test_splat_tie_uses_preferred_camera_without_colour_average(self):
+        points = np.asarray([[[0.0, 0.0, 1.0]]], np.float32)
+        red = np.asarray([[[1.0, 0.0, 0.0]]], np.float32)
+        blue = np.asarray([[[0.0, 0.0, 1.0]]], np.float32)
+        valid = np.ones((1, 1), bool)
+        preferred = np.full((20, 40), -1, np.int16)
+        preferred[10, 20] = 1
+        result = splat_world_points(
+            [(0, points, red, valid), (1, points, blue, valid)],
+            np.zeros(3), np.eye(3), 20, 40, splat_radius=0,
+            preferred_source=preferred)
+        self.assertEqual(result.rgb[10, 20].tolist(), [0.0, 0.0, 1.0])
+        self.assertEqual(int(result.source[10, 20]), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

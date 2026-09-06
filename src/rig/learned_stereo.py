@@ -238,7 +238,8 @@ def world_to_equirectangular(points, center, rig_camera_to_world,
 
 
 def splat_world_points(layers, center, rig_camera_to_world, height, width,
-                       splat_radius=1, depth_tie=1e-4):
+                       splat_radius=1, depth_tie=1e-4,
+                       preferred_source=None):
     """Z-buffer current foreground points into one single-source ERP layer.
 
     ``layers`` contains ``(source_index, world_points, rgb, valid)`` tuples.
@@ -295,7 +296,17 @@ def splat_world_points(layers, center, rig_camera_to_world, height, width,
     np.minimum.at(output_range, pixel_ids, ranges)
     eligible = ranges <= output_range[pixel_ids] + float(depth_tie)
     indices = np.flatnonzero(eligible)
-    order = np.lexsort((sources[indices], ranges[indices], pixel_ids[indices]))
+    if preferred_source is None:
+        preference_penalty = np.zeros(indices.size, np.int8)
+    else:
+        preferred_source = np.asarray(preferred_source)
+        if preferred_source.shape != (height, width):
+            raise ValueError("preferred source map has the wrong shape")
+        desired = preferred_source.reshape(-1)[pixel_ids[indices]]
+        preference_penalty = (sources[indices] != desired).astype(np.int8)
+    order = np.lexsort((
+        sources[indices], ranges[indices], preference_penalty,
+        pixel_ids[indices]))
     indices = indices[order]
     ordered_pixels = pixel_ids[indices]
     first = np.r_[True, ordered_pixels[1:] != ordered_pixels[:-1]]

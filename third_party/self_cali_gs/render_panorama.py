@@ -278,10 +278,10 @@ def warp_current_sources(world_points, world_valid, cameras, gaussians,
 
 def stereo_foreground_layer(
         cameras, native_foreground, temporal_foreground, center,
-        rig_camera_to_world,
+        rig_camera_to_world, preferred_source,
         height, width, model_path, alignment, cuda_lib_dir=None,
         cudnn_lib_dir=None, splat_radius=1):
-    """Depth-place current foreground from the three physical stereo pairs."""
+    """Depth-place both colour views from each physical stereo pair."""
     import cv2
 
     from src.rig.fast_foundation_stereo import FastFoundationStereo
@@ -320,12 +320,19 @@ def stereo_foreground_layer(
             K_right, (right_width, right_height), rectified_size)
         left = cv2.resize(left, rectified_size, interpolation=cv2.INTER_LINEAR)
         right = cv2.resize(right, rectified_size, interpolation=cv2.INTER_LINEAR)
-        qualified_foreground = (
+        qualified_left = (
             native_foreground[left_index]
             & temporal_foreground[left_index]
         )
-        foreground_left = cv2.resize(
-            qualified_foreground.astype(np.uint8), rectified_size,
+        qualified_right = (
+            native_foreground[right_index]
+            & temporal_foreground[right_index]
+        )
+        foreground_left_native = cv2.resize(
+            qualified_left.astype(np.uint8), rectified_size,
+            interpolation=cv2.INTER_NEAREST)
+        foreground_right_native = cv2.resize(
+            qualified_right.astype(np.uint8), rectified_size,
             interpolation=cv2.INTER_NEAREST)
         rectification = rectify_learned_pair(
             K_left, K_right, left_pose, right_pose,
@@ -337,27 +344,56 @@ def stereo_foreground_layer(
             right, *rectification.map_right, cv2.INTER_LINEAR,
             borderMode=cv2.BORDER_CONSTANT)
         foreground_rectified = cv2.remap(
-            foreground_left, *rectification.map_left, cv2.INTER_NEAREST,
+            foreground_left_native, *rectification.map_left,
+            cv2.INTER_NEAREST,
             borderMode=cv2.BORDER_CONSTANT) > 0
+        foreground_right_rectified = cv2.remap(
+            foreground_right_native, *rectification.map_right,
+            cv2.INTER_NEAREST,
+            borderMode=cv2.BORDER_CONSTANT) > 0
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
         foreground_rectified = cv2.morphologyEx(
             foreground_rectified.astype(np.uint8), cv2.MORPH_CLOSE,
-            cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))) > 0
+            kernel) > 0
+        foreground_right_rectified = cv2.morphologyEx(
+            foreground_right_rectified.astype(np.uint8), cv2.MORPH_CLOSE,
+            kernel) > 0
 
-        disparity = model.disparity(
+        raw_disparity = model.disparity(
             left_rectified[..., ::-1], right_rectified[..., ::-1])
-        disparity, foreground_rectified, component_count = \
+        yy, xx = np.mgrid[
+            0:rectified_size[1], 0:rectified_size[0]].astype(np.float32)
+        right_x = xx - raw_disparity
+        right_foreground_in_left = cv2.remap(
+            foreground_right_rectified.astype(np.uint8), right_x, yy,
+            cv2.INTER_NEAREST, borderMode=cv2.BORDER_CONSTANT) > 0
+        combined_foreground = foreground_rectified | right_foreground_in_left
+        disparity, combined_foreground, component_count = \
             regularize_component_disparity(
-                disparity, foreground_rectified, min_component_px=24)
+                raw_disparity, combined_foreground, min_component_px=24)
         map_x, map_y = rectification.map_left
-        support = (
+        left_support = (
             (map_x >= 0.0) & (map_x < rectified_size[0] - 1)
             & (map_y >= 0.0) & (map_y < rectified_size[1] - 1)
         )
+        right_x = xx - disparity
+        right_support = (right_x >= 0.0) \
+            & (right_x < rectified_size[0] - 1)
+        right_foreground_in_left = cv2.remap(
+            foreground_right_rectified.astype(np.uint8), right_x, yy,
+            cv2.INTER_NEAREST, borderMode=cv2.BORDER_CONSTANT) > 0
+        right_colour_in_left = cv2.remap(
+            right_rectified, right_x, yy, cv2.INTER_LINEAR,
+            borderMode=cv2.BORDER_CONSTANT)
         points, point_valid = rectified_world_points(
             disparity, rectification,
-            mask=foreground_rectified & support)
+            mask=combined_foreground & left_support)
         layers.append((
-            left_index, points, left_rectified, point_valid))
+            left_index, points, left_rectified,
+            point_valid & foreground_rectified))
+        layers.append((
+            right_index, points, right_colour_in_left,
+            point_valid & right_foreground_in_left & right_support))
         pair_stats.append({
             "pair": [left_index, right_index],
             "native_sizes": [
@@ -366,16 +402,24 @@ def stereo_foreground_layer(
             "baseline_learned_units": rectification.baseline,
             "static_residual_fraction": float(
                 native_foreground[left_index].mean()),
+            "right_static_residual_fraction": float(
+                native_foreground[right_index].mean()),
             "temporal_fraction": float(
                 temporal_foreground[left_index].mean()),
-            "foreground_fraction": float(foreground_rectified.mean()),
+            "right_temporal_fraction": float(
+                temporal_foreground[right_index].mean()),
+            "foreground_fraction": float(combined_foreground.mean()),
             "foreground_components": component_count,
             "valid_foreground_points": int(point_valid.sum()),
+            "left_colour_points": int(
+                (point_valid & foreground_rectified).sum()),
+            "right_colour_points": int(
+                (point_valid & right_foreground_in_left & right_support).sum()),
         })
 
     layer = splat_world_points(
         layers, center, rig_camera_to_world, height, width,
-        splat_radius=splat_radius)
+        splat_radius=splat_radius, preferred_source=preferred_source)
     return layer, {
         "providers": model.providers,
         "pairs": pair_stats,
@@ -538,7 +582,7 @@ def main():
             args.temporal_threshold / 255.0)
         stereo_layer, stereo_stats = stereo_foreground_layer(
             source_cameras, native_foreground, temporal_foreground,
-            actual_center, panorama_camera_to_world[:3, :3],
+            actual_center, panorama_camera_to_world[:3, :3], owner,
             erp_height, args.erp_width, args.stereo_model, alignment,
             cuda_lib_dir=args.stereo_cuda_lib_dir,
             cudnn_lib_dir=args.stereo_cudnn_lib_dir,
