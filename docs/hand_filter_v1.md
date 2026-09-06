@@ -307,6 +307,75 @@ documented residual failure mode. Future work here should collect more
 independent examples of the rare false-owner regime BEFORE introducing a more
 complex ownership model.
 
+## H. Face filtering — verifier ablation and frozen decision
+
+A residual failure mode is occasional detection of large skin-coloured
+non-face regions as faces. The production configuration is:
+
+```
+MIN_CONF          = 0.35
+MAX_FACE_FRAC     = None
+HAND_OVERLAP_VETO = 0.45
+```
+
+An audit set of 531 candidates was built from the CONTINUOUS frames of five
+rendered clips -- not from a package's sampled frames, because a mosaic that
+appears for half a second occupies fifteen consecutive frames and has about a
+one-in-nineteen chance of landing on a stride-19 sample. The first attempt
+measured 6.5% from a population that held almost none of what was complained
+about.
+
+```
+350   randomly sampled candidates
+181   enriched for large bounding boxes
+```
+
+The enriched half stress-tests large-face filtering and MUST NOT be read as
+deployment prevalence.
+
+```
+arm                            真脸保留    误检保留   precision              recall
+F0  score >= 0.35, no cap      516/516     14/14    0.974 [0.956, 0.984]   1.000
+F1  + 5-point geometry         292/516     12/14    0.961 [0.932, 0.977]   0.566
+F2  + secondary detector       478/516     12/14    0.976 [0.958, 0.986]   0.926
+F3  + size cap 0.055           251/516      1/14    0.996 [0.978, 0.999]   0.486
+```
+
+All three verification strategies are an unfavourable privacy trade:
+
+```
+F1  removes  2 false positives at the cost of 224 true faces
+F2  removes  2 false positives at the cost of  38 true faces
+F3  removes 13 false positives at the cost of 265 true faces
+```
+
+The size-cap result matters most because an earlier, smaller audit
+underestimated how many real close-range faces exist. With the sample
+expanded from 97 to 278 large candidates, the cap's recall falls from 0.732
+to 0.486.
+
+F1 and F2 fail for a reason that is not the geometry check: of the 224 true
+faces F1 rejects, 38 are ones YuNet did not detect at all. YuNet was rejected
+as a DETECTOR for over-proposing; what this exposes is the same model's other
+face, a recall it cannot support in the verifier role either. A cascade
+assumes the second detector can see what the first one saw.
+
+The phenomenon is real and uncommon. On the random 350 the false-positive
+rate is 1.7% [0.8%, 3.7%]. It is also temporally clustered: 9 of the 14 false
+positives come from one continuous event in `R0827_114736`, not nine
+independent errors.
+
+### Decision
+
+Freeze F0. No landmark verification, no second detector, no size cap. Large
+skin-like false positives are a known residual failure mode.
+
+**The 1.000 recall above is CANDIDATE-CONDITIONAL.** Every one of those 516
+faces is one the detector already proposed. A face it never proposed is in
+nobody's denominator here, so this says nothing about end-to-end face recall.
+Detection misses are measurable only by looking at the finished video, which
+is what the full-video audit does.
+
 ## The frozen configuration
 
 ```
@@ -320,7 +389,8 @@ target mask       off (section F)
 letterbox         off (section F)
 mask              GrabCut on a window round the box
 panorama          baseline three-view (the depth renderer is opt-in)
-faces             YOLOv8-face at 0.35, no size cap
+faces             YOLOv8-face at 0.35, no size cap, hand-overlap veto 0.45
+face verifier     off (section H)
 privacy           other -> blur
 ```
 
