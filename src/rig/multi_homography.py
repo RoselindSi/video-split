@@ -275,3 +275,116 @@ def accepted_components(camera_count, pair_reports):
                 pending.append(neighbour)
         components.append(sorted(component))
     return sorted(components, key=lambda values: (-len(values), values))
+
+
+def assign_segments_to_models(segments, points, labels, model_count):
+    """Assign each content segment one model without crossing its boundary."""
+    segments = np.asarray(segments)
+    if segments.ndim != 2:
+        raise ValueError("segments must be two-dimensional")
+    points = _points(points, "points")
+    labels = np.asarray(labels, np.int64).reshape(-1)
+    model_count = int(model_count)
+    if len(points) != len(labels):
+        raise ValueError("points and labels must have the same length")
+    if model_count < 1:
+        raise ValueError("model_count must be positive")
+    segment_values, inverse = np.unique(segments, return_inverse=True)
+    segment_map = inverse.reshape(segments.shape)
+    votes = np.zeros((len(segment_values), model_count), np.int64)
+    x = np.rint(points[:, 0]).astype(np.int64)
+    y = np.rint(points[:, 1]).astype(np.int64)
+    valid = (
+        (labels >= 0) & (labels < model_count)
+        & (x >= 0) & (x < segments.shape[1])
+        & (y >= 0) & (y < segments.shape[0])
+    )
+    np.add.at(votes, (segment_map[y[valid], x[valid]], labels[valid]), 1)
+    assignment = np.argmax(votes, axis=1).astype(np.int16)
+    seeded = votes.sum(axis=1) > 0
+    if not seeded.any():
+        return np.zeros(segments.shape, np.int16)
+
+    # Empty segments inherit the nearest seeded segment in source-image
+    # coordinates. This extrapolates only across content regions and never
+    # averages two model transforms inside one region.
+    yy, xx = np.indices(segments.shape)
+    area = np.bincount(segment_map.ravel(), minlength=len(segment_values))
+    centroid_x = np.bincount(
+        segment_map.ravel(), weights=xx.ravel(),
+        minlength=len(segment_values)) / np.maximum(area, 1)
+    centroid_y = np.bincount(
+        segment_map.ravel(), weights=yy.ravel(),
+        minlength=len(segment_values)) / np.maximum(area, 1)
+    seeded_indices = np.flatnonzero(seeded)
+    for index in np.flatnonzero(~seeded):
+        distance = (
+            (centroid_x[seeded_indices] - centroid_x[index]) ** 2
+            + (centroid_y[seeded_indices] - centroid_y[index]) ** 2
+        )
+        assignment[index] = assignment[seeded_indices[np.argmin(distance)]]
+    return assignment[segment_map]
+
+
+def transformed_support_points(model_map, homographies, step=24):
+    """Sample a segmented image's transformed footprint for canvas sizing."""
+    import cv2
+
+    model_map = np.asarray(model_map, np.int64)
+    if model_map.ndim != 2:
+        raise ValueError("model_map must be two-dimensional")
+    homographies = [np.asarray(value, np.float64) for value in homographies]
+    height, width = model_map.shape
+    step = max(1, int(step))
+    x = np.unique(np.r_[np.arange(0, width, step), width - 1])
+    y = np.unique(np.r_[np.arange(0, height, step), height - 1])
+    xx, yy = np.meshgrid(x, y)
+    points = np.stack((xx.ravel(), yy.ravel()), axis=1).astype(np.float32)
+    labels = model_map[yy.ravel(), xx.ravel()]
+    transformed = []
+    for model_index, homography in enumerate(homographies):
+        selected = labels == model_index
+        if selected.any():
+            values = cv2.perspectiveTransform(
+                points[selected, None], homography)[:, 0]
+            transformed.append(values[np.isfinite(values).all(axis=1)])
+    return (np.concatenate(transformed).astype(np.float32)
+            if transformed else np.empty((0, 2), np.float32))
+
+
+def segmented_warp(image, model_map, homographies, canvas_transform,
+                   canvas_size, interpolation=None):
+    """Warp one image with one homography per complete content segment."""
+    import cv2
+
+    image = np.asarray(image)
+    model_map = np.asarray(model_map, np.int64)
+    if image.shape[:2] != model_map.shape:
+        raise ValueError("image and model_map shapes differ")
+    width, height = (int(value) for value in canvas_size)
+    if width < 1 or height < 1:
+        raise ValueError("canvas dimensions must be positive")
+    if interpolation is None:
+        interpolation = cv2.INTER_LINEAR
+    if image.ndim == 2:
+        output = np.zeros((height, width), image.dtype)
+    else:
+        output = np.zeros((height, width, image.shape[2]), image.dtype)
+    valid = np.zeros((height, width), bool)
+    canvas_transform = np.asarray(canvas_transform, np.float64)
+    for model_index, homography in enumerate(homographies):
+        source_mask = (model_map == model_index).astype(np.uint8)
+        if not source_mask.any():
+            continue
+        transform = canvas_transform @ np.asarray(homography, np.float64)
+        warped_mask = cv2.warpPerspective(
+            source_mask, transform, (width, height), flags=cv2.INTER_NEAREST)
+        selected = (warped_mask > 0) & ~valid
+        if not selected.any():
+            continue
+        warped = cv2.warpPerspective(
+            image, transform, (width, height), flags=interpolation,
+            borderMode=cv2.BORDER_CONSTANT)
+        output[selected] = warped[selected]
+        valid[selected] = True
+    return output, valid

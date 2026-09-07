@@ -6,10 +6,14 @@ from src.rig.multi_homography import (
     PairGeometryConfig,
     accepted_components,
     analyze_pair,
+    assign_segments_to_models,
     fit_piecewise_homographies,
     grid_coverage,
+    segmented_warp,
     static_correspondence_mask,
+    transformed_support_points,
 )
+from src.rig.segmented_panorama import canvas_from_footprints, content_segments
 
 
 class MultiHomographyTest(unittest.TestCase):
@@ -77,6 +81,65 @@ class MultiHomographyTest(unittest.TestCase):
             accepted_components(5, reports), [[0, 1, 2], [3, 4]])
         reports[2]["accepted"] = True
         self.assertEqual(accepted_components(5, reports), [[0, 1, 2, 3, 4]])
+
+    def test_segment_assignment_never_splits_a_content_region(self):
+        segments = np.zeros((12, 18), np.int16)
+        segments[:, 6:12] = 1
+        segments[:, 12:] = 2
+        points = np.array([[2, 2], [3, 8], [14, 2], [15, 8]], np.float32)
+        labels = np.array([0, 0, 1, 1])
+        model_map = assign_segments_to_models(segments, points, labels, 2)
+        self.assertEqual(np.unique(model_map[:, :6]).tolist(), [0])
+        self.assertEqual(np.unique(model_map[:, 6:12]).size, 1)
+        self.assertEqual(np.unique(model_map[:, 12:]).tolist(), [1])
+
+    def test_segmented_warp_preserves_single_source_colours(self):
+        image = np.zeros((10, 20, 3), np.uint8)
+        image[:, :10] = (10, 20, 30)
+        image[:, 10:] = (100, 110, 120)
+        model_map = np.zeros((10, 20), np.int16)
+        model_map[:, 10:] = 1
+        homographies = [
+            np.eye(3),
+            np.array([[1, 0, 5], [0, 1, 0], [0, 0, 1]], np.float64),
+        ]
+        warped, valid = segmented_warp(
+            image, model_map, homographies, np.eye(3), (30, 10))
+        colours = np.unique(warped[valid], axis=0)
+        self.assertEqual(colours.tolist(), [[10, 20, 30], [100, 110, 120]])
+        self.assertTrue(valid[:, :10].all())
+        self.assertTrue(valid[:, 15:25].all())
+
+    def test_transformed_support_tracks_piecewise_extent(self):
+        model_map = np.zeros((9, 21), np.int16)
+        model_map[:, 10:] = 1
+        homographies = [
+            np.eye(3),
+            np.array([[1, 0, 20], [0, 1, 0], [0, 0, 1]], np.float64),
+        ]
+        points = transformed_support_points(model_map, homographies, step=4)
+        self.assertLessEqual(float(points[:, 0].min()), 0.0)
+        self.assertGreaterEqual(float(points[:, 0].max()), 40.0)
+
+    def test_person_mask_is_one_indivisible_content_segment(self):
+        image = np.zeros((40, 60, 3), np.uint8)
+        image[:, 30:] = 255
+        person = np.zeros((40, 60), bool)
+        person[5:35, 20:40] = True
+        segments = content_segments(image, person, count=12, compactness=5)
+        self.assertEqual(np.unique(segments[person]).size, 1)
+
+    def test_canvas_contains_anchor_and_translated_footprints(self):
+        footprints = [
+            np.array([[0, 0], [100, 50]], np.float32),
+            np.array([[-80, -10], [170, 60]], np.float32),
+        ]
+        transform, size, stats = canvas_from_footprints(
+            footprints, (50, 100), margin=0)
+        self.assertGreaterEqual(size[0], 250)
+        self.assertGreaterEqual(size[1], 70)
+        np.testing.assert_allclose(transform[:2, 2], [80, 10], atol=2)
+        self.assertEqual(stats["size"], list(size))
 
 
 if __name__ == "__main__":
