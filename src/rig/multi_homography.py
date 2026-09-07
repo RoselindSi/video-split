@@ -363,7 +363,6 @@ def regularized_match_map(
         hull_feather_px=48):
     """Build a continuous target-to-source map from robust match residuals."""
     import cv2
-    from scipy.interpolate import LinearNDInterpolator
 
     source = _points(source, "source")
     target = _points(target, "target")
@@ -417,13 +416,17 @@ def regularized_match_map(
         np.arange(0, target_width, cell_px), target_width - 1])
     grid_y = np.unique(np.r_[
         np.arange(0, target_height, cell_px), target_height - 1])
-    xx, yy = np.meshgrid(grid_x, grid_y)
-    queries = np.stack((xx.ravel(), yy.ravel()), axis=1)
-    interpolator = LinearNDInterpolator(
-        control_points, control_residuals, fill_value=np.nan)
-    coarse = np.asarray(interpolator(queries), np.float32).reshape(
-        len(grid_y), len(grid_x), 2)
-    coarse[~np.isfinite(coarse)] = 0.0
+    coarse = np.zeros((len(grid_y), len(grid_x), 2), np.float32)
+    known = np.zeros(coarse.shape[:2], bool)
+    for point, value in zip(control_points, control_residuals):
+        column = int(np.argmin(np.abs(grid_x - point[0])))
+        row = int(np.argmin(np.abs(grid_y - point[1])))
+        coarse[row, column] = value
+        known[row, column] = True
+    missing = (~known).astype(np.uint8)
+    for channel in range(2):
+        coarse[..., channel] = cv2.inpaint(
+            coarse[..., channel], missing, 2.0, cv2.INPAINT_TELEA)
     if float(smooth_sigma) > 0.0:
         coarse = cv2.GaussianBlur(
             coarse, (0, 0), sigmaX=float(smooth_sigma),

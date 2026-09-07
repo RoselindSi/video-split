@@ -21,9 +21,11 @@ from src.rig.segmented_panorama import (
     compose_frequency_selective_blend,
     content_segments,
     enforce_anchor_authority,
+    hierarchical_six_owner,
     minimum_vertical_seam,
     overlay_dense_anchor_warp,
     overlay_regularized_match_warp,
+    pair_seam_cost,
     three_band_owner,
 )
 
@@ -213,6 +215,19 @@ class MultiHomographyTest(unittest.TestCase):
             cost, np.ones_like(cost, bool), nominal=15, max_step=2)
         self.assertLess(float(np.abs(seam - corridor).mean()), 1.0)
 
+    def test_pair_seam_cost_keeps_margin_around_protected_content(self):
+        shape = (30, 60)
+        image = np.zeros((*shape, 3), np.uint8)
+        valid = np.ones(shape, bool)
+        protected = np.zeros(shape, bool)
+        protected[10:20, 28:32] = True
+        cost, allowed = pair_seam_cost(
+            image, image, valid, valid, protected, None,
+            protect_margin=12)
+        self.assertTrue(allowed.all())
+        self.assertGreater(float(cost[15, 24]), float(cost[15, 8]))
+        self.assertGreater(float(cost[15, 30]), float(cost[15, 24]))
+
     def test_three_band_owner_keeps_ordered_contiguous_sources(self):
         shape = (20, 60)
         images = {camera: np.zeros((*shape, 3), np.uint8)
@@ -227,6 +242,27 @@ class MultiHomographyTest(unittest.TestCase):
             self.assertEqual(changes, 2)
             self.assertEqual(int(owner[row, 0]), 1)
             self.assertEqual(int(owner[row, -1]), 5)
+
+    def test_hierarchical_owner_uses_ordered_stereo_modules(self):
+        shape = (24, 120)
+        images = {
+            camera: np.full((*shape, 3), camera * 20, np.uint8)
+            for camera in range(6)
+        }
+        valid = {camera: np.ones(shape, bool) for camera in images}
+        semantic = {camera: np.zeros(shape, bool) for camera in images}
+        cost = {
+            camera: np.zeros(shape, np.float32) for camera in images
+        }
+        owner, protected, stats = hierarchical_six_owner(
+            images, valid, semantic, cost, max_step=2)
+        self.assertEqual(np.unique(owner).tolist(), list(range(6)))
+        self.assertFalse(protected.any())
+        self.assertEqual(len(stats["pair_seams"]), 3)
+        for row in range(shape[0]):
+            self.assertEqual(
+                np.unique(owner[row], return_index=True)[0].tolist(),
+                list(range(6)))
 
     def test_frequency_blend_smooths_colour_but_keeps_protected_pixels(self):
         shape = (32, 64)

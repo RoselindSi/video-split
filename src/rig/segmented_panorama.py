@@ -184,7 +184,8 @@ def minimum_vertical_seam(cost, allowed, nominal, max_step=6,
 
 
 def pair_seam_cost(left, right, left_valid, right_valid,
-                   left_protected=None, right_protected=None):
+                   left_protected=None, right_protected=None,
+                   protect_margin=0):
     """Prefer photometrically agreeing, low-gradient, non-person pixels."""
     import cv2
 
@@ -204,13 +205,19 @@ def pair_seam_cost(left, right, left_valid, right_valid,
         protected |= np.asarray(left_protected, bool)
     if right_protected is not None:
         protected |= np.asarray(right_protected, bool)
-    cost[protected] += 20.0
+    margin = max(int(protect_margin), 0)
+    if protected.any() and margin:
+        distance = cv2.distanceTransform(
+            (~protected).astype(np.uint8), cv2.DIST_L2, 3)
+        cost += 20.0 * np.clip(1.0 - distance / margin, 0.0, 1.0)
+    else:
+        cost[protected] += 20.0
     allowed = np.asarray(left_valid, bool) & np.asarray(right_valid, bool)
     return cost, allowed
 
 
 def three_band_owner(images, valid, protected, cameras=(1, 3, 5),
-                     max_step=6, smoothness=0.03):
+                     max_step=6, smoothness=0.03, protect_margin=0):
     """Compose left/centre/right modules with two constrained seams."""
     left, centre, right = (int(value) for value in cameras)
     if any(camera not in images for camera in (left, centre, right)):
@@ -224,12 +231,12 @@ def three_band_owner(images, valid, protected, cameras=(1, 3, 5),
 
     first_cost, first_allowed = pair_seam_cost(
         images[left], images[centre], valid[left], valid[centre],
-        protected.get(left), protected.get(centre))
+        protected.get(left), protected.get(centre), protect_margin)
     first_seam = minimum_vertical_seam(
         first_cost, first_allowed, first_nominal, max_step, smoothness)
     second_cost, second_allowed = pair_seam_cost(
         images[centre], images[right], valid[centre], valid[right],
-        protected.get(centre), protected.get(right))
+        protected.get(centre), protected.get(right), protect_margin)
     second_seam = minimum_vertical_seam(
         second_cost, second_allowed, second_nominal, max_step, smoothness)
 
@@ -251,6 +258,99 @@ def three_band_owner(images, valid, protected, cameras=(1, 3, 5),
         selected = (owner < 0) & np.asarray(valid[camera], bool)
         owner[selected] = camera
     return owner, first_seam, second_seam
+
+
+def hierarchical_six_owner(
+        images, valid, semantic, cost, pairs=((0, 1), (2, 3), (4, 5)),
+        max_step=6, smoothness=0.03, protect_margin=0,
+        semantic_close=12, semantic_dilate=2):
+    """Resolve three stereo modules before placing two inter-module seams."""
+    pair_owners = {}
+    module_images = {}
+    module_valid = {}
+    module_semantic = {}
+    module_cost = {}
+    pair_stats = {}
+    pair_seams = {}
+    shape = next(iter(valid.values())).shape
+    columns = np.broadcast_to(np.arange(shape[1]), shape)
+
+    for module, pair in enumerate(pairs):
+        left, right = (int(value) for value in pair)
+        overlap = np.asarray(valid[left], bool) & np.asarray(valid[right], bool)
+        overlap_columns = np.nonzero(overlap)[1]
+        if not len(overlap_columns):
+            raise ValueError(f"stereo pair {pair} has no overlap")
+        low, high = int(overlap_columns.min()), int(overlap_columns.max())
+        fraction = (module + 0.5) / len(pairs)
+        nominal = int(round(low + fraction * (high - low)))
+        seam_cost, allowed = pair_seam_cost(
+            images[left], images[right], valid[left], valid[right],
+            semantic.get(left), semantic.get(right), protect_margin)
+        seam = minimum_vertical_seam(
+            seam_cost, allowed, nominal, max_step, smoothness)
+        pair_owner = np.full(shape, -1, np.int16)
+        for camera, region in (
+                (left, columns <= seam[:, None]),
+                (right, columns > seam[:, None])):
+            selected = region & np.asarray(valid[camera], bool)
+            pair_owner[selected] = camera
+        pair_valid = {camera: valid[camera] for camera in pair}
+        pair_cost = {camera: cost[camera] for camera in pair}
+        fallback = geometric_owner(pair_valid, pair_cost)
+        pair_owner[pair_owner < 0] = fallback[pair_owner < 0]
+        pair_semantic = {camera: semantic[camera] for camera in pair}
+        pair_owner, pair_protected, stats = regularize_semantic_owner(
+            pair_owner, pair_semantic, pair_valid, pair_cost,
+            close_px=semantic_close, dilate_px=semantic_dilate,
+            max_component_fraction=0.35)
+        pair_owners[module] = pair_owner
+        pair_seams[module] = seam
+        pair_stats[str(module)] = stats
+        black = np.zeros((*shape, 3), np.float32)
+        composed, filled, _ = compose_single_source(
+            {camera: images[camera] for camera in pair}, pair_valid,
+            pair_owner, black, np.zeros(shape, bool))
+        module_images[module] = np.clip(
+            composed * 255.0, 0, 255).astype(np.uint8)
+        module_valid[module] = filled
+        module_semantic[module] = pair_protected
+        stacked_cost = np.stack([
+            np.where(valid[camera], cost[camera], np.inf)
+            for camera in pair
+        ])
+        module_cost[module] = np.min(stacked_cost, axis=0)
+
+    module_owner, first_seam, second_seam = three_band_owner(
+        module_images, module_valid, module_semantic, cameras=(0, 1, 2),
+        max_step=max_step, smoothness=smoothness,
+        protect_margin=protect_margin)
+    fallback = geometric_owner(module_valid, module_cost)
+    module_owner[module_owner < 0] = fallback[module_owner < 0]
+    module_owner, protected, module_stats = regularize_semantic_owner(
+        module_owner, module_semantic, module_valid, module_cost,
+        close_px=semantic_close, dilate_px=semantic_dilate,
+        max_component_fraction=0.35)
+    owner = np.full(shape, -1, np.int16)
+    for module, pair_owner in pair_owners.items():
+        selected = module_owner == module
+        owner[selected] = pair_owner[selected]
+    return owner, protected, {
+        "pair_semantic": pair_stats,
+        "module_semantic": module_stats,
+        "pair_seams": {
+            str(module): {
+                "min": int(seam.min()),
+                "median": float(np.median(seam)),
+                "max": int(seam.max()),
+            } for module, seam in pair_seams.items()
+        },
+        "module_seams": [{
+            "min": int(seam.min()),
+            "median": float(np.median(seam)),
+            "max": int(seam.max()),
+        } for seam in (first_seam, second_seam)],
+    }
 
 
 def compose_frequency_selective_blend(
@@ -458,6 +558,12 @@ def render(args):
     import cv2
     import torch
 
+    np.random.seed(int(args.seed))
+    cv2.setRNGSeed(int(args.seed))
+    torch.manual_seed(int(args.seed))
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(int(args.seed))
+
     root = Path(args.scene) / "images"
     paths = [root / f"cam{camera}" / f"t{args.time:03d}.jpg"
              for camera in range(6)]
@@ -627,22 +733,33 @@ def render(args):
         distance = cv2.distanceTransform(
             valid[camera].astype(np.uint8), cv2.DIST_L2, 3)
         cost[camera] = -distance.astype(np.float32)
-    if args.composition == "three-band":
+    if args.composition == "hierarchical-six":
+        owner, protected, semantic_stats = hierarchical_six_owner(
+            adjusted, valid, warped_semantic, cost,
+            max_step=args.seam_max_step,
+            smoothness=args.seam_smoothness,
+            protect_margin=args.seam_protect_margin,
+            semantic_close=args.semantic_close,
+            semantic_dilate=args.semantic_dilate)
+        graph_masks = None
+    elif args.composition == "three-band":
         band_cameras = tuple(int(value) for value in args.band_cameras.split(","))
         if len(band_cameras) != 3:
             raise ValueError("--band-cameras must contain three camera ids")
         owner, first_seam, second_seam = three_band_owner(
             adjusted, valid, warped_semantic, band_cameras,
-            args.seam_max_step, args.seam_smoothness)
+            args.seam_max_step, args.seam_smoothness,
+            args.seam_protect_margin)
         fallback = geometric_owner(valid, cost)
         owner[owner < 0] = fallback[owner < 0]
         graph_masks = None
     else:
         owner, graph_masks = graphcut_owner(adjusted, valid, cost)
-    owner, protected, semantic_stats = regularize_semantic_owner(
-        owner, warped_semantic, valid, cost,
-        close_px=args.semantic_close, dilate_px=args.semantic_dilate,
-        max_component_fraction=0.35)
+    if args.composition != "hierarchical-six":
+        owner, protected, semantic_stats = regularize_semantic_owner(
+            owner, warped_semantic, valid, cost,
+            close_px=args.semantic_close, dilate_px=args.semantic_dilate,
+            max_component_fraction=0.35)
     if args.composition == "anchor" or (
             args.composition == "graphcut" and args.anchor_authority):
         owner = enforce_anchor_authority(owner, valid[anchor], anchor)
@@ -654,8 +771,10 @@ def render(args):
         adjusted, valid, cost, owner, black, no_background,
         protected=protected, gate=args.blend_gate / 255.0,
         boundary_px=args.blend_width, temperature=args.blend_temperature)
+    frequency_protected = (
+        protected if args.frequency_preserve_protected else None)
     frequency, frequency_transition = compose_frequency_selective_blend(
-        adjusted, valid, owner, hard, protected=protected,
+        adjusted, valid, owner, hard, protected=frequency_protected,
         sigma=args.frequency_sigma, boundary_px=args.frequency_width,
         protect_dilate_px=args.frequency_protect_dilate)
 
@@ -730,6 +849,7 @@ def main():
     parser.add_argument("--scene", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--time", type=int, default=0)
+    parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--anchor", type=int, choices=range(6), default=3)
     parser.add_argument("--runtime", default="/workspace/roma_runtime")
     parser.add_argument(
@@ -776,14 +896,19 @@ def main():
     parser.add_argument("--frequency-width", type=int, default=72)
     parser.add_argument("--frequency-protect-dilate", type=int, default=12)
     parser.add_argument(
+        "--frequency-preserve-protected",
+        action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument(
         "--anchor-authority", action=argparse.BooleanOptionalAction,
         default=True)
     parser.add_argument(
-        "--composition", choices=("three-band", "anchor", "graphcut"),
+        "--composition",
+        choices=("hierarchical-six", "three-band", "anchor", "graphcut"),
         default="three-band")
     parser.add_argument("--band-cameras", default="1,3,5")
     parser.add_argument("--seam-max-step", type=int, default=6)
     parser.add_argument("--seam-smoothness", type=float, default=0.03)
+    parser.add_argument("--seam-protect-margin", type=int, default=64)
     parser.add_argument(
         "--dense-refine", action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument("--dense-certainty", type=float, default=0.08)

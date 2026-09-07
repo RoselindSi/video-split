@@ -244,6 +244,44 @@ class _YoloFace:
                         scores[int(i)]))
         return out
 
+    def detect_tiled(self, bgr, cols=2, rows=1, overlap=0.25):
+        """Whole frame plus overlapping tiles, merged. -> [(x0,y0,x1,y1,s)]
+
+        THE INPUT IS A STATIC 640x640 AND THE FRAME IS 1.78:1, so a face
+        arrives squeezed to 56% of its width on top of whatever the downscale
+        already cost it. The ONNX will not run at any other size -- 960 and
+        1280 both fail in reshape -- so the resolution has to come from
+        feeding it smaller pieces of the picture instead of a bigger tensor.
+        Two columns of a 1.78:1 frame are very nearly square, which is why
+        this fixes the distortion at the same time as the scale.
+
+        THE WHOLE-FRAME PASS IS KEPT RATHER THAN REPLACED. A face spanning a
+        tile boundary is cut in two, and a tiling that loses the near
+        colleague to find the distant one is not an improvement. Keeping it
+        makes the union a superset of the baseline by construction, so recall
+        cannot go down and the only thing left to measure is what the extra
+        proposals cost -- which is the honest question, since over-blur is
+        already the most frequent complaint about this pipeline."""
+        cv2 = self.cv2
+        H, W = bgr.shape[:2]
+        found = list(self.detect(bgr))
+        tw, th = W / float(cols), H / float(rows)
+        ox, oy = tw * overlap, th * overlap
+        for r in range(rows):
+            for c in range(cols):
+                x0, x1 = int(max(0, c * tw - ox)), int(min(W, (c + 1) * tw + ox))
+                y0, y1 = int(max(0, r * th - oy)), int(min(H, (r + 1) * th + oy))
+                if x1 - x0 < 32 or y1 - y0 < 32:
+                    continue
+                for a, b, cc, d, s in self.detect(bgr[y0:y1, x0:x1]):
+                    found.append((a + x0, b + y0, cc + x0, d + y0, s))
+        if not found:
+            return []
+        boxes = [[f[0], f[1], f[2] - f[0], f[3] - f[1]] for f in found]
+        scores = [float(f[4]) for f in found]
+        keep = cv2.dnn.NMSBoxes(boxes, scores, self.min_conf, self.nms)
+        return [found[int(i)] for i in np.asarray(keep).reshape(-1)]
+
     def close(self):
         pass
 
@@ -296,8 +334,14 @@ def load_detector(model_path=MODEL, min_conf=MIN_CONF):
             "BlazeFace fallback does.")
 
 
-def detect_faces(det, rgb):
-    """-> [(x0, y0, x1, y1, score)] in pixels, clipped to the frame."""
+def detect_faces(det, rgb, tiles=None):
+    """-> [(x0, y0, x1, y1, score)] in pixels, clipped to the frame.
+
+    `tiles=(cols, rows)` asks for the sliced pass where the detector supports
+    it. It is off by default: F0 is frozen and every number in the face
+    section was measured against the whole-frame call."""
+    if tiles and hasattr(det, "detect_tiled"):
+        return det.detect_tiled(rgb, int(tiles[0]), int(tiles[1]))
     if getattr(det, "kind", None) in ("yunet", "yolo"):
         return det.detect(rgb)
     import cv2
