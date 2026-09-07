@@ -252,6 +252,87 @@ def three_band_owner(images, valid, protected, cameras=(1, 3, 5),
     return owner, first_seam, second_seam
 
 
+def compose_frequency_selective_blend(
+        images, valid, owner, hard, protected=None, sigma=24.0,
+        boundary_px=72, protect_dilate_px=12):
+    """Blend low-frequency colour across seams while retaining owned detail."""
+    import cv2
+
+    owner = np.asarray(owner, np.int16)
+    hard = np.asarray(hard, np.float32)
+    if hard.shape[:2] != owner.shape:
+        raise ValueError("hard image and owner shapes differ")
+    sigma = max(float(sigma), 0.1)
+    keys = sorted(images)
+    low_images = {}
+    weights = {}
+    for key in keys:
+        image = np.asarray(images[key])
+        image_float = image.astype(np.float32)
+        if np.issubdtype(image.dtype, np.integer):
+            image_float /= float(np.iinfo(image.dtype).max)
+        source_valid = np.asarray(valid[key], bool)
+        valid_float = source_valid.astype(np.float32)
+        normalizer = cv2.GaussianBlur(
+            valid_float, (0, 0), sigmaX=sigma, sigmaY=sigma)
+        numerator = cv2.GaussianBlur(
+            image_float * valid_float[..., None], (0, 0),
+            sigmaX=sigma, sigmaY=sigma)
+        low_images[key] = np.divide(
+            numerator, normalizer[..., None],
+            out=np.zeros_like(numerator),
+            where=normalizer[..., None] > 1e-5)
+        owned = ((owner == key) & source_valid).astype(np.float32)
+        weights[key] = cv2.GaussianBlur(
+            owned, (0, 0), sigmaX=sigma, sigmaY=sigma) * valid_float
+
+    total = np.zeros(owner.shape, np.float32)
+    blended_low = np.zeros_like(hard)
+    selected_low = np.zeros_like(hard)
+    for key in keys:
+        weight = weights[key]
+        total += weight
+        blended_low += low_images[key] * weight[..., None]
+        selected = owner == key
+        selected_low[selected] = low_images[key][selected]
+    blended_low = np.divide(
+        blended_low, total[..., None], out=selected_low.copy(),
+        where=total[..., None] > 1e-5)
+
+    boundary = np.zeros(owner.shape, bool)
+    horizontal = (owner[:, 1:] != owner[:, :-1]) \
+        & (owner[:, 1:] >= 0) & (owner[:, :-1] >= 0)
+    vertical = (owner[1:] != owner[:-1]) \
+        & (owner[1:] >= 0) & (owner[:-1] >= 0)
+    boundary[:, 1:] |= horizontal
+    boundary[:, :-1] |= horizontal
+    boundary[1:] |= vertical
+    boundary[:-1] |= vertical
+    distance = cv2.distanceTransform(
+        (~boundary).astype(np.uint8), cv2.DIST_L2, 3)
+    overlap = np.sum(
+        np.stack([np.asarray(valid[key], bool) for key in keys]), axis=0)
+    transition = boundary | (distance <= max(int(boundary_px), 0))
+    transition &= overlap >= 2
+    transition &= owner >= 0
+    if protected is not None:
+        protected = np.asarray(protected, bool)
+        radius = max(int(protect_dilate_px), 0)
+        if radius:
+            kernel = cv2.getStructuringElement(
+                cv2.MORPH_ELLIPSE, (2 * radius + 1, 2 * radius + 1))
+            protected = cv2.dilate(
+                protected.astype(np.uint8), kernel) > 0
+        transition &= ~protected
+
+    # The hard-selected source contributes every high-frequency residual.
+    # Only its slowly varying colour and illumination are mixed.
+    candidate = np.clip(blended_low + hard - selected_low, 0.0, 1.0)
+    output = hard.copy()
+    output[transition] = candidate[transition]
+    return output, transition
+
+
 def overlay_dense_anchor_warp(
         global_image, global_valid, source_image, source_protected,
         anchor_protected, anchor_to_source, certainty, canvas_transform,
@@ -507,17 +588,25 @@ def render(args):
         adjusted, valid, cost, owner, black, no_background,
         protected=protected, gate=args.blend_gate / 255.0,
         boundary_px=args.blend_width, temperature=args.blend_temperature)
+    frequency, frequency_transition = compose_frequency_selective_blend(
+        adjusted, valid, owner, hard, protected=protected,
+        sigma=args.frequency_sigma, boundary_px=args.frequency_width,
+        protect_dilate_px=args.frequency_protect_dilate)
 
     adjusted, arrays, valid, crop = crop_valid(
-        adjusted, [hard, gated, owner, protected, transition, gated_out],
+        adjusted, [hard, gated, frequency, owner, protected, transition,
+                   gated_out, frequency_transition],
         valid)
-    hard, gated, owner, protected, transition, gated_out = arrays
+    hard, gated, frequency, owner, protected, transition, gated_out, \
+        frequency_transition = arrays
     output = Path(args.output)
     output.mkdir(parents=True, exist_ok=True)
     cv2.imwrite(os.fspath(output / "panorama_hard.png"),
                 np.clip(hard * 255.0, 0, 255).astype(np.uint8))
     cv2.imwrite(os.fspath(output / "panorama_gated.png"),
                 np.clip(gated * 255.0, 0, 255).astype(np.uint8))
+    cv2.imwrite(os.fspath(output / "panorama_frequency.png"),
+                np.clip(frequency * 255.0, 0, 255).astype(np.uint8))
     palette = np.asarray([
         [230, 80, 80], [80, 210, 80], [80, 130, 240],
         [220, 180, 60], [190, 80, 210], [70, 210, 210],
@@ -532,6 +621,8 @@ def render(args):
                 transition.astype(np.uint8) * 255)
     cv2.imwrite(os.fspath(output / "blend_gated_out.png"),
                 gated_out.astype(np.uint8) * 255)
+    cv2.imwrite(os.fspath(output / "frequency_transition.png"),
+                frequency_transition.astype(np.uint8) * 255)
 
     result = {
         "method": "tiny-roma-segmented-multi-homography",
@@ -544,6 +635,8 @@ def render(args):
         "protected_fraction": float(protected.mean()),
         "blend_transition_fraction": float(transition.mean()),
         "blend_gated_fraction": float(gated_out.mean()),
+        "frequency_transition_fraction": float(
+            frequency_transition.mean()),
         "dense_refine_fraction": dense_fractions,
         "semantic_ownership": semantic_stats,
         "composition": args.composition,
@@ -612,6 +705,9 @@ def main():
     parser.add_argument("--blend-width", type=int, default=3)
     parser.add_argument("--blend-gate", type=float, default=20.0)
     parser.add_argument("--blend-temperature", type=float, default=8.0)
+    parser.add_argument("--frequency-sigma", type=float, default=24.0)
+    parser.add_argument("--frequency-width", type=int, default=72)
+    parser.add_argument("--frequency-protect-dilate", type=int, default=12)
     parser.add_argument(
         "--anchor-authority", action=argparse.BooleanOptionalAction,
         default=True)

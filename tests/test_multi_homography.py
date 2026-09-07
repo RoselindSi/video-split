@@ -17,6 +17,7 @@ from src.rig.multi_homography import (
 )
 from src.rig.segmented_panorama import (
     canvas_from_footprints,
+    compose_frequency_selective_blend,
     content_segments,
     enforce_anchor_authority,
     minimum_vertical_seam,
@@ -209,6 +210,31 @@ class MultiHomographyTest(unittest.TestCase):
             self.assertEqual(changes, 2)
             self.assertEqual(int(owner[row, 0]), 1)
             self.assertEqual(int(owner[row, -1]), 5)
+
+    def test_frequency_blend_smooths_colour_but_keeps_protected_pixels(self):
+        shape = (32, 64)
+        images = {
+            0: np.full((*shape, 3), 51, np.uint8),
+            1: np.full((*shape, 3), 204, np.uint8),
+        }
+        valid = {key: np.ones(shape, bool) for key in images}
+        owner = np.zeros(shape, np.int16)
+        owner[:, shape[1] // 2:] = 1
+        hard = np.full((*shape, 3), 0.2, np.float32)
+        hard[:, shape[1] // 2:] = 0.8
+        protected = np.zeros(shape, bool)
+        protected[8:16, shape[1] // 2 - 2:shape[1] // 2 + 2] = True
+        result, transition = compose_frequency_selective_blend(
+            images, valid, owner, hard, protected=protected,
+            sigma=4.0, boundary_px=10, protect_dilate_px=0)
+        seam = shape[1] // 2
+        self.assertLess(
+            float(np.abs(result[24, seam] - result[24, seam - 1]).max()),
+            0.15)
+        np.testing.assert_allclose(
+            result[protected], hard[protected], atol=1e-6)
+        self.assertTrue(transition[24, seam])
+        self.assertFalse(transition[10, seam])
 
     def test_dense_refine_never_warps_protected_content(self):
         source = np.zeros((8, 10, 3), np.uint8)

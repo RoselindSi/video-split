@@ -315,6 +315,33 @@ def detect_faces(det, rgb):
     return out
 
 
+def split_on_hands(faces, dets, frac=HAND_OVERLAP_VETO):
+    """`drop_on_hands`, but it also hands back what it threw away.
+
+    A VETOED FACE AND A FACE THAT WAS NEVER PROPOSED ARE INDISTINGUISHABLE
+    DOWNSTREAM AND NEED OPPOSITE FIXES. Attribution of an uncovered face asks
+    which stage lost it; if the veto is invisible, every such frame reads as a
+    detector failure and points at the detector, when the thing that actually
+    discarded the box was this rule. The audit only needs the survivors, so
+    `drop_on_hands` stays as it was and this is the split version."""
+    keep, dropped = [], []
+    for f in faces:
+        (keep if _worst_overlap(f, dets) < frac else dropped).append(f)
+    return keep, dropped
+
+
+def _worst_overlap(f, dets):
+    """Largest fraction of THIS FACE's area covered by any hand box. -> float"""
+    fa = max(1, (f[2] - f[0]) * (f[3] - f[1]))
+    worst = 0.0
+    for d in dets:
+        x0, y0, x1, y1 = [int(v) for v in d["box"]]
+        ix = max(0, min(f[2], x1) - max(f[0], x0))
+        iy = max(0, min(f[3], y1) - max(f[1], y0))
+        worst = max(worst, ix * iy / float(fa))
+    return worst
+
+
 def drop_on_hands(faces, dets, frac=HAND_OVERLAP_VETO):
     """Remove face detections that sit on a detected hand. -> [face]
 
@@ -329,18 +356,7 @@ def drop_on_hands(faces, dets, frac=HAND_OVERLAP_VETO):
     this is for."""
     if not dets:
         return list(faces)
-    keep = []
-    for f in faces:
-        fa = max(1, (f[2] - f[0]) * (f[3] - f[1]))
-        worst = 0.0
-        for d in dets:
-            x0, y0, x1, y1 = [int(v) for v in d["box"]]
-            ix = max(0, min(f[2], x1) - max(f[0], x0))
-            iy = max(0, min(f[3], y1) - max(f[1], y0))
-            worst = max(worst, ix * iy / float(fa))
-        if worst < frac:
-            keep.append(f)
-    return keep
+    return split_on_hands(faces, dets, frac)[0]
 
 
 class Hold:

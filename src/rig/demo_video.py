@@ -299,7 +299,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
             # Low-score unmatched candidates still veto a face false positive:
             # failure to start a hand track does not turn that patch into a
             # plausible face.
-            faces = face_mask.drop_on_hands(faces, raw_dets)
+            faces, faces_vetoed = face_mask.split_on_hands(faces, raw_dets)
             n_face += len(faces)
             rgb, _ = face_mask.cover(clean, hold.update(faces,
                                                         shape=clean.shape))
@@ -379,6 +379,12 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
                     "p_owner": [round(float(p), 3) for _, p in flags],
                     "faces": [[int(v) for v in f[:4]] for f in faces]
                               if fdet is not None else [],
+                    # Proposed and then discarded by the hand veto. Without
+                    # this a vetoed face looks exactly like a face the
+                    # detector never found, and the two need opposite fixes.
+                    "faces_vetoed": [[int(v) for v in f[:4]]
+                                     for f in faces_vetoed]
+                                    if fdet is not None else [],
                     "oth_px": int(m_oth.sum()),
                     "own_px": int(m_own.sum()),
                     "veto_px": int((m_oth & m_own).sum())})

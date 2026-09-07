@@ -26,7 +26,11 @@ never uncertain about.
 
 WHAT IT SHOWS PER FRAME. The source, the delivered output, and the source with
 every proposal drawn: hand detections with their track admission and P(owner),
-face detections after the hand veto. The judgement is then one click.
+face detections, and separately the faces the hand veto discarded. That last
+distinction is not cosmetic -- a vetoed face and a face the detector never
+found are identical in the delivered picture and identical in a panel that
+only draws survivors, and they are repaired at opposite ends of the pipeline.
+The judgement is then one click.
 """
 from __future__ import annotations
 
@@ -66,7 +70,9 @@ b{color:#ffd33d}
 <div id=bar>
  <span id=prog></span>
  <span><b>1</b> 检测器没提出 &nbsp; <b>2</b> 提出了但没建轨迹 &nbsp;
-   <b>3</b> 归属判错 &nbsp; <b>4</b> 掩码没盖住 &nbsp; <b>5</b> 说不准
+   <b>3</b> 归属判错 &nbsp; <b>4</b> 掩码没盖住 &nbsp;
+   <b>5</b> 被手部否决<span style="color:#a76fd0">（紫框 VETO）</span> &nbsp;
+   <b>6</b> 说不准
    &nbsp; <b>&uarr;&darr;</b> move &nbsp; <b>u</b> undo</span>
  <button onclick="dl()">download CSV</button>
 </div>
@@ -74,9 +80,10 @@ b{color:#ffd33d}
 <script>
 const D = __PAYLOAD__;
 const KEY = "diag:" + D.tag;
-const CLS = ["detector","admission","ownership","mask","unsure"];
+const CLS = ["detector","admission","ownership","mask","veto","unsure"];
 const CN = {detector:"检测器没提出", admission:"没建轨迹",
-            ownership:"归属判错", mask:"掩码没盖住", unsure:"说不准"};
+            ownership:"归属判错", mask:"掩码没盖住",
+            veto:"被手部否决", unsure:"说不准"};
 let lab = {}, cur = 0, hist = [];
 try { lab = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch(e) { lab={}; }
 const list = document.getElementById("list");
@@ -110,7 +117,7 @@ function draw(){
   if(el) el.scrollIntoView({block:"nearest"});
 }
 document.onkeydown = ev => {
-  if(ev.key>="1" && ev.key<="5"){
+  if(ev.key>="1" && ev.key<="6"){
     const e = D.events[cur]; if(!e) return;
     hist.push([e.key, lab[e.key]]);
     lab[e.key] = CLS[+ev.key-1];
@@ -251,6 +258,14 @@ def main():
                             (90, 255, 140) if own else (90, 140, 255), 2)
             for x0, y0, x1, y1 in info["faces"]:
                 cv2.rectangle(dbg, (x0, y0), (x1, y1), (255, 120, 255), 3)
+            # A face the detector DID propose and the hand veto threw away.
+            # Drawn separately because the alternative -- not drawing it --
+            # makes an uncovered face read as `detector never proposed` and
+            # sends the fix to the wrong stage.
+            for x0, y0, x1, y1 in info.get("faces_vetoed", []):
+                cv2.rectangle(dbg, (x0, y0), (x1, y1), (120, 60, 160), 3)
+                cv2.putText(dbg, "VETO", (x0, max(14, y0 - 5)),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.55, (150, 80, 200), 2)
             got[f] = {
                 "key": f"{rec}:{f}", "rec": rec, "frame": f,
                 "kinds": frames[f], "raw": b64(clean), "out": b64(out),
@@ -258,7 +273,9 @@ def main():
                 "info": (f"raw_det {len(info['raw_dets'])}  "
                          f"admitted {len(info['dets'])}  "
                          f"own {sum(info['own'])}  "
-                         f"faces {len(info['faces'])}  "
+                         f"faces {len(info['faces'])}"
+                         + (f"+{len(info['faces_vetoed'])}veto"
+                            if info.get("faces_vetoed") else "") + "  "
                          f"oth_px {info['oth_px']}  "
                          f"veto_px {info['veto_px']}")}
 
@@ -280,9 +297,10 @@ def main():
     print(f"\n  {len(events)} 个事件 -> {a.out} "
           f"({os.path.getsize(a.out) / 1e6:.1f} MB)")
     print("  第三张图是原始画面加上全部候选：青色=进了管线的手，灰色=检测器"
-          "提出但没建轨迹，\n  洋红=脸。手下方标 OWN/OTH 和 P(owner)。")
+          "提出但没建轨迹，\n  洋红=脸，紫色 VETO=脸检测器提出了但被手部否决"
+          "丢掉。手下方标 OWN/OTH 和 P(owner)。")
     print("  1 检测器没提出   2 提出了但没建轨迹   3 归属判错   "
-          "4 掩码没盖住   5 说不准")
+          "4 掩码没盖住   5 被手部否决   6 说不准")
 
 
 if __name__ == "__main__":
