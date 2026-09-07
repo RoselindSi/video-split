@@ -19,6 +19,8 @@ from src.rig.segmented_panorama import (
     canvas_from_footprints,
     content_segments,
     enforce_anchor_authority,
+    minimum_vertical_seam,
+    three_band_owner,
 )
 
 
@@ -183,6 +185,29 @@ class MultiHomographyTest(unittest.TestCase):
         result = enforce_anchor_authority(owner, anchor_valid, anchor=3)
         self.assertTrue(np.all(result[anchor_valid] == 3))
         self.assertTrue(np.all(result[~anchor_valid] == 1))
+
+    def test_vertical_seam_follows_low_cost_corridor(self):
+        cost = np.ones((30, 40), np.float32)
+        corridor = np.arange(30) // 3 + 12
+        cost[np.arange(30), corridor] = 0.0
+        seam = minimum_vertical_seam(
+            cost, np.ones_like(cost, bool), nominal=15, max_step=2)
+        self.assertLess(float(np.abs(seam - corridor).mean()), 1.0)
+
+    def test_three_band_owner_keeps_ordered_contiguous_sources(self):
+        shape = (20, 60)
+        images = {camera: np.zeros((*shape, 3), np.uint8)
+                  for camera in (1, 3, 5)}
+        valid = {camera: np.ones(shape, bool) for camera in images}
+        protected = {camera: np.zeros(shape, bool) for camera in images}
+        owner, first, second = three_band_owner(
+            images, valid, protected, cameras=(1, 3, 5))
+        self.assertTrue(np.all(first < second))
+        for row in range(shape[0]):
+            changes = np.count_nonzero(owner[row, 1:] != owner[row, :-1])
+            self.assertEqual(changes, 2)
+            self.assertEqual(int(owner[row, 0]), 1)
+            self.assertEqual(int(owner[row, -1]), 5)
 
 
 if __name__ == "__main__":

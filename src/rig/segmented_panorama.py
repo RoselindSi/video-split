@@ -140,6 +140,118 @@ def enforce_anchor_authority(owner, anchor_valid, anchor):
     return owner
 
 
+def minimum_vertical_seam(cost, allowed, nominal, max_step=6,
+                          smoothness=0.03):
+    """Find a top-to-bottom seam through a pair's valid overlap."""
+    cost = np.asarray(cost, np.float32)
+    allowed = np.asarray(allowed, bool)
+    if cost.shape != allowed.shape or cost.ndim != 2:
+        raise ValueError("cost and allowed must share a 2D shape")
+    height, width = cost.shape
+    nominal = int(np.clip(nominal, 0, width - 1))
+    max_step = max(1, int(max_step))
+    columns = np.arange(width)
+    position = 0.02 * ((columns - nominal) / max(width, 1)) ** 2
+    row_cost = cost + position[None]
+    row_cost = np.where(allowed, row_cost, 1e3 + position[None])
+    # If an overlap disappears for one row, keep the path near the closest
+    # valid row instead of making the seam jump to the image boundary.
+    empty = ~allowed.any(axis=1)
+    row_cost[empty] = position
+
+    previous = row_cost[0].astype(np.float64)
+    back = np.zeros((height, width), np.int16)
+    offsets = np.arange(-max_step, max_step + 1)
+    for row in range(1, height):
+        candidates = np.full((len(offsets), width), np.inf, np.float64)
+        for index, offset in enumerate(offsets):
+            if offset < 0:
+                candidates[index, -offset:] = previous[:offset]
+            elif offset > 0:
+                candidates[index, :-offset] = previous[offset:]
+            else:
+                candidates[index] = previous
+            candidates[index] += float(smoothness) * abs(int(offset))
+        choice = np.argmin(candidates, axis=0)
+        back[row] = np.clip(columns + offsets[choice], 0, width - 1)
+        previous = row_cost[row] + candidates[choice, columns]
+    seam = np.empty(height, np.int32)
+    seam[-1] = int(np.argmin(previous))
+    for row in range(height - 1, 0, -1):
+        seam[row - 1] = int(back[row, seam[row]])
+    return seam
+
+
+def pair_seam_cost(left, right, left_valid, right_valid,
+                   left_protected=None, right_protected=None):
+    """Prefer photometrically agreeing, low-gradient, non-person pixels."""
+    import cv2
+
+    left = np.asarray(left, np.float32)
+    right = np.asarray(right, np.float32)
+    colour = np.abs(left - right).mean(axis=2) / 255.0
+    gray_left = cv2.cvtColor(left, cv2.COLOR_BGR2GRAY)
+    gray_right = cv2.cvtColor(right, cv2.COLOR_BGR2GRAY)
+    gradient = np.zeros(colour.shape, np.float32)
+    for gray in (gray_left, gray_right):
+        gx = cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=3)
+        gy = cv2.Sobel(gray, cv2.CV_32F, 0, 1, ksize=3)
+        gradient += np.sqrt(gx * gx + gy * gy) / (8.0 * 255.0)
+    cost = colour + 0.35 * gradient
+    protected = np.zeros(colour.shape, bool)
+    if left_protected is not None:
+        protected |= np.asarray(left_protected, bool)
+    if right_protected is not None:
+        protected |= np.asarray(right_protected, bool)
+    cost[protected] += 20.0
+    allowed = np.asarray(left_valid, bool) & np.asarray(right_valid, bool)
+    return cost, allowed
+
+
+def three_band_owner(images, valid, protected, cameras=(1, 3, 5),
+                     max_step=6, smoothness=0.03):
+    """Compose left/centre/right modules with two constrained seams."""
+    left, centre, right = (int(value) for value in cameras)
+    if any(camera not in images for camera in (left, centre, right)):
+        raise ValueError("all three band cameras must be available")
+    centre_columns = np.nonzero(np.asarray(valid[centre], bool))[1]
+    if not len(centre_columns):
+        raise ValueError("centre camera has no valid pixels")
+    low, high = int(centre_columns.min()), int(centre_columns.max())
+    first_nominal = int(round(low + (high - low) / 3.0))
+    second_nominal = int(round(low + 2.0 * (high - low) / 3.0))
+
+    first_cost, first_allowed = pair_seam_cost(
+        images[left], images[centre], valid[left], valid[centre],
+        protected.get(left), protected.get(centre))
+    first_seam = minimum_vertical_seam(
+        first_cost, first_allowed, first_nominal, max_step, smoothness)
+    second_cost, second_allowed = pair_seam_cost(
+        images[centre], images[right], valid[centre], valid[right],
+        protected.get(centre), protected.get(right))
+    second_seam = minimum_vertical_seam(
+        second_cost, second_allowed, second_nominal, max_step, smoothness)
+
+    height, width = first_cost.shape
+    columns = np.broadcast_to(np.arange(width), (height, width))
+    owner = np.full((height, width), -1, np.int16)
+    bands = (
+        (left, columns <= first_seam[:, None]),
+        (centre, (columns > first_seam[:, None])
+         & (columns <= second_seam[:, None])),
+        (right, columns > second_seam[:, None]),
+    )
+    for camera, band in bands:
+        selected = band & np.asarray(valid[camera], bool)
+        owner[selected] = camera
+    # Keep each preferred band's source when possible, but never leave a hole
+    # where another one of the three primary cameras has pixels.
+    for camera in (centre, left, right):
+        selected = (owner < 0) & np.asarray(valid[camera], bool)
+        owner[selected] = camera
+    return owner, first_seam, second_seam
+
+
 def crop_valid(images, arrays, valid, margin=0):
     """Crop a common bounding box around all visible source pixels."""
     union = np.logical_or.reduce([np.asarray(value, bool)
@@ -293,12 +405,24 @@ def render(args):
         distance = cv2.distanceTransform(
             valid[camera].astype(np.uint8), cv2.DIST_L2, 3)
         cost[camera] = -distance.astype(np.float32)
-    owner, graph_masks = graphcut_owner(adjusted, valid, cost)
+    if args.composition == "three-band":
+        band_cameras = tuple(int(value) for value in args.band_cameras.split(","))
+        if len(band_cameras) != 3:
+            raise ValueError("--band-cameras must contain three camera ids")
+        owner, first_seam, second_seam = three_band_owner(
+            adjusted, valid, warped_semantic, band_cameras,
+            args.seam_max_step, args.seam_smoothness)
+        fallback = geometric_owner(valid, cost)
+        owner[owner < 0] = fallback[owner < 0]
+        graph_masks = None
+    else:
+        owner, graph_masks = graphcut_owner(adjusted, valid, cost)
     owner, protected, semantic_stats = regularize_semantic_owner(
         owner, warped_semantic, valid, cost,
         close_px=args.semantic_close, dilate_px=args.semantic_dilate,
         max_component_fraction=0.35)
-    if args.anchor_authority:
+    if args.composition == "anchor" or (
+            args.composition == "graphcut" and args.anchor_authority):
         owner = enforce_anchor_authority(owner, valid[anchor], anchor)
     black = np.zeros((*owner.shape, 3), np.float32)
     no_background = np.zeros(owner.shape, bool)
@@ -346,6 +470,7 @@ def render(args):
         "blend_transition_fraction": float(transition.mean()),
         "blend_gated_fraction": float(gated_out.mean()),
         "semantic_ownership": semantic_stats,
+        "composition": args.composition,
         "pairs": {
             str(camera): _serializable_report(values["report"])
             for camera, values in camera_models.items()
@@ -414,6 +539,12 @@ def main():
     parser.add_argument(
         "--anchor-authority", action=argparse.BooleanOptionalAction,
         default=True)
+    parser.add_argument(
+        "--composition", choices=("three-band", "anchor", "graphcut"),
+        default="three-band")
+    parser.add_argument("--band-cameras", default="1,3,5")
+    parser.add_argument("--seam-max-step", type=int, default=6)
+    parser.add_argument("--seam-smoothness", type=float, default=0.03)
     args = parser.parse_args()
     render(args)
 
