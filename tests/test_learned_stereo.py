@@ -8,7 +8,9 @@ import numpy as np
 from src.rig.learned_stereo import (
     camera_matrix_from_fov,
     combine_instance_masks,
+    estimate_depth_scale,
     pose_guided_foreground_mask,
+    rectified_camera_points,
     rectified_world_points,
     rectify_learned_pair,
     regularize_component_disparity,
@@ -54,6 +56,38 @@ class LearnedStereoTest(unittest.TestCase):
         self.assertGreater(float(points[height // 2, width // 2, 2]), 0.0)
         self.assertAlmostEqual(
             float(points[height // 2, width // 2, 2]), 0.4, places=2)
+
+    def test_rectified_depth_scale_scales_about_left_camera(self):
+        width, height = 80, 60
+        K = camera_matrix_from_fov(width, height, np.pi / 2, np.pi / 2)
+        left = np.eye(4)
+        right = np.eye(4)
+        right[0, 3] = 0.1
+        rect = rectify_learned_pair(K, K, left, right, (width, height))
+        points, valid = rectified_camera_points(
+            np.full((height, width), 10.0, np.float32), rect,
+            depth_scale=2.5)
+        self.assertTrue(valid.all())
+        self.assertAlmostEqual(
+            float(points[height // 2, width // 2, 2]), 1.0, places=2)
+
+    def test_depth_scale_is_robust_to_outliers(self):
+        stereo = np.linspace(1.0, 4.0, 1000, dtype=np.float32)
+        reference = stereo * 2.5
+        reference[:25] *= 4.0
+        estimate = estimate_depth_scale(
+            stereo, reference, min_samples=100)
+        self.assertAlmostEqual(estimate.scale, 2.5, places=5)
+        self.assertEqual(estimate.sample_count, 1000)
+        self.assertLess(estimate.median_relative_error, 1e-5)
+        self.assertLess(estimate.p90_relative_error, 1e-5)
+
+    def test_depth_scale_rejects_too_few_samples(self):
+        estimate = estimate_depth_scale(
+            np.ones((4, 4)), np.full((4, 4), 2.0), min_samples=32)
+        self.assertEqual(estimate.scale, 1.0)
+        self.assertEqual(estimate.sample_count, 16)
+        self.assertTrue(np.isinf(estimate.p90_relative_error))
 
     def test_temporal_change_rejects_static_pixels(self):
         background = np.zeros((12, 16, 3), np.float32)

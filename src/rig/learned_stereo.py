@@ -34,6 +34,14 @@ class EquirectangularLayer:
     source: np.ndarray
 
 
+@dataclass(frozen=True)
+class DepthScaleEstimate:
+    scale: float
+    sample_count: int
+    median_relative_error: float
+    p90_relative_error: float
+
+
 def camera_matrix_from_fov(width, height, fov_x, fov_y):
     """Centered pinhole matrix matching a learned Self-Cali camera."""
     width, height = int(width), int(height)
@@ -108,6 +116,44 @@ def combine_instance_masks(masks, classes, image_shape, class_ids=(0,),
     if not selected.any():
         return np.zeros((height, width), bool)
     return np.any(masks[selected] >= float(threshold), axis=0)
+
+
+def estimate_depth_scale(stereo_depth, reference_depth, mask=None,
+                         min_samples=256, ratio_limits=(0.05, 20.0)):
+    """Robustly align stereo depth to a learned-scene depth coordinate."""
+    stereo_depth = np.asarray(stereo_depth, np.float32)
+    reference_depth = np.asarray(reference_depth, np.float32)
+    if stereo_depth.shape != reference_depth.shape:
+        raise ValueError("stereo and reference depth shapes differ")
+    valid = (
+        np.isfinite(stereo_depth) & np.isfinite(reference_depth)
+        & (stereo_depth > 1e-6) & (reference_depth > 1e-6)
+    )
+    if mask is not None:
+        mask = np.asarray(mask, bool)
+        if mask.shape != valid.shape:
+            raise ValueError("depth scale mask has the wrong shape")
+        valid &= mask
+    ratio = reference_depth[valid] / stereo_depth[valid]
+    lower, upper = (float(value) for value in ratio_limits)
+    ratio = ratio[np.isfinite(ratio) & (ratio >= lower) & (ratio <= upper)]
+    sample_count = int(ratio.size)
+    if sample_count < int(min_samples):
+        return DepthScaleEstimate(1.0, sample_count, float("inf"),
+                                  float("inf"))
+    scale = float(np.median(ratio))
+    stereo = stereo_depth[valid]
+    reference = reference_depth[valid]
+    retained = np.isfinite(reference / stereo) \
+        & (reference / stereo >= lower) & (reference / stereo <= upper)
+    relative_error = np.abs(scale * stereo[retained] - reference[retained]) \
+        / reference[retained]
+    return DepthScaleEstimate(
+        scale=scale,
+        sample_count=sample_count,
+        median_relative_error=float(np.median(relative_error)),
+        p90_relative_error=float(np.percentile(relative_error, 90.0)),
+    )
 
 
 def pose_guided_foreground_mask(image, boxes, keypoints=None, residual=None,
@@ -304,26 +350,40 @@ def rectify_learned_pair(K_left, K_right, left_camera_to_world,
         baseline=baseline)
 
 
-def rectified_world_points(disparity, rectification, mask=None,
-                           min_disparity=0.5):
-    """Turn left-view disparity into dense world points and validity."""
+def rectified_camera_points(disparity, rectification, depth_scale=1.0,
+                            min_disparity=0.5):
+    """Turn disparity into points in the original left-camera frame."""
     import cv2
 
     disparity = np.asarray(disparity, np.float32)
     points_rectified = cv2.reprojectImageTo3D(
         disparity, np.asarray(rectification.Q, np.float32))
-    points_left = points_rectified @ np.asarray(
-        rectification.R1, np.float32)
+    with np.errstate(invalid="ignore"):
+        points_left = points_rectified @ np.asarray(
+            rectification.R1, np.float32)
+    points_left *= float(depth_scale)
+    valid = (
+        (disparity > float(min_disparity))
+        & np.isfinite(points_left).all(axis=2)
+        & (points_rectified[..., 2] > 0.0)
+        & (points_left[..., 2] > 0.0)
+    )
+    return points_left.astype(np.float32), valid
+
+
+def rectified_world_points(disparity, rectification, mask=None,
+                           min_disparity=0.5, depth_scale=1.0):
+    """Turn left-view disparity into dense world points and validity."""
+    points_left, valid = rectified_camera_points(
+        disparity, rectification, depth_scale=depth_scale,
+        min_disparity=min_disparity)
     rotation = np.asarray(
         rectification.left_camera_to_world[:3, :3], np.float32)
     translation = np.asarray(
         rectification.left_camera_to_world[:3, 3], np.float32)
-    points_world = points_left @ rotation.T + translation
-    valid = (
-        (disparity > float(min_disparity))
-        & np.isfinite(points_world).all(axis=2)
-        & (points_rectified[..., 2] > 0.0)
-    )
+    with np.errstate(invalid="ignore"):
+        points_world = points_left @ rotation.T + translation
+    valid &= np.isfinite(points_world).all(axis=2)
     if mask is not None:
         valid &= np.asarray(mask, bool)
     return points_world.astype(np.float32), valid

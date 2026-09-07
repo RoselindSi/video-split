@@ -35,7 +35,9 @@ from src.rig.dynamic_panorama import (
 from src.rig.learned_stereo import (
     camera_matrix_from_fov,
     combine_instance_masks,
+    estimate_depth_scale,
     pose_guided_foreground_mask,
+    rectified_camera_points,
     rectified_world_points,
     rectify_learned_pair,
     regularize_component_disparity,
@@ -312,7 +314,8 @@ def warp_current_sources(world_points, world_valid, cameras, gaussians,
     homogeneous = torch.cat(
         [points, torch.ones((height, width, 1), device=points.device)],
         dim=-1)
-    warped, valid, cost, foreground, native_foreground = {}, {}, {}, {}, {}
+    warped, valid, cost, foreground = {}, {}, {}, {}
+    native_foreground, native_depth, native_alpha = {}, {}, {}
     with torch.no_grad():
         for index, camera in enumerate(cameras):
             world_view = camera.get_world_view_transform(
@@ -384,15 +387,19 @@ def warp_current_sources(world_points, world_valid, cameras, gaussians,
             native_foreground[index] = (
                 source_difference[0] >= foreground_threshold
             ).cpu().numpy()
-    return warped, valid, cost, foreground, native_foreground
+            native_depth[index] = source_depth[0].cpu().numpy()
+            native_alpha[index] = source_alpha[0].cpu().numpy()
+    return (warped, valid, cost, foreground, native_foreground,
+            native_depth, native_alpha)
 
 
 def stereo_foreground_layer(
         cameras, native_foreground, temporal_foreground,
-        semantic_foreground, center,
+        semantic_foreground, native_depth, native_alpha, center,
         rig_camera_to_world, preferred_source,
         height, width, model_path, alignment, cuda_lib_dir=None,
-        cudnn_lib_dir=None, splat_radius=1):
+        cudnn_lib_dir=None, splat_radius=1, scale_min_samples=2048,
+        scale_max_p90=0.35):
     """Depth-place both colour views from each physical stereo pair."""
     import cv2
 
@@ -482,6 +489,39 @@ def stereo_foreground_layer(
             foreground_right_rectified.astype(np.uint8), right_x, yy,
             cv2.INTER_NEAREST, borderMode=cv2.BORDER_CONSTANT) > 0
         combined_foreground = foreground_rectified | right_foreground_in_left
+        static_points, static_stereo_valid = rectified_camera_points(
+            raw_disparity, rectification)
+        learned_depth = cv2.resize(
+            native_depth[left_index], rectified_size,
+            interpolation=cv2.INTER_LINEAR)
+        learned_alpha = cv2.resize(
+            native_alpha[left_index], rectified_size,
+            interpolation=cv2.INTER_LINEAR)
+        learned_depth = cv2.remap(
+            learned_depth, *rectification.map_left, cv2.INTER_LINEAR,
+            borderMode=cv2.BORDER_CONSTANT)
+        learned_alpha = cv2.remap(
+            learned_alpha, *rectification.map_left, cv2.INTER_LINEAR,
+            borderMode=cv2.BORDER_CONSTANT)
+        gray = cv2.cvtColor(left_rectified, cv2.COLOR_RGB2GRAY)
+        gradient = cv2.magnitude(
+            cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=3),
+            cv2.Sobel(gray, cv2.CV_32F, 0, 1, ksize=3))
+        static_support = (
+            static_stereo_valid & (learned_alpha > 0.50)
+            & ~combined_foreground
+        )
+        if static_support.any():
+            texture_threshold = float(np.median(gradient[static_support]))
+            static_support &= gradient >= max(texture_threshold, 1.0)
+        scale_estimate = estimate_depth_scale(
+            static_points[..., 2], learned_depth, mask=static_support,
+            min_samples=scale_min_samples)
+        scale_applied = (
+            scale_estimate.sample_count >= int(scale_min_samples)
+            and scale_estimate.p90_relative_error <= float(scale_max_p90)
+        )
+        depth_scale = scale_estimate.scale if scale_applied else 1.0
         disparity, combined_foreground, component_count = \
             regularize_component_disparity(
                 raw_disparity, combined_foreground, min_component_px=24)
@@ -501,7 +541,8 @@ def stereo_foreground_layer(
             borderMode=cv2.BORDER_CONSTANT)
         points, point_valid = rectified_world_points(
             disparity, rectification,
-            mask=combined_foreground & left_support)
+            mask=combined_foreground & left_support,
+            depth_scale=depth_scale)
         layers.append((
             left_index, points, left_rectified,
             point_valid & foreground_rectified))
@@ -514,6 +555,19 @@ def stereo_foreground_layer(
                 [left_width, left_height], [right_width, right_height]],
             "rectified_size": list(rectified_size),
             "baseline_learned_units": rectification.baseline,
+            "depth_scale_fit": {
+                "scale": scale_estimate.scale,
+                "sample_count": scale_estimate.sample_count,
+                "median_relative_error": (
+                    scale_estimate.median_relative_error
+                    if np.isfinite(scale_estimate.median_relative_error)
+                    else None),
+                "p90_relative_error": (
+                    scale_estimate.p90_relative_error
+                    if np.isfinite(scale_estimate.p90_relative_error)
+                    else None),
+                "applied": scale_applied,
+            },
             "static_residual_fraction": float(
                 native_foreground[left_index].mean()),
             "right_static_residual_fraction": float(
@@ -538,6 +592,8 @@ def stereo_foreground_layer(
         "providers": model.providers,
         "pairs": pair_stats,
         "layer_fraction": float(layer.valid.mean()),
+        "scale_min_samples": int(scale_min_samples),
+        "scale_max_p90_relative_error": float(scale_max_p90),
     }
 
 
@@ -586,6 +642,8 @@ def main():
     parser.add_argument("--stereo-cuda-lib-dir")
     parser.add_argument("--stereo-cudnn-lib-dir")
     parser.add_argument("--stereo-splat-radius", type=int, default=1)
+    parser.add_argument("--stereo-scale-min-samples", type=int, default=2048)
+    parser.add_argument("--stereo-scale-max-p90", type=float, default=0.35)
     parser.add_argument("--temporal-threshold", type=float, default=24.0)
     parser.add_argument("--stereo-replacement-coverage", type=float,
                         default=0.75)
@@ -662,10 +720,11 @@ def main():
     world_points, _ = compose_equirectangular(
         face_world, face_alpha, erp_height, args.erp_width, args.face_fov)
     world_valid = alpha[0] > 0.05
-    warped, valid, cost, foreground, native_foreground = warp_current_sources(
-        world_points, world_valid, source_cameras, gaussians, pipeline,
-        background, shift, scene.loaded_iter, alignment,
-        args.foreground_threshold / 255.0)
+    (warped, valid, cost, foreground, native_foreground,
+     native_depth, native_alpha) = warp_current_sources(
+         world_points, world_valid, source_cameras, gaussians, pipeline,
+         background, shift, scene.loaded_iter, alignment,
+         args.foreground_threshold / 255.0)
     learned_background = panorama.permute(1, 2, 0).cpu().numpy()
     learned_valid = world_valid.cpu().numpy()
     base_owner = geometric_owner(valid, cost)
@@ -724,12 +783,14 @@ def main():
             args.temporal_threshold / 255.0)
         stereo_layer, stereo_stats = stereo_foreground_layer(
             source_cameras, native_foreground, temporal_foreground,
-            semantic_foreground, actual_center,
+            semantic_foreground, native_depth, native_alpha, actual_center,
             panorama_camera_to_world[:3, :3], owner,
             erp_height, args.erp_width, args.stereo_model, alignment,
             cuda_lib_dir=args.stereo_cuda_lib_dir,
             cudnn_lib_dir=args.stereo_cudnn_lib_dir,
-            splat_radius=args.stereo_splat_radius)
+            splat_radius=args.stereo_splat_radius,
+            scale_min_samples=args.stereo_scale_min_samples,
+            scale_max_p90=args.stereo_scale_max_p90)
         learned_range = np.linalg.norm(
             world_points.permute(1, 2, 0).cpu().numpy()
             - actual_center, axis=2)
