@@ -360,7 +360,30 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
             # faces and foreign hands covered. No boxes, no scores, no panel:
             # an auditor asked to find what the system MISSED must not be
             # shown what it believes, or they will only check its work.
-            frame_hook(k, clean, sup)
+            #
+            # `info` carries what the pipeline believed, for the OTHER job.
+            # Attribution is not detection: once a person has named a frame as
+            # wrong, the question becomes which stage lost it, and answering
+            # that needs the boxes the audit deliberately withheld. A hook
+            # that wants only the pictures ignores the third argument.
+            try:
+                frame_hook(k, clean, sup, {
+                    "frame": start + k * stride,
+                    "dets": [{"box": [int(v) for v in d["box"]],
+                              "conf": float(d.get("conf", 1.0))}
+                             for d in dets],
+                    "raw_dets": [{"box": [int(v) for v in d["box"]],
+                                  "conf": float(d.get("conf", 1.0))}
+                                 for d in raw_dets],
+                    "own": [bool(o) for o, _ in flags],
+                    "p_owner": [round(float(p), 3) for _, p in flags],
+                    "faces": [[int(v) for v in f[:4]] for f in faces]
+                              if fdet is not None else [],
+                    "oth_px": int(m_oth.sum()),
+                    "own_px": int(m_own.sum()),
+                    "veto_px": int((m_oth & m_own).sum())})
+            except TypeError:
+                frame_hook(k, clean, sup)
         if trace is not None:
             # Every quantity between "a hand was called foreign" and "pixels
             # were suppressed", so a frame where the cover drops can be
