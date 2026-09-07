@@ -20,6 +20,7 @@ from src.rig.segmented_panorama import (
     content_segments,
     enforce_anchor_authority,
     minimum_vertical_seam,
+    overlay_dense_anchor_warp,
     three_band_owner,
 )
 
@@ -208,6 +209,29 @@ class MultiHomographyTest(unittest.TestCase):
             self.assertEqual(changes, 2)
             self.assertEqual(int(owner[row, 0]), 1)
             self.assertEqual(int(owner[row, -1]), 5)
+
+    def test_dense_refine_never_warps_protected_content(self):
+        source = np.zeros((8, 10, 3), np.uint8)
+        source[:] = (20, 80, 160)
+        global_image = np.zeros_like(source)
+        global_valid = np.ones(source.shape[:2], bool)
+        yy, xx = np.indices(source.shape[:2])
+        mapping = np.stack((
+            2.0 * (xx + 0.5) / source.shape[1] - 1.0,
+            2.0 * (yy + 0.5) / source.shape[0] - 1.0,
+        ), axis=-1).astype(np.float32)
+        protected = np.zeros(source.shape[:2], bool)
+        protected[2:6, 3:7] = True
+        result, valid, fraction = overlay_dense_anchor_warp(
+            global_image, global_valid, source, protected,
+            np.zeros_like(protected), mapping,
+            np.ones(source.shape[:2], np.float32), np.eye(3),
+            (source.shape[1], source.shape[0]),
+            certainty_floor=0.1, certainty_feather=0.1)
+        self.assertTrue(np.all(result[protected] == 0))
+        self.assertTrue(np.all(result[~protected] == (20, 80, 160)))
+        self.assertTrue(valid.all())
+        self.assertGreater(fraction, 0.4)
 
 
 if __name__ == "__main__":

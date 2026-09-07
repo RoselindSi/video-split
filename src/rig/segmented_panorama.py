@@ -252,6 +252,63 @@ def three_band_owner(images, valid, protected, cameras=(1, 3, 5),
     return owner, first_seam, second_seam
 
 
+def overlay_dense_anchor_warp(
+        global_image, global_valid, source_image, source_protected,
+        anchor_protected, anchor_to_source, certainty, canvas_transform,
+        canvas_size, certainty_floor=0.08, certainty_feather=0.08):
+    """Refine static overlap in anchor coordinates with dense matches."""
+    import cv2
+
+    global_image = np.asarray(global_image).copy()
+    global_valid = np.asarray(global_valid, bool).copy()
+    source_image = np.asarray(source_image)
+    source_protected = np.asarray(source_protected, bool)
+    anchor_protected = np.asarray(anchor_protected, bool)
+    mapping = np.asarray(anchor_to_source, np.float32)
+    certainty = np.asarray(certainty, np.float32)
+    if mapping.shape[:2] != anchor_protected.shape or \
+            mapping.shape[2:] != (2,) or certainty.shape != anchor_protected.shape:
+        raise ValueError("dense mapping must match the anchor image shape")
+    source_height, source_width = source_image.shape[:2]
+    # Tiny RoMa/grid_sample use pixel-centre normalized coordinates. OpenCV
+    # remap uses integer pixel centres, hence the half-pixel conversion.
+    map_x = source_width / 2.0 * (mapping[..., 0] + 1.0) - 0.5
+    map_y = source_height / 2.0 * (mapping[..., 1] + 1.0) - 0.5
+    inside = (
+        np.isfinite(map_x) & np.isfinite(map_y)
+        & (map_x >= 0.0) & (map_x <= source_width - 1)
+        & (map_y >= 0.0) & (map_y <= source_height - 1)
+    )
+    dense_image = cv2.remap(
+        source_image, map_x, map_y, cv2.INTER_LINEAR,
+        borderMode=cv2.BORDER_CONSTANT)
+    dense_protected = cv2.remap(
+        source_protected.astype(np.uint8), map_x, map_y, cv2.INTER_NEAREST,
+        borderMode=cv2.BORDER_CONSTANT) > 0
+    feather = max(float(certainty_feather), 1e-6)
+    alpha = np.clip(
+        (certainty - float(certainty_floor)) / feather, 0.0, 1.0)
+    alpha *= inside & ~dense_protected & ~anchor_protected
+    width, height = (int(value) for value in canvas_size)
+    dense_canvas = cv2.warpPerspective(
+        dense_image, np.asarray(canvas_transform, np.float64),
+        (width, height), flags=cv2.INTER_LINEAR,
+        borderMode=cv2.BORDER_CONSTANT)
+    alpha_canvas = cv2.warpPerspective(
+        alpha.astype(np.float32), np.asarray(canvas_transform, np.float64),
+        (width, height), flags=cv2.INTER_LINEAR,
+        borderMode=cv2.BORDER_CONSTANT)
+    selected = alpha_canvas > 1e-4
+    blend = alpha_canvas[..., None]
+    global_image[selected] = np.clip(
+        global_image[selected].astype(np.float32)
+        * (1.0 - blend[selected])
+        + dense_canvas[selected].astype(np.float32) * blend[selected],
+        0, 255).astype(global_image.dtype)
+    global_valid[selected] = True
+    return global_image, global_valid, float(selected.mean())
+
+
 def crop_valid(images, arrays, valid, margin=0):
     """Crop a common bounding box around all visible source pixels."""
     union = np.logical_or.reduce([np.asarray(value, bool)
@@ -365,11 +422,20 @@ def render(args):
                 segments, model_map, homographies, fallback_index=0,
                 max_delta_px=args.max_local_delta,
                 max_relative_span=args.max_local_span)
+            reverse_warp = reverse_certainty = None
+            if args.dense_refine:
+                reverse_warp_tensor, reverse_certainty_tensor = matcher.match(
+                    os.fspath(paths[anchor]), os.fspath(paths[camera]))
+                reverse_warp = reverse_warp_tensor[..., 2:].detach().cpu().numpy()
+                reverse_certainty = \
+                    reverse_certainty_tensor.detach().cpu().numpy()
             camera_models[camera] = {
                 "homographies": homographies,
                 "model_map": model_map,
                 "report": report,
                 "stable_affine_inliers": int(stable_inliers.sum()),
+                "anchor_to_source": reverse_warp,
+                "dense_certainty": reverse_certainty,
             }
             print(
                 f"cam{camera}->cam{anchor}: "
@@ -389,6 +455,7 @@ def render(args):
         max_size=(args.max_canvas_width, args.max_canvas_height))
 
     warped, valid, warped_semantic = {}, {}, {}
+    dense_fractions = {}
     for camera, values in camera_models.items():
         warped[camera], valid[camera] = segmented_warp(
             images[camera], values["model_map"], values["homographies"],
@@ -398,6 +465,14 @@ def render(args):
             values["model_map"], values["homographies"],
             canvas_transform, canvas_size, interpolation=cv2.INTER_NEAREST)
         warped_semantic[camera] = semantic_image > 127
+        if values.get("anchor_to_source") is not None:
+            warped[camera], valid[camera], dense_fractions[camera] = \
+                overlay_dense_anchor_warp(
+                    warped[camera], valid[camera], images[camera],
+                    semantic[camera], semantic[anchor],
+                    values["anchor_to_source"], values["dense_certainty"],
+                    canvas_transform, canvas_size,
+                    args.dense_certainty, args.dense_feather)
 
     adjusted = exposure_compensate(warped, valid)
     cost = {}
@@ -469,6 +544,7 @@ def render(args):
         "protected_fraction": float(protected.mean()),
         "blend_transition_fraction": float(transition.mean()),
         "blend_gated_fraction": float(gated_out.mean()),
+        "dense_refine_fraction": dense_fractions,
         "semantic_ownership": semantic_stats,
         "composition": args.composition,
         "pairs": {
@@ -545,6 +621,10 @@ def main():
     parser.add_argument("--band-cameras", default="1,3,5")
     parser.add_argument("--seam-max-step", type=int, default=6)
     parser.add_argument("--seam-smoothness", type=float, default=0.03)
+    parser.add_argument(
+        "--dense-refine", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--dense-certainty", type=float, default=0.08)
+    parser.add_argument("--dense-feather", type=float, default=0.08)
     args = parser.parse_args()
     render(args)
 
