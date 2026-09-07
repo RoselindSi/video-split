@@ -15,7 +15,11 @@ from src.rig.multi_homography import (
     static_correspondence_mask,
     transformed_support_points,
 )
-from src.rig.segmented_panorama import canvas_from_footprints, content_segments
+from src.rig.segmented_panorama import (
+    canvas_from_footprints,
+    content_segments,
+    enforce_anchor_authority,
+)
 
 
 class MultiHomographyTest(unittest.TestCase):
@@ -171,6 +175,14 @@ class MultiHomographyTest(unittest.TestCase):
         self.assertGreaterEqual(size[1], 70)
         np.testing.assert_allclose(transform[:2, 2], [80, 10], atol=2)
         self.assertEqual(stats["size"], list(size))
+
+    def test_anchor_authority_removes_every_internal_camera_seam(self):
+        owner = np.ones((12, 20), np.int16)
+        anchor_valid = np.zeros((12, 20), bool)
+        anchor_valid[2:10, 4:16] = True
+        result = enforce_anchor_authority(owner, anchor_valid, anchor=3)
+        self.assertTrue(np.all(result[anchor_valid] == 3))
+        self.assertTrue(np.all(result[~anchor_valid] == 1))
 
 
 if __name__ == "__main__":

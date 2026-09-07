@@ -130,6 +130,16 @@ def graphcut_owner(images, valid, cost):
     return owner, cut_valid
 
 
+def enforce_anchor_authority(owner, anchor_valid, anchor):
+    """Keep the anchor's complete raw view free of internal camera seams."""
+    owner = np.asarray(owner, np.int16).copy()
+    anchor_valid = np.asarray(anchor_valid, bool)
+    if owner.shape != anchor_valid.shape:
+        raise ValueError("owner and anchor validity shapes differ")
+    owner[anchor_valid] = int(anchor)
+    return owner
+
+
 def crop_valid(images, arrays, valid, margin=0):
     """Crop a common bounding box around all visible source pixels."""
     union = np.logical_or.reduce([np.asarray(value, bool)
@@ -288,6 +298,8 @@ def render(args):
         owner, warped_semantic, valid, cost,
         close_px=args.semantic_close, dilate_px=args.semantic_dilate,
         max_component_fraction=0.35)
+    if args.anchor_authority:
+        owner = enforce_anchor_authority(owner, valid[anchor], anchor)
     black = np.zeros((*owner.shape, 3), np.float32)
     no_background = np.zeros(owner.shape, bool)
     hard, _, _ = compose_single_source(
@@ -399,6 +411,9 @@ def main():
     parser.add_argument("--blend-width", type=int, default=3)
     parser.add_argument("--blend-gate", type=float, default=20.0)
     parser.add_argument("--blend-temperature", type=float, default=8.0)
+    parser.add_argument(
+        "--anchor-authority", action=argparse.BooleanOptionalAction,
+        default=True)
     args = parser.parse_args()
     render(args)
 
