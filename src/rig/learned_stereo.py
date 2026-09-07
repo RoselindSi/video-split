@@ -90,6 +90,26 @@ def temporal_change_mask(current, references, threshold=24.0 / 255.0):
     return difference >= float(threshold)
 
 
+def combine_instance_masks(masks, classes, image_shape, class_ids=(0,),
+                           threshold=0.5):
+    """Union selected, source-resolution instance masks by class."""
+    height, width = (int(value) for value in image_shape[:2])
+    if height <= 0 or width <= 0:
+        raise ValueError("image dimensions must be positive")
+    masks = np.asarray(masks, np.float32)
+    classes = np.asarray(classes).reshape(-1)
+    if masks.ndim != 3:
+        raise ValueError("masks must have shape [instances, height, width]")
+    if len(masks) != len(classes):
+        raise ValueError("masks and classes must contain the same instances")
+    if masks.shape[1:] != (height, width):
+        raise ValueError("instance masks must already match the source image")
+    selected = np.isin(classes.astype(np.int64), tuple(class_ids))
+    if not selected.any():
+        return np.zeros((height, width), bool)
+    return np.any(masks[selected] >= float(threshold), axis=0)
+
+
 def pose_guided_foreground_mask(image, boxes, keypoints=None, residual=None,
                                 keypoint_confidence=0.25):
     """Turn person boxes and pose limbs into conservative GrabCut masks."""

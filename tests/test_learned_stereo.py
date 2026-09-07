@@ -7,6 +7,7 @@ import numpy as np
 
 from src.rig.learned_stereo import (
     camera_matrix_from_fov,
+    combine_instance_masks,
     pose_guided_foreground_mask,
     rectified_world_points,
     rectify_learned_pair,
@@ -62,6 +63,22 @@ class LearnedStereoTest(unittest.TestCase):
             current, [background, background], threshold=0.2)
         self.assertEqual(int(changed.sum()), 30)
         self.assertTrue(changed[3:8, 5:11].all())
+
+    def test_instance_masks_keep_people_and_reject_other_classes(self):
+        masks = np.zeros((3, 8, 10), np.float32)
+        masks[0, 1:5, 2:6] = 0.9
+        masks[1, 4:7, 6:9] = 0.8
+        masks[2, 0:2, 0:2] = 0.95
+        combined = combine_instance_masks(
+            masks, [0, 0, 24], (8, 10), threshold=0.5)
+        self.assertTrue(combined[1:5, 2:6].all())
+        self.assertTrue(combined[4:7, 6:9].all())
+        self.assertFalse(combined[0, 0])
+
+    def test_instance_masks_require_source_resolution(self):
+        with self.assertRaisesRegex(ValueError, "match the source image"):
+            combine_instance_masks(
+                np.zeros((1, 4, 5), np.float32), [0], (8, 10))
 
     def test_pose_guided_mask_keeps_person_and_rejects_box_exterior(self):
         image = np.zeros((30, 40, 3), np.uint8)

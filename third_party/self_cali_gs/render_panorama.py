@@ -34,6 +34,7 @@ from src.rig.dynamic_panorama import (
 )
 from src.rig.learned_stereo import (
     camera_matrix_from_fov,
+    combine_instance_masks,
     pose_guided_foreground_mask,
     rectified_world_points,
     rectify_learned_pair,
@@ -93,7 +94,7 @@ def temporal_foreground_masks(scene, cameras, time_index, threshold,
     return masks
 
 
-def semantic_foreground_masks(cameras, model_path, residual, confidence=0.15):
+def pose_foreground_masks(cameras, model_path, residual, confidence=0.15):
     """Detect complete people and refine their boxes into source-view masks."""
     from ultralytics import YOLO
 
@@ -118,6 +119,42 @@ def semantic_foreground_masks(cameras, model_path, residual, confidence=0.15):
         stats.append({
             "camera": cameras[index].image_name,
             "people": len(boxes),
+            "mask_fraction": float(masks[index].mean()),
+        })
+    return masks, stats
+
+
+def segmentation_foreground_masks(cameras, model_path, confidence=0.15):
+    """Run instance segmentation and retain source-resolution person masks."""
+    from ultralytics import YOLO
+    from ultralytics.utils.ops import scale_masks
+
+    images = []
+    for camera in cameras:
+        image = camera.original_image.permute(1, 2, 0).cpu().numpy()
+        images.append(np.clip(image * 255.0, 0, 255).astype(np.uint8))
+    model = YOLO(model_path)
+    results = model.predict(
+        [image[..., ::-1] for image in images], conf=float(confidence),
+        verbose=False)
+    masks = {}
+    stats = []
+    for index, (image, result) in enumerate(zip(images, results)):
+        classes = (result.boxes.cls.detach().cpu().numpy()
+                   if result.boxes is not None else np.zeros(0))
+        if result.masks is None or not len(classes):
+            instance_masks = np.zeros((0, *image.shape[:2]), np.float32)
+        else:
+            scaled = scale_masks(
+                result.masks.data[:, None], image.shape[:2],
+                padding=True, mode="bilinear")[:, 0]
+            instance_masks = scaled.detach().cpu().numpy()
+        masks[index] = combine_instance_masks(
+            instance_masks, classes, image.shape[:2], class_ids=(0,))
+        stats.append({
+            "camera": cameras[index].image_name,
+            "instances": int(len(classes)),
+            "people": int(np.count_nonzero(classes.astype(np.int64) == 0)),
             "mask_fraction": float(masks[index].mean()),
         })
     return masks, stats
@@ -559,6 +596,8 @@ def main():
     parser.add_argument("--static-blend-gate", type=float, default=40.0)
     parser.add_argument("--pose-model")
     parser.add_argument("--pose-confidence", type=float, default=0.15)
+    parser.add_argument("--segment-model")
+    parser.add_argument("--segment-confidence", type=float, default=0.15)
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
     if args.erp_width % 2:
@@ -648,10 +687,18 @@ def main():
         for index, mask in native_foreground.items()
     }
     semantic_old = np.zeros(dynamic_mask.shape, bool)
-    if args.pose_model:
-        semantic_foreground, semantic_stats = semantic_foreground_masks(
+    semantic_method = None
+    if args.segment_model:
+        semantic_method = "instance-segmentation"
+        semantic_foreground, semantic_stats = segmentation_foreground_masks(
+            source_cameras, args.segment_model,
+            confidence=args.segment_confidence)
+    elif args.pose_model:
+        semantic_method = "pose-grabcut"
+        semantic_foreground, semantic_stats = pose_foreground_masks(
             source_cameras, args.pose_model, native_foreground,
             confidence=args.pose_confidence)
+    if semantic_method:
         warped_semantic = warp_native_masks(
             world_points, world_valid, source_cameras, alignment,
             semantic_foreground)
@@ -747,6 +794,11 @@ def main():
         stereo_mask_tensor, output / "stereo_foreground_mask.png")
     torchvision.utils.save_image(
         semantic_mask_tensor, output / "semantic_foreground_mask.png")
+    if semantic_method:
+        for index, mask in semantic_foreground.items():
+            source_mask = torch.from_numpy(mask.astype(np.float32))[None]
+            torchvision.utils.save_image(
+                source_mask, output / f"semantic_source_cam{index}.png")
 
     report = {
         "schema": "video-split.learned-panorama.v1",
@@ -779,11 +831,14 @@ def main():
             "gated_fraction": float(gated_transition.mean()),
         },
         "semantic_foreground": {
-            "model": args.pose_model,
-            "confidence": args.pose_confidence,
+            "method": semantic_method,
+            "model": args.segment_model or args.pose_model,
+            "confidence": (
+                args.segment_confidence if args.segment_model
+                else args.pose_confidence),
             "panorama_fraction": float(semantic_old.mean()),
             "sources": semantic_stats,
-        } if args.pose_model else None,
+        } if semantic_method else None,
         "source_valid_fraction": {
             source_cameras[index].image_name: float(mask.mean())
             for index, mask in valid.items()
