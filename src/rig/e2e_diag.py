@@ -57,6 +57,7 @@ b{color:#ffd33d}
 .ev.admission{border-left:5px solid #d83}
 .ev.ownership{border-left:5px solid #38d}
 .ev.mask{border-left:5px solid #8a3}
+.ev.veto{border-left:5px solid #a76fd0}
 .ev.unsure{border-left:5px solid #666}
 .imgs{display:flex;gap:8px}
 .imgs figure{margin:0;flex:1}
@@ -296,7 +297,7 @@ def main():
                               json.dumps({"tag": tag, "events": events})))
     print(f"\n  {len(events)} 个事件 -> {a.out} "
           f"({os.path.getsize(a.out) / 1e6:.1f} MB)")
-    print("  第三张图是原始画面加上全部候选：青色=进了管线的手，灰色=检测器"
+    print("  第三张图是原始画面加上全部候选：金黄=进了管线的手，灰色=检测器"
           "提出但没建轨迹，\n  洋红=脸，紫色 VETO=脸检测器提出了但被手部否决"
           "丢掉。手下方标 OWN/OTH 和 P(owner)。")
     print("  1 检测器没提出   2 提出了但没建轨迹   3 归属判错   "
