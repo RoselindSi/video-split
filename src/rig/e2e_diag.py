@@ -67,6 +67,9 @@ b{color:#ffd33d}
 .tag{background:#733;color:#fff;padding:1px 7px;border-radius:3px;
   font-size:11px;margin-left:6px}
 .num{color:#8ab4c8;font-family:ui-monospace,monospace;font-size:11px}
+.key{font-size:11px;color:#aaa}
+.key i{display:inline-block;width:10px;height:10px;border-radius:2px;
+  margin:0 4px 0 10px;vertical-align:-1px}
 </style>
 <div id=bar>
  <span id=prog></span>
@@ -76,6 +79,12 @@ b{color:#ffd33d}
    <b>6</b> 说不准
    &nbsp; <b>&uarr;&darr;</b> move &nbsp; <b>u</b> undo</span>
  <button onclick="dl()">download CSV</button>
+ <span class=key>第三张图：
+   <i style="background:#5aff5a"></i>OWN 判成自己的手
+   <i style="background:#28dcff"></i>OTH 判成别人的手
+   <i style="background:#828282"></i>没建轨迹
+   <i style="background:#ff78ff"></i>脸
+   <i style="background:#a03c78"></i>脸被手部否决</span>
 </div>
 <div id=list></div>
 <script>
@@ -241,32 +250,47 @@ def main():
             # admitted: an unadmitted box is the whole point of the
             # `admission` category and would be invisible if only `dets`
             # were drawn.
-            adm = {tuple(d["box"]) for d in info["dets"]}
+            # EVERYTHING IS DRAWN AT FULL RESOLUTION AND THEN SQUEEZED TO
+            # `a.width`. A 0.55 font on a frame four times wider than the
+            # panel arrives about three pixels tall, which is why the verdict
+            # was unreadable. Scale the annotation by the same factor the
+            # picture is about to shrink by, so it lands at a fixed size.
+            k = max(1.0, clean.shape[1] / float(a.width))
+            fs, th = 0.6 * k, max(2, int(round(2 * k)))
+            bt = max(2, int(round(2.5 * k)))
+
+            # OWNERSHIP IN THE COLOUR, NOT ONLY IN THE TEXT. Admitted-versus-
+            # not survives the change -- an unadmitted box has no ownership
+            # verdict to show and stays grey -- so this three-way encoding
+            # carries strictly more than the two-way one it replaces, and
+            # carries it at a glance rather than at reading distance.
+            OWN_C, OTH_C, GREY = (90, 255, 90), (255, 220, 40), (130, 130, 130)
+            verdict = {tuple(d["box"]): (o, p) for d, o, p in
+                       zip(info["dets"], info["own"], info["p_owner"])}
             for d in info["raw_dets"]:
                 t = tuple(d["box"])
                 x0, y0, x1, y1 = t
-                inn = t in adm
-                col = (60, 220, 255) if inn else (110, 110, 110)
-                cv2.rectangle(dbg, (x0, y0), (x1, y1), col, 3 if inn else 2)
-                cv2.putText(dbg, f"{d['conf']:.2f}", (x0, max(14, y0 - 5)),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.55, col, 2)
-            for i, (d, own, p) in enumerate(zip(info["dets"], info["own"],
-                                                info["p_owner"])):
-                x0, y0, x1, y1 = d["box"]
-                cv2.putText(dbg, f"{'OWN' if own else 'OTH'} {p:.2f}",
-                            (x0, min(dbg.shape[0] - 4, y1 + 20)),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.55,
-                            (90, 255, 140) if own else (90, 140, 255), 2)
+                v = verdict.get(t)
+                col = GREY if v is None else (OWN_C if v[0] else OTH_C)
+                cv2.rectangle(dbg, (x0, y0), (x1, y1), col,
+                              bt if v is not None else max(2, bt // 2))
+                # The confidence is what there is to say about a box with no
+                # verdict; where there is a verdict, the verdict is the point.
+                txt = (f"{d['conf']:.2f}" if v is None
+                       else f"{'OWN' if v[0] else 'OTH'} {v[1]:.2f}")
+                cv2.putText(dbg, txt, (x0, max(int(fs * 24), y0 - int(6 * k))),
+                            cv2.FONT_HERSHEY_SIMPLEX, fs, col, th)
             for x0, y0, x1, y1 in info["faces"]:
-                cv2.rectangle(dbg, (x0, y0), (x1, y1), (255, 120, 255), 3)
+                cv2.rectangle(dbg, (x0, y0), (x1, y1), (255, 120, 255), bt)
             # A face the detector DID propose and the hand veto threw away.
             # Drawn separately because the alternative -- not drawing it --
             # makes an uncovered face read as `detector never proposed` and
             # sends the fix to the wrong stage.
             for x0, y0, x1, y1 in info.get("faces_vetoed", []):
-                cv2.rectangle(dbg, (x0, y0), (x1, y1), (120, 60, 160), 3)
-                cv2.putText(dbg, "VETO", (x0, max(14, y0 - 5)),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.55, (150, 80, 200), 2)
+                cv2.rectangle(dbg, (x0, y0), (x1, y1), (120, 60, 160), bt)
+                cv2.putText(dbg, "VETO",
+                            (x0, max(int(fs * 24), y0 - int(6 * k))),
+                            cv2.FONT_HERSHEY_SIMPLEX, fs, (150, 80, 200), th)
             got[f] = {
                 "key": f"{rec}:{f}", "rec": rec, "frame": f,
                 "kinds": frames[f], "raw": b64(clean), "out": b64(out),
@@ -297,9 +321,10 @@ def main():
                               json.dumps({"tag": tag, "events": events})))
     print(f"\n  {len(events)} 个事件 -> {a.out} "
           f"({os.path.getsize(a.out) / 1e6:.1f} MB)")
-    print("  第三张图是原始画面加上全部候选：金黄=进了管线的手，灰色=检测器"
-          "提出但没建轨迹，\n  洋红=脸，紫色 VETO=脸检测器提出了但被手部否决"
-          "丢掉。手下方标 OWN/OTH 和 P(owner)。")
+    print("  第三张图是原始画面加上全部候选。手框的颜色就是归属判断："
+          "绿=判成自己的手，\n  蓝=判成别人的手，灰=检测器提出但没建轨迹（没有"
+          "归属可言）。洋红=脸，\n  紫色 VETO=脸检测器提出了但被手部否决丢掉。"
+          "框上的数字是平滑后的 P(owner)。")
     print("  1 检测器没提出   2 提出了但没建轨迹   3 归属判错   "
           "4 掩码没盖住   5 被手部否决   6 说不准")
 

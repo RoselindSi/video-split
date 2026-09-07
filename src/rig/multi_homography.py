@@ -357,6 +357,117 @@ def fit_stable_affine(source, target, threshold_px=4.0):
     return homography, inliers.reshape(-1).astype(bool)
 
 
+def regularized_match_map(
+        source_shape, target_shape, source, target, affine,
+        cell_px=32, smooth_sigma=1.0, max_correction_px=120.0,
+        hull_feather_px=48):
+    """Build a continuous target-to-source map from robust match residuals."""
+    import cv2
+    from scipy.interpolate import LinearNDInterpolator
+
+    source = _points(source, "source")
+    target = _points(target, "target")
+    if len(source) != len(target):
+        raise ValueError("source and target match counts differ")
+    source_height, source_width = (
+        int(value) for value in source_shape[:2])
+    target_height, target_width = (
+        int(value) for value in target_shape[:2])
+    affine = np.asarray(affine, np.float64)
+    if affine.shape != (3, 3):
+        raise ValueError("affine must be 3x3")
+    inverse = np.linalg.inv(affine)
+    baseline = cv2.perspectiveTransform(target[:, None], inverse)[:, 0]
+    residual = source - baseline
+    magnitude = np.linalg.norm(residual, axis=1)
+    in_frame = (
+        np.isfinite(target).all(axis=1)
+        & np.isfinite(residual).all(axis=1)
+        & (target[:, 0] >= 0) & (target[:, 0] < target_width)
+        & (target[:, 1] >= 0) & (target[:, 1] < target_height)
+    )
+    finite_magnitude = magnitude[in_frame]
+    if len(finite_magnitude) < 6:
+        raise ValueError("not enough finite matches for a continuous map")
+    median = float(np.median(finite_magnitude))
+    mad = float(np.median(np.abs(finite_magnitude - median)))
+    robust_limit = median + max(4.0 * 1.4826 * mad, 8.0)
+    limit = min(float(max_correction_px), robust_limit)
+    keep = in_frame & (magnitude <= limit)
+    if int(keep.sum()) < 6:
+        raise ValueError("not enough bounded matches for a continuous map")
+
+    cell_px = max(int(cell_px), 4)
+    cells = {}
+    for point, value in zip(target[keep], residual[keep]):
+        key = (int(point[1] // cell_px), int(point[0] // cell_px))
+        cells.setdefault(key, [[], []])
+        cells[key][0].append(point)
+        cells[key][1].append(value)
+    control_points = np.asarray([
+        np.median(values[0], axis=0) for values in cells.values()
+    ], np.float32)
+    control_residuals = np.asarray([
+        np.median(values[1], axis=0) for values in cells.values()
+    ], np.float32)
+    if len(control_points) < 6:
+        raise ValueError("not enough occupied mesh cells")
+
+    grid_x = np.unique(np.r_[
+        np.arange(0, target_width, cell_px), target_width - 1])
+    grid_y = np.unique(np.r_[
+        np.arange(0, target_height, cell_px), target_height - 1])
+    xx, yy = np.meshgrid(grid_x, grid_y)
+    queries = np.stack((xx.ravel(), yy.ravel()), axis=1)
+    interpolator = LinearNDInterpolator(
+        control_points, control_residuals, fill_value=np.nan)
+    coarse = np.asarray(interpolator(queries), np.float32).reshape(
+        len(grid_y), len(grid_x), 2)
+    coarse[~np.isfinite(coarse)] = 0.0
+    if float(smooth_sigma) > 0.0:
+        coarse = cv2.GaussianBlur(
+            coarse, (0, 0), sigmaX=float(smooth_sigma),
+            sigmaY=float(smooth_sigma))
+    correction = cv2.resize(
+        coarse, (target_width, target_height), interpolation=cv2.INTER_CUBIC)
+
+    hull = cv2.convexHull(control_points.astype(np.float32))
+    support = np.zeros((target_height, target_width), np.uint8)
+    cv2.fillConvexPoly(support, np.rint(hull).astype(np.int32), 1)
+    distance = cv2.distanceTransform(support, cv2.DIST_L2, 3)
+    feather = max(float(hull_feather_px), 1.0)
+    weight = np.clip(distance / feather, 0.0, 1.0)
+    correction *= weight[..., None]
+    correction_norm = np.linalg.norm(correction, axis=2)
+    scale = np.minimum(
+        1.0, float(max_correction_px) / np.maximum(correction_norm, 1e-6))
+    correction *= scale[..., None]
+
+    grid_columns, grid_rows = np.meshgrid(
+        np.arange(target_width, dtype=np.float32),
+        np.arange(target_height, dtype=np.float32))
+    target_grid = np.stack(
+        (grid_columns, grid_rows), axis=-1).reshape(-1, 1, 2)
+    base_map = cv2.perspectiveTransform(target_grid, inverse).reshape(
+        target_height, target_width, 2)
+    mapping = base_map + correction
+    inside = (
+        np.isfinite(mapping).all(axis=2)
+        & (mapping[..., 0] >= 0.0)
+        & (mapping[..., 0] <= source_width - 1)
+        & (mapping[..., 1] >= 0.0)
+        & (mapping[..., 1] <= source_height - 1)
+    )
+    active = (weight > 1e-4) & inside
+    return mapping.astype(np.float32), active, {
+        "input_matches": int(len(source)),
+        "bounded_matches": int(keep.sum()),
+        "control_points": int(len(control_points)),
+        "correction_limit_px": float(limit),
+        "active_fraction": float(active.mean()),
+    }
+
+
 def guard_segment_models(segments, model_map, homographies,
                          fallback_index=0, max_delta_px=180.0,
                          max_relative_span=2.5):

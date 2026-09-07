@@ -20,6 +20,7 @@ from src.rig.multi_homography import (
     assign_segments_to_models,
     fit_stable_affine,
     guard_segment_models,
+    regularized_match_map,
     segmented_warp,
     transformed_support_points,
 )
@@ -333,6 +334,37 @@ def compose_frequency_selective_blend(
     return output, transition
 
 
+def overlay_regularized_match_warp(
+        global_image, global_valid, source_image, mapping, active,
+        canvas_transform, canvas_size, interpolation=None):
+    """Replace an affine overlap with one continuous, bounded match warp."""
+    import cv2
+
+    global_image = np.asarray(global_image).copy()
+    global_valid = np.asarray(global_valid, bool).copy()
+    source_image = np.asarray(source_image)
+    mapping = np.asarray(mapping, np.float32)
+    active = np.asarray(active, bool)
+    if mapping.shape[:2] != active.shape or mapping.shape[2:] != (2,):
+        raise ValueError("mapping and active mask shapes differ")
+    if interpolation is None:
+        interpolation = cv2.INTER_LINEAR
+    remapped = cv2.remap(
+        source_image, mapping[..., 0], mapping[..., 1], interpolation,
+        borderMode=cv2.BORDER_CONSTANT)
+    width, height = (int(value) for value in canvas_size)
+    transform = np.asarray(canvas_transform, np.float64)
+    dense_canvas = cv2.warpPerspective(
+        remapped, transform, (width, height), flags=interpolation,
+        borderMode=cv2.BORDER_CONSTANT)
+    active_canvas = cv2.warpPerspective(
+        active.astype(np.uint8), transform, (width, height),
+        flags=cv2.INTER_NEAREST, borderMode=cv2.BORDER_CONSTANT) > 0
+    global_image[active_canvas] = dense_canvas[active_canvas]
+    global_valid[active_canvas] = True
+    return global_image, global_valid
+
+
 def overlay_dense_anchor_warp(
         global_image, global_valid, source_image, source_protected,
         anchor_protected, anchor_to_source, certainty, canvas_transform,
@@ -503,6 +535,23 @@ def render(args):
                 segments, model_map, homographies, fallback_index=0,
                 max_delta_px=args.max_local_delta,
                 max_relative_span=args.max_local_span)
+            mesh_mapping = mesh_active = mesh_report = None
+            if args.continuous_refine:
+                mesh_matches = report["labels"] >= 0
+                try:
+                    mesh_mapping, mesh_active, mesh_report = \
+                        regularized_match_map(
+                            images[camera].shape, images[anchor].shape,
+                            report["source"][mesh_matches],
+                            report["target"][mesh_matches], stable,
+                            cell_px=args.mesh_cell,
+                            smooth_sigma=args.mesh_smooth,
+                            max_correction_px=args.mesh_max_correction,
+                            hull_feather_px=args.mesh_feather)
+                except (ValueError, np.linalg.LinAlgError) as error:
+                    print(
+                        f"cam{camera}->cam{anchor}: "
+                        f"continuous refine skipped: {error}", flush=True)
             reverse_warp = reverse_certainty = None
             if args.dense_refine:
                 reverse_warp_tensor, reverse_certainty_tensor = matcher.match(
@@ -515,6 +564,9 @@ def render(args):
                 "model_map": model_map,
                 "report": report,
                 "stable_affine_inliers": int(stable_inliers.sum()),
+                "mesh_mapping": mesh_mapping,
+                "mesh_active": mesh_active,
+                "mesh_report": mesh_report,
                 "anchor_to_source": reverse_warp,
                 "dense_certainty": reverse_certainty,
             }
@@ -537,6 +589,7 @@ def render(args):
 
     warped, valid, warped_semantic = {}, {}, {}
     dense_fractions = {}
+    mesh_reports = {}
     for camera, values in camera_models.items():
         warped[camera], valid[camera] = segmented_warp(
             images[camera], values["model_map"], values["homographies"],
@@ -546,6 +599,19 @@ def render(args):
             values["model_map"], values["homographies"],
             canvas_transform, canvas_size, interpolation=cv2.INTER_NEAREST)
         warped_semantic[camera] = semantic_image > 127
+        if values.get("mesh_mapping") is not None:
+            warped[camera], valid[camera] = overlay_regularized_match_warp(
+                warped[camera], valid[camera], images[camera],
+                values["mesh_mapping"], values["mesh_active"],
+                canvas_transform, canvas_size)
+            semantic_image, _ = overlay_regularized_match_warp(
+                semantic_image, semantic_image > 127,
+                semantic[camera].astype(np.uint8) * 255,
+                values["mesh_mapping"], values["mesh_active"],
+                canvas_transform, canvas_size,
+                interpolation=cv2.INTER_NEAREST)
+            warped_semantic[camera] = semantic_image > 127
+            mesh_reports[camera] = values["mesh_report"]
         if values.get("anchor_to_source") is not None:
             warped[camera], valid[camera], dense_fractions[camera] = \
                 overlay_dense_anchor_warp(
@@ -638,6 +704,7 @@ def render(args):
         "frequency_transition_fraction": float(
             frequency_transition.mean()),
         "dense_refine_fraction": dense_fractions,
+        "continuous_refine": mesh_reports,
         "semantic_ownership": semantic_stats,
         "composition": args.composition,
         "pairs": {
@@ -718,9 +785,16 @@ def main():
     parser.add_argument("--seam-max-step", type=int, default=6)
     parser.add_argument("--seam-smoothness", type=float, default=0.03)
     parser.add_argument(
-        "--dense-refine", action=argparse.BooleanOptionalAction, default=True)
+        "--dense-refine", action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument("--dense-certainty", type=float, default=0.08)
     parser.add_argument("--dense-feather", type=float, default=0.08)
+    parser.add_argument(
+        "--continuous-refine", action=argparse.BooleanOptionalAction,
+        default=True)
+    parser.add_argument("--mesh-cell", type=int, default=32)
+    parser.add_argument("--mesh-smooth", type=float, default=1.0)
+    parser.add_argument("--mesh-max-correction", type=float, default=120.0)
+    parser.add_argument("--mesh-feather", type=float, default=48.0)
     args = parser.parse_args()
     render(args)
 

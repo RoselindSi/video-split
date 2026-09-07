@@ -11,6 +11,7 @@ from src.rig.multi_homography import (
     fit_piecewise_homographies,
     guard_segment_models,
     grid_coverage,
+    regularized_match_map,
     segmented_warp,
     static_correspondence_mask,
     transformed_support_points,
@@ -22,6 +23,7 @@ from src.rig.segmented_panorama import (
     enforce_anchor_authority,
     minimum_vertical_seam,
     overlay_dense_anchor_warp,
+    overlay_regularized_match_warp,
     three_band_owner,
 )
 
@@ -122,6 +124,21 @@ class MultiHomographyTest(unittest.TestCase):
         transform, inliers = fit_stable_affine(source, target, 0.5)
         self.assertGreater(int(inliers.sum()), 95)
         np.testing.assert_allclose(transform[2], [0, 0, 1])
+
+    def test_regularized_match_map_is_continuous_and_rejects_outlier(self):
+        yy, xx = np.meshgrid(
+            np.arange(6, 35, 7), np.arange(6, 55, 8), indexing="ij")
+        target = np.stack((xx.ravel(), yy.ravel()), axis=1).astype(np.float32)
+        source = target + np.asarray([4.0, -2.0], np.float32)
+        target = np.vstack((target, [[30.0, 20.0]])).astype(np.float32)
+        source = np.vstack((source, [[500.0, 500.0]])).astype(np.float32)
+        mapping, active, report = regularized_match_map(
+            (40, 60), (40, 60), source, target, np.eye(3),
+            cell_px=6, smooth_sigma=0.5, max_correction_px=20,
+            hull_feather_px=3)
+        np.testing.assert_allclose(mapping[20, 30], [34.0, 18.0], atol=0.75)
+        self.assertTrue(active[20, 30])
+        self.assertLess(report["bounded_matches"], report["input_matches"])
 
     def test_wild_local_model_falls_back_for_complete_segment(self):
         segments = np.zeros((20, 40), np.int16)
@@ -258,6 +275,21 @@ class MultiHomographyTest(unittest.TestCase):
         self.assertTrue(np.all(result[~protected] == (20, 80, 160)))
         self.assertTrue(valid.all())
         self.assertGreater(fraction, 0.4)
+
+    def test_regularized_overlay_replaces_only_active_pixels(self):
+        source = np.full((8, 10, 3), (20, 80, 160), np.uint8)
+        global_image = np.zeros_like(source)
+        global_valid = np.zeros(source.shape[:2], bool)
+        yy, xx = np.indices(source.shape[:2])
+        mapping = np.stack((xx, yy), axis=-1).astype(np.float32)
+        active = np.zeros(source.shape[:2], bool)
+        active[2:6, 3:7] = True
+        result, valid = overlay_regularized_match_warp(
+            global_image, global_valid, source, mapping, active,
+            np.eye(3), (source.shape[1], source.shape[0]))
+        self.assertTrue(np.all(result[active] == (20, 80, 160)))
+        self.assertTrue(np.all(result[~active] == 0))
+        np.testing.assert_array_equal(valid, active)
 
 
 if __name__ == "__main__":
