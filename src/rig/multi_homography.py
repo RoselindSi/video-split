@@ -277,7 +277,9 @@ def accepted_components(camera_count, pair_reports):
     return sorted(components, key=lambda values: (-len(values), values))
 
 
-def assign_segments_to_models(segments, points, labels, model_count):
+def assign_segments_to_models(segments, points, labels, model_count,
+                              default_model=None, min_votes=1,
+                              min_vote_fraction=0.0):
     """Assign each content segment one model without crossing its boundary."""
     segments = np.asarray(segments)
     if segments.ndim != 2:
@@ -301,9 +303,17 @@ def assign_segments_to_models(segments, points, labels, model_count):
     )
     np.add.at(votes, (segment_map[y[valid], x[valid]], labels[valid]), 1)
     assignment = np.argmax(votes, axis=1).astype(np.int16)
-    seeded = votes.sum(axis=1) > 0
+    totals = votes.sum(axis=1)
+    strongest = votes.max(axis=1)
+    seeded = (totals >= int(min_votes)) & (
+        strongest / np.maximum(totals, 1) >= float(min_vote_fraction))
     if not seeded.any():
-        return np.zeros(segments.shape, np.int16)
+        fill = 0 if default_model is None else int(default_model)
+        return np.full(segments.shape, fill, np.int16)
+
+    if default_model is not None:
+        assignment[~seeded] = int(default_model)
+        return assignment[segment_map]
 
     # Empty segments inherit the nearest seeded segment in source-image
     # coordinates. This extrapolates only across content regions and never
@@ -324,6 +334,74 @@ def assign_segments_to_models(segments, points, labels, model_count):
         )
         assignment[index] = assignment[seeded_indices[np.argmin(distance)]]
     return assignment[segment_map]
+
+
+def fit_stable_affine(source, target, threshold_px=4.0):
+    """Fit a non-projective fallback that remains finite outside overlap."""
+    import cv2
+
+    source = _points(source, "source")
+    target = _points(target, "target")
+    if len(source) != len(target):
+        raise ValueError("source and target match counts differ")
+    if len(source) < 3:
+        return None, np.zeros(len(source), bool)
+    affine, inliers = cv2.estimateAffine2D(
+        source, target, method=cv2.RANSAC,
+        ransacReprojThreshold=float(threshold_px), maxIters=10000,
+        confidence=0.999, refineIters=10)
+    if affine is None or inliers is None:
+        return None, np.zeros(len(source), bool)
+    homography = np.eye(3, dtype=np.float64)
+    homography[:2] = affine
+    return homography, inliers.reshape(-1).astype(bool)
+
+
+def guard_segment_models(segments, model_map, homographies,
+                         fallback_index=0, max_delta_px=180.0,
+                         max_relative_span=2.5):
+    """Reject local transforms that extrapolate wildly over one segment."""
+    import cv2
+
+    segments = np.asarray(segments)
+    model_map = np.asarray(model_map, np.int16).copy()
+    if segments.shape != model_map.shape or segments.ndim != 2:
+        raise ValueError("segments and model_map must share a 2D shape")
+    homographies = [np.asarray(value, np.float64) for value in homographies]
+    fallback_index = int(fallback_index)
+    fallback = homographies[fallback_index]
+    for segment in np.unique(segments):
+        selected = segments == segment
+        models, counts = np.unique(model_map[selected], return_counts=True)
+        model_index = int(models[np.argmax(counts)])
+        if model_index == fallback_index:
+            continue
+        rows, columns = np.nonzero(selected)
+        x0, x1 = float(columns.min()), float(columns.max())
+        y0, y1 = float(rows.min()), float(rows.max())
+        samples = np.asarray([
+            [x0, y0], [x1, y0], [x1, y1], [x0, y1],
+            [(x0 + x1) / 2.0, (y0 + y1) / 2.0],
+        ], np.float32)
+        local_points = cv2.perspectiveTransform(
+            samples[:, None], homographies[model_index])[:, 0]
+        fallback_points = cv2.perspectiveTransform(
+            samples[:, None], fallback)[:, 0]
+        finite = np.isfinite(local_points).all() and \
+            np.isfinite(fallback_points).all()
+        if finite:
+            delta = float(np.max(np.linalg.norm(
+                local_points - fallback_points, axis=1)))
+            local_span = np.ptp(local_points[:4], axis=0)
+            fallback_span = np.maximum(
+                np.ptp(fallback_points[:4], axis=0), 1.0)
+            span_ratio = local_span / fallback_span
+            finite = delta <= float(max_delta_px) and bool(np.all(
+                (span_ratio >= 1.0 / float(max_relative_span))
+                & (span_ratio <= float(max_relative_span))))
+        if not finite:
+            model_map[selected] = fallback_index
+    return model_map
 
 
 def transformed_support_points(model_map, homographies, step=24):

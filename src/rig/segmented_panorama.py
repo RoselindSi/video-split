@@ -18,6 +18,8 @@ from src.rig.multi_homography import (
     PairGeometryConfig,
     analyze_pair,
     assign_segments_to_models,
+    fit_stable_affine,
+    guard_segment_models,
     segmented_warp,
     transformed_support_points,
 )
@@ -223,19 +225,35 @@ def render(args):
             segments = content_segments(
                 images[camera], semantic[camera], args.segments,
                 args.compactness)
+            stable, stable_inliers = fit_stable_affine(
+                report["source"], report["target"],
+                threshold_px=args.affine_threshold)
+            if stable is None or int(stable_inliers.sum()) \
+                    < args.min_affine_inliers:
+                print(f"cam{camera}->cam{anchor}: no stable affine", flush=True)
+                continue
+            homographies = [stable] + [
+                model["homography"] for model in report["homographies"]]
             model_map = assign_segments_to_models(
-                segments, report["source"], report["labels"],
-                len(report["homographies"]))
+                segments, report["source"], report["labels"] + 1,
+                len(homographies), default_model=0,
+                min_votes=args.segment_min_votes,
+                min_vote_fraction=args.segment_vote_fraction)
+            model_map = guard_segment_models(
+                segments, model_map, homographies, fallback_index=0,
+                max_delta_px=args.max_local_delta,
+                max_relative_span=args.max_local_span)
             camera_models[camera] = {
-                "homographies": [model["homography"]
-                                 for model in report["homographies"]],
+                "homographies": homographies,
                 "model_map": model_map,
                 "report": report,
+                "stable_affine_inliers": int(stable_inliers.sum()),
             }
             print(
                 f"cam{camera}->cam{anchor}: "
                 f"H={report['explained_matches']} "
                 f"models={len(report['homographies'])} "
+                f"affine={int(stable_inliers.sum())} "
                 f"p90={report['piecewise_p90_px']:.2f}px", flush=True)
 
     if len(camera_models) < 3:
@@ -357,6 +375,12 @@ def main():
     parser.add_argument("--matches", type=int, default=5000)
     parser.add_argument("--segments", type=int, default=450)
     parser.add_argument("--compactness", type=float, default=10.0)
+    parser.add_argument("--affine-threshold", type=float, default=6.0)
+    parser.add_argument("--min-affine-inliers", type=int, default=100)
+    parser.add_argument("--segment-min-votes", type=int, default=4)
+    parser.add_argument("--segment-vote-fraction", type=float, default=0.55)
+    parser.add_argument("--max-local-delta", type=float, default=180.0)
+    parser.add_argument("--max-local-span", type=float, default=2.5)
     parser.add_argument("--min-certainty", type=float, default=0.05)
     parser.add_argument("--fundamental-threshold", type=float, default=2.0)
     parser.add_argument("--homography-threshold", type=float, default=3.0)

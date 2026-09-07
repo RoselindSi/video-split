@@ -7,7 +7,9 @@ from src.rig.multi_homography import (
     accepted_components,
     analyze_pair,
     assign_segments_to_models,
+    fit_stable_affine,
     fit_piecewise_homographies,
+    guard_segment_models,
     grid_coverage,
     segmented_warp,
     static_correspondence_mask,
@@ -92,6 +94,35 @@ class MultiHomographyTest(unittest.TestCase):
         self.assertEqual(np.unique(model_map[:, :6]).tolist(), [0])
         self.assertEqual(np.unique(model_map[:, 6:12]).size, 1)
         self.assertEqual(np.unique(model_map[:, 12:]).tolist(), [1])
+
+    def test_unmatched_segments_use_stable_default_model(self):
+        segments = np.zeros((12, 18), np.int16)
+        segments[:, 6:12] = 1
+        segments[:, 12:] = 2
+        points = np.array([[2, 2], [2, 4], [2, 6], [2, 8]], np.float32)
+        labels = np.ones(4, np.int16)
+        model_map = assign_segments_to_models(
+            segments, points, labels, 2, default_model=0, min_votes=4)
+        self.assertEqual(np.unique(model_map[:, :6]).tolist(), [1])
+        self.assertEqual(np.unique(model_map[:, 6:]).tolist(), [0])
+
+    def test_stable_affine_does_not_create_projective_extrapolation(self):
+        rng = np.random.default_rng(21)
+        source = rng.uniform([0, 0], [100, 60], (100, 2)).astype(np.float32)
+        target = source @ np.array([[1.1, 0.1], [-0.05, 0.9]]) \
+            + np.array([20, -7])
+        transform, inliers = fit_stable_affine(source, target, 0.5)
+        self.assertGreater(int(inliers.sum()), 95)
+        np.testing.assert_allclose(transform[2], [0, 0, 1])
+
+    def test_wild_local_model_falls_back_for_complete_segment(self):
+        segments = np.zeros((20, 40), np.int16)
+        segments[:, 20:] = 1
+        model_map = np.ones_like(segments)
+        local = np.array([[1, 0, 1000], [0, 1, 0], [0, 0, 1]], np.float64)
+        guarded = guard_segment_models(
+            segments, model_map, [np.eye(3), local], max_delta_px=100)
+        self.assertTrue(np.all(guarded == 0))
 
     def test_segmented_warp_preserves_single_source_colours(self):
         image = np.zeros((10, 20, 3), np.uint8)
