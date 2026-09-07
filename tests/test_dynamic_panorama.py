@@ -13,6 +13,7 @@ from src.rig.dynamic_panorama import (
     disagreement_mask,
     geometric_owner,
     regularize_dynamic_owner,
+    regularize_semantic_owner,
     regularize_spatial_owner,
 )
 
@@ -144,6 +145,42 @@ class DynamicPanoramaTest(unittest.TestCase):
         self.assertEqual(components, 1)
         self.assertTrue(accepted[dynamic].all())
         self.assertEqual(np.unique(owner[dynamic]).tolist(), [0])
+
+    def test_semantic_region_suppresses_displaced_second_view(self):
+        base = np.zeros((H, W), np.int16)
+        base[:, W // 2:] = 1
+        semantic = {
+            0: np.zeros((H, W), bool),
+            1: np.zeros((H, W), bool),
+        }
+        semantic[0][12:28, 25:39] = True
+        semantic[1][12:28, 41:55] = True
+        cost = _cost(2.0, 8.0)
+        owner, protected, stats = regularize_semantic_owner(
+            base, semantic, _valid(), cost, close_px=3, dilate_px=1,
+            min_component_px=8, max_component_fraction=0.5)
+        self.assertEqual(stats["components"], 1)
+        self.assertEqual(stats["source_regions"], {0: 1, 1: 0})
+        self.assertTrue(protected[20, 30:50].all())
+        self.assertTrue(np.all(owner[protected] == 0))
+
+    def test_semantic_winner_gaps_fall_back_instead_of_switching_view(self):
+        semantic = {
+            0: np.zeros((H, W), bool),
+            1: np.zeros((H, W), bool),
+        }
+        semantic[0][10:30, 25:45] = True
+        semantic[1][10:30, 35:55] = True
+        valid = _valid()
+        valid[0][15:20, 38:42] = False
+        cost = _cost(0.0, 30.0)
+        owner, protected, _ = regularize_semantic_owner(
+            geometric_owner(valid, cost), semantic, valid, cost,
+            close_px=0, dilate_px=0, min_component_px=8,
+            max_component_fraction=0.5)
+        self.assertTrue(protected[16, 39])
+        self.assertEqual(int(owner[16, 39]), -1)
+        self.assertFalse(np.any(owner[protected] == 1))
 
     def test_previous_owner_is_kept_within_switch_margin(self):
         dynamic = np.zeros((H, W), bool)

@@ -31,6 +31,7 @@ from src.rig.dynamic_panorama import (
     compose_gated_boundary_blend,
     compose_single_source,
     geometric_owner,
+    regularize_semantic_owner,
 )
 from src.rig.learned_stereo import (
     camera_matrix_from_fov,
@@ -656,6 +657,8 @@ def main():
     parser.add_argument("--pose-confidence", type=float, default=0.15)
     parser.add_argument("--segment-model")
     parser.add_argument("--segment-confidence", type=float, default=0.15)
+    parser.add_argument("--semantic-owner-close", type=int, default=12)
+    parser.add_argument("--semantic-owner-dilate", type=int, default=2)
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
     if args.erp_width % 2:
@@ -746,6 +749,7 @@ def main():
         for index, mask in native_foreground.items()
     }
     semantic_old = np.zeros(dynamic_mask.shape, bool)
+    semantic_owner_stats = None
     semantic_method = None
     if args.segment_model:
         semantic_method = "instance-segmentation"
@@ -761,8 +765,16 @@ def main():
         warped_semantic = warp_native_masks(
             world_points, world_valid, source_cameras, alignment,
             semantic_foreground)
-        for index, mask in warped_semantic.items():
-            semantic_old |= (owner == index) & mask
+        owner, semantic_old, semantic_owner_stats = \
+            regularize_semantic_owner(
+                owner, warped_semantic, valid, cost,
+                close_px=args.semantic_owner_close,
+                dilate_px=args.semantic_owner_dilate)
+        dynamic_image, current, fallback = compose_single_source(
+            warped, valid, owner, learned_background, learned_valid)
+        dynamic_stats["current_fraction"] = float(current.mean())
+        dynamic_stats["background_fallback_fraction"] = float(
+            fallback.mean())
     protected_mask = dynamic_mask | semantic_old
     seam_image, transition_mask, gated_transition = \
         compose_gated_boundary_blend(
@@ -899,6 +911,7 @@ def main():
                 else args.pose_confidence),
             "panorama_fraction": float(semantic_old.mean()),
             "sources": semantic_stats,
+            "ownership": semantic_owner_stats,
         } if semantic_method else None,
         "source_valid_fraction": {
             source_cameras[index].image_name: float(mask.mean())

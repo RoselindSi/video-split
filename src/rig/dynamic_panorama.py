@@ -235,6 +235,78 @@ def regularize_dynamic_owner(
     return owner, accepted, kept
 
 
+def regularize_semantic_owner(
+        base_owner, semantic, valid, cost, close_px=12, dilate_px=2,
+        min_component_px=24, max_component_fraction=0.25,
+        invalid_cost=90.0):
+    """Assign each semantic foreground region to one physical camera."""
+    import cv2
+
+    keys = sorted(semantic)
+    if not keys or keys != sorted(valid) or keys != sorted(cost):
+        raise ValueError(
+            "semantic, valid and cost must contain the same cameras")
+    owner = np.asarray(base_owner, np.int16).copy()
+    shape = owner.shape
+    native = {}
+    union = np.zeros(shape, bool)
+    for key in keys:
+        mask = np.asarray(semantic[key], bool)
+        if mask.shape != shape or np.asarray(valid[key]).shape != shape or \
+                np.asarray(cost[key]).shape != shape:
+            raise ValueError("semantic ownership maps must share one shape")
+        native[key] = mask
+        union |= mask
+    merged = union.astype(np.uint8)
+    if int(close_px) > 0:
+        radius = int(close_px)
+        kernel = cv2.getStructuringElement(
+            cv2.MORPH_ELLIPSE, (2 * radius + 1, 2 * radius + 1))
+        merged = cv2.morphologyEx(merged, cv2.MORPH_CLOSE, kernel)
+    if int(dilate_px) > 0:
+        radius = int(dilate_px)
+        kernel = cv2.getStructuringElement(
+            cv2.MORPH_ELLIPSE, (2 * radius + 1, 2 * radius + 1))
+        merged = cv2.dilate(merged, kernel)
+
+    accepted = np.zeros(shape, bool)
+    source_regions = {key: 0 for key in keys}
+    count, labels, stats, _ = cv2.connectedComponentsWithStats(
+        (merged > 0).astype(np.uint8), connectivity=8)
+    for label in range(1, count):
+        area = int(stats[label, cv2.CC_STAT_AREA])
+        if area < int(min_component_px) or \
+                area / merged.size > float(max_component_fraction):
+            continue
+        component = labels == label
+        candidates = {}
+        for key in keys:
+            support = component & native[key] & np.asarray(valid[key], bool)
+            support_count = int(support.sum())
+            if support_count < int(min_component_px):
+                continue
+            values = np.asarray(cost[key], np.float32)[support]
+            support_fraction = support_count / max(area, 1)
+            candidates[key] = (
+                float(np.median(values))
+                + (1.0 - support_fraction) * float(invalid_cost)
+            )
+        if not candidates:
+            continue
+        winner = min(candidates, key=candidates.get)
+        visible = component & np.asarray(valid[winner], bool)
+        owner[component] = -1
+        owner[visible] = winner
+        accepted[component] = True
+        source_regions[winner] += 1
+    return owner, accepted, {
+        "detected_fraction": float(union.mean()),
+        "protected_fraction": float(accepted.mean()),
+        "components": int(sum(source_regions.values())),
+        "source_regions": source_regions,
+    }
+
+
 def compose_single_source(warped, valid, owner, background,
                           background_valid=None):
     """Compose without ever averaging RGB from two physical cameras."""
