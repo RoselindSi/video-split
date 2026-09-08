@@ -60,17 +60,24 @@ CAUSES = {
              "<b>3</b> 归属判错 &nbsp; <b>4</b> 掩码没盖住 &nbsp;"
              "<b>5</b> 被手部否决<span style=\"color:#a76fd0\">（紫框 VETO）"
              "</span> &nbsp; <b>6</b> 说不准"),
-    "cover": (["face_fp", "hand_oth", "residue", "spill", "unsure"],
+    # `hand_fp` is appended rather than inserted next to `hand_oth`, where it
+    # belongs logically: two chunks have already been labelled with 1-4 meaning
+    # what they mean now, and renumbering them to make the list tidy would
+    # silently rewrite those judgements.
+    "cover": (["face_fp", "hand_oth", "residue", "spill", "hand_fp",
+               "unsure"],
               {"face_fp": "人脸误检", "hand_oth": "手判成别人的",
                "residue": "残留（框已经没了）", "spill": "掩码溢出",
-               "unsure": "说不准"},
+               "hand_fp": "非手物体被当成手", "unsure": "说不准"},
               "<b>1</b> 人脸误检<span style=\"color:#ff78ff\">（洋红框扣在"
               "非脸上）</span> &nbsp; <b>2</b> 手判成别人的"
               "<span style=\"color:#28dcff\">（蓝框扣在自己手上）</span>"
               " &nbsp; <b>3</b> 残留<span style=\"color:#ccc\">（白圈里没有"
               "任何框）</span> &nbsp; <b>4</b> 掩码溢出<span "
               "style=\"color:#ccc\">（框对了但白圈糊出去太多）</span>"
-              " &nbsp; <b>5</b> 说不准"),
+              " &nbsp; <b>5</b> 非手物体被当成手<span "
+              "style=\"color:#28dcff\">（蓝框里根本不是手：膝盖、布、工件）"
+              "</span> &nbsp; <b>6</b> 说不准"),
 }
 
 SHEET = """<meta charset=utf-8><title>miss attribution</title><style>
@@ -92,6 +99,7 @@ b{color:#ffd33d}
 .ev.hand_oth{border-left:5px solid #38d}
 .ev.residue{border-left:5px solid #d83}
 .ev.spill{border-left:5px solid #8a3}
+.ev.hand_fp{border-left:5px solid #2aa}
 .imgs{display:flex;gap:8px}
 .imgs figure{margin:0;flex:1}
 .imgs img{border-radius:3px;display:block;width:100%}
