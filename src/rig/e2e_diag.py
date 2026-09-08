@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import collections
 import csv
 import glob
 import json
@@ -44,6 +45,10 @@ import os
 FLAGS = ("face_miss", "other_miss", "owner_blur", "junk_blur")
 CRITICAL = ("face_miss", "other_miss")
 FALSE_COVER = ("owner_blur", "junk_blur")
+
+# How far back to look for what produced a cover. `Hold` keeps a face
+# for HOLD_FRAMES = 12; the tracker coasts for 2. Twelve covers both.
+LOOKBACK = 12
 
 # A MISS AND A FALSE COVER DO NOT SHARE A TAXONOMY, and forcing them to share
 # one is how the over-blur half of this audit stayed unexplained. `the
@@ -287,7 +292,7 @@ def main():
     geom = geom_prior.load_model(a.geom)
     model = YOLO("/shared/models/HaWoR/weights/external/detector.pt")
 
-    events = []
+    events, flip = [], []
     for rec, frames in sorted(want.items()):
         cand = src_of.get(rec)
         if not cand:
@@ -301,9 +306,26 @@ def main():
         print(f"  {rec}: {len(frames)} 帧, 重跑 {lo}-{hi}")
 
         got = {}
+        # A COVER CANNOT COME FROM NOWHERE, but a single frame cannot show
+        # where it came from. `Hold` keeps a face covered for HOLD_FRAMES
+        # after the detector stops finding it and the tracker coasts a lost
+        # hand for MAX_PREDICTION_AGE, so a mosaic with no box in this frame
+        # traces to a proposal up to twelve frames back -- four tenths of a
+        # second, invisible to someone looking at one picture. Worse, a
+        # one-frame face false positive becomes a twelve-frame mosaic, and
+        # the middle frame of that event (which is the frame attribution
+        # samples) is exactly the one where the box has already gone. That
+        # would file the same defect under `residue` and `face_fp` depending
+        # on which phase was sampled. Keeping a short history and reporting
+        # what last explained each cover separates them.
+        past = collections.deque(maxlen=LOOKBACK + 1)
 
         def keep(k, clean, out, info=None):
             f = info["frame"] if info else None
+            if info is not None:
+                past.append((f, [tuple(b[:4]) for b in info["faces"]],
+                             [tuple(d["box"]) for d, o
+                              in zip(info["dets"], info["own"]) if not o]))
             if f not in frames:
                 return
             h = int(round(clean.shape[0] * a.width / clean.shape[1]))
@@ -397,6 +419,20 @@ def main():
                 own = [d["box"] for d, o in zip(info["dets"], info["own"]) if o]
                 inside = (f"  白圈内 洋红{n_face} 蓝{sum(1 for b in oth if hits(b))}"
                           f" 绿{sum(1 for b in own if hits(b))}")
+                if not n_face and not any(hits(b) for b in oth):
+                    # Nothing in THIS frame explains the mosaic. Walk back.
+                    src, age = "无", None
+                    for j in range(len(past) - 2, -1, -1):
+                        pf, pfaces, poth = past[j]
+                        if any(hits(b) for b in pfaces):
+                            src, age = "脸", f - pf
+                            break
+                        if any(hits(b) for b in poth):
+                            src, age = "手", f - pf
+                            break
+                    inside += (f"  |  最近解释={src}" +
+                               (f" {age}帧前" if age is not None else
+                                f"（回看{len(past) - 1}帧内都没有）"))
             got[f] = {
                 "key": f"{rec}:{f}", "rec": rec, "frame": f,
                 "kinds": frames[f], "raw": b64(clean), "out": b64(out),
@@ -410,16 +446,39 @@ def main():
                          f"oth_px {info['oth_px']}  "
                          f"veto_px {info['veto_px']}" + inside)}
 
-        demo_video.run(rig, vids, None, lo, hi - lo + 1, 1, model, None, None,
+        _, _, _, fl = demo_video.run(
+            rig, vids, None, lo, hi - lo + 1, 1, model, None, None,
                        10, 14.0, 12.0, verbose=False,
                        face_model=a.face_model, geom=geom, geom_w=0.5,
                        max_owner=2, ctx=(ctx_model, ctx_device),
                        frame_hook=keep)
+        # FLICKER IS THE OTHER END OF EVERY TRADE THIS PIPELINE MAKES.
+        # `HOLD_FRAMES`, `MAX_PREDICTION_AGE` and the cap writeback all buy
+        # steadiness with over-blur, and until now only the over-blur side had
+        # a number on this footage. The rerun computes flips anyway; it cost
+        # nothing but a return value to keep them.
+        flip.append((rec, fl))
+        print(f"    flips {fl['flips']} / {fl['hand_frames']} hand-frames "
+              f"= {fl['flips_per_100_hand_frames']:.1f} per 100  "
+              f"({fl['tracks']} tracks)")
         events += [got[f] for f in sorted(got)]
         missing = sorted(set(frames) - set(got))
         if missing:
             print(f"    !! {len(missing)} 帧没重现（解码漂移？）: "
                   f"{missing[:5]}")
+
+    if flip:
+        tf = sum(f["flips"] for _, f in flip)
+        th = sum(f["hand_frames"] for _, f in flip)
+        tt = sum(f["tracks"] for _, f in flip)
+        print(f"\n  === 翻转率（整段重跑，不只被标记的帧）===")
+        for rec, f in sorted(flip, key=lambda kv: -kv[1]
+                             ["flips_per_100_hand_frames"])[:6]:
+            print(f"    {rec:<16} {f['flips']:>4} / {f['hand_frames']:>6} "
+                  f"= {f['flips_per_100_hand_frames']:>5.1f} per 100")
+        print(f"    {'合计':<16} {tf:>4} / {th:>6} = "
+              f"{100.0 * tf / th if th else float('nan'):>5.1f} per 100   "
+              f"{tt} 条轨迹")
 
     tag = "critical" if set(kinds) == set(CRITICAL) else "_".join(kinds)
     # WHICH QUESTION IS BEING ASKED FOLLOWS FROM WHICH FLAGS WERE SELECTED.

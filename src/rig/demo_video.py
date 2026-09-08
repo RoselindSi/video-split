@@ -491,7 +491,10 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
             w.writeheader()
             w.writerows(trace)
         _report_trace(trace, trace_path)
-    return n_written, n_dis, n_face
+    # The flip report is computed either way; returning it lets a
+    # caller that runs quietly still measure flicker, which is the
+    # other end of every trade this pipeline makes against over-blur.
+    return n_written, n_dis, n_face, flips.report()
 
 
 def _self_test():
@@ -735,7 +738,7 @@ def main():
              if a.panorama == "depth" else ""))
     print(f"  faces {'NOT covered' if a.no_faces else 'covered'}"
           f"{'   <- do not send this anywhere' if a.no_faces else ''}")
-    n, dis, nf = run(rig, vids, a.out, a.start, a.n, a.stride,
+    n, dis, nf, _fl = run(rig, vids, a.out, a.start, a.n, a.stride,
                      YOLO(a.weights), cnn, device, a.dilate, a.sigma, a.fps,
                      face_model=None if a.no_faces else a.face_model,
                      face_conf=a.face_conf, trace_path=a.trace,
