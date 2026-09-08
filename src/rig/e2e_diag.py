@@ -43,6 +43,35 @@ import os
 
 FLAGS = ("face_miss", "other_miss", "owner_blur", "junk_blur")
 CRITICAL = ("face_miss", "other_miss")
+FALSE_COVER = ("owner_blur", "junk_blur")
+
+# A MISS AND A FALSE COVER DO NOT SHARE A TAXONOMY, and forcing them to share
+# one is how the over-blur half of this audit stayed unexplained. `the
+# detector never proposed` is the commonest cause of an uncovered face and is
+# meaningless for a mosaic that should not be there: something DID propose it,
+# and the question is what. The two sets below are chosen so every class names
+# a different repair.
+CAUSES = {
+    "miss": (["detector", "admission", "ownership", "mask", "veto", "unsure"],
+             {"detector": "检测器没提出", "admission": "没建轨迹",
+              "ownership": "归属判错", "mask": "掩码没盖住",
+              "veto": "被手部否决", "unsure": "说不准"},
+             "<b>1</b> 检测器没提出 &nbsp; <b>2</b> 提出了但没建轨迹 &nbsp;"
+             "<b>3</b> 归属判错 &nbsp; <b>4</b> 掩码没盖住 &nbsp;"
+             "<b>5</b> 被手部否决<span style=\"color:#a76fd0\">（紫框 VETO）"
+             "</span> &nbsp; <b>6</b> 说不准"),
+    "cover": (["face_fp", "hand_oth", "residue", "spill", "unsure"],
+              {"face_fp": "人脸误检", "hand_oth": "手判成别人的",
+               "residue": "残留（框已经没了）", "spill": "掩码溢出",
+               "unsure": "说不准"},
+              "<b>1</b> 人脸误检<span style=\"color:#ff78ff\">（洋红框扣在"
+              "非脸上）</span> &nbsp; <b>2</b> 手判成别人的"
+              "<span style=\"color:#28dcff\">（蓝框扣在自己手上）</span>"
+              " &nbsp; <b>3</b> 残留<span style=\"color:#ccc\">（白圈里没有"
+              "任何框）</span> &nbsp; <b>4</b> 掩码溢出<span "
+              "style=\"color:#ccc\">（框对了但白圈糊出去太多）</span>"
+              " &nbsp; <b>5</b> 说不准"),
+}
 
 SHEET = """<meta charset=utf-8><title>miss attribution</title><style>
 body{font:13px/1.5 system-ui;margin:0;background:#111;color:#ddd}
@@ -59,6 +88,10 @@ b{color:#ffd33d}
 .ev.mask{border-left:5px solid #8a3}
 .ev.veto{border-left:5px solid #a76fd0}
 .ev.unsure{border-left:5px solid #666}
+.ev.face_fp{border-left:5px solid #d33}
+.ev.hand_oth{border-left:5px solid #38d}
+.ev.residue{border-left:5px solid #d83}
+.ev.spill{border-left:5px solid #8a3}
 .imgs{display:flex;gap:8px}
 .imgs figure{margin:0;flex:1}
 .imgs img{border-radius:3px;display:block;width:100%}
@@ -73,10 +106,7 @@ b{color:#ffd33d}
 </style>
 <div id=bar>
  <span id=prog></span>
- <span><b>1</b> 检测器没提出 &nbsp; <b>2</b> 提出了但没建轨迹 &nbsp;
-   <b>3</b> 归属判错 &nbsp; <b>4</b> 掩码没盖住 &nbsp;
-   <b>5</b> 被手部否决<span style="color:#a76fd0">（紫框 VETO）</span> &nbsp;
-   <b>6</b> 说不准
+ <span>__KEYS__
    &nbsp; <b>&uarr;&darr;</b> move &nbsp; <b>u</b> undo</span>
  <button onclick="dl()">download CSV</button>
  <span class=key>第三张图：
@@ -84,16 +114,15 @@ b{color:#ffd33d}
    <i style="background:#28dcff"></i>OTH 判成别人的手
    <i style="background:#828282"></i>没建轨迹
    <i style="background:#ff78ff"></i>脸
-   <i style="background:#a03c78"></i>脸被手部否决</span>
+   <i style="background:#a03c78"></i>脸被手部否决
+   <i style="background:#fff"></i>白圈=输出里真的被糊掉的区域</span>
 </div>
 <div id=list></div>
 <script>
 const D = __PAYLOAD__;
 const KEY = "diag:" + D.tag;
-const CLS = ["detector","admission","ownership","mask","veto","unsure"];
-const CN = {detector:"检测器没提出", admission:"没建轨迹",
-            ownership:"归属判错", mask:"掩码没盖住",
-            veto:"被手部否决", unsure:"说不准"};
+const CLS = __CLS__;
+const CN = __CN__;
 let lab = {}, cur = 0, hist = [];
 try { lab = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch(e) { lab={}; }
 const list = document.getElementById("list");
@@ -127,7 +156,7 @@ function draw(){
   if(el) el.scrollIntoView({block:"nearest"});
 }
 document.onkeydown = ev => {
-  if(ev.key>="1" && ev.key<="6"){
+  if(ev.key>="1" && ev.key<=String(CLS.length)){
     const e = D.events[cur]; if(!e) return;
     hist.push([e.key, lab[e.key]]);
     lab[e.key] = CLS[+ev.key-1];
@@ -186,6 +215,7 @@ def main():
     a = ap.parse_args()
 
     import cv2
+    import numpy as np
     from ultralytics import YOLO
     from src.rig import demo_video, own_ctx, geom_prior
     from src.rig.calibration import RigCalibration
@@ -291,6 +321,21 @@ def main():
                 cv2.putText(dbg, "VETO",
                             (x0, max(int(fs * 24), y0 - int(6 * k))),
                             cv2.FONT_HERSHEY_SIMPLEX, fs, (150, 80, 200), th)
+            # WHAT WAS ACTUALLY COVERED, taken from the pictures rather than
+            # from the pipeline's own account of itself. `sup` differs from
+            # `clean` exactly where pixels were destroyed, so the outline is
+            # the delivered mosaic by definition -- no mask has to be
+            # threaded through the hook, and a cover produced by a hold or a
+            # coasting track shows up even though no box explains it. For a
+            # false cover that coincidence is the whole judgement: a white
+            # ring with a magenta box in it is a face false positive, and a
+            # white ring with nothing in it is residue.
+            diff = np.any(clean != out, axis=2).astype(np.uint8)
+            if diff.any():
+                cont, _ = cv2.findContours(diff, cv2.RETR_EXTERNAL,
+                                           cv2.CHAIN_APPROX_SIMPLE)
+                cv2.drawContours(dbg, cont, -1, (255, 255, 255),
+                                 max(2, bt // 2))
             got[f] = {
                 "key": f"{rec}:{f}", "rec": rec, "frame": f,
                 "kinds": frames[f], "raw": b64(clean), "out": b64(out),
@@ -316,15 +361,30 @@ def main():
                   f"{missing[:5]}")
 
     tag = "critical" if set(kinds) == set(CRITICAL) else "_".join(kinds)
+    # WHICH QUESTION IS BEING ASKED FOLLOWS FROM WHICH FLAGS WERE SELECTED.
+    # Mixing a miss and a false cover in one sheet would put both taxonomies
+    # on screen and let a frame be attributed with a class that cannot apply
+    # to it, so the two are simply not allowed together.
+    if set(kinds) <= set(FALSE_COVER):
+        cls, cn, keys = CAUSES["cover"]
+    elif set(kinds) <= set(CRITICAL):
+        cls, cn, keys = CAUSES["miss"]
+    else:
+        raise SystemExit("--kinds 不能把漏检和误糊混在一起：它们的归因类别"
+                         "不同，混在一张表里会让一帧被标上不适用的原因")
     with open(a.out, "w", encoding="utf-8") as f:
         f.write(SHEET.replace("__PAYLOAD__",
-                              json.dumps({"tag": tag, "events": events})))
+                              json.dumps({"tag": tag, "events": events}))
+                .replace("__CLS__", json.dumps(cls))
+                .replace("__CN__", json.dumps(cn, ensure_ascii=False))
+                .replace("__KEYS__", keys))
     print(f"\n  {len(events)} 个事件 -> {a.out} "
           f"({os.path.getsize(a.out) / 1e6:.1f} MB)")
     print("  第三张图是原始画面加上全部候选。手框的颜色就是归属判断："
           "绿=判成自己的手，\n  蓝=判成别人的手，灰=检测器提出但没建轨迹（没有"
           "归属可言）。洋红=脸，\n  紫色 VETO=脸检测器提出了但被手部否决丢掉。"
-          "框上的数字是平滑后的 P(owner)。")
+          "框上的数字是平滑后的 P(owner)。\n  白色轮廓=输出里真的被糊掉的区域，"
+          "由原始帧和输出帧逐像素相减得到。")
     print("  1 检测器没提出   2 提出了但没建轨迹   3 归属判错   "
           "4 掩码没盖住   5 被手部否决   6 说不准")
 
