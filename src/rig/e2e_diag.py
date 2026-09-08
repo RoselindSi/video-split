@@ -185,15 +185,42 @@ function dl(){
 """
 
 
-def load_flags(paths, kinds):
-    """-> {recording: {frame: [kind]}} for frames a person flagged."""
-    by = {}
+def load_flags(paths, kinds, per_event=False):
+    """-> {recording: {frame: [kind]}} for frames a person flagged.
+
+    `per_event` keeps ONE FRAME PER RUN of consecutive flagged samples.
+    A mosaic that sits on a bench for two seconds is one mistake with one
+    cause, and attributing all twelve of its sampled frames costs twelve
+    reruns and twelve judgements to learn the same thing once. The event is
+    the unit everywhere else in this audit; this makes it the unit here too.
+    The middle frame is taken rather than the first, because the first is
+    where a cause is most likely to be transitional."""
+    by, stride = {}, {}
     for p in paths:
         for r in csv.DictReader(open(p, encoding="utf-8-sig")):
             hit = [k for k in kinds if int(r.get(k, 0))]
             if hit:
-                by.setdefault(r["recording"], {})[int(r["frame"])] = hit
-    return by
+                rec = r["recording"]
+                by.setdefault(rec, {})[int(r["frame"])] = hit
+                stride[rec] = int(r.get("stride", 5) or 5)
+    if not per_event:
+        return by
+    out = {}
+    for rec, frames in by.items():
+        step, run, keep = stride.get(rec, 5), [], {}
+        for f in sorted(frames):
+            # A gap wider than the sampling stride means an unflagged sample
+            # came between: two events, not one.
+            if run and f - run[-1] > step:
+                mid = run[len(run) // 2]
+                keep[mid] = frames[mid]
+                run = []
+            run.append(f)
+        if run:
+            mid = run[len(run) // 2]
+            keep[mid] = frames[mid]
+        out[rec] = keep
+    return out
 
 
 def main():
@@ -203,6 +230,9 @@ def main():
     ap.add_argument("--csv", action="append", required=True)
     ap.add_argument("--clips", default="/workspace/e2e_main2.txt",
                     help="databag:start[:n] per line, to find the sources")
+    ap.add_argument("--per_event", action="store_true",
+                    help="attribute one frame per run of consecutive "
+                         "flagged samples instead of every frame")
     ap.add_argument("--kinds", default=",".join(CRITICAL),
                     help="which flags to attribute; default the two "
                          "privacy-critical ones")
@@ -224,7 +254,8 @@ def main():
     for c in a.csv:
         paths += sorted(glob.glob(c)) or [c]
     kinds = [k.strip() for k in a.kinds.split(",") if k.strip()]
-    want = load_flags([p for p in paths if os.path.exists(p)], kinds)
+    want = load_flags([p for p in paths if os.path.exists(p)], kinds,
+                      per_event=a.per_event)
     if not want:
         raise SystemExit("no flagged frames in those csv files")
     n_frames = sum(len(v) for v in want.values())
@@ -331,11 +362,33 @@ def main():
             # ring with a magenta box in it is a face false positive, and a
             # white ring with nothing in it is residue.
             diff = np.any(clean != out, axis=2).astype(np.uint8)
+            inside = ""
             if diff.any():
                 cont, _ = cv2.findContours(diff, cv2.RETR_EXTERNAL,
                                            cv2.CHAIN_APPROX_SIMPLE)
                 cv2.drawContours(dbg, cont, -1, (255, 255, 255),
                                  max(2, bt // 2))
+                # WHAT SITS INSIDE THE COVERED REGION IS A FACT, NOT A
+                # JUDGEMENT, so counting it here saves the auditor from doing
+                # it by eye 165 times. It is reported and nothing is inferred
+                # from it: `a magenta box is inside the ring` says the face
+                # detector produced this mosaic, and whether the thing under
+                # it is a face is the part only a person can settle.
+                covered = [cv2.boundingRect(c) for c in cont]
+
+                def hits(box):
+                    x0, y0, x1, y1 = [int(v) for v in box[:4]]
+                    for cx, cy, cw, ch in covered:
+                        if (x0 < cx + cw and cx < x1
+                                and y0 < cy + ch and cy < y1):
+                            return True
+                    return False
+                n_face = sum(1 for b in info["faces"] if hits(b))
+                oth = [d["box"] for d, o in zip(info["dets"], info["own"])
+                       if not o]
+                own = [d["box"] for d, o in zip(info["dets"], info["own"]) if o]
+                inside = (f"  白圈内 洋红{n_face} 蓝{sum(1 for b in oth if hits(b))}"
+                          f" 绿{sum(1 for b in own if hits(b))}")
             got[f] = {
                 "key": f"{rec}:{f}", "rec": rec, "frame": f,
                 "kinds": frames[f], "raw": b64(clean), "out": b64(out),
@@ -347,7 +400,7 @@ def main():
                          + (f"+{len(info['faces_vetoed'])}veto"
                             if info.get("faces_vetoed") else "") + "  "
                          f"oth_px {info['oth_px']}  "
-                         f"veto_px {info['veto_px']}")}
+                         f"veto_px {info['veto_px']}" + inside)}
 
         demo_video.run(rig, vids, None, lo, hi - lo + 1, 1, model, None, None,
                        10, 14.0, 12.0, verbose=False,
