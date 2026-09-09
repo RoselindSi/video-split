@@ -35,16 +35,30 @@ import csv
 import json
 import os
 
-CAUSES = [
-    ("appearance", "外观混淆", "别人的手看着像自己的，或反过来"),
-    ("body_relation", "缺身体关联", "裁剪合理，但要看手臂连到谁才判得了"),
-    ("truncation", "第一视角截断", "自己的手过大／贴边／极端视角"),
-    ("overlap", "重叠遮挡", "两只手或前臂叠在一起"),
-    ("context", "上下文不够", "2.5× 窗口里根本没有能判归属的信息"),
-    ("crop_bad", "框或轨迹有问题", "框偏、混进手臂或物体、轨迹太短"),
-    ("ref_bad", "参照规则可疑", "出口高度规则在这一例上可能不适用"),
-    ("ambiguous", "真的说不清", ""),
+QUESTIONS = [
+    ("human_ownership", "这只手是谁的",
+     [("owner", "自己"), ("other", "别人"), ("unsure", "说不准")], False),
+    ("reference_rule", "冻结出口规则判得对吗",
+     [("agrees", "规则对"), ("suspicious", "规则可疑"),
+      ("contradicted", "规则相反")], False),
+    ("mechanism", "整条为什么站错侧",
+     [("appearance", "外观混淆"), ("body_relation", "缺身体关联"),
+      ("truncation", "第一视角截断"), ("overlap", "重叠遮挡"),
+      ("context", "上下文不够"), ("crop_bad", "框或轨迹有问题"),
+      ("ref_bad", "参照规则可疑"), ("ambiguous", "真的说不清")], False),
+    ("entry_distinct", "进入方向和自己的手明显不同吗",
+     [("yes", "是"), ("no", "否"), ("uncertain", "不确定")], True),
+    ("same_depth", "和自己的手可能同深度吗",
+     [("yes", "是"), ("no", "否"), ("uncertain", "不确定")], True),
 ]
+
+# `human_ownership` IS THE LABEL EVERYTHING DOWNSTREAM SHOULD USE. The frozen
+# exit-height rule is what selected these 49 tracks, so scoring a later
+# experiment against that same rule would be circular; and 44 tracks in the
+# same run had the rule contradicting itself, which is why it gets a question
+# of its own rather than being assumed correct. The last two are not training
+# targets -- they are there to explain, afterwards, why a depth scalar might
+# fail where a trajectory does not.
 
 SHEET = """<meta charset=utf-8><title>ownership mechanism census</title><style>
 body{font:13px/1.5 system-ui;margin:0;background:#111;color:#ddd}
@@ -67,6 +81,10 @@ b{color:#ffd33d}
 .strip img{width:100%;border-radius:3px;display:block}
 .strip figcaption{font-size:10px;color:#888;text-align:center}
 .key{font-size:11px;color:#aaa}
+.chip{display:inline-block;padding:1px 8px;margin:2px 5px 0 0;border-radius:3px;
+  font-size:11px;background:#222;color:#888;border:1px solid #333}
+.chip.has{background:#25303a;color:#cde;border-color:#3a5}
+.chip.on{outline:2px solid #ffd33d;color:#ffd33d}
 </style>
 <div id=bar>
  <span id=prog></span>
@@ -78,14 +96,10 @@ b{color:#ffd33d}
 <div id=list></div>
 <script>
 const D = __PAYLOAD__;
-const KEY = "census:" + D.tag;
-const CLS = __CLS__;
-const CN = __CN__;
-let lab = {}, cur = 0, hist = [];
+const Q = __QUESTIONS__;
+const KEY = "census5:" + D.tag;
+let lab = {}, cur = 0, qi = 0, hist = [];
 try { lab = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch(e) { lab={}; }
-document.getElementById("keys").innerHTML = CLS.map((c,i) =>
-  '<b>' + (i+1) + '</b> ' + CN[c]).join(' &nbsp; ') +
-  ' &nbsp; <b>&uarr;&darr;</b> move &nbsp; <b>u</b> undo';
 const list = document.getElementById("list");
 D.tracks.forEach((t, i) => {
   const d = document.createElement("div");
@@ -94,51 +108,87 @@ D.tracks.forEach((t, i) => {
     '</span><span class=dir>' + t.dir + '</span> ' + t.rec +
     ' &nbsp;<span class=num>track ' + t.tid + '  f' + t.first + '-' + t.last +
     '  ' + t.n + ' 帧  p_raw ' + t.p_lo + '-' + t.p_hi + ' (中位 ' + t.p_med +
-    ')  错 ' + t.wrong + '/' + t.n + '</span> <span id=v' + i + '></span></div>' +
+    ')  错 ' + t.wrong + '/' + t.n + '</span><br><span id=v' + i +
+    '></span></div>' +
     '<div class=strip>' + t.crops.map(f =>
       '<figure><img src="' + f.c + '"><figcaption>f' + f.f + '  p=' + f.p +
       '</figcaption></figure>').join('') + '</div>' +
     '<div class=strip style="margin-top:4px">' + t.crops.map(f =>
       '<figure><img src="' + f.w + '"></figure>').join('') + '</div>';
-  d.onclick = () => { cur = i; draw(); };
+  d.onclick = () => { cur = i; qi = firstUnanswered(i); draw(); };
   list.appendChild(d);
 });
+function ans(i){ return lab[D.tracks[i].key] || {}; }
+function firstUnanswered(i){
+  const a = ans(i);
+  for (let j = 0; j < Q.length; j++) if (!(Q[j].key in a)) return j;
+  return Q.length - 1;
+}
+function done(i){
+  const a = ans(i);
+  return Q.every(q => q.optional || (q.key in a));
+}
+function chips(i){
+  const a = ans(i);
+  return Q.map((q, j) => {
+    const v = a[q.key];
+    const on = (i === cur && j === qi);
+    const txt = v === undefined ? "—"
+      : (v === "" ? "跳过" : (q.opts.find(o => o[0] === v) || ["", v])[1]);
+    return '<span class="chip' + (on ? " on" : "") + (v ? " has" : "") + '">' +
+           q.label + ': ' + txt + '</span>';
+  }).join("");
+}
 function draw(){
   D.tracks.forEach((t,i)=>{
-    const v = lab[t.key];
     document.getElementById("t"+i).className =
-      "t" + (v ? " done" : "") + (i===cur ? " cur" : "");
-    document.getElementById("v"+i).innerHTML =
-      v ? '<span class=grp style="background:#356">' + CN[v] + '</span>' : '';
+      "t" + (done(i) ? " done" : "") + (i===cur ? " cur" : "");
+    document.getElementById("v"+i).innerHTML = chips(i);
   });
+  const q = Q[qi];
+  document.getElementById("keys").innerHTML =
+    '<b style="color:#8f8">' + q.label + '</b> &nbsp; ' +
+    q.opts.map((o,k) => '<b>' + (k+1) + '</b> ' + o[1]).join(" &nbsp; ") +
+    (q.optional ? ' &nbsp; <b>空格</b> 跳过' : '') +
+    ' &nbsp;&nbsp; <b>&uarr;&darr;</b> 换轨迹 &nbsp; <b>u</b> undo';
+  const nd = D.tracks.filter((_,i)=>done(i)).length;
   document.getElementById("prog").innerHTML =
-    "<b>" + D.tag + "</b> &nbsp; " + Object.keys(lab).length + "/" +
-    D.tracks.length + " 已判";
+    "<b>" + D.tag + "</b> &nbsp; " + nd + "/" + D.tracks.length + " 已判完";
   localStorage.setItem(KEY, JSON.stringify(lab));
   const el = document.getElementById("t"+cur);
   if(el) el.scrollIntoView({block:"nearest"});
 }
+function set(v){
+  const t = D.tracks[cur]; if(!t) return;
+  hist.push([t.key, JSON.stringify(lab[t.key] || null), qi]);
+  lab[t.key] = Object.assign({}, lab[t.key] || {});
+  lab[t.key][Q[qi].key] = v;
+  if (qi + 1 < Q.length) qi += 1;
+  else { cur = Math.min(cur + 1, D.tracks.length - 1); qi = 0; }
+  draw();
+}
 document.onkeydown = ev => {
   const n = +ev.key;
-  if(n >= 1 && n <= CLS.length){
-    const t = D.tracks[cur]; if(!t) return;
-    hist.push([t.key, lab[t.key]]);
-    lab[t.key] = CLS[n-1];
-    cur = Math.min(cur+1, D.tracks.length-1); draw();
-  }
-  else if(ev.key==="ArrowDown"){cur=Math.min(cur+1,D.tracks.length-1);draw();}
-  else if(ev.key==="ArrowUp"){cur=Math.max(cur-1,0);draw();}
-  else if(ev.key==="u"){const h=hist.pop(); if(h){ if(h[1]===undefined)
-    delete lab[h[0]]; else lab[h[0]]=h[1]; draw(); }}
+  if(n >= 1 && n <= Q[qi].opts.length){ set(Q[qi].opts[n-1][0]); }
+  else if(ev.key===" " && Q[qi].optional){ set(""); }
+  else if(ev.key==="ArrowDown"){cur=Math.min(cur+1,D.tracks.length-1);qi=firstUnanswered(cur);draw();}
+  else if(ev.key==="ArrowUp"){cur=Math.max(cur-1,0);qi=firstUnanswered(cur);draw();}
+  else if(ev.key==="u"){const h=hist.pop(); if(h){
+      if(h[1]==="null") delete lab[h[0]]; else lab[h[0]]=JSON.parse(h[1]);
+      qi = h[2]; draw(); }}
   else return;
   ev.preventDefault();
 };
 draw();
 function dl(){
-  let s = "key,rec,tid,group,direction,frames,wrong,p_median,cause\\n";
-  for(const t of D.tracks) if(lab[t.key])
-    s += t.key + "," + t.rec + "," + t.tid + "," + t.grp + "," + t.dir + "," +
-         t.n + "," + t.wrong + "," + t.p_med + "," + lab[t.key] + "\\n";
+  let s = "key,rec,tid,group,ref_direction,frames,wrong,p_median," +
+          Q.map(q=>q.key).join(",") + "\\n";
+  for(const t of D.tracks){
+    const a = lab[t.key]; if(!a) continue;
+    s += t.key + "," + t.rec + "," + t.tid + "," + t.grp + ',"' + t.dir +
+         '",' + t.n + "," + t.wrong + "," + t.p_med + "," +
+         Q.map(q => (q.key in a ? a[q.key] : "")).join(",") + "\\n";
+  }
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([s],{type:"text/csv"}));
   a.download = "own_census.csv"; a.click();
@@ -168,11 +218,41 @@ def groups(rows):
     return out
 
 
+
+def repage(a):
+    """Re-render an existing sheet with the current questions.
+
+    The pictures cost hours of video decoding and the schema does not. When
+    the questions change -- as they did once the frozen rule turned out to
+    need a question of its own -- the payload is lifted out of the old page
+    and wrapped in the new one, so nothing is re-read and any answers already
+    stored in the browser stay under their own key."""
+    import re
+    s = open(a.repage, encoding="utf-8").read()
+    m = re.search(r"const D = (\{.*?\});\nconst ", s, re.S)
+    if not m:
+        raise SystemExit(f"{a.repage} 里找不到 payload")
+    payload = m.group(1)
+    qs = [{"key": k, "label": lab, "optional": bool(opt),
+           "opts": [[x, y] for x, y in opts]}
+          for k, lab, opts, opt in QUESTIONS]
+    out = (SHEET.replace("__PAYLOAD__", payload)
+           .replace("__QUESTIONS__", json.dumps(qs, ensure_ascii=False)))
+    open(a.out, "w", encoding="utf-8").write(out)
+    n = len(json.loads(payload)["tracks"])
+    print(f"  {n} 条 -> {a.out} ({os.path.getsize(a.out) / 1e6:.1f} MB)")
+    for k, lab, opts, opt in QUESTIONS:
+        line = "  ".join(f"{i+1} {b}" for i, (x, b) in enumerate(opts))
+        print(f"  {lab:<28} {line}" + ("   空格=跳过" if opt else ""))
+
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--rows", required=True, help="own_dump.csv")
+    ap.add_argument("--rows", help="own_dump.csv")
+    ap.add_argument("--repage",
+                    help="an existing sheet; re-wrap its payload "
+                         "with the current questions and exit")
     ap.add_argument("--clips", default="/workspace/e2e_main2.txt")
     ap.add_argument("--shots", type=int, default=4)
     ap.add_argument("--crop_w", type=int, default=170)
@@ -180,6 +260,12 @@ def main():
     ap.add_argument("--ctx_scale", type=float, default=2.5)
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
+
+    if a.repage:
+        repage(a)
+        return
+    if not a.rows:
+        ap.error('--rows is required unless --repage')
 
     import cv2
     from src.rig.calibration import RigCalibration
@@ -299,17 +385,18 @@ def main():
     # C first: it holds the most error mass and its flips say the
     # representation carries something, which is the more actionable half.
     out.sort(key=lambda t: (t["grp"] != "C", -t["wrong"]))
-    cls = [c for c, _, _ in CAUSES]
-    cn = {c: n for c, n, _ in CAUSES}
+    qs = [{"key": k, "label": lab, "optional": bool(opt),
+           "opts": [[a, b] for a, b in opts]}
+          for k, lab, opts, opt in QUESTIONS]
     with open(a.out, "w", encoding="utf-8") as f:
         f.write(SHEET.replace("__PAYLOAD__",
                               json.dumps({"tag": "CD", "tracks": out}))
-                .replace("__CLS__", json.dumps(cls))
-                .replace("__CN__", json.dumps(cn, ensure_ascii=False)))
+                .replace("__QUESTIONS__", json.dumps(qs, ensure_ascii=False)))
     print(f"\n  {len(out)} 条 -> {a.out} "
           f"({os.path.getsize(a.out) / 1e6:.1f} MB)")
-    for i, (c, n, why) in enumerate(CAUSES, 1):
-        print(f"  {i} {n:<12} {why}")
+    for k, lab, opts, opt in QUESTIONS:
+        line = "  ".join(f"{i+1} {b}" for i, (a, b) in enumerate(opts))
+        print(f"  {lab:<28} {line}" + ("   空格=跳过" if opt else ""))
 
 
 if __name__ == "__main__":
