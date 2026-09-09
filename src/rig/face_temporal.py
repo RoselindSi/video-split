@@ -430,11 +430,196 @@ def sheet(a, props):
           f"({os.path.getsize(a.out) / 1e6:.1f} MB)")
 
 
+
+TAIL_SHEET = """<meta charset=utf-8><title>hold tails</title><style>
+body{font:13px/1.5 system-ui;margin:0;background:#111;color:#ddd}
+#bar{position:sticky;top:0;background:#181818;padding:9px 14px;z-index:9;
+  border-bottom:1px solid #333;display:flex;gap:14px;align-items:center}
+button{font:13px system-ui;padding:5px 10px;cursor:pointer}
+b{color:#ffd33d}
+.r{padding:10px 14px;border-bottom:1px solid #262626;display:flex;gap:12px}
+.r.cur{background:#1d2430;outline:2px solid #4a8}
+.r.here{border-left:5px solid #d33}
+.r.gone{border-left:5px solid #2a6}
+.r.unsure{border-left:5px solid #666}
+.meta{min-width:190px;color:#9ab;font-size:12px}
+.num{color:#8ab4c8;font-family:ui-monospace,monospace;font-size:11px}
+.strip{display:flex;gap:4px;flex:1}
+.strip figure{margin:0;flex:1}
+.strip img{width:100%;border-radius:3px;display:block}
+.strip figcaption{font-size:10px;color:#888;text-align:center}
+</style>
+<div id=bar><span id=prog></span>
+<span><b>1</b> 脸还在（T2 会漏） &nbsp; <b>2</b> 脸已经不在（T2 无损）
+ &nbsp; <b>3</b> 说不准 &nbsp; <b>&uarr;&darr;</b> move &nbsp; <b>u</b> undo</span>
+<button onclick="dl()">download CSV</button>
+<span class=num>黄框 = T0 在这些帧上继续糊的位置（最后一次检测的框，保持不动）。
+问的是：那个位置上脸还在吗。</span></div>
+<div id=list></div>
+<script>
+const D = __PAYLOAD__;
+const KEY = "tail:" + D.tag;
+const V = ["here","gone","unsure"];
+const CN = {here:"脸还在", gone:"已经不在", unsure:"说不准"};
+let lab = {}, cur = 0, hist = [];
+try { lab = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch(e) { lab={}; }
+const list = document.getElementById("list");
+D.runs.forEach((c, i) => {
+  const d = document.createElement("div");
+  d.className = "r"; d.id = "r" + i;
+  d.innerHTML = '<div class=meta>' + c.rec + '<br><span class=num>末次检测 f' +
+    c.last + '  该轨迹检测 ' + c.n_det + ' 帧</span> <span id=v' + i +
+    '></span></div><div class=strip>' + c.frames.map(f =>
+      '<figure><img src="' + f.img + '"><figcaption>+' + f.dt +
+      '</figcaption></figure>').join('') + '</div>';
+  d.onclick = () => { cur = i; draw(); };
+  list.appendChild(d);
+});
+function draw(){
+  D.runs.forEach((c,i)=>{
+    const v = lab[c.key];
+    document.getElementById("r"+i).className =
+      "r " + (v || "") + (i===cur?" cur":"");
+    document.getElementById("v"+i).innerHTML = v ?
+      '<b style="color:' + (v==="here"?"#d55":v==="gone"?"#5c5":"#999") + '">' +
+      CN[v] + '</b>' : '';
+  });
+  document.getElementById("prog").innerHTML =
+    "<b>" + D.tag + "</b> &nbsp; " + Object.keys(lab).length + "/" +
+    D.runs.length + " 已判";
+  localStorage.setItem(KEY, JSON.stringify(lab));
+  const el = document.getElementById("r"+cur);
+  if(el) el.scrollIntoView({block:"nearest"});
+}
+document.onkeydown = ev => {
+  if(ev.key>="1" && ev.key<="3"){
+    const c = D.runs[cur]; if(!c) return;
+    hist.push([c.key, lab[c.key]]);
+    lab[c.key] = V[+ev.key-1];
+    cur = Math.min(cur+1, D.runs.length-1); draw();
+  }
+  else if(ev.key==="ArrowDown"){cur=Math.min(cur+1,D.runs.length-1);draw();}
+  else if(ev.key==="ArrowUp"){cur=Math.max(cur-1,0);draw();}
+  else if(ev.key==="u"){const h=hist.pop(); if(h){ if(h[1]===undefined)
+    delete lab[h[0]]; else lab[h[0]]=h[1]; draw(); }}
+  else return;
+  ev.preventDefault();
+};
+draw();
+function dl(){
+  let s = "key,rec,last,n_det,tail_frames,verdict\\n";
+  for(const c of D.runs) if(c.key in lab)
+    s += c.key + "," + c.rec + "," + c.last + "," + c.n_det + "," +
+         c.tail + "," + lab[c.key] + "\\n";
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([s],{type:"text/csv"}));
+  a.download = "hold_tails.csv"; a.click();
+}
+</script>
+"""
+
+
+def tails(a, props, labels):
+    """The frames T0 covers and T2 does not, on runs a person called a face.
+
+    THIS IS THE ONLY PLACE T2 CAN LOSE. Bridging inside the observed span is
+    identical between the policies -- measured, not assumed -- so every frame
+    where they differ sits after the last detection, and on a false proposal
+    that is pure gain. On a TRUE face it is a gamble: the hold may have been
+    covering a face the detector lost while it was still there, and no metric
+    built from detections can see that, because the evidence for it is exactly
+    the detections that did not happen. So the tail gets looked at.
+
+    The box drawn is the last detection's, held stationary, which is precisely
+    what `Hold` mosaics -- it replaces the box on a match and then keeps it."""
+    import cv2
+    from src.rig.calibration import RigCalibration
+    from src.rig.geometry import VirtualWideCamera
+    from src.rig.render_wide import render
+    from src.rig.seam_fix import ClipReader, Prefetch
+
+    clips = {}
+    for line in open(a.clips):
+        line = line.strip()
+        if not line:
+            continue
+        p = line.rsplit(":", 2)
+        clips[os.path.basename(p[0].rstrip("/")).replace("databag-26_", "R")] \
+            = (p[0], int(p[1]))
+    runs = [r for r in runs_of(props) if labels.get(key_of(r)) is True]
+    offs = [int(x) for x in a.tail_at.split(",")]
+    by_rec = collections.defaultdict(list)
+    for r in runs:
+        by_rec[r["rec"]].append(r)
+    print(f"  {len(runs)} 条真脸轨迹，每条看 +{offs} 帧")
+
+    out = []
+    for rec, rs in sorted(by_rec.items()):
+        if rec not in clips:
+            continue
+        databag, start = clips[rec]
+        rig = RigCalibration(os.path.join(databag, "calibration.yaml"))
+        vcam = VirtualWideCamera.from_rig(rig)
+        vids = {k: os.path.join(databag, f"{k}.mp4")
+                for k in ("cam12", "cam34", "cam56")}
+        want = collections.defaultdict(list)
+        for r in rs:
+            for d in offs:
+                want[r["last"] + d].append((r, d))
+        lo, hi = min(want), max(want)
+        rd = Prefetch(ClipReader(rig, vids, lo), skip=0)
+        mc, imgs = {}, {}
+        print(f"  {rec}: {len(rs)} 条, 读 {lo}-{hi}", flush=True)
+        for k in range(hi - lo + 1):
+            src = rd.next()
+            if not src:
+                break
+            f = lo + k
+            if f not in want:
+                continue
+            try:
+                rgb, _, _, _ = render(rig, vcam, src, 0.6, map_cache=mc)
+            except TypeError:
+                rgb, _, _, _ = render(rig, vcam, src, 0.6)
+            imgs[f] = rgb
+        rd.close()
+        for r in rs:
+            box = r["frames"][r["last"]]
+            frames = []
+            for d in offs:
+                img = imgs.get(r["last"] + d)
+                if img is None:
+                    continue
+                x0, y0, x1, y1 = box
+                pad = int(max(x1 - x0, y1 - y0) * 1.6)
+                cx0, cy0 = max(0, x0 - pad), max(0, y0 - pad)
+                cx1 = min(img.shape[1], x1 + pad)
+                cy1 = min(img.shape[0], y1 + pad)
+                crop = img[cy0:cy1, cx0:cx1].copy()
+                cv2.rectangle(crop, (x0 - cx0, y0 - cy0),
+                              (x1 - cx0, y1 - cy0), (60, 220, 255), 2)
+                h = int(round(crop.shape[0] * a.width / max(1, crop.shape[1])))
+                ok, buf = cv2.imencode(".jpg",
+                                       cv2.resize(crop, (a.width, max(1, h))),
+                                       [int(cv2.IMWRITE_JPEG_QUALITY), 84])
+                if ok:
+                    frames.append({"dt": d, "img": "data:image/jpeg;base64,"
+                                   + base64.b64encode(buf).decode()})
+            if frames:
+                out.append({"key": key_of(r), "rec": rec, "last": r["last"],
+                            "n_det": r["n_det"], "tail": 11, "frames": frames})
+    with open(a.out, "w", encoding="utf-8") as f:
+        f.write(TAIL_SHEET.replace("__PAYLOAD__",
+                                   json.dumps({"tag": "tails", "runs": out})))
+    print(f"\n  {len(out)} 条 -> {a.out} "
+          f"({os.path.getsize(a.out) / 1e6:.1f} MB)")
+    print("  1 脸还在（T2 会漏）  2 脸已经不在（T2 无损）  3 说不准")
+
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--mode", choices=("dump", "sheet", "report"),
+    ap.add_argument("--mode", choices=("dump", "sheet", "report", "tail"),
                     required=True)
     ap.add_argument("--clips", default="/workspace/e2e_main2.txt")
     ap.add_argument("--rec", action="append")
@@ -444,6 +629,8 @@ def main():
     ap.add_argument("--hold", type=int, default=12)
     ap.add_argument("--gap", type=int, default=GAP)
     ap.add_argument("--width", type=int, default=180)
+    ap.add_argument("--tail_at", default="2,5,8,11",
+                    help="frames after the last detection to show")
     ap.add_argument("--out")
     ap.add_argument("--face_model",
                     default="/workspace/models/yolov8n-face-lindevs.onnx")
@@ -459,6 +646,12 @@ def main():
              if not int(r.get("vetoed", 0))]
     if a.mode == "sheet":
         sheet(a, props)
+        return
+    if a.mode == "tail":
+        lb = {}
+        for r in csv.DictReader(open(a.labels, encoding="utf-8-sig")):
+            lb[r["key"]] = bool(int(r["is_face"]))
+        tails(a, props, lb)
         return
     labels = {}
     if a.labels:

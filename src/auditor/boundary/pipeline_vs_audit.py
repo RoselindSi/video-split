@@ -110,8 +110,17 @@ def load_timelines(patterns):
 
 
 def _rid_from_path(p, d):
+    """Recover the recording id from a run's own paths. -> str
+
+    THE IDS HAVE NOT MET TWICE BEFORE AND EACH TIME THE COMPARISON SILENTLY
+    RETURNED ZERO. The audit writes `4`, the manifest writes
+    `recording_000004`, and a run directory writes `rec004`; the first two
+    normalise together and the third used to match nothing, because a
+    three-digit `rec004` fails both the `recording_` prefix and the four-digit
+    run. Anything recovered here is passed through `_norm_rid`, so the forms
+    only have to be recognised, not spelled the same."""
     src = str(d.get("source_video") or p)
-    m = re.search(r"(recording_\d+|\d{4,})", src)
+    m = re.search(r"(recording[_-]?\d+|rec[_-]?\d+|\d{4,})", src)
     return m.group(1) if m else p
 
 
