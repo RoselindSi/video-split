@@ -84,6 +84,52 @@ def proj_matrix(cam, np):
     return np.hstack([Rt, (-Rt @ t).reshape(3, 1)])
 
 
+def disparity_at(pix, Z, camL, camR, cv2, np):
+    """Predicted uL-uR if the point at left-eye pixel `pix` were Z m away.
+
+    THE SIGN OF THE DISPARITY IS NOT A CONSTRAINT AND A GRID ON ONE RECORDING
+    SAID OTHERWISE. Back-projecting a 13x11 grid through one databag's
+    calibration gave 2145 positive disparities and no negative one, which read
+    as proof that a negative disparity means a wrong pair. It was proof about
+    that databag. Every recording carries its own calibration, and module A's
+    far-field disparity -- the offset that survives when parallax has gone,
+    mostly the two principal points -- runs from +88 px to -128 px across the
+    twenty-nine. Where it is -128, a hand half a metre away is SUPPOSED to
+    have a disparity near -50.
+
+    So the feasible interval is per pixel and per recording: back-project the
+    left pixel at the near and far ends of the plausible depth range and
+    project both into the right eye. Disparity is monotone in 1/Z, so the two
+    ends bracket everything in between, and the test is sharp where a sign
+    test had no margin at all."""
+    ray = undistort([pix], camL, cv2, np)[0]
+    R = np.asarray(camL.R, np.float64)
+    t = np.asarray(camL.t, np.float64).reshape(3)
+    P1 = R @ np.array([ray[0] * Z, ray[1] * Z, Z], np.float64) + t
+
+    def to_pix(cam):
+        q = proj_matrix(cam, np) @ np.append(P1, 1.0)
+        if q[2] <= 0:
+            return None
+        n = (q[:2] / q[2]).reshape(1, 1, 2)
+        p = cv2.fisheye.distortPoints(
+            np.asarray(n, np.float64), np.asarray(cam.K, np.float64),
+            np.asarray(cam.D, np.float64).reshape(4, 1))
+        return p.reshape(2)
+
+    a, b = to_pix(camL), to_pix(camR)
+    return None if a is None or b is None else float(a[0] - b[0])
+
+
+def disparity_band(pix, camL, camR, cv2, np, z_near=0.15, z_far=2.0):
+    """-> (low, high) disparity a real point at that pixel could produce."""
+    d1 = disparity_at(pix, z_near, camL, camR, cv2, np)
+    d2 = disparity_at(pix, z_far, camL, camR, cv2, np)
+    if d1 is None or d2 is None:
+        return None
+    return (min(d1, d2), max(d1, d2))
+
+
 def triangulate(pL, pR, camL, camR, cv2, np):
     """One normalised point in each eye -> (XYZ in cam1 frame, reproj px)"""
     PL, PR = proj_matrix(camL, np), proj_matrix(camR, np)

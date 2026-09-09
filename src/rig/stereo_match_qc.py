@@ -162,7 +162,46 @@ FIELDS = ("key", "rec", "frame", "tid", "module", "reference_owner",
           "side_l", "side_r", "side_agree", "conf_l", "conf_r",
           "size_ratio", "disparity_px", "epipolar_px", "angle_deg",
           "reproj_px", "range_m", "cheiral_ok",
+          "ul", "vl", "ur", "vr", "d_at_near", "d_at_far", "band_ok",
+          "z_implied",
           "kp_n", "kp_epi_med", "kp_disp_pos", "kp_depth_med", "kp_depth_iqr")
+
+# The depth range a hand in this corpus can plausibly be at. Deliberately
+# generous at both ends: this is a feasibility bound, not a prior.
+Z_NEAR, Z_FAR = 0.15, 2.0
+# How far outside the predicted band a correct pair may still fall. Two views
+# of the same hand do not put their box centres on the same 3D point -- the
+# silhouette differs -- so a few pixels of slack is physics, not fudge.
+BAND_SLACK_PX = 20.0
+
+
+def disparity_at(pix, Z, m, cv2, np, s3):
+    """Predicted uL-uR for a left-eye pixel if its point were Z metres away.
+
+    THIS IS THE FEASIBILITY CONSTRAINT `disparity > 0` WAS STANDING IN FOR.
+    Module A's own predicted disparity runs from +9 px to +180 at 0.3 m
+    depending on where in the fisheye the point sits, so a global sign test
+    has almost no margin there while a global magnitude test would be wrong
+    everywhere. Per pixel, the band is narrow and the test is sharp."""
+    ray = s3.undistort([pix], m.left, cv2, np)[0]
+    R = np.asarray(m.left.R, np.float64)
+    t = np.asarray(m.left.t, np.float64).reshape(3)
+    P1 = R @ np.array([ray[0] * Z, ray[1] * Z, Z]) + t
+
+    def to_pix(cam):
+        q = s3.proj_matrix(cam, np) @ np.append(P1, 1.0)
+        if q[2] <= 0:
+            return None
+        n = (q[:2] / q[2]).reshape(1, 1, 2)
+        p = cv2.fisheye.distortPoints(
+            np.asarray(n, np.float64), np.asarray(cam.K, np.float64),
+            np.asarray(cam.D, np.float64).reshape(4, 1))
+        return p.reshape(2)
+
+    pl, pr = to_pix(m.left), to_pix(m.right)
+    if pl is None or pr is None:
+        return None
+    return float(pl[0] - pr[0])
 
 
 def pair_features(dl, dr, m, cv2, np, s3):
@@ -200,7 +239,36 @@ def pair_features(dl, dr, m, cv2, np, s3):
         "conf_r": round(float(dr["conf"]), 3),
         "size_ratio": round(min(area(dl), area(dr))
                             / max(area(dl), area(dr)), 3),
+        "ul": round(cl[0], 1), "vl": round(cl[1], 1),
+        "ur": round(cr[0], 1), "vr": round(cr[1], 1),
     }
+    d_near = disparity_at(cl, Z_NEAR, m, cv2, np, s3)
+    d_far = disparity_at(cl, Z_FAR, m, cv2, np, s3)
+    obs = out["disparity_px"]
+    out["d_at_near"] = round(d_near, 1) if d_near is not None else ""
+    out["d_at_far"] = round(d_far, 1) if d_far is not None else ""
+    if d_near is None or d_far is None:
+        out["band_ok"] = ""
+        out["z_implied"] = ""
+    else:
+        lo, hi = min(d_near, d_far), max(d_near, d_far)
+        out["band_ok"] = int(lo - BAND_SLACK_PX <= obs <= hi + BAND_SLACK_PX)
+        # Disparity is monotone in 1/Z, so one bisection reads the depth the
+        # observed disparity is claiming. A hand at eight metres is a verdict.
+        a_, b_ = Z_NEAR, Z_FAR
+        z = ""
+        if lo <= obs <= hi:
+            for _ in range(40):
+                mid = 0.5 * (a_ + b_)
+                dm = disparity_at(cl, mid, m, cv2, np, s3)
+                if dm is None:
+                    break
+                if (dm > obs) == (d_near > d_far):
+                    a_ = mid
+                else:
+                    b_ = mid
+            z = round(0.5 * (a_ + b_), 3)
+        out["z_implied"] = z
     # THE 21-POINT TEST. Two arbitrary rays triangulate to something and
     # reproject well; twenty-one correspondences agreeing on one epipolar
     # geometry AND one depth is what a wrong pair cannot fake.
@@ -304,7 +372,9 @@ def build(a):
                     continue
                 eye[cam.name] = detect(model, src[cam.name], min_conf=a.conf)
                 if cam.name not in maps:
-                    maps[cam.name] = source_maps(rig, cam, vcam, 0.6)
+                    # `source_maps` looks the camera up by name; handing it
+                    # the object makes rig.cameras[...] hash an ndarray.
+                    maps[cam.name] = source_maps(rig, cam.name, vcam, 0.6)
 
             for r in need[f]:
                 u = int(round(float(r["u_frac"]) * W))
@@ -365,7 +435,7 @@ def build(a):
                 if not rowset:
                     continue
                 feas = [x for x in rowset
-                        if x["disparity_px"] > 0 and x["cheiral_ok"]]
+                        if x["band_ok"] == 1 and x["cheiral_ok"]]
                 order = sorted(rowset, key=lambda x: x["cur_cost"])
                 for rank, x in enumerate(order):
                     x["cost_rank"] = rank
@@ -479,8 +549,21 @@ def report(dump):
     pos = [r for r in ch if float(r["disparity_px"]) > 0]
     print(f"\n=== 被选中的对 {len(ch)}（负 {len(neg)} / 正 {len(pos)}）===")
 
+    print("\n  被选中的对落在自己那条深度带里吗"
+          f"（每个左眼像素单独算 {Z_NEAR}-{Z_FAR}m 的预测视差区间）")
+    for name, s in (("负视差", neg), ("正视差", pos)):
+        if not s:
+            continue
+        ok = sum(1 for r in s if str(r["band_ok"]) == "1")
+        zs = sorted(float(r["z_implied"]) for r in s
+                    if r["z_implied"] not in ("", None))
+        zt = f"   带内那些的隐含深度中位 {zs[len(zs)//2]:.2f}m" if zs else ""
+        print(f"    {name}  n={len(s)}   在带内 {ok} ({ok/len(s):.0%}){zt}")
+    print("    视差为正只是这条带的一个很松的下界。module_A 的预测视差"
+          "在 0.3m 处随像素从 +9 到 +180，所以『正』几乎没有余量。")
+
     print("\n  这到底是配错还是漏检？"
-          "（n_feasible = 该检测的所有候选对里视差为正且在两相机前方的个数）")
+          "（n_feasible = 该检测的所有候选对里落在深度带内且在两相机前方的个数）")
     for name, s in (("负视差", neg), ("正视差", pos)):
         if not s:
             continue

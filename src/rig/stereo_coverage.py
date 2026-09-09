@@ -54,11 +54,20 @@ SEED_RADIUS = 180.0
 # Below this angle the depth is conditioned badly enough that the point is not
 # a measurement. 3 degrees is roughly one metre at a 6 cm baseline.
 MIN_ANGLE_DEG = 3.0
-# Physical sanity, not a geometry criterion.
-MAX_LATERAL_M = 1.5
-Z_RANGE = (0.10, 6.0)
+# Physical sanity, not a geometry criterion. Range is a DISTANCE in the
+# module's own camera frame, not a coordinate in cam1's: only module A's cam1
+# Z is a depth, because B and C are rotated 31 and 60 degrees and a point half
+# a metre in front of cam5 lands at Z=0.19 in cam1's frame.
+RANGE_M = (0.10, 6.0)
+# The depth range a hand can plausibly be at, used to build the per-pixel
+# disparity band. Generous at both ends: it is a feasibility bound, not a
+# prior. The slack is the fact that two views of one hand do not put their box
+# centres on the same 3D point -- the silhouette differs between viewpoints.
+Z_NEAR, Z_FAR = 0.15, 2.0
+BAND_SLACK_PX = 20.0
 
-STAGES = ("seen", "left", "right", "matched", "angle_ok", "phys_ok", "usable")
+STAGES = ("seen", "left", "right", "matched", "angle_ok", "disp_ok",
+          "phys_ok", "usable")
 
 
 def size_band(w_frac):
@@ -97,7 +106,13 @@ def main():
     from src.rig.hand_track import Tracker, MAX_LOST
     from src.rig import demo_video
     from src.rig.stereo3d import (undistort, triangulate, tri_angle_deg,
-                                  epipolar_px)
+                                  disparity_band)
+
+    def in_cam(X, cam):
+        """cam1-frame point -> that camera's own frame."""
+        R = np.asarray(cam.R, np.float64)
+        t = np.asarray(cam.t, np.float64).reshape(3)
+        return R.T @ (np.asarray(X, np.float64) - t)
 
     clips = {}
     for line in open(a.clips):
@@ -168,7 +183,9 @@ def main():
                        "module": "", "left_found": 0, "right_found": 0,
                        "matched": 0, "angle_deg": "", "disparity_px": "",
                        "reproj_error": "", "x": "", "y": "", "z": "",
-                       "angle_ok": 0, "phys_ok": 0, "usable": 0}
+                       "z_local": "", "range_m": "",
+                       "d_lo": "", "d_hi": "",
+                       "angle_ok": 0, "disp_ok": 0, "phys_ok": 0, "usable": 0}
                 best = None
                 for m in mods:
                     got = {}
@@ -217,11 +234,31 @@ def main():
                 rec["x"], rec["y"], rec["z"] = (round(float(X[0]), 4),
                                                 round(float(X[1]), 4),
                                                 round(float(X[2]), 4))
+                # CHEIRALITY IN EACH CAMERA'S OWN FRAME, then a distance --
+                # not a coordinate. `X[2]` is a depth only for module A.
+                pL3, pR3 = in_cam(X, m.left), in_cam(X, m.right)
+                dist = float(np.linalg.norm(pL3))
+                rec["z_local"] = round(float(pL3[2]), 4)
+                rec["range_m"] = round(dist, 4)
                 rec["angle_ok"] = int(ang >= MIN_ANGLE_DEG)
-                rec["phys_ok"] = int(
-                    Z_RANGE[0] <= X[2] <= Z_RANGE[1]
-                    and max(abs(X[0]), abs(X[1])) <= MAX_LATERAL_M)
-                rec["usable"] = int(rec["angle_ok"] and rec["phys_ok"])
+                # THE GATE IS A PER-PIXEL DEPTH BAND, NOT THE SIGN. The sign
+                # test that stood here was justified by a grid run on ONE
+                # databag's calibration; module A's far-field disparity runs
+                # from +88 px to -128 px across the twenty-nine recordings, so
+                # in the recording where it is -128 a hand at half a metre is
+                # supposed to come out at about -50. That gate threw away 375
+                # pairs in 708 and most of them were fine.
+                band = disparity_band(cl, m.left, m.right, cv2, np,
+                                      Z_NEAR, Z_FAR)
+                rec["d_lo"] = "" if band is None else round(band[0], 1)
+                rec["d_hi"] = "" if band is None else round(band[1], 1)
+                rec["disp_ok"] = 0 if band is None else int(
+                    band[0] - BAND_SLACK_PX <= cl[0] - cr[0]
+                    <= band[1] + BAND_SLACK_PX)
+                rec["phys_ok"] = int(pL3[2] > 0 and pR3[2] > 0
+                                     and RANGE_M[0] <= dist <= RANGE_M[1])
+                rec["usable"] = int(rec["angle_ok"] and rec["phys_ok"]
+                                    and rec["disp_ok"])
                 rows.append(rec)
         rd.close()
 
@@ -239,6 +276,7 @@ def stage_flags(r):
     return {"seen": 1, "left": ok_l, "right": ok_r,
             "matched": int(r["matched"]),
             "angle_ok": int(r["angle_ok"]),
+            "disp_ok": int(r.get("disp_ok", 0)),
             "phys_ok": int(r["phys_ok"]),
             "usable": int(r["usable"])}
 
@@ -264,7 +302,7 @@ def funnel(rows, title):
               + (f"   (上一层的 {c/prev:.0%})" if prev and st != "seen" else ""))
         prev = c if c else prev
     mt = tot["matched"] or 1
-    for st in ("angle_ok", "phys_ok"):
+    for st in ("angle_ok", "disp_ok", "phys_ok"):
         c = tot[st]
         print(f"      {st:<10} {c:>6}  {c/n:>7.1%}   (配上的里 {c/mt:.0%})")
     c = tot["usable"]
@@ -296,8 +334,11 @@ def report(rows):
         if s:
             u = sum(int(r["usable"]) for r in s)
             o = sum(1 for r in s if not int(r["reference_owner"]))
+            d = sorted(float(r["range_m"]) for r in s
+                       if r.get("range_m") not in ("", None))
+            med = f"{d[len(d)//2]:.2f}m" if d else "—"
             print(f"  {band:<10} n={len(s):>5}  usable {u/len(s):>6.1%}   "
-                  f"其中参照=别人的手 {o/len(s):>6.1%}")
+                  f"其中参照=别人的手 {o/len(s):>6.1%}   距离中位 {med}")
 
     print(f"\n=== 轨迹级（P3 只需要够估轨迹，不需要每帧都有）===")
     by = collections.defaultdict(list)
