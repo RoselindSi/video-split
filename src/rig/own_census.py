@@ -37,7 +37,15 @@ import os
 
 QUESTIONS = [
     ("human_ownership", "这只手是谁的",
-     [("owner", "自己"), ("other", "别人"), ("unsure", "说不准")], False),
+     # `not_a_hand` IS NOT AN OWNERSHIP ANSWER AND THAT IS THE POINT. A red
+     # cloth, a bag of peppers, a basket of greens and a box degenerated to a
+     # vertical line all arrived here as ownership errors; the detector
+     # proposed a non-hand and the classifier then dutifully assigned it an
+     # owner. Nothing about ownership caused that, so folding those into
+     # `the classifier was wrong` would send the repair to the wrong stage --
+     # the same mistake the cover taxonomy already had to fix once.
+     [("owner", "自己"), ("other", "别人"),
+      ("not_a_hand", "根本不是手"), ("unsure", "说不准")], False),
     ("reference_rule", "冻结出口规则判得对吗",
      [("agrees", "规则对"), ("suspicious", "规则可疑"),
       ("contradicted", "规则相反")], False),
