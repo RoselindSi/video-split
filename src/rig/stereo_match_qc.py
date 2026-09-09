@@ -1,41 +1,46 @@
-"""Why does the front module pair the wrong two hands?
+"""Are the front module's odd pairs two different hands, or one hand twice?
 
-MODULE A PRODUCED 375 NEGATIVE DISPARITIES IN 708 MATCHES; B AND C PRODUCED 13
-AND 0. A 13x11 grid back-projected at four depths through the real KB4 model
-gives 2145 positive disparities and no negative one anywhere in the working
-volume, smallest +4 px, so those 375 pairs are not a sign convention -- they
-are wrong pairs. Their triangulation angles were HIGHER than the survivors',
-which is why neither the angle gate nor the reprojection error saw them.
+THIS SHEET WAS BUILT TO EXPLAIN 375 IMPOSSIBLE MATCHES AND THEY TURNED OUT NOT
+TO BE IMPOSSIBLE. A grid back-projected through the KB4 model gave 2145
+positive disparities and no negative one, which read as proof that a negative
+disparity meant a wrong pair -- but it was one databag's calibration. Module
+A's far-field disparity runs from +88 px to -128 px across the twenty-nine
+recordings, and where it is -128 a hand half a metre away is SUPPOSED to come
+out near -50. Judged against its own pixel's depth band, 80% of the 150
+negative pairs are perfectly ordinary hands at 0.36 m.
 
-THERE IS NO PAIR COST TO BLAME, AND THAT IS THE FINDING. The matcher projects
-the panorama box into each eye through `source_maps` and takes, in each eye
-INDEPENDENTLY, the detection nearest that predicted point within 180 px. Left
-and right are never compared to each other. Nothing in the procedure can
-notice that the two chosen boxes are different hands, so `disparity > 0` is
-the first thing in the whole pipeline that ever looked at the pair jointly.
-Module A is the front module and carries 69% of all matches: it is where the
-wearer's two hands and a colleague's hands are most often in shot together,
-which is exactly where independent nearest-neighbour breaks.
+SO THE SHEET NOW ANSWERS THE QUESTION THAT SURVIVED. Two hypotheses make
+opposite predictions and no amount of geometry can separate them, because
+every geometric statistic here has already failed:
 
-SO THE FIRST QUESTION IS NOT WHICH COST TO ADD. It is whether a correct pair
-was even available: if no pairing of the detections in the two eyes has a
-positive disparity, one eye simply missed the hand and this is a detection
-failure wearing a matching failure's clothes. `n_feasible` counts that, per
-panorama detection, before any repair is discussed.
+    H1  the pair is two different hands -- an association failure
+    H2  it is one hand, and the box CENTRE is not a stable stereo landmark,
+        because two views of a hand do not crop it the same way
 
-THE POSITIVE HALF IS JUDGED TOO, BLIND. A positive disparity is necessary and
-not sufficient -- two different hands at different depths can pair to a
-perfectly positive number -- so the sheet mixes matched pairs of both signs in
-random order and shows no geometry at all. If the labeller can see which arm a
-case is in, the control stops being a control; the same mistake that gave one
-defect a 2.2% and a 46.9% reading is available here too.
+Reprojection and epipolar error point the wrong way (the odd pairs score
+BETTER on both), the triangulation angle does not separate, handedness agrees
+96% either way, and the 21 keypoints add nothing: their epipolar residual is
+3.13 against 2.97 and their depth spread is TIGHTER on the odd ones. A person
+looking at two crops settles it in a second, and nothing else does.
 
-WHAT THE KEYPOINTS BUY. Two arbitrary rays always triangulate to something and
-reproject well, which is how a cross-match survives a reprojection test. The
-detector already returns 21 named points per hand, so the pair can be asked a
-much harder question: do all 21 correspondences satisfy the same epipolar
-geometry, and do they triangulate to depths within a few centimetres of each
-other. A wrong pair has to fake that 21 times over.
+WHAT REMAINS TRUE WITHOUT ANY MEASUREMENT is how the matcher works. It
+projects the panorama box into each eye and takes, in each eye INDEPENDENTLY,
+the detection nearest that point within 180 px. Left and right are never
+compared. So a pair cost does not exist to be blamed or improved -- which is
+also why the chosen pair is the cost minimum in 300 cases out of 300, and why
+`best minus second best` was never going to say anything.
+
+THE SHEET IS BLIND AND MIXES BOTH SIGNS. No geometry is shown, and the
+positive half is judged too: a labeller who can tell which arm a case is in
+turns the control into a second treatment. That is the same mistake that let
+one defect read 2.2% and 46.9% in two sampling frames.
+
+ONE REPAIR GETS TESTED, NOT THREE. M1 is M0 with the depth band as a
+feasibility filter -- same seed, same radius, same cost -- and it differs from
+M0 on 30 of the 300: it drops 22 and swaps 8. If that cannot remove the
+confirmed mismatches while keeping the confirmed good pairs, the failure is in
+the landmark rather than the association, and the next thing to try is a wrist
+rather than a better cost.
 """
 from __future__ import annotations
 
@@ -455,11 +460,23 @@ def build(a):
                     chosen["chosen"] = 1
                 for x in rowset:
                     dump.append({k2: x.get(k2, "") for k2 in FIELDS})
+                card_of = chosen
+                if a.m1_diff:
+                    # THE EIGHT PAIRS M1 SWAPS TO. They are the only new
+                    # thing it produces that has never been looked at, and
+                    # without a verdict on them the ablation cannot say
+                    # whether a swap was a repair or a second mistake.
+                    p1 = m1_pick(rowset)
+                    if p1 is None or (p1["li"], p1["ri"]) == (chosen["li"],
+                                                              chosen["ri"]):
+                        continue
+                    card_of = p1
                 if a.out:
                     # ENCODED HERE, NOT LATER. Holding the panorama and two
                     # 1920x1520 eyes for three hundred cards is six gigabytes;
                     # the three JPEGs are twenty kilobytes.
-                    cards.append(card(a, tag, f, r, chosen, rgb, src, m, cv2))
+                    cards.append(card(a, tag, f, r, card_of,
+                                      rgb, src, m, cv2))
 
         rd.close()
 
@@ -489,6 +506,102 @@ def crop(img, cx, cy, half, cv2, box=None, w=200, q=82):
                            [int(cv2.IMWRITE_JPEG_QUALITY), q])
     return ("data:image/jpeg;base64," +
             base64.b64encode(buf).decode()) if ok else ""
+
+
+def m1_pick(rowset):
+    """M0 plus one thing: the candidate must lie in its own depth band.
+
+    NOT A NEW MATCHER. Same seed projection, same 180 px radius, same
+    nearest-seed cost; the band only removes candidates that no real point at
+    that pixel could have produced. If it cannot separate the confirmed
+    mismatches from the confirmed correct pairs, the analytic repair is out of
+    moves and the failure is in the landmark, not in the association."""
+    cand = [x for x in rowset if x["seed_d_l"] < SEED_RADIUS
+            and x["seed_d_r"] < SEED_RADIUS]
+    feas = [x for x in cand if x["band_ok"] == 1 and x["cheiral_ok"]]
+    return min(feas, key=lambda x: x["cur_cost"]) if feas else None
+
+
+def ablate(a):
+    """M0 vs M1 on the pairs a person has actually judged.
+
+    THE LABELS ARE ON M0'S OUTPUT, so M1 can only be scored where it agrees
+    with M0 or where its own pick has been judged too. It agrees on 270 of the
+    300, rejects outright on 22 -- which needs no new label, since the
+    question there is only whether what it dropped was wrong -- and swaps the
+    pair on 8, which is why there is a second small sheet."""
+    rows = list(csv.DictReader(open(a.cov, encoding="utf-8-sig")))
+    for r in rows:
+        for k in ("seed_d_l", "seed_d_r", "cur_cost", "disparity_px"):
+            r[k] = float(r[k])
+        for k in ("band_ok", "cheiral_ok"):
+            r[k] = int(r[k]) if r[k] not in ("", None) else 0
+    lab = {}
+    for p in (a.labels or []) + (a.m1_labels or []):
+        for r in csv.DictReader(open(p, encoding="utf-8-sig")):
+            lab[r["key"]] = r["pattern"]
+    by = collections.defaultdict(list)
+    for r in rows:
+        by[(r["rec"], r["frame"], r["tid"])].append(r)
+
+    def key(k, x):
+        return f"{k[0]}:{k[1]}:{k[2]}:{x['li']}:{x['ri']}"
+
+    kept_ok = kept_bad = dropped_ok = dropped_bad = 0
+    swap = collections.Counter()
+    unjudged = 0
+    for k, v in by.items():
+        ch = next((x for x in v if int(x["chosen"])), None)
+        if ch is None:
+            continue
+        v0 = lab.get(key(k, ch))
+        if v0 is None:
+            continue
+        if v0 == "unclear":
+            unjudged += 1
+            continue
+        good0 = v0 == "same"
+        p = m1_pick(v)
+        if p is None:
+            if good0:
+                dropped_ok += 1
+            else:
+                dropped_bad += 1
+        elif (p["li"], p["ri"]) == (ch["li"], ch["ri"]):
+            if good0:
+                kept_ok += 1
+            else:
+                kept_bad += 1
+        else:
+            v1 = lab.get(key(k, p))
+            swap[(v0, v1 or "未标")] += 1
+
+    n_ok = kept_ok + dropped_ok + sum(n for (a_, b_), n in swap.items()
+                                      if a_ == "same")
+    n_bad = kept_bad + dropped_bad + sum(n for (a_, b_), n in swap.items()
+                                         if a_ != "same")
+    print(f"\n=== M0 vs M1（人工确认集，n={n_ok + n_bad}，"
+          f"另有 {unjudged} 个『看不清』不计）===")
+    print(f"  M0 判对 {n_ok}   M0 判错 {n_bad}   "
+          f"M0 correct-match rate {n_ok / max(1, n_ok + n_bad):.1%}")
+    print("\n  M1 对 M0 的每一类做了什么")
+    print(f"    对的留下   {kept_ok:>4}      对的被丢   {dropped_ok:>4}")
+    print(f"    错的留下   {kept_bad:>4}      错的被丢   {dropped_bad:>4}")
+    for (v0, v1), n in sorted(swap.items(), key=lambda x: -x[1]):
+        print(f"    换了对     M0={v0} -> M1={v1}   {n}")
+    swap_ok = sum(n for (a_, b_), n in swap.items() if b_ == "same")
+    swap_from_bad = sum(n for (a_, b_), n in swap.items() if a_ != "same")
+    rej = dropped_bad + swap_from_bad
+    print(f"\n  false-match rejection  {rej}/{n_bad} = "
+          f"{rej / max(1, n_bad):.1%}   （丢掉或换掉的错配）")
+    keep = kept_ok + sum(n for (a_, b_), n in swap.items()
+                         if a_ == "same" and b_ == "same")
+    print(f"  correct-match recall   {keep}/{n_ok} = "
+          f"{keep / max(1, n_ok):.1%}   （原本判对且 M1 仍给出正确对）")
+    print(f"  换对后变成正确的        {swap_ok}")
+    print("\n  判据（事前写死，不调阈值）：rejection 明显提高且 recall 基本不掉"
+          "\n  → matcher 可修，重跑 Gate A/B/C；否则 bbox 中心不是可靠的"
+          "\n  stereo landmark，只值得试一次 wrist/稳定关键点三角化。")
 
 
 def card(a, tag, f, r, ch, rgb, src, m, cv2):
@@ -631,10 +744,21 @@ def main():
     ap.add_argument("--ctx_scale", type=float, default=3.0)
     ap.add_argument("--page", type=int, default=100)
     ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--out_csv", required=True)
+    ap.add_argument("--out_csv", help="candidate-pair dump")
     ap.add_argument("--out", help="QC sheet html")
+    ap.add_argument("--m1_diff", action="store_true",
+                    help="sheet only the pairs M1 swaps to")
+    ap.add_argument("--ablate", action="store_true",
+                    help="score M0 vs M1 on the judged pairs")
+    ap.add_argument("--labels", nargs="*", help="pair_qc csvs")
+    ap.add_argument("--m1_labels", nargs="*", help="the M1-swap sheet's csv")
     a = ap.parse_args()
-    build(a)
+    if a.ablate:
+        ablate(a)
+    else:
+        if not a.out_csv:
+            ap.error("--out_csv is required when building")
+        build(a)
 
 
 if __name__ == "__main__":
