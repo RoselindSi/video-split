@@ -47,7 +47,12 @@ import os
 FIELDS = ("rec", "frame", "tid", "reference_owner", "p_owner_raw",
           "logit_owner", "ema_owner", "ownhold_pre_cap", "owner_count_pre_cap",
           "cap_triggered", "cap_demoted", "final_owner_post_cap",
-          "track_age", "track_lost", "side_raw", "side_conf")
+          "track_age", "track_lost", "side_raw", "side_conf",
+          # The box is here so a later census can rebuild the crop the
+          # classifier actually saw. Leaving it out once already meant the
+          # only follow-up question worth asking -- what was it looking at --
+          # could not be asked without repeating the whole run.
+          "x0", "y0", "x1", "y1")
 
 
 def logit(p, eps=1e-6):
@@ -150,7 +155,9 @@ def dump(a):
                     "track_age": int(tr.get("age", 0)),
                     "track_lost": int(tr.get("lost", 0)),
                     "side_raw": d.get("side", ""),
-                    "side_conf": round(float(d.get("conf", 0.0)), 4)})
+                    "side_conf": round(float(d.get("conf", 0.0)), 4),
+                    "x0": int(d["box"][0]), "y0": int(d["box"][1]),
+                    "x1": int(d["box"][2]), "y1": int(d["box"][3])})
         rd.close()
     with open(a.out, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(FIELDS))
