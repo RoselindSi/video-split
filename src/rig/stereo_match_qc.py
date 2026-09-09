@@ -1,0 +1,558 @@
+"""Why does the front module pair the wrong two hands?
+
+MODULE A PRODUCED 375 NEGATIVE DISPARITIES IN 708 MATCHES; B AND C PRODUCED 13
+AND 0. A 13x11 grid back-projected at four depths through the real KB4 model
+gives 2145 positive disparities and no negative one anywhere in the working
+volume, smallest +4 px, so those 375 pairs are not a sign convention -- they
+are wrong pairs. Their triangulation angles were HIGHER than the survivors',
+which is why neither the angle gate nor the reprojection error saw them.
+
+THERE IS NO PAIR COST TO BLAME, AND THAT IS THE FINDING. The matcher projects
+the panorama box into each eye through `source_maps` and takes, in each eye
+INDEPENDENTLY, the detection nearest that predicted point within 180 px. Left
+and right are never compared to each other. Nothing in the procedure can
+notice that the two chosen boxes are different hands, so `disparity > 0` is
+the first thing in the whole pipeline that ever looked at the pair jointly.
+Module A is the front module and carries 69% of all matches: it is where the
+wearer's two hands and a colleague's hands are most often in shot together,
+which is exactly where independent nearest-neighbour breaks.
+
+SO THE FIRST QUESTION IS NOT WHICH COST TO ADD. It is whether a correct pair
+was even available: if no pairing of the detections in the two eyes has a
+positive disparity, one eye simply missed the hand and this is a detection
+failure wearing a matching failure's clothes. `n_feasible` counts that, per
+panorama detection, before any repair is discussed.
+
+THE POSITIVE HALF IS JUDGED TOO, BLIND. A positive disparity is necessary and
+not sufficient -- two different hands at different depths can pair to a
+perfectly positive number -- so the sheet mixes matched pairs of both signs in
+random order and shows no geometry at all. If the labeller can see which arm a
+case is in, the control stops being a control; the same mistake that gave one
+defect a 2.2% and a 46.9% reading is available here too.
+
+WHAT THE KEYPOINTS BUY. Two arbitrary rays always triangulate to something and
+reproject well, which is how a cross-match survives a reprojection test. The
+detector already returns 21 named points per hand, so the pair can be asked a
+much harder question: do all 21 correspondences satisfy the same epipolar
+geometry, and do they triangulate to depths within a few centimetres of each
+other. A wrong pair has to fake that 21 times over.
+"""
+from __future__ import annotations
+
+import argparse
+import base64
+import collections
+import csv
+import json
+import math
+import os
+import random
+
+# The deployed matcher's only parameter: how far from the predicted pixel an
+# eye detection may sit and still be taken. Reproduced here rather than
+# imported so the QC keeps working if coverage's copy is changed.
+SEED_RADIUS = 180.0
+# Candidates considered by the QC. Wider than the matcher's own radius on
+# purpose: the pair it SHOULD have taken may be outside the radius it used,
+# and that difference is one of the answers being looked for.
+QC_RADIUS = 420.0
+
+PATTERNS = [("same", "同一只手（配对正确）"),
+            ("wearer_lr", "佩戴者左手 ↔ 佩戴者右手"),
+            ("wearer_other", "佩戴者的手 ↔ 别人的手"),
+            ("two_others", "两个不同的别人的手"),
+            ("not_hand", "有一边根本不是手"),
+            ("unclear", "看不清")]
+
+SHEET = """<meta charset=utf-8><title>module_A pair QC</title><style>
+body{font:13px/1.5 system-ui;margin:0;background:#111;color:#ddd}
+#bar{position:sticky;top:0;background:#181818;padding:9px 14px;z-index:9;
+  border-bottom:1px solid #333;display:flex;gap:14px;align-items:center;
+  flex-wrap:wrap}
+button{font:13px system-ui;padding:5px 10px;cursor:pointer}
+b{color:#ffd33d}
+.t{padding:9px 14px;border-bottom:1px solid #262626;display:flex;gap:10px;
+  align-items:flex-start}
+.t.cur{background:#1d2430;outline:2px solid #4a8}
+.t.done{border-left:5px solid #2a6}
+.meta{min-width:170px;color:#9ab;font-size:12px}
+.num{color:#8ab4c8;font-family:ui-monospace,monospace;font-size:11px}
+.strip{display:flex;gap:5px;flex:1;align-items:flex-start}
+.strip figure{margin:0;flex:1}
+.strip figure.pano{flex:2.2}
+.strip img{width:100%;border-radius:3px;display:block}
+.strip figcaption{font-size:10px;color:#888;text-align:center}
+.key{font-size:11px;color:#999}
+</style>
+<div id=bar><span id=prog></span><span id=keys></span>
+<button onclick="dl()">download CSV</button>
+<span class=key>左眼和右眼各一张裁剪，右边是同一时刻的全景（绿框=全景检测）。
+问的是：这两张裁剪里的，是不是同一只手。故意不显示任何几何数字。</span></div>
+<div id=list></div>
+<script>
+const D = __PAYLOAD__;
+const P = __PATTERNS__;
+const KEY = "pairqc:" + D.tag;
+let lab = {}, cur = 0, hist = [];
+try { lab = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch(e) { lab={}; }
+const list = document.getElementById("list");
+D.pairs.forEach((t, i) => {
+  const d = document.createElement("div");
+  d.className = "t"; d.id = "t" + i;
+  d.innerHTML = '<div class=meta>' + t.rec + ' f' + t.frame +
+    ' <span id=v' + i + '></span></div>' +
+    '<div class=strip>' +
+    '<figure><img src="' + t.l + '"><figcaption>左眼</figcaption></figure>' +
+    '<figure><img src="' + t.r + '"><figcaption>右眼</figcaption></figure>' +
+    '<figure class=pano><img src="' + t.p +
+    '"><figcaption>全景</figcaption></figure></div>';
+  d.onclick = () => { cur = i; draw(); };
+  list.appendChild(d);
+});
+function draw(){
+  D.pairs.forEach((t,i)=>{
+    const v = lab[t.key];
+    document.getElementById("t"+i).className =
+      "t" + (v ? " done" : "") + (i===cur ? " cur" : "");
+    document.getElementById("v"+i).innerHTML = v ?
+      '<b>' + (P.find(p => p[0] === v) || ["",v])[1] + '</b>' : '';
+  });
+  document.getElementById("keys").innerHTML =
+    P.map((p,k) => '<b>' + (k+1) + '</b> ' + p[1]).join(" &nbsp; ") +
+    ' &nbsp;&nbsp; <b>&uarr;&darr;</b> 换 &nbsp; <b>u</b> undo';
+  const n = D.pairs.filter(t => lab[t.key]).length;
+  document.getElementById("prog").innerHTML =
+    "<b>" + D.tag + "</b> &nbsp; " + n + "/" + D.pairs.length + " 已判";
+  localStorage.setItem(KEY, JSON.stringify(lab));
+  const el = document.getElementById("t"+cur);
+  if(el) el.scrollIntoView({block:"nearest"});
+}
+document.onkeydown = ev => {
+  const n = +ev.key;
+  if(n >= 1 && n <= P.length){
+    const t = D.pairs[cur]; if(!t) return;
+    hist.push([t.key, lab[t.key]]);
+    lab[t.key] = P[n-1][0];
+    cur = Math.min(cur+1, D.pairs.length-1); draw();
+  }
+  else if(ev.key==="ArrowDown"){cur=Math.min(cur+1,D.pairs.length-1);draw();}
+  else if(ev.key==="ArrowUp"){cur=Math.max(cur-1,0);draw();}
+  else if(ev.key==="u"){const h=hist.pop(); if(h){ if(h[1]===undefined)
+    delete lab[h[0]]; else lab[h[0]]=h[1]; draw(); }}
+  else return;
+  ev.preventDefault();
+};
+draw();
+function dl(){
+  let s = "key,rec,frame,pattern\\n";
+  for(const t of D.pairs) if(lab[t.key])
+    s += t.key + "," + t.rec + "," + t.frame + "," + lab[t.key] + "\\n";
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([s],{type:"text/csv"}));
+  a.download = "pair_qc_" + D.tag + ".csv"; a.click();
+}
+</script>
+"""
+
+FIELDS = ("key", "rec", "frame", "tid", "module", "reference_owner",
+          "pano_u", "pano_v", "pano_w_frac",
+          "li", "ri", "n_left", "n_right", "n_pairs", "n_feasible",
+          "chosen", "chosen_by_matcher",
+          "seed_d_l", "seed_d_r", "cur_cost", "cost_rank", "cost_margin",
+          "side_l", "side_r", "side_agree", "conf_l", "conf_r",
+          "size_ratio", "disparity_px", "epipolar_px", "angle_deg",
+          "reproj_px", "range_m", "cheiral_ok",
+          "kp_n", "kp_epi_med", "kp_disp_pos", "kp_depth_med", "kp_depth_iqr")
+
+
+def pair_features(dl, dr, m, cv2, np, s3):
+    """Everything about one candidate (left det, right det) pair."""
+    def ctr(d):
+        b = d["box"]
+        return ((float(b[0]) + float(b[2])) / 2.0,
+                (float(b[1]) + float(b[3])) / 2.0)
+
+    def area(d):
+        b = d["box"]
+        return max(1.0, (float(b[2]) - float(b[0]))
+                   * (float(b[3]) - float(b[1])))
+
+    cl, cr = ctr(dl), ctr(dr)
+    pL = s3.undistort([cl], m.left, cv2, np)[0]
+    pR = s3.undistort([cr], m.right, cv2, np)[0]
+    X, err = s3.triangulate(pL, pR, m.left, m.right, cv2, np)
+    R = np.asarray(m.left.R, np.float64)
+    t = np.asarray(m.left.t, np.float64).reshape(3)
+    XL = R.T @ (X - t)
+    R2 = np.asarray(m.right.R, np.float64)
+    t2 = np.asarray(m.right.t, np.float64).reshape(3)
+    XR = R2.T @ (X - t2)
+    out = {
+        "disparity_px": round(cl[0] - cr[0], 1),
+        "epipolar_px": round(s3.epipolar_px(pL, pR, m.left, m.right, np), 2),
+        "angle_deg": round(s3.tri_angle_deg(X, m.left, m.right, np), 2),
+        "reproj_px": round(float(err), 2),
+        "range_m": round(float(np.linalg.norm(XL)), 4),
+        "cheiral_ok": int(XL[2] > 0 and XR[2] > 0),
+        "side_l": dl.get("side", ""), "side_r": dr.get("side", ""),
+        "side_agree": int(dl.get("side") == dr.get("side")),
+        "conf_l": round(float(dl["conf"]), 3),
+        "conf_r": round(float(dr["conf"]), 3),
+        "size_ratio": round(min(area(dl), area(dr))
+                            / max(area(dl), area(dr)), 3),
+    }
+    # THE 21-POINT TEST. Two arbitrary rays triangulate to something and
+    # reproject well; twenty-one correspondences agreeing on one epipolar
+    # geometry AND one depth is what a wrong pair cannot fake.
+    kl, kr = dl.get("kp"), dr.get("kp")
+    epi, dep, pos, n = [], [], 0, 0
+    if kl is not None and kr is not None and len(kl) == len(kr):
+        for a_, b_ in zip(np.asarray(kl, np.float64),
+                          np.asarray(kr, np.float64)):
+            if not (a_[0] > 0 and a_[1] > 0 and b_[0] > 0 and b_[1] > 0):
+                continue
+            qL = s3.undistort([(a_[0], a_[1])], m.left, cv2, np)[0]
+            qR = s3.undistort([(b_[0], b_[1])], m.right, cv2, np)[0]
+            epi.append(s3.epipolar_px(qL, qR, m.left, m.right, np))
+            Y, _ = s3.triangulate(qL, qR, m.left, m.right, cv2, np)
+            dep.append(float((R.T @ (Y - t))[2]))
+            pos += int(a_[0] - b_[0] > 0)
+            n += 1
+    out["kp_n"] = n
+    if n >= 3:
+        epi.sort()
+        dep.sort()
+        q1, q3 = dep[len(dep) // 4], dep[(3 * len(dep)) // 4]
+        out["kp_epi_med"] = round(epi[len(epi) // 2], 2)
+        out["kp_disp_pos"] = round(pos / n, 3)
+        out["kp_depth_med"] = round(dep[len(dep) // 2], 4)
+        out["kp_depth_iqr"] = round(q3 - q1, 4)
+    else:
+        out["kp_epi_med"] = out["kp_disp_pos"] = ""
+        out["kp_depth_med"] = out["kp_depth_iqr"] = ""
+    return out, (cl, cr)
+
+
+def build(a):
+    import cv2
+    import numpy as np
+    from ultralytics import YOLO
+    from src.rig.calibration import RigCalibration
+    from src.rig.geometry import VirtualWideCamera, source_maps
+    from src.rig.render_wide import render
+    from src.rig.seam_fix import ClipReader
+    from src.rig.hand_detect import detect
+    from src.rig import stereo3d as s3
+
+    cov = list(csv.DictReader(open(a.cov, encoding="utf-8-sig")))
+    want = [r for r in cov
+            if r["module"] == a.module and r["matched"] == "1"]
+    neg = [r for r in want if float(r["disparity_px"]) <= 0]
+    pos = [r for r in want if float(r["disparity_px"]) > 0]
+    rnd = random.Random(a.seed)
+    rnd.shuffle(neg)
+    rnd.shuffle(pos)
+    sel = neg[:a.n_neg] + pos[:a.n_pos]
+    print(f"  {a.module}: 负视差 {len(neg)} 取 {min(a.n_neg, len(neg))}   "
+          f"正视差 {len(pos)} 取 {min(a.n_pos, len(pos))}")
+
+    by_rec = collections.defaultdict(list)
+    for r in sel:
+        by_rec[r["rec"]].append(r)
+
+    clips = {}
+    for line in open(a.clips):
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        p = line.rsplit(":", 2)
+        clips[os.path.basename(p[0].rstrip("/")).replace("databag-26_", "R")] \
+            = (p[0], int(p[1]))
+
+    model = YOLO(a.weights)
+    dump, cards = [], []
+    for tag in sorted(by_rec):
+        databag, start = clips[tag]
+        rig = RigCalibration(os.path.join(databag, "calibration.yaml"))
+        vcam = VirtualWideCamera.from_rig(rig)
+        mods = rig.modules() if callable(rig.modules) else rig.modules
+        m = next(x for x in mods if x.name == a.module)
+        vids = {k: os.path.join(databag, f"{k}.mp4")
+                for k in ("cam12", "cam34", "cam56")}
+        need = collections.defaultdict(list)
+        for r in by_rec[tag]:
+            need[int(r["frame"])].append(r)
+        lo, hi = min(need), max(need)
+        rd = ClipReader(rig, vids, lo)
+        mc, maps = {}, {}
+        print(f"  {tag}: {len(by_rec[tag])} 个检测, 读 {lo}-{hi}", flush=True)
+        for k in range(hi - lo + 1):
+            src = rd.next()
+            if not src:
+                break
+            f = lo + k
+            if f not in need:
+                continue
+            try:
+                rgb, _, _, _ = render(rig, vcam, src, 0.6, map_cache=mc)
+            except TypeError:
+                rgb, _, _, _ = render(rig, vcam, src, 0.6)
+            H, W = rgb.shape[:2]
+            eye = {}
+            for cam in (m.left, m.right):
+                if cam.name not in src:
+                    continue
+                eye[cam.name] = detect(model, src[cam.name], min_conf=a.conf)
+                if cam.name not in maps:
+                    maps[cam.name] = source_maps(rig, cam, vcam, 0.6)
+
+            for r in need[f]:
+                u = int(round(float(r["u_frac"]) * W))
+                v = int(round(float(r["v_frac"]) * H))
+                u, v = min(max(u, 0), W - 1), min(max(v, 0), H - 1)
+                seeds = {}
+                for side, cam in (("l", m.left), ("r", m.right)):
+                    mp = maps.get(cam.name)
+                    if mp is None or not mp[2][v, u]:
+                        continue
+                    seeds[side] = (float(mp[0][v, u]), float(mp[1][v, u]))
+                if len(seeds) < 2:
+                    continue
+                L = eye.get(m.left.name, [])
+                R = eye.get(m.right.name, [])
+
+                def near(dets, seed, rad):
+                    out = []
+                    for i, d in enumerate(dets):
+                        cx = (float(d["box"][0]) + float(d["box"][2])) / 2.0
+                        cy = (float(d["box"][1]) + float(d["box"][3])) / 2.0
+                        dd = math.hypot(cx - seed[0], cy - seed[1])
+                        if dd < rad:
+                            out.append((i, d, dd))
+                    return out
+
+                cl = near(L, seeds["l"], a.radius)
+                cr = near(R, seeds["r"], a.radius)
+                if not cl or not cr:
+                    continue
+                # The deployed matcher: nearest in each eye INDEPENDENTLY,
+                # inside 180 px. Reproduced, not imported, so the QC keeps
+                # meaning the same thing if coverage's copy moves.
+                pick_l = min((x for x in cl if x[2] < SEED_RADIUS),
+                             key=lambda x: x[2], default=None)
+                pick_r = min((x for x in cr if x[2] < SEED_RADIUS),
+                             key=lambda x: x[2], default=None)
+                rowset = []
+                for il, dl, ddl in cl:
+                    for ir, dr, ddr in cr:
+                        feat, (pl, pr) = pair_features(dl, dr, m, cv2, np, s3)
+                        row = {"key": f"{tag}:{f}:{r['tid']}",
+                               "rec": tag, "frame": f, "tid": r["tid"],
+                               "module": a.module,
+                               "reference_owner": r["reference_owner"],
+                               "pano_u": u, "pano_v": v,
+                               "pano_w_frac": r["w_frac"],
+                               "li": il, "ri": ir,
+                               "n_left": len(cl), "n_right": len(cr),
+                               "seed_d_l": round(ddl, 1),
+                               "seed_d_r": round(ddr, 1),
+                               "cur_cost": round(ddl + ddr, 1),
+                               "chosen": 0, "chosen_by_matcher": 0}
+                        row.update(feat)
+                        row["_dl"], row["_dr"] = dl, dr
+                        row["_pl"], row["_pr"] = pl, pr
+                        rowset.append(row)
+                if not rowset:
+                    continue
+                feas = [x for x in rowset
+                        if x["disparity_px"] > 0 and x["cheiral_ok"]]
+                order = sorted(rowset, key=lambda x: x["cur_cost"])
+                for rank, x in enumerate(order):
+                    x["cost_rank"] = rank
+                    x["cost_margin"] = round(
+                        order[1]["cur_cost"] - order[0]["cur_cost"], 1) \
+                        if len(order) > 1 else ""
+                    x["n_pairs"] = len(rowset)
+                    x["n_feasible"] = len(feas)
+                chosen = None
+                if pick_l is not None and pick_r is not None:
+                    for x in rowset:
+                        if x["li"] == pick_l[0] and x["ri"] == pick_r[0]:
+                            x["chosen"] = x["chosen_by_matcher"] = 1
+                            chosen = x
+                if chosen is None:
+                    chosen = order[0]
+                    chosen["chosen"] = 1
+                for x in rowset:
+                    dump.append({k2: x.get(k2, "") for k2 in FIELDS})
+                if a.out:
+                    # ENCODED HERE, NOT LATER. Holding the panorama and two
+                    # 1920x1520 eyes for three hundred cards is six gigabytes;
+                    # the three JPEGs are twenty kilobytes.
+                    cards.append(card(a, tag, f, r, chosen, rgb, src, m, cv2))
+
+        rd.close()
+
+    with open(a.out_csv, "w", newline="", encoding="utf-8") as fh:
+        w = csv.DictWriter(fh, fieldnames=list(FIELDS))
+        w.writeheader()
+        w.writerows(dump)
+    print(f"  {len(dump)} 个候选对 -> {a.out_csv}")
+    report(dump)
+
+    if a.out:
+        write_sheet(a, cards, cv2)
+
+
+def crop(img, cx, cy, half, cv2, box=None, w=200, q=82):
+    H, W = img.shape[:2]
+    x0, y0 = max(0, int(cx - half)), max(0, int(cy - half))
+    x1, y1 = min(W, int(cx + half)), min(H, int(cy + half))
+    c = img[y0:y1, x0:x1].copy()
+    if c.size == 0:
+        return ""
+    if box is not None:
+        cv2.rectangle(c, (int(box[0]) - x0, int(box[1]) - y0),
+                      (int(box[2]) - x0, int(box[3]) - y0), (60, 255, 60), 2)
+    h = int(round(c.shape[0] * w / max(1, c.shape[1])))
+    ok, buf = cv2.imencode(".jpg", cv2.resize(c, (w, max(1, h))),
+                           [int(cv2.IMWRITE_JPEG_QUALITY), q])
+    return ("data:image/jpeg;base64," +
+            base64.b64encode(buf).decode()) if ok else ""
+
+
+def card(a, tag, f, r, ch, rgb, src, m, cv2):
+    dl, dr = ch["_dl"], ch["_dr"]
+    pl, pr = ch["_pl"], ch["_pr"]
+    iml, imr = src.get(m.left.name), src.get(m.right.name)
+    if iml is None or imr is None:
+        return None
+
+    def half(d):
+        return max(60, int(max(float(d["box"][2]) - float(d["box"][0]),
+                               float(d["box"][3]) - float(d["box"][1]))
+                           * a.ctx_scale / 2))
+
+    W = rgb.shape[1]
+    wf = float(r["w_frac"]) * W
+    pano = rgb.copy()
+    cv2.rectangle(pano, (int(ch["pano_u"] - wf / 2),
+                         int(ch["pano_v"] - wf / 2)),
+                  (int(ch["pano_u"] + wf / 2),
+                   int(ch["pano_v"] + wf / 2)), (60, 255, 60), 3)
+    return {"key": f"{tag}:{f}:{r['tid']}:{ch['li']}:{ch['ri']}",
+            "rec": tag, "frame": f,
+            "l": crop(iml, pl[0], pl[1], half(dl), cv2, dl["box"], a.crop_w),
+            "r": crop(imr, pr[0], pr[1], half(dr), cv2, dr["box"], a.crop_w),
+            "p": crop(pano, ch["pano_u"], ch["pano_v"],
+                      max(220, wf * 2.5), cv2, None, a.pano_w)}
+
+
+def write_sheet(a, cards, cv2):
+    out = [c for c in cards if c]
+    # BLIND. Negative and positive disparity mixed, no geometry shown: a
+    # labeller who can tell which arm a case is in makes the control useless.
+    random.Random(a.seed + 7).shuffle(out)
+    stem, ext = os.path.splitext(a.out)
+    n_pg = max(1, (len(out) + a.page - 1) // a.page)
+    for i in range(n_pg):
+        part = out[i * a.page:(i + 1) * a.page]
+        path = a.out if n_pg == 1 else f"{stem}_{i + 1}{ext}"
+        tag = "all" if n_pg == 1 else f"p{i + 1}"
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(SHEET.replace("__PAYLOAD__",
+                                   json.dumps({"tag": tag, "pairs": part}))
+                     .replace("__PATTERNS__",
+                              json.dumps([[k, v] for k, v in PATTERNS],
+                                         ensure_ascii=False)))
+        print(f"  {len(part):>3} 对 -> {path} "
+              f"({os.path.getsize(path) / 1e6:.1f} MB)")
+    for i, (k, v) in enumerate(PATTERNS):
+        print(f"  {i + 1} {v}")
+
+
+def report(dump):
+    ch = [r for r in dump if int(r["chosen"])]
+    if not ch:
+        return
+    neg = [r for r in ch if float(r["disparity_px"]) <= 0]
+    pos = [r for r in ch if float(r["disparity_px"]) > 0]
+    print(f"\n=== 被选中的对 {len(ch)}（负 {len(neg)} / 正 {len(pos)}）===")
+
+    print("\n  这到底是配错还是漏检？"
+          "（n_feasible = 该检测的所有候选对里视差为正且在两相机前方的个数）")
+    for name, s in (("负视差", neg), ("正视差", pos)):
+        if not s:
+            continue
+        z = sum(1 for r in s if int(r["n_feasible"]) == 0)
+        one = sum(1 for r in s if int(r["n_feasible"]) == 1)
+        more = len(s) - z - one
+        print(f"    {name}  n={len(s)}   没有可行对 {z} ({z/len(s):.0%})"
+              f"   恰好一个 {one} ({one/len(s):.0%})"
+              f"   多于一个 {more} ({more/len(s):.0%})")
+    print("    『没有可行对』= 有一只眼睛根本没检到这只手，那是检测问题，"
+          "换 cost function 救不了。")
+
+    print("\n  同帧候选密度（组合歧义的直接证据）")
+    for name, s in (("负视差", neg), ("正视差", pos)):
+        if not s:
+            continue
+        nl = sorted(int(r["n_left"]) for r in s)
+        nr = sorted(int(r["n_right"]) for r in s)
+        np_ = sorted(int(r["n_pairs"]) for r in s)
+        multi = sum(1 for r in s if int(r["n_pairs"]) > 1)
+        print(f"    {name}  左眼候选中位 {nl[len(nl)//2]}  "
+              f"右眼 {nr[len(nr)//2]}  候选对中位 {np_[len(np_)//2]}  "
+              f"不止一个候选对 {multi}/{len(s)} = {multi/len(s):.0%}")
+
+    print("\n  现有 cost（两眼各自到种子点的距离之和）能不能分开")
+    for name, s in (("负视差", neg), ("正视差", pos)):
+        if not s:
+            continue
+        c = sorted(float(r["cur_cost"]) for r in s)
+        rk = collections.Counter(int(r["cost_rank"]) for r in s)
+        print(f"    {name}  cost 中位 {c[len(c)//2]:.0f}px   "
+              f"被选中的对在 cost 排序里排第一的比例 "
+              f"{rk[0]}/{len(s)} = {rk[0]/len(s):.0%}")
+
+    print("\n  各特征在两组上的中位（能不能当 feasibility 用）")
+    keys = ("epipolar_px", "angle_deg", "reproj_px", "range_m",
+            "size_ratio", "kp_epi_med", "kp_disp_pos", "kp_depth_iqr")
+    print(f"    {'':<14}{'负视差':>12}{'正视差':>12}")
+    for k in keys:
+        def med(s):
+            v = sorted(float(r[k]) for r in s if r[k] not in ("", None))
+            return f"{v[len(v)//2]:.3g}" if v else "—"
+        print(f"    {k:<14}{med(neg):>12}{med(pos):>12}")
+    for name, s in (("负视差", neg), ("正视差", pos)):
+        if s:
+            ag = sum(int(r["side_agree"]) for r in s)
+            print(f"    {name} 左右眼手别一致 {ag}/{len(s)} = {ag/len(s):.0%}")
+
+
+def main():
+    ap = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--cov", required=True, help="stereo_coverage csv")
+    ap.add_argument("--clips", default="/workspace/e2e_main2.txt")
+    ap.add_argument("--module", default="module_A")
+    ap.add_argument("--n_neg", type=int, default=150)
+    ap.add_argument("--n_pos", type=int, default=150)
+    ap.add_argument("--radius", type=float, default=QC_RADIUS)
+    ap.add_argument("--conf", type=float, default=0.25)
+    ap.add_argument("--weights",
+                    default="/shared/models/HaWoR/weights/external/detector.pt")
+    ap.add_argument("--crop_w", type=int, default=190)
+    ap.add_argument("--pano_w", type=int, default=380)
+    ap.add_argument("--ctx_scale", type=float, default=3.0)
+    ap.add_argument("--page", type=int, default=100)
+    ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--out_csv", required=True)
+    ap.add_argument("--out", help="QC sheet html")
+    a = ap.parse_args()
+    build(a)
+
+
+if __name__ == "__main__":
+    main()
