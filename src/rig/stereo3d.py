@@ -441,7 +441,7 @@ def qc(a):
                     rp = tuple(int(v) for v in pix.reshape(2))
                 pad = int(max(x1 - x0, y1 - y0) * 1.4)
                 cx0, cy0 = max(0, x0 - pad), max(0, y0 - pad)
-                cx1, cy1 = min(img.shape[1], x1 + pad)
+                cx1 = min(img.shape[1], x1 + pad)
                 cy1 = min(img.shape[0], y1 + pad)
                 crop = img[cy0:cy1, cx0:cx1].copy()
                 cv2.rectangle(crop, (x0 - cx0, y0 - cy0),
