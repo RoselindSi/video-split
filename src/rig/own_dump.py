@@ -297,12 +297,32 @@ def main():
                     default="/shared/models/HaWoR/weights/external/detector.pt")
     ap.add_argument("--out", default="/workspace/own_dump.csv")
     ap.add_argument("--rows", help="report mode: the dumped csv")
+    ap.add_argument("--hands", nargs="*",
+                    help="hand_precision label csvs; keep only the tracks a "
+                         "person confirmed are hands")
     a = ap.parse_args()
 
     if a.mode == "dump":
         dump(a)
         return
-    report(list(csv.DictReader(open(a.rows, encoding="utf-8-sig"))))
+    rows = list(csv.DictReader(open(a.rows, encoding="utf-8-sig")))
+    if a.hands:
+        # THE DENOMINATOR WAS CONTAMINATED. 18.2% of the tracks handed to the
+        # ownership classifier are not hands at all, and a detector proposing
+        # a bag of peppers is not an ownership failure -- charging it to this
+        # stage sends the repair to the wrong place. Everything below is
+        # re-derived on the tracks a person confirmed, so the census counts
+        # only errors ownership could have made.
+        keep = set()
+        for f in a.hands:
+            for r in csv.DictReader(open(f, encoding="utf-8-sig")):
+                if r["verdict"] == "hand":
+                    keep.add((r["rec"], r["tid"]))
+        n0 = len(rows)
+        rows = [r for r in rows if (r["rec"], r["tid"]) in keep]
+        print(f"  只保留人工确认是手的轨迹：{len(keep)} 条，"
+              f"{n0} -> {len(rows)} 帧-手")
+    report(rows)
 
 
 if __name__ == "__main__":
