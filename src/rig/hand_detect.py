@@ -520,6 +520,13 @@ class OwnHold:
         # the cap, not the classifier and not the prior, is this system's
         # decision maker, and replacing it is a bigger change than it looks.
         # Nothing has recorded it since. This does, and decides nothing.
+        # INSTRUMENTATION ONLY, like `last_demoted` beside it. The cap is a
+        # frame-level constraint applied on top of a per-track belief, and its
+        # verdict is written back into that belief, so a flip seen at the
+        # output cannot be charged to the classifier, the hysteresis or the
+        # cap without keeping the three apart. This is the state before the
+        # cap has touched anything; nothing reads it inside this class.
+        self.last_pre_cap = [(bool(o), float(p)) for o, p in out]
         self.last_demoted = []
         if self.max_owner is not None:
             own_i = [i for i, (o, _) in enumerate(out) if o]
