@@ -55,7 +55,13 @@ FIELDS = ("rec", "frame", "module", "tid",
           "entry_dir_x", "entry_dir_y", "entry_dir_z", "distance_to_rig",
           "left_x0", "left_y0", "left_x1", "left_y1", "left_conf", "left_side",
           "right_x0", "right_y0", "right_x1", "right_y1", "right_conf",
-          "right_side")
+          "right_side",
+          # DIAGNOSTICS. `match_margin` is the one that matters: three hands
+          # producing three pairs is not the same as three unambiguous pairs,
+          # and a best cost of 0.21 against a second best of 0.22 is a coin
+          # toss wearing the shape of a unique assignment.
+          "disparity_px", "epipolar_error_px", "triangulation_angle_deg",
+          "match_cost", "match_margin", "invalid_reason", "timestamp_s")
 
 
 def undistort(pts, cam, cv2, np):
@@ -96,6 +102,50 @@ def triangulate(pL, pR, camL, camR, cv2, np):
         f = float(np.asarray(cam.K)[0, 0])
         err = max(err, f * float(np.linalg.norm(q - np.asarray(p))))
     return X, err
+
+
+def relative_pose(camL, camR, np):
+    """Left camera -> right camera. -> (R, t)
+
+    Both are stored as camX -> cam1, so composing one forward and the other
+    backward gives the transform between them."""
+    RL = np.asarray(camL.R, np.float64)
+    tL = np.asarray(camL.t, np.float64).reshape(3)
+    RR = np.asarray(camR.R, np.float64)
+    tR = np.asarray(camR.t, np.float64).reshape(3)
+    R = RR.T @ RL
+    t = RR.T @ (tL - tR)
+    return R, t
+
+
+def epipolar_px(pL, pR, camL, camR, np):
+    """Sampson distance to the epipolar line, in pixels. -> float"""
+    R, t = relative_pose(camL, camR, np)
+    tx = np.array([[0, -t[2], t[1]], [t[2], 0, -t[0]], [-t[1], t[0], 0]])
+    E = tx @ R
+    xL = np.array([pL[0], pL[1], 1.0])
+    xR = np.array([pR[0], pR[1], 1.0])
+    Ex, Etx = E @ xL, E.T @ xR
+    d = Ex[0] ** 2 + Ex[1] ** 2 + Etx[0] ** 2 + Etx[1] ** 2
+    if d <= 0:
+        return float("inf")
+    f = float(np.asarray(camL.K)[0, 0])
+    return float(f * abs(xR @ Ex) / math.sqrt(d))
+
+
+def tri_angle_deg(X, camL, camR, np):
+    """Angle between the two rays at the reconstructed point. -> degrees
+
+    A small angle means the depth is poorly conditioned however clean the
+    reprojection looks, which is the failure a 6 cm baseline invites at range."""
+    cL = np.asarray(camL.t, np.float64).reshape(3)
+    cR = np.asarray(camR.t, np.float64).reshape(3)
+    a, b = np.asarray(X) - cL, np.asarray(X) - cR
+    na, nb = np.linalg.norm(a), np.linalg.norm(b)
+    if na < 1e-9 or nb < 1e-9:
+        return 0.0
+    return float(math.degrees(math.acos(
+        max(-1.0, min(1.0, float(a @ b) / (na * nb))))))
 
 
 def eyes(frame, np):
@@ -184,6 +234,19 @@ def probe(a):
                     usedL.add(i)
                     usedR.add(j)
                     stats["matched"] += 1
+                    # THE MARGIN IS THE HONEST AMBIGUITY MEASURE. A unique
+                    # assignment can still be a coin toss: what matters is how
+                    # much worse the runner-up was for either of these two
+                    # detections, not that the algorithm produced one answer.
+                    alt = [c[0] for c in cand
+                           if (c[1] == i or c[2] == j) and not (c[1] == i and c[2] == j)]
+                    margin = (min(alt) - err) if alt else float("inf")
+                    cxi = (di["box"][0] + di["box"][2]) / 2.0
+                    cxj = (dj["box"][0] + dj["box"][2]) / 2.0
+                    pLn = undistort([(cxi, (di["box"][1] + di["box"][3]) / 2.0)],
+                                    m.left, cv2, np)[0]
+                    pRn = undistort([(cxj, (dj["box"][1] + dj["box"][3]) / 2.0)],
+                                    m.right, cv2, np)[0]
                     rows.append({
                         "rec": tag, "frame": start + k, "module": m.name,
                         "tid": "", "x": round(float(X[0]), 4),
@@ -201,7 +264,17 @@ def probe(a):
                         "right_x0": int(dj["box"][0]), "right_y0": int(dj["box"][1]),
                         "right_x1": int(dj["box"][2]), "right_y1": int(dj["box"][3]),
                         "right_conf": round(float(dj["conf"]), 3),
-                        "right_side": dj.get("side", "")})
+                        "right_side": dj.get("side", ""),
+                        "disparity_px": round(float(cxi - cxj), 1),
+                        "epipolar_error_px": round(
+                            epipolar_px(pLn, pRn, m.left, m.right, np), 2),
+                        "triangulation_angle_deg": round(
+                            tri_angle_deg(X, m.left, m.right, np), 2),
+                        "match_cost": round(err, 2),
+                        "match_margin": ("inf" if margin == float("inf")
+                                         else round(margin, 2)),
+                        "invalid_reason": "",
+                        "timestamp_s": round((start + k) / 30.0, 2)})
             cap.release()
 
     print(f"\n  === 检测（每只眼单独跑，原始鱼眼图）===")
@@ -245,6 +318,172 @@ def probe(a):
         print("  这一轮只验证几何与单帧匹配，不做跟踪。")
 
 
+
+QC_SHEET = """<meta charset=utf-8><title>stereo QC</title><style>
+body{font:13px/1.5 system-ui;margin:0;background:#111;color:#ddd}
+#bar{position:sticky;top:0;background:#181818;padding:9px 14px;z-index:9;
+  border-bottom:1px solid #333}
+b{color:#ffd33d}
+.c{padding:12px 14px;border-bottom:1px solid #262626}
+.c.A{border-left:5px solid #2a6}
+.c.B{border-left:5px solid #d83}
+.c.C{border-left:5px solid #d33}
+.hd{color:#9ab;font-size:12px;margin-bottom:5px}
+.tag{padding:1px 7px;border-radius:3px;font-size:11px;margin-right:6px}
+.tag.A{background:#264}.tag.B{background:#752}.tag.C{background:#733}
+.num{color:#8ab4c8;font-family:ui-monospace,monospace;font-size:11px}
+.pair{display:flex;gap:8px}
+.pair figure{margin:0;flex:1}
+.pair img{width:100%;border-radius:3px;display:block}
+.pair figcaption{font-size:11px;color:#999;text-align:center;margin-top:2px}
+</style>
+<div id=bar><b>stereo QC</b> &nbsp;
+<span class=num>青框=检测框　黄点=框中心（三角化用的点）　洋红十字=3D 点重投影回来的位置<br>
+黄点和洋红十字重合 = 几何自洽；两只眼的黄点落在手的不同部位 = 中心不是同一个解剖点</span></div>
+__BODY__
+"""
+
+
+def qc(a):
+    """Look at the pairs before trusting the numbers they produced.
+
+    THE MATHS BEING RIGHT DOES NOT MAKE THE MEASUREMENT RIGHT. A synthetic
+    point triangulates exactly, which proves the code, not that two detector
+    boxes in two eyes centre on the same part of a hand. If the left box
+    centres on the palm and the right on the knuckles, every reconstruction
+    carries that offset, and differencing positions into a velocity would
+    amplify it -- so this is the gate before any trajectory feature exists.
+
+    Three strata, because the failure modes differ: a random sample says
+    whether the typical pair is sane, the smallest margins say whether the
+    assignment was ever really a choice, and the largest reprojection errors
+    say what the tail is made of."""
+    import base64
+    import cv2
+    import numpy as np
+    import random
+    from src.rig.calibration import RigCalibration
+
+    rows = [r for r in csv.DictReader(open(a.rows, encoding="utf-8-sig"))
+            if int(r.get("stereo_valid", 0))]
+    if not rows:
+        raise SystemExit(f"no valid rows in {a.rows}")
+
+    def margin(r):
+        v = r.get("match_margin", "")
+        return float("inf") if v in ("", "inf") else float(v)
+
+    rng = random.Random(a.seed)
+    picked, seen = [], set()
+    for tag, sel in (("B", sorted(rows, key=margin)[:a.n_margin]),
+                     ("C", sorted(rows, key=lambda r: -float(r["reproj_error"]))
+                      [:a.n_reproj]),
+                     ("A", rng.sample(rows, min(a.n_random, len(rows))))):
+        for r in sel:
+            k = (r["rec"], r["frame"], r["module"], r["left_x0"], r["right_x0"])
+            if k in seen:
+                continue
+            seen.add(k)
+            picked.append((tag, r))
+    print(f"  {len(rows)} 个有效配对 -> 抽 {len(picked)} 个 "
+          f"({collections.Counter(t for t, _ in picked)})")
+
+    clips = {}
+    for line in open(a.clips):
+        line = line.strip()
+        if not line:
+            continue
+        p = line.rsplit(":", 2)
+        clips[os.path.basename(p[0].rstrip("/")).replace("databag-26_", "R")] \
+            = (p[0], int(p[1]))
+    vids = {"module_A": "cam12", "module_B": "cam34", "module_C": "cam56"}
+
+    by = collections.defaultdict(list)
+    for tag, r in picked:
+        by[(r["rec"], r["module"])].append((tag, r))
+
+    body = []
+    for (rec, mod), items in sorted(by.items()):
+        if rec not in clips:
+            continue
+        databag, _ = clips[rec]
+        rig = RigCalibration(os.path.join(databag, "calibration.yaml"))
+        mods = rig.modules() if callable(rig.modules) else rig.modules
+        m = next((x for x in mods if x.name == mod), None)
+        if m is None:
+            continue
+        cap = cv2.VideoCapture(os.path.join(databag, vids[mod] + ".mp4"))
+        for tag, r in sorted(items, key=lambda x: int(x[1]["frame"])):
+            cap.set(cv2.CAP_PROP_POS_FRAMES, int(r["frame"]))
+            ok, frame = cap.read()
+            if not ok:
+                continue
+            imL, imR = eyes(frame, np)
+            X = np.array([float(r["x"]), float(r["y"]), float(r["z"])])
+            shots = []
+            for side, img, cam in (("left", imL, m.left),
+                                   ("right", imR, m.right)):
+                x0, y0 = int(r[side + "_x0"]), int(r[side + "_y0"])
+                x1, y1 = int(r[side + "_x1"]), int(r[side + "_y1"])
+                cx, cy = (x0 + x1) // 2, (y0 + y1) // 2
+                # Where the 3D point lands when pushed back through the
+                # fisheye model -- if it misses the yellow dot, the geometry
+                # and the detector disagree about what was measured.
+                P = proj_matrix(cam, np)
+                q = P @ np.append(X, 1.0)
+                rp = None
+                if abs(q[2]) > 1e-9:
+                    n = (q[:2] / q[2]).reshape(1, 1, 2)
+                    pix = cv2.fisheye.distortPoints(
+                        np.asarray(n, np.float64),
+                        np.asarray(cam.K, np.float64),
+                        np.asarray(cam.D, np.float64).reshape(4, 1))
+                    rp = tuple(int(v) for v in pix.reshape(2))
+                pad = int(max(x1 - x0, y1 - y0) * 1.4)
+                cx0, cy0 = max(0, x0 - pad), max(0, y0 - pad)
+                cx1, cy1 = min(img.shape[1], x1 + pad)
+                cy1 = min(img.shape[0], y1 + pad)
+                crop = img[cy0:cy1, cx0:cx1].copy()
+                cv2.rectangle(crop, (x0 - cx0, y0 - cy0),
+                              (x1 - cx0, y1 - cy0), (255, 220, 40), 2)
+                cv2.circle(crop, (cx - cx0, cy - cy0), 5, (60, 255, 255), -1)
+                if rp is not None:
+                    px, py = rp[0] - cx0, rp[1] - cy0
+                    cv2.drawMarker(crop, (px, py), (255, 80, 255),
+                                   cv2.MARKER_CROSS, 22, 2)
+                h = int(round(crop.shape[0] * a.width /
+                              max(1, crop.shape[1])))
+                okj, buf = cv2.imencode(
+                    ".jpg", cv2.resize(crop, (a.width, max(1, h))),
+                    [int(cv2.IMWRITE_JPEG_QUALITY), 88])
+                shots.append((side, cam.name,
+                              "data:image/jpeg;base64,"
+                              + base64.b64encode(buf).decode() if okj else ""))
+            if len(shots) < 2:
+                continue
+            body.append(
+                f'<div class="c {tag}"><div class=hd>'
+                f'<span class="tag {tag}">{tag}</span>{rec} {mod} f{r["frame"]}'
+                f' &nbsp;<span class=num>'
+                f'XYZ ({r["x"]}, {r["y"]}, {r["z"]})  '
+                f'disp {r["disparity_px"]}px  epi {r["epipolar_error_px"]}px  '
+                f'reproj {r["reproj_error"]}px  角 {r["triangulation_angle_deg"]}°<br>'
+                f'cost {r["match_cost"]}  margin {r["match_margin"]}  '
+                f'L {r["left_side"]}/{r["left_conf"]}  '
+                f'R {r["right_side"]}/{r["right_conf"]}</span></div>'
+                f'<div class=pair>'
+                + "".join(f'<figure><img src="{img}">'
+                          f'<figcaption>{side} ({name})</figcaption></figure>'
+                          for side, name, img in shots)
+                + '</div></div>')
+        cap.release()
+
+    with open(a.out, "w", encoding="utf-8") as f:
+        f.write(QC_SHEET.replace("__BODY__", "\n".join(body)))
+    print(f"  {len(body)} 个配对 -> {a.out} "
+          f"({os.path.getsize(a.out) / 1e6:.1f} MB)")
+    print("  A=随机成功  B=margin 最小  C=重投影最大")
+
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__,
@@ -258,7 +497,15 @@ def main():
     ap.add_argument("--weights",
                     default="/shared/models/HaWoR/weights/external/detector.pt")
     ap.add_argument("--out")
-    probe(ap.parse_args())
+    ap.add_argument("--mode", choices=("probe", "qc"), default="probe")
+    ap.add_argument("--rows", help="qc mode: the probe csv")
+    ap.add_argument("--n_random", type=int, default=25)
+    ap.add_argument("--n_margin", type=int, default=10)
+    ap.add_argument("--n_reproj", type=int, default=10)
+    ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--width", type=int, default=330)
+    a = ap.parse_args()
+    (qc if a.mode == "qc" else probe)(a)
 
 
 if __name__ == "__main__":
