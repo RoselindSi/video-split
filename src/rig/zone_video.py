@@ -66,7 +66,8 @@ canvas{cursor:crosshair}
 <div id=bar>
  <button onclick="tog()">播放/暂停 (空格)</button>
  <span id=info></span>
- <span class=key><b>按住拖拽</b>=随手画一条分割曲线（两端自动延到画面边缘）
+ <span class=key><b>按住拖拽</b>=随手画一条分割曲线（画到画面边缘就自动收笔；
+ 松开鼠标也收笔，两端自动延到边缘）
  <b>f</b> 翻转哪一侧是自己的 <b>k</b> 打关键帧 <b>c</b>/<b>d</b> 删掉当前关键帧
  <b>,</b>/<b>.</b> 前后一帧 <b>&larr;</b>/<b>&rarr;</b> 前后一秒。
  绿色一侧=佩戴者自己的手所在的区域。</span>
@@ -197,15 +198,31 @@ function paint(){
   }
 }
 function save(){ localStorage.setItem(KEY, JSON.stringify(kfs)); paint(); }
-c.onmousedown = e => { const r = c.getBoundingClientRect();
-  raw = [[e.clientX-r.left, e.clientY-r.top]]; };
-c.onmousemove = e => {
+// POINTER CAPTURE, AND THE STROKE ENDS AT THE EDGE. Without capture a mouseup
+// outside the canvas never arrives, so the stroke stays live and keeps
+// following the cursor -- there is no way to stop drawing. And a boundary is
+// finished once it reaches the border, so leaving the frame commits it rather
+// than dragging the curve around outside.
+c.onpointerdown = e => {
+  const r = c.getBoundingClientRect();
+  c.setPointerCapture(e.pointerId);
+  raw = [[e.clientX-r.left, e.clientY-r.top]];
+  e.preventDefault();
+};
+c.onpointermove = e => {
   if (!raw) return;
-  const r = c.getBoundingClientRect(), p = [e.clientX-r.left, e.clientY-r.top];
+  const r = c.getBoundingClientRect();
+  let p = [e.clientX-r.left, e.clientY-r.top];
+  const out = p[0] < 0 || p[0] > W || p[1] < 0 || p[1] > H;
+  p = [Math.min(Math.max(p[0], 0), W), Math.min(Math.max(p[1], 0), H)];
   const q = raw[raw.length-1];
-  if (Math.hypot(p[0]-q[0], p[1]-q[1]) < 3) return;
+  if (!out && Math.hypot(p[0]-q[0], p[1]-q[1]) < 3) return;
   raw.push(p);
-  if (raw.length < 3) return;
+  if (raw.length >= 3) refresh();
+  if (out) finish();                    // reached the border: that is the end
+};
+c.onpointerup = c.onpointercancel = () => finish();
+function refresh(){
   const prev = kfs[keyOf(v.currentTime)] || curveAt(v.currentTime);
   live = {c: resample(raw, N), flip: prev ? prev.flip : 0};
   // DEFAULT THE SIDE TO THE ONE THE ARMS COME FROM. On a head-mounted rig the
@@ -216,7 +233,16 @@ c.onmousemove = e => {
     if (!inside(poly, [W/2, H-2])) live.flip = 1;
   }
   paint();
-};
+}
+function finish(){
+  if (live){
+    kfs[keyOf(v.currentTime)] =
+      {c: live.c.map(p => [Math.round(p[0]*10)/10, Math.round(p[1]*10)/10]),
+       flip: live.flip};
+    live = null; save();
+  }
+  raw = null;
+}
 function inside(poly, p){
   let win = false;
   for (let i=0, j=poly.length-1; i<poly.length; j=i++){
@@ -226,13 +252,6 @@ function inside(poly, p){
   }
   return win;
 }
-c.onmouseup = () => {
-  if (live){ kfs[keyOf(v.currentTime)] =
-    {c: live.c.map(p => [Math.round(p[0]*10)/10, Math.round(p[1]*10)/10]),
-     flip: live.flip};
-    live = null; save(); }
-  raw = null;
-};
 tl.onclick = e => { const r = tl.getBoundingClientRect();
   v.currentTime = Math.max(0, Math.min(M.dur,
     (e.clientX-r.left)/r.width*M.dur)); paint(); };
