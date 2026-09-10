@@ -587,9 +587,20 @@ def build(a):
     for k in by:
         per_rec[k[0]].append(k)
 
-    def b64(img, w, q=84):
-        h = int(round(img.shape[0] * w / max(1, img.shape[1])))
-        ok, buf = cv2.imencode(".jpg", cv2.resize(img, (w, max(1, h))),
+    def b64(img, w, q=84, box=None):
+        # THE BOX GOES ON AFTER THE RESIZE. Two pixels of line on a 1400 px
+        # crop is a quarter of a pixel once the crop is 185 px wide, and
+        # cv2.resize samples rather than averages on the way down, so the
+        # line does not thin -- it disappears. Measured on the sheets this
+        # file has already produced: 34 of 1050 crops lost their box.
+        s = w / float(max(1, img.shape[1]))
+        out = cv2.resize(img, (w, max(1, int(round(img.shape[0] * s)))))
+        if box is not None:
+            cv2.rectangle(out,
+                          (int(round(box[0] * s)), int(round(box[1] * s))),
+                          (int(round(box[2] * s)), int(round(box[3] * s))),
+                          (60, 255, 60), 2)
+        ok, buf = cv2.imencode(".jpg", out,
                                [int(cv2.IMWRITE_JPEG_QUALITY), q])
         return ("data:image/jpeg;base64," +
                 base64.b64encode(buf).decode()) if ok else ""
@@ -650,14 +661,13 @@ def build(a):
                 half = max(20, int(max(x1 - x0, y1 - y0) * a.ctx_scale / 2))
                 cx0, cy0 = max(0, cx - half), max(0, cy - half)
                 cx1, cy1 = min(W, cx + half), min(H, cy + half)
-                crop = img[cy0:cy1, cx0:cx1].copy()
-                cv2.rectangle(crop, (x0 - cx0, y0 - cy0),
-                              (x1 - cx0, y1 - cy0), (60, 255, 60), 2)
-                shots.append({"f": f, "img": b64(crop, a.crop_w)})
+                shots.append({"f": f,
+                              "img": b64(img[cy0:cy1, cx0:cx1], a.crop_w,
+                                         box=(x0 - cx0, y0 - cy0,
+                                              x1 - cx0, y1 - cy0))})
                 if f in ends:
-                    w = img.copy()
-                    cv2.rectangle(w, (x0, y0), (x1, y1), (60, 255, 60), 3)
-                    wides.append(b64(w, a.wide_w, 80))
+                    wides.append(b64(img, a.wide_w, 80,
+                                     box=(x0, y0, x1, y1)))
             if not shots:
                 continue
             out.append({"key": f"{k[0]}:{k[1]}", "rec": k[0], "tid": k[1],

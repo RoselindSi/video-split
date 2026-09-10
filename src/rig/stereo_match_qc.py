@@ -495,15 +495,26 @@ def crop(img, cx, cy, half, cv2, box=None, w=200, q=82):
     H, W = img.shape[:2]
     x0, y0 = max(0, int(cx - half)), max(0, int(cy - half))
     x1, y1 = min(W, int(cx + half)), min(H, int(cy + half))
-    c = img[y0:y1, x0:x1].copy()
+    c = img[y0:y1, x0:x1]
     if c.size == 0:
         return ""
+    s = w / float(c.shape[1])
+    out = cv2.resize(c, (w, max(1, int(round(c.shape[0] * s)))))
     if box is not None:
-        cv2.rectangle(c, (int(box[0]) - x0, int(box[1]) - y0),
-                      (int(box[2]) - x0, int(box[3]) - y0), (60, 255, 60), 2)
-    h = int(round(c.shape[0] * w / max(1, c.shape[1])))
-    ok, buf = cv2.imencode(".jpg", cv2.resize(c, (w, max(1, h))),
-                           [int(cv2.IMWRITE_JPEG_QUALITY), q])
+        # THE BOX IS DRAWN AFTER THE RESIZE, AND IT HAS TO BE. Two pixels of
+        # line on a 1217 px crop is a third of a pixel once that crop is 190
+        # px wide, and cv2.resize samples rather than averages on the way
+        # down, so the line does not thin -- it vanishes. It vanished on 15
+        # of these 300 pairs, all of them large boxes near the frame edge
+        # where the crop is widest, and a pair QC that does not say which
+        # detection it means is not asking a question.
+        cv2.rectangle(out,
+                      (int(round((int(box[0]) - x0) * s)),
+                       int(round((int(box[1]) - y0) * s))),
+                      (int(round((int(box[2]) - x0) * s)),
+                       int(round((int(box[3]) - y0) * s))),
+                      (60, 255, 60), 2)
+    ok, buf = cv2.imencode(".jpg", out, [int(cv2.IMWRITE_JPEG_QUALITY), q])
     return ("data:image/jpeg;base64," +
             base64.b64encode(buf).decode()) if ok else ""
 
