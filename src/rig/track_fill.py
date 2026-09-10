@@ -142,15 +142,112 @@ def runs(flags):
     return out
 
 
+def iou(a, b):
+    ax0, ay0 = a[0] - a[2] / 2, a[1] - a[3] / 2
+    ax1, ay1 = a[0] + a[2] / 2, a[1] + a[3] / 2
+    bx0, by0 = b[0] - b[2] / 2, b[1] - b[3] / 2
+    bx1, by1 = b[0] + b[2] / 2, b[1] + b[3] / 2
+    ix = max(0.0, min(ax1, bx1) - max(ax0, bx0))
+    iy = max(0.0, min(ay1, by1) - max(ay0, by0))
+    inter = ix * iy
+    return inter / max(1e-9, a[2] * a[3] + b[2] * b[3] - inter)
+
+
+def synthetic(a):
+    """Hide frames the detector actually found, and interpolate them back.
+
+    THE REAL GAPS ARE A BIASED SAMPLE OF GAPS. They exist exactly where the
+    detector failed -- motion blur, occlusion, an awkward pose -- so measuring
+    interpolation on them measures the hardest case and cannot say whether the
+    geometry itself is sound. Masking frames that WERE detected gives a
+    pseudo-ground-truth for every gap length and every kind of motion, and it
+    asks a question the privacy metric cannot: is a straight line in cx, cy,
+    log w, log h a good enough model of a hand for five frames.
+
+    THE TWO HORIZONS ARE NOT THE SAME NUMBER. MAX_LOST is how long the tracker
+    will keep an identity; nothing says a linear box is still accurate that
+    far. If the error grows sharply past two or three frames then the identity
+    horizon and the geometry horizon differ, and the fill should use the
+    smaller of the two."""
+    D, gold = load(a)
+    H, W = 900.0, 1600.0
+    rows = []
+    for k, v in D.items():
+        fr = [int(r["frame"]) for r in v]
+        bx = [box(r) for r in v]
+        spd = statistics.median(
+            [math.hypot(bx[i + 1][0] - bx[i][0], bx[i + 1][1] - bx[i][1])
+             / math.sqrt(bx[i][2] * bx[i][3]) / max(1, fr[i + 1] - fr[i])
+             for i in range(len(v) - 1)]) if len(v) > 1 else 0.0
+        for i in range(len(v)):
+            for g in range(1, INTERP_MAX_GAP + 1):
+                j = i + g + 1
+                if j >= len(v) or fr[j] - fr[i] != g + 1:
+                    continue          # must be genuinely consecutive
+                b0, b1 = bx[i], bx[j]
+                for t in range(1, g + 1):
+                    pred = interpolate(b0, b1, t / (g + 1.0))
+                    true = bx[i + t]
+                    size = math.sqrt(true[2] * true[3])
+                    cx, cy = true[0], true[1]
+                    rows.append({
+                        "g": g, "own": gold[k],
+                        "err": math.hypot(pred[0] - cx, pred[1] - cy) / size,
+                        "iou": iou(pred, true),
+                        "scale": abs(math.log((pred[2] * pred[3])
+                                              / (true[2] * true[3]))),
+                        "spd": spd, "size": size,
+                        "edge": min(cx, W - cx, cy, H - cy) < 0.15 * min(W, H)})
+    if not rows:
+        raise SystemExit("no consecutive runs")
+    med_spd = statistics.median([r["spd"] for r in rows])
+    med_size = statistics.median([r["size"] for r in rows])
+
+    def show(title, groups):
+        print(f"\n  {title}")
+        print(f"    {'':<16}{'n':>7}{'中心误差中位':>13}{'p90':>8}"
+              f"{'IoU中位':>9}{'IoU<0.5':>9}")
+        for name, sel in groups:
+            s = [r for r in rows if sel(r)]
+            if not s:
+                continue
+            e = sorted(r["err"] for r in s)
+            io = sorted(r["iou"] for r in s)
+            bad = sum(1 for r in s if r["iou"] < 0.5) / len(s)
+            print(f"    {name:<16}{len(s):>7}{e[len(e)//2]:>13.3f}"
+                  f"{e[int(.9*len(e))]:>8.3f}{io[len(io)//2]:>9.3f}"
+                  f"{bad:>9.1%}")
+
+    print(f"\n  === 合成空洞：把检测到的帧挖掉再插回来 ===")
+    print(f"  {len(rows)} 个被挖掉又插回的帧（误差以框宽为单位）")
+    show("按空洞长度", [(f"gap = {g}", lambda r, g=g: r["g"] == g)
+                    for g in range(1, INTERP_MAX_GAP + 1)])
+    show("按归属", [("自己的手", lambda r: r["own"] == "owner"),
+                 ("别人的手", lambda r: r["own"] == "other")])
+    show("按运动快慢", [("慢（中位以下）", lambda r: r["spd"] <= med_spd),
+                   ("快（中位以上）", lambda r: r["spd"] > med_spd)])
+    show("按框大小", [("小", lambda r: r["size"] <= med_size),
+                  ("大", lambda r: r["size"] > med_size)])
+    show("按位置", [("靠边", lambda r: r["edge"]),
+                 ("居中", lambda r: not r["edge"])])
+    show("最难的一格", [("gap=5 且 快", lambda r: r["g"] == 5
+                     and r["spd"] > med_spd)])
+
+
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--rows", required=True)
     ap.add_argument("--gold", nargs="+", required=True)
+    ap.add_argument("--synthetic", action="store_true",
+                    help="mask detected frames and interpolate them back")
     ap.add_argument("--out")
     a = ap.parse_args()
 
+    if a.synthetic:
+        synthetic(a)
+        return
     D, gold = load(a)
     # TRUE MEANS THE TRACK'S MAJORITY SAYS `owner`. Named for what it holds:
     # reading it as `other` once made the fill run on exactly the wrong half.
