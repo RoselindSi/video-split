@@ -124,7 +124,17 @@ def dump(a):
             raw_dets = detect(model, rgb, min_conf=a.conf)
             raw_ids = tracker.update(raw_dets, rgb.shape,
                                      new_track_conf=a.new_track_conf,
-                                     continue_conf=a.conf)
+                                     # SEPARATED FROM THE DETECTOR'S FLOOR ON
+                                     # PURPOSE. Raising `--conf` to disable
+                                     # track-conditioned admission would also
+                                     # delete those detections from the frame,
+                                     # which changes what `max_owner` ranks and
+                                     # what the geometric prior sees as
+                                     # context. The ablation has to move one
+                                     # thing.
+                                     continue_conf=(a.continue_conf
+                                                    if a.continue_conf
+                                                    is not None else a.conf))
             keep = [i for i, t in enumerate(raw_ids) if t is not None]
             dets = [raw_dets[i] for i in keep]
             tids = [raw_ids[i] for i in keep]
@@ -289,6 +299,11 @@ def main():
     ap.add_argument("--n", type=int, default=400)
     ap.add_argument("--conf", type=float, default=0.25)
     ap.add_argument("--new_track_conf", type=float, default=0.60)
+    ap.add_argument("--continue_conf", type=float, default=None,
+                    help="admission floor for continuing an existing track; "
+                         "defaults to --conf, and setting it equal to "
+                         "--new_track_conf turns track-conditioned admission "
+                         "off without changing what the detector reports")
     ap.add_argument("--geom_w", type=float, default=0.5)
     ap.add_argument("--max_owner", type=int, default=2)
     ap.add_argument("--clf_ctx", default="/workspace/own_ctx_best.pt")

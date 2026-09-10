@@ -45,8 +45,17 @@ import os
 import random
 import statistics
 
+# ONE PASS, FIVE ANSWERS. The first batch needed two sheets -- is it a hand,
+# then whose is it -- and the census showed the two framings agree 48 times in
+# 49 on the first question, judged from the same crops. Folding it in halves
+# the labelling without touching the sampling frame, which is what made the
+# measurement unbiased in the first place.
+#
+# `not_a_hand` sits at 3 because that is the key a person already reached for:
+# asked to judge only ownership, the first batch's non-hands were entered as 3.
 OPTIONS = [("owner", "自己的手"), ("other", "别人的手"),
-           ("ambiguous", "说不准是谁的"), ("mixed_identity", "这条轨迹不止一只手")]
+           ("not_a_hand", "根本不是手"), ("ambiguous", "说不准是谁的"),
+           ("mixed_identity", "这条轨迹不止一只手")]
 
 SHEET = """<meta charset=utf-8><title>ownership gold</title><style>
 body{font:13px/1.5 system-ui;margin:0;background:#111;color:#ddd}
@@ -74,7 +83,7 @@ b{color:#ffd33d}
 <div id=bar><span id=prog></span><span id=keys></span>
 <button onclick="dl()">download CSV</button>
 <span class=key>绿框=同一条轨迹在不同时刻，最右两张是整帧。
-看前臂往哪走：自己的手从画面下沿出去。</span></div>
+先看框里是不是一只手；是的话，再判它是谁的。</span></div>
 <div id=list></div>
 <script>
 const D = __PAYLOAD__;
@@ -181,6 +190,28 @@ def report(a):
     esc = collections.Counter(gold[k] for k in J
                               if gold[k] in ("ambiguous", "mixed_identity"))
     D = {k: v for k, v in J.items() if gold[k] in ("owner", "other")}
+    NH = {k: v for k, v in J.items() if gold[k] == "not_a_hand"}
+    if NH:
+        # THE UPSTREAM NUMBER, MEASURED IN THE SAME PASS. A detector proposing
+        # a bag of peppers is not an ownership failure, so it is counted here
+        # and then removed from every denominator below.
+        nf = sum(len(v) for v in NH.values())
+        tf = sum(len(v) for v in J.values())
+        lo, hi = wilson(len(NH), len(J))
+        print(f"\n  === 上游：到达归属分类器的东西里有多少不是手 ===")
+        print(f"  轨迹级 {len(NH)}/{len(J)} = {len(NH)/len(J):.1%} "
+              f"[{lo:.3f}, {hi:.3f}]   帧级 {nf}/{tf} = {nf/tf:.1%}")
+        blur = sum(1 for v in NH.values() for r in v
+                   if not int(r["final_owner_post_cap"]))
+        print(f"  其中最终被判 other（=真的糊了）{blur} 帧 = "
+              f"{blur/max(1,nf):.1%}，占语料全部糊帧的 "
+              f"{blur/max(1, sum(1 for v in J.values() for r in v if not int(r['final_owner_post_cap']))):.1%}")
+        for name, a_, b_ in (("1-3 帧", 1, 3), ("4-20 帧", 4, 20),
+                             ("21-100 帧", 21, 100), (">100 帧", 101, 10 ** 9)):
+            sel = [k for k in J if a_ <= len(J[k]) <= b_]
+            if sel:
+                n = sum(1 for k in sel if gold[k] == "not_a_hand")
+                print(f"    {name:<10} {n:>3}/{len(sel):<4} = {n/len(sel):>6.1%}")
 
     def owner(k):
         return gold[k] == "owner"
