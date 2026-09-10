@@ -208,10 +208,14 @@ def dump(a):
                     "x1": int(d["box"][2]), "y1": int(d["box"][3]),
                     **arm_fields(d)})
         rd.close()
-    with open(a.out, "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=list(FIELDS))
-        w.writeheader()
-        w.writerows(rows)
+        # FLUSHED AFTER EVERY RECORDING. A four-hour run that writes once at
+        # the end has a four-hour blast radius, and the sheets downstream can
+        # start on what has landed instead of waiting for the last clip.
+        with open(a.out, "w", newline="", encoding="utf-8") as f:
+            w = csv.DictWriter(f, fieldnames=list(FIELDS))
+            w.writeheader()
+            w.writerows(rows)
+        print(f"    -> {len(rows)} 行已落盘", flush=True)
     print(f"\n  {len(rows)} 行 / "
           f"{len({(r['rec'], r['tid']) for r in rows})} 条轨迹 -> {a.out}")
 
