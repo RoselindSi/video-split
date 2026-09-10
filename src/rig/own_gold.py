@@ -317,6 +317,119 @@ def report(a):
     print("    『只有模型对』那一格，在旧口径里全部被记成模型的错。")
 
 
+FPS = 30.0
+
+
+def arms(a):
+    """The privacy metrics that matter, for each candidate arm.
+
+    FRAME RECALL IS THE WRONG HEADLINE. A frame is 33 ms and cannot be seen;
+    twenty-eight consecutive frames are nine tenths of a second and are enough
+    to recognise a person. Twenty-eight scattered single-frame misses and one
+    0.93 s hole are the same number and not the same risk, so what gets
+    reported is the exposure event: a contiguous run of frames in which a hand
+    a person judged foreign was not covered. Frame recall stays, in small
+    print, because it is comparable with everything measured before.
+
+    AND THE MISS THAT MATTERS MOST IS THE ONE THAT NEVER GETS COVERED AT ALL.
+    A track whose majority verdict is wrong is a person the system does not
+    know is there; a hole inside a track is a person it covers imperfectly.
+    Those are different failures with different repairs, so they are counted
+    apart and the whole-track miss goes first.
+
+    WHAT THIS DOES NOT COVER, and the number must not be read as if it did:
+    a foreign hand that never became a track is invisible to every arm here,
+    the eight tracks that produced no images were never judged, and all of it
+    is twenty-nine windows of one corpus."""
+    by = load(a)
+    gold = {}
+    for p in a.labels:
+        for r in csv.DictReader(open(p, encoding="utf-8-sig")):
+            gold[(r["rec"], r["tid"])] = r["human_ownership"]
+    D = {k: v for k, v in by.items()
+         if gold.get(k) in ("owner", "other")}
+
+    def P0(r):
+        return float(r["p_owner_raw"]) >= 0.5
+
+    def P1(r):
+        return bool(int(r["ownhold_pre_cap"]))
+
+    def P2(r):
+        return bool(int(r["final_owner_post_cap"]))
+
+    def R(r):
+        return bool(int(r["reference_owner"]))
+
+    def majority(fn):
+        # THE TIE RULE IS FIXED HERE AND NOT AT SCORING TIME. An even split
+        # resolves to `other`, because the two errors are not equal: a tie
+        # broken towards the wearer leaks, a tie broken towards a colleague
+        # blurs. Same asymmetry the Schmitt trigger is built on.
+        cache = {}
+        for k, v in D.items():
+            cache[k] = sum(1 for r in v if fn(r)) * 2 > len(v)
+        return lambda r: cache[(r["rec"], r["tid"])]
+
+    def runs_of(v, fn, want_other):
+        """Contiguous frames where a foreign hand was left uncovered."""
+        out, cur = [], 0
+        for r in v:
+            if fn(r):                      # called the wearer's -> not blurred
+                cur += 1
+            elif cur:
+                out.append(cur)
+                cur = 0
+        if cur:
+            out.append(cur)
+        return out
+
+    print(f"\n  {'':<26}{'整轨漏':>7}{'暴露事件':>9}{'中位s':>7}{'最长s':>7}"
+          f"{'>=0.4s':>7}{'录像':>6}{'误糊帧':>7}{'帧召回':>8}{'F1':>7}")
+    for name, fn in (("P0 分类器 raw", P0),
+                     ("P1 cap 前", P1),
+                     ("P2 部署", P2),
+                     ("R  冻结出口规则", R),
+                     ("P0 + 整轨多数票", majority(P0)),
+                     ("P1 + 整轨多数票", majority(P1)),
+                     ("P2 + 整轨多数票", majority(P2))):
+        miss = ev = 0
+        lens, recs = [], set()
+        for k, v in D.items():
+            if gold[k] != "other":
+                continue
+            lab = [fn(r) for r in v]
+            if sum(lab) * 2 >= len(lab):
+                miss += 1
+            rr = runs_of(v, fn, True)
+            ev += len(rr)
+            lens += rr
+            if rr:
+                recs.add(k[0])
+        blur = sum(1 for k, v in D.items() if gold[k] == "owner"
+                   for r in v if not fn(r))
+        of = sum(len(v) for k, v in D.items() if gold[k] == "other")
+        cov = of - sum(lens)
+        tp, fp = cov, blur
+        rec_ = tp / max(1, of)
+        prec = tp / max(1, tp + fp)
+        f1 = 2 * prec * rec_ / max(1e-9, prec + rec_)
+        lens.sort()
+        med = lens[len(lens) // 2] / FPS if lens else 0.0
+        mx = lens[-1] / FPS if lens else 0.0
+        big = sum(1 for x in lens if x / FPS >= 0.4)
+        print(f"  {name:<26}{miss:>7}{ev:>9}{med:>7.2f}{mx:>7.2f}"
+              f"{big:>7}{len(recs):>6}{blur:>7}{rec_:>8.3f}{f1:>7.3f}")
+    n_oth = sum(1 for k in D if gold[k] == "other")
+    print(f"\n  分母：别人的手 {n_oth} 条 / "
+          f"{sum(len(v) for k, v in D.items() if gold[k] == 'other')} 帧；"
+          f"自己的手 {sum(1 for k in D if gold[k] == 'owner')} 条 / "
+          f"{sum(len(v) for k, v in D.items() if gold[k] == 'owner')} 帧")
+    print("  『整轨漏』= 多数票判成自己的手的别人的手轨迹数（平局归 other）。")
+    print("  不覆盖：从未形成轨迹的别人的手、8 条没渲染出图的轨迹、"
+          "这 29 段以外的录像。")
+
+
 def build(a):
     import cv2
     from src.rig.calibration import RigCalibration
@@ -453,10 +566,12 @@ def main():
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--min_rec", type=int, default=6)
     ap.add_argument("--labels", nargs="*", help="report mode: gold csvs")
+    ap.add_argument("--arms", action="store_true",
+                    help="compare the candidate arms on the privacy metrics")
     ap.add_argument("--out")
     a = ap.parse_args()
     if a.labels:
-        report(a)
+        arms(a) if a.arms else report(a)
     elif a.out:
         build(a)
     else:
