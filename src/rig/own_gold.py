@@ -140,7 +140,7 @@ document.onkeydown = ev => {
 };
 draw();
 function dl(){
-  let s = "key,rec,tid,frames,human_ownership\\n";
+  let s = "key,rec,tid,frames,track_truth\\n";
   for(const t of D.tracks) if(lab[t.key])
     s += t.key + "," + t.rec + "," + t.tid + "," + t.n + "," + lab[t.key] + "\\n";
   const a = document.createElement("a");
@@ -178,12 +178,23 @@ def load(a):
     return by
 
 
+def verdict(r):
+    """The sheet's verdict column, under either name.
+
+    It was `human_ownership` while the sheet asked only about ownership. Now
+    that `not_a_hand` and `mixed_identity` are answers rather than escapes the
+    variable is not about ownership at all -- it is what this track IS -- so
+    new sheets write `track_truth`. Both names are read, because the first
+    batch's labels are not being collected again to rename a column."""
+    return r.get("track_truth") or r.get("human_ownership") or ""
+
+
 def report(a):
     by = load(a)
     gold = {}
     for p in a.labels:
         for r in csv.DictReader(open(p, encoding="utf-8-sig")):
-            gold[(r["rec"], r["tid"])] = r["human_ownership"]
+            gold[(r["rec"], r["tid"])] = verdict(r)
     J = {k: v for k, v in by.items() if k in gold}
     if not J:
         raise SystemExit("no gold")
@@ -388,7 +399,7 @@ def consolidate(a):
     gold = {}
     for p in a.labels:
         for r in csv.DictReader(open(p, encoding="utf-8-sig")):
-            gold[(r["rec"], r["tid"])] = r["human_ownership"]
+            gold[(r["rec"], r["tid"])] = verdict(r)
     D = {k: v for k, v in by.items() if gold.get(k) in ("owner", "other")}
 
     def stats(v):
@@ -464,7 +475,7 @@ def consolidate(a):
     if a.out:
         with open(a.out, "w", newline="", encoding="utf-8") as fh:
             w = csv.writer(fh)
-            w.writerow(["rec", "tid", "human_ownership", "n_frames",
+            w.writerow(["rec", "tid", "track_truth", "n_frames",
                         "frac_other_p2", "mean_logit_raw", "median_logit_raw",
                         "mean_logit_ema", "longest_wrong_run",
                         "label_transitions"] + [n.split()[0] for n, _ in ARMS])
@@ -509,7 +520,7 @@ def arms(a):
     gold = {}
     for p in a.labels:
         for r in csv.DictReader(open(p, encoding="utf-8-sig")):
-            gold[(r["rec"], r["tid"])] = r["human_ownership"]
+            gold[(r["rec"], r["tid"])] = verdict(r)
     D = {k: v for k, v in by.items()
          if gold.get(k) in ("owner", "other")}
 
