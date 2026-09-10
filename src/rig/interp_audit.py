@@ -41,8 +41,16 @@ import os
 from src.rig.track_fill import (INTERP_MAX_GAP, box, interpolate, gaps_of,
                                 continuity)
 
+# THE FOURTH ANSWER CAME OUT OF THE FIRST FIFTEEN GAPS. Sixteen of twenty-one
+# frames were marked `no hand here`, and the reason was not that the detector
+# had blinked: the track was a bunch of spring onions. Gaps are chosen by the
+# pipeline's own verdict, which has no opinion about whether the thing is a
+# hand, and 19.4% of the frames this fill would add land on tracks a person
+# has already called not-a-hand. Folding that into `no hand in this frame`
+# would hide an upstream defect inside a geometry measurement, so it is its
+# own answer and it finishes the gap in one key.
 IDENTITY = [("same_hand", "两端是同一只手"), ("id_switch", "两端不是同一只手"),
-            ("uncertain", "说不准")]
+            ("uncertain", "说不准"), ("not_a_hand_track", "这条轨迹根本不是手")]
 
 SHEET = """<meta charset=utf-8><title>interpolation audit</title><style>
 body{font:13px/1.5 system-ui;margin:0;background:#111;color:#ddd}
@@ -67,9 +75,11 @@ canvas{border-radius:3px;display:block;cursor:crosshair}
 .chip.on{background:#25303a;color:#cde;border-color:#3a5}
 </style>
 <div id=bar><span id=prog></span>
-<span class=key>洋红=插值补出来的框。<b>拖拽</b>在每张图上画出手的真实位置；
+<span class=key>一行里所有图是<b>同一个取景窗</b>，只有框在动。
+两端绿框=检测器真正找到的手；中间洋红=插值补出来的框。<b>拖拽</b>在每张图上画出手的真实位置；
 <b>x</b> 表示这张裁剪里根本没有手；<b>z</b> 撤销当前图。
-两端身份：<b>1</b> 同一只手 <b>2</b> 不是同一只手 <b>3</b> 说不准。
+两端身份：<b>1</b> 同一只手 <b>2</b> 不是同一只手 <b>3</b> 说不准
+<b>4</b> 这条轨迹根本不是手（整条跳过，不用画）。
 <b>&uarr;&darr;</b> 换空洞</span>
 <button onclick="dl()">download CSV</button></div>
 <div id=list></div>
@@ -88,14 +98,14 @@ D.gaps.forEach((g, i) => {
     '  <span class=num>gap ' + g.n + ' 帧  f' + g.f0 + '-' + g.f1 +
     '  端点连续性 ' + g.cont + '</span> <span id=v' + i + '></span></div>' +
     '<div class=row>' +
-    '<figure class=end><img src="' + g.pre + '" width="150">' +
-    '<figcaption>gap 前（真实检测）</figcaption></figure>' +
+    '<figure class=end><img src="' + g.pre + '" width="' + g.w + '">' +
+    '<figcaption>f' + g.f0 + ' 真实检测（绿）</figcaption></figure>' +
     g.frames.map((f, j) =>
       '<figure><canvas id="c' + i + '_' + j + '" width="' + f.w +
       '" height="' + f.h + '"></canvas><figcaption>f' + f.f +
       '</figcaption></figure>').join('') +
-    '<figure class=end><img src="' + g.post + '" width="150">' +
-    '<figcaption>gap 后（真实检测）</figcaption></figure></div>';
+    '<figure class=end><img src="' + g.post + '" width="' + g.w + '">' +
+    '<figcaption>f' + g.f1 + ' 真实检测（绿）</figcaption></figure></div>';
   d.onclick = () => { cur = i; draw(); };
   list.appendChild(d);
 });
@@ -113,10 +123,15 @@ D.gaps.forEach((g, i) => g.frames.forEach((f, j) => {
   cv.onmousemove = e => {
     if (!drag) return;
     const r = cv.getBoundingClientRect();
-    st[f.key] = {b: [Math.min(drag[0], e.clientX - r.left),
-                     Math.min(drag[1], e.clientY - r.top),
-                     Math.max(drag[0], e.clientX - r.left),
-                     Math.max(drag[1], e.clientY - r.top)]};
+    const bb = [Math.min(drag[0], e.clientX - r.left),
+                Math.min(drag[1], e.clientY - r.top),
+                Math.max(drag[0], e.clientX - r.left),
+                Math.max(drag[1], e.clientY - r.top)];
+    // A CLICK IS NOT A BOX. Five of the first twenty-one drawn boxes came
+    // back 0x0 or 0x1: a click with a pixel of jitter stored a point and the
+    // csv called it a measurement.
+    if (bb[2]-bb[0] < 6 || bb[3]-bb[1] < 6) return;
+    st[f.key] = {b: bb};
     paint(i, j);
   };
   cv.onmouseup = () => { drag = null; save(); draw(); };
@@ -142,7 +157,9 @@ function paint(i, j){
 }
 function done(i){
   const g = D.gaps[i];
-  return st["id:" + g.key] && g.frames.every(f => st[f.key]);
+  const v = st["id:" + g.key];
+  if (v === "not_a_hand_track") return true;   // nothing to draw on a vegetable
+  return v && g.frames.every(f => st[f.key]);
 }
 function draw(){
   D.gaps.forEach((g,i)=>{
@@ -162,7 +179,11 @@ function draw(){
 }
 document.onkeydown = ev => {
   const g = D.gaps[cur]; if(!g) return;
-  if(ev.key>="1" && ev.key<="3"){ st["id:"+g.key] = ID[+ev.key-1][0]; }
+  if(ev.key>="1" && ev.key<=String(ID.length)){
+    st["id:"+g.key] = ID[+ev.key-1][0];
+    if (ID[+ev.key-1][0] === "not_a_hand_track")
+      cur = Math.min(cur+1, D.gaps.length-1);
+  }
   else if(ev.key==="x"){ g.frames.forEach(f => { if(!st[f.key])
       st[f.key] = {none:1}; }); g.frames.forEach((f,j)=>paint(cur,j)); }
   else if(ev.key==="z"){ g.frames.forEach((f,j)=>{ delete st[f.key];
@@ -297,52 +318,87 @@ def main():
                 f0, f1 = int(v[i]["frame"]), int(v[j]["frame"])
                 b0, b1 = box(v[i]), box(v[j])
                 cont = round(continuity(v, i, j), 3)
+                ref = imgs.get(f0)
+                if ref is None:
+                    continue
+                H, W = ref.shape[:2]
+                # ONE WINDOW FOR THE WHOLE GAP, WIDE ENOUGH TO HOLD BOTH ENDS.
+                # A window centred on each fill in turn moves with the fill, so
+                # every picture in the row is a different view and neither
+                # question can be answered from it: the endpoints cannot be
+                # compared to each other, and a fill that has drifted off the
+                # hand looks the same as one that has not, because the drift
+                # moved the camera with it. A single window makes the row a
+                # short film of one place, and the box is the only thing that
+                # moves.
+                boxes = [b0, b1] + [interpolate(b0, b1, t / (g + 1.0))
+                                    for t in range(1, g + 1)]
+                xs = [b[0] - b[2] / 2 for b in boxes] + \
+                     [b[0] + b[2] / 2 for b in boxes]
+                ys = [b[1] - b[3] / 2 for b in boxes] + \
+                     [b[1] + b[3] / 2 for b in boxes]
+                pad = max(60.0, max(max(b[2], b[3]) for b in boxes)
+                          * (a.ctx - 1.0) / 2.0)
+                x0 = max(0, int(min(xs) - pad))
+                y0 = max(0, int(min(ys) - pad))
+                x1 = min(W, int(max(xs) + pad))
+                y1 = min(H, int(max(ys) + pad))
+                if x1 - x0 < 8 or y1 - y0 < 8:
+                    continue
+                s = a.crop_w / float(x1 - x0)
+                cw = a.crop_w
+                ch = max(1, int(round((y1 - y0) * s)))
+
+                def shot(f, b, colour):
+                    img = imgs.get(f)
+                    if img is None:
+                        return None
+                    c = img[y0:y1, x0:x1]
+                    if c.size == 0:
+                        return None
+                    im = cv2.resize(c, (cw, ch))
+                    if colour is not None:
+                        cv2.rectangle(im,
+                                      (int(round((b[0] - b[2] / 2 - x0) * s)),
+                                       int(round((b[1] - b[3] / 2 - y0) * s))),
+                                      (int(round((b[0] + b[2] / 2 - x0) * s)),
+                                       int(round((b[1] + b[3] / 2 - y0) * s))),
+                                      colour, 2)
+                    ok, buf = cv2.imencode(".jpg", im,
+                                           [int(cv2.IMWRITE_JPEG_QUALITY), 85])
+                    return ("data:image/jpeg;base64," +
+                            base64.b64encode(buf).decode()) if ok else None
+
                 frames = []
                 for t in range(1, g + 1):
-                    img = imgs.get(f0 + t)
-                    if img is None:
+                    # The fill is drawn by the canvas, not burnt in, so the
+                    # person can still see the pixels underneath it.
+                    im = shot(f0 + t, None, None)
+                    if im is None:
                         continue
-                    cx, cy, bw, bh = interpolate(b0, b1, t / (g + 1.0))
-                    H, W = img.shape[:2]
-                    half = max(40, int(max(bw, bh) * a.ctx / 2))
-                    x0, y0 = max(0, int(cx - half)), max(0, int(cy - half))
-                    x1, y1 = min(W, int(cx + half)), min(H, int(cy + half))
-                    crop = img[y0:y1, x0:x1]
-                    if crop.size == 0:
-                        continue
-                    s = a.crop_w / float(crop.shape[1])
-                    cw = a.crop_w
-                    ch = max(1, int(round(crop.shape[0] * s)))
+                    cx, cy, bw, bh = boxes[1 + t]
                     frames.append({
                         "key": f"{rec}:{k[1]}:{f0 + t}", "f": f0 + t,
                         "w": cw, "h": ch, "s": round(s, 5),
                         "o": [x0, y0, x0, y0],
-                        # the fill, in crop pixels, for the canvas to draw
                         "pb": [round((cx - bw / 2 - x0) * s, 1),
                                round((cy - bh / 2 - y0) * s, 1),
                                round((cx + bw / 2 - x0) * s, 1),
                                round((cy + bh / 2 - y0) * s, 1)],
-                        # and in panorama pixels, for the csv
                         "tb": [int(cx - bw / 2), int(cy - bh / 2),
                                int(cx + bw / 2), int(cy + bh / 2)],
-                        "img": b64(crop, cw)})
+                        "img": im})
                 if not frames:
                     continue
-
-                def end(idx, b):
-                    img = imgs.get(int(v[idx]["frame"]))
-                    if img is None:
-                        return ""
-                    H, W = img.shape[:2]
-                    half = max(40, int(max(b[2], b[3]) * a.ctx / 2))
-                    c = img[max(0, int(b[1] - half)):min(H, int(b[1] + half)),
-                            max(0, int(b[0] - half)):min(W, int(b[0] + half))]
-                    return b64(c, 150) if c.size else ""
-
+                # GREEN, AND ON THE SAME WINDOW. The endpoints are what the
+                # detector actually found; without the box drawn on them the
+                # identity question has nothing to compare.
+                pre, post = shot(f0, b0, (60, 255, 60)), shot(f1, b1,
+                                                              (60, 255, 60))
                 out.append({"key": f"{rec}:{k[1]}:{f0}", "rec": rec,
                             "tid": k[1], "n": g, "f0": f0, "f1": f1,
-                            "cont": cont, "frames": frames,
-                            "pre": end(i, b0), "post": end(j, b1)})
+                            "cont": cont, "frames": frames, "w": cw, "h": ch,
+                            "pre": pre or "", "post": post or ""})
 
     stem, ext = os.path.splitext(a.out)
     n_pg = max(1, (len(out) + a.page - 1) // a.page)
