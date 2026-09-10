@@ -320,6 +320,139 @@ def report(a):
 FPS = 30.0
 
 
+def _logit(p, eps=1e-6):
+    p = min(1.0 - eps, max(eps, float(p)))
+    return math.log(p / (1.0 - p))
+
+
+def consolidate(a):
+    """Track-level ownership consolidation: four estimators of one latent state.
+
+    A HAND DOES NOT CHANGE OWNER WHILE IT EXISTS, so the thing to estimate is
+    one state per physical track and not a decision per frame. `mixed_identity`
+    came back 0 of 274, which is the assumption's own test: a track is a hand.
+    Majority is only the crudest estimator of that state -- it counts 0.51 and
+    0.99 as the same vote -- so the alternatives that use the magnitude of the
+    evidence get measured beside it rather than assumed better.
+
+    WHICH QUANTITY GETS ACCUMULATED IS THE WHOLE QUESTION. `p_owner_raw` is
+    the classifier alone: clean per-frame evidence, but without the geometric
+    prior or the frame-level cap, and those are what take foreign-hand recall
+    from 0.786 to 0.963. `ema_owner` carries them but is already a temporal
+    average, so accumulating it across the track averages an average and the
+    frames stop being independent evidence in any sense. Neither is the right
+    input; the right one -- blended, pre-smoothing -- is not stored, and that
+    is a one-field change to the dump rather than an analysis to fudge here.
+    Both are reported so the gap between them is visible.
+
+    THE MEAN LOG-ODDS IS THE ONE WITH A STORY. Each frame contributes evidence
+    and the track sums it, which is what a per-frame probability is FOR. It
+    was measured once before and lost -- but against the exit rule, which is
+    wrong on 37% of foreign tracks, so that result says nothing and this one
+    replaces it.
+
+    SEEN GOLD. Every number here comes from the 274 tracks that produced the
+    majority rule in the first place. Anything that wins is a DEV candidate."""
+    by = load(a)
+    gold = {}
+    for p in a.labels:
+        for r in csv.DictReader(open(p, encoding="utf-8-sig")):
+            gold[(r["rec"], r["tid"])] = r["human_ownership"]
+    D = {k: v for k, v in by.items() if gold.get(k) in ("owner", "other")}
+
+    def stats(v):
+        lab2 = [bool(int(r["final_owner_post_cap"])) for r in v]
+        lab1 = [bool(int(r["ownhold_pre_cap"])) for r in v]
+        raw = [_logit(r["p_owner_raw"]) for r in v]
+        ema = [_logit(r["ema_owner"]) for r in v]
+        return lab1, lab2, raw, ema
+
+    def est(name, fn):
+        out = {}
+        for k, v in D.items():
+            out[k] = fn(*stats(v))
+        return name, out
+
+    ARMS = [
+        est("T0 多数票 (P2 标签)",
+            lambda l1, l2, raw, ema: sum(l2) * 2 > len(l2)),
+        est("T1 平均概率 (ema)",
+            lambda l1, l2, raw, ema: statistics.mean(
+                1 / (1 + math.exp(-x)) for x in ema) > 0.5),
+        est("T2 平均 log-odds (ema)",
+            lambda l1, l2, raw, ema: statistics.mean(ema) > 0),
+        est("T3 中位 log-odds (ema)",
+            lambda l1, l2, raw, ema: statistics.median(ema) > 0),
+        est("T4 平均 log-odds (raw)",
+            lambda l1, l2, raw, ema: statistics.mean(raw) > 0),
+        est("T5 中位 log-odds (raw)",
+            lambda l1, l2, raw, ema: statistics.median(raw) > 0),
+        est("T6 多数票 (P1 标签)",
+            lambda l1, l2, raw, ema: sum(l1) * 2 > len(l1)),
+    ]
+    of = sum(len(v) for k, v in D.items() if gold[k] == "other")
+    print(f"\n  === 整轨归属整合：同一个隐状态的几种估计 ===")
+    print(f"  {'':<24}{'整轨漏':>7}{'误糊帧':>8}{'误糊s':>8}{'帧召回':>9}"
+          f"{'与T0不同':>9}")
+    base = ARMS[0][1]
+    for name, out in ARMS:
+        miss = sum(1 for k in D if gold[k] == "other" and out[k])
+        blur = sum(len(D[k]) for k in D if gold[k] == "owner" and not out[k])
+        cov = sum(len(D[k]) for k in D if gold[k] == "other" and not out[k])
+        diff = sum(1 for k in D if out[k] != base[k])
+        print(f"  {name:<24}{miss:>7}{blur:>8}{blur/FPS:>8.1f}"
+              f"{cov/of:>9.3f}{diff:>9}")
+    print("  广播之后每条轨迹只有一个标签，所以暴露事件数 = 整轨漏的条数，"
+          "\n  每次暴露的长度 = 那条轨迹的长度。这就是聚合的全部风险。")
+
+    print(f"\n  === 99 条别人的手 vs 169 条自己的手，整条概率轨迹长什么样 ===")
+    print(f"  {'':<12}{'轨迹':>5}{'长度中位':>9}{'other帧占比':>11}"
+          f"{'中位logit':>10}{'最长错run':>10}{'标签跳变':>9}")
+    for want in ("other", "owner"):
+        ks = [k for k in D if gold[k] == want]
+        rows = []
+        for k in ks:
+            v = D[k]
+            l1, l2, raw, ema = stats(v)
+            wrong, cur, best = (gold[k] == "other"), 0, 0
+            for x in l2:
+                if x == wrong:
+                    cur += 1
+                    best = max(best, cur)
+                else:
+                    cur = 0
+            rows.append((len(v), sum(1 for x in l2 if not x) / len(v),
+                         statistics.median(raw), best,
+                         sum(1 for x, y in zip(l2, l2[1:]) if x != y)))
+        med = lambda i: statistics.median([r[i] for r in rows])
+        print(f"  {want:<12}{len(ks):>5}{med(0):>9.0f}{med(1):>11.2f}"
+              f"{med(2):>10.2f}{med(3):>10.0f}{med(4):>9.0f}")
+    print("  『最长错run』= 整条里连续判错的最长帧数；『标签跳变』= 逐帧标签"
+          "改变次数。\n  两者都接近 0 就说明轨迹本身已经很稳，多数票没什么可修的。")
+
+    if a.out:
+        with open(a.out, "w", newline="", encoding="utf-8") as fh:
+            w = csv.writer(fh)
+            w.writerow(["rec", "tid", "human_ownership", "n_frames",
+                        "frac_other_p2", "mean_logit_raw", "median_logit_raw",
+                        "mean_logit_ema", "longest_wrong_run",
+                        "label_transitions"] + [n.split()[0] for n, _ in ARMS])
+            for k, v in sorted(D.items()):
+                l1, l2, raw, ema = stats(v)
+                wrong, cur, best = (gold[k] == "other"), 0, 0
+                for x in l2:
+                    cur = cur + 1 if x == wrong else 0
+                    best = max(best, cur)
+                w.writerow([k[0], k[1], gold[k], len(v),
+                            round(sum(1 for x in l2 if not x) / len(v), 3),
+                            round(statistics.mean(raw), 3),
+                            round(statistics.median(raw), 3),
+                            round(statistics.mean(ema), 3), best,
+                            sum(1 for x, y in zip(l2, l2[1:]) if x != y)]
+                           + [int(out[k]) for _, out in ARMS])
+        print(f"\n  每条轨迹的形态 -> {a.out}")
+
+
 def arms(a):
     """The privacy metrics that matter, for each candidate arm.
 
@@ -568,10 +701,18 @@ def main():
     ap.add_argument("--labels", nargs="*", help="report mode: gold csvs")
     ap.add_argument("--arms", action="store_true",
                     help="compare the candidate arms on the privacy metrics")
+    ap.add_argument("--consolidate", action="store_true",
+                    help="track-level ownership consolidation: estimators "
+                         "of the one latent state, and the track morphology")
     ap.add_argument("--out")
     a = ap.parse_args()
     if a.labels:
-        arms(a) if a.arms else report(a)
+        if a.consolidate:
+            consolidate(a)
+        elif a.arms:
+            arms(a)
+        else:
+            report(a)
     elif a.out:
         build(a)
     else:
