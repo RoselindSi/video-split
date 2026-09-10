@@ -155,14 +155,115 @@ def features(v):
     return out
 
 
-def load(a):
+def screen(a):
+    """Can the trajectory tell a hand from a thing the detector imagined?
+
+    THE FIRST PROBE ASKED THE WRONG GOLD. It joined the excursion features to
+    ownership misses and found nothing, which closed the question `does a jump
+    predict a leak`. It did not touch the question a jump is actually shaped
+    to answer: whether this observation is a hand at all. There are 335 tracks
+    with a person's verdict on exactly that, and the features were never
+    joined to them.
+
+    THE ONLY TABLE THAT DECIDES ANYTHING IS THE HARD CELL. Non-hand tracks are
+    short and low-confidence -- 54.5% of 1-3 frame tracks and 34.5% below 0.65
+    confidence -- so an anomaly rate that is higher on non-hands proves
+    nothing on its own: short tracks jitter more and short tracks are more
+    often false. The trajectory earns its place only if it separates INSIDE
+    the short, low-confidence cell, where length and confidence have already
+    said everything they can.
+
+    AND FAST IS NOT WRONG. The wearer's own hand swings, grabs and reaches;
+    a rule that treats speed as error would delete the most useful hand in the
+    corpus. What the round trip tests is different: a departure from the path
+    that comes back, which is a detector or tracker mistake rather than a
+    motion. 100 -> 150 -> 210 -> 270 is fast and continuous; 100 -> 110 ->
+    420 -> 120 is not.
+
+    DELETING A FOREIGN HAND IS THE EXPENSIVE MISTAKE, not deleting any true
+    hand, so the true hands are split by ownership before anything is
+    concluded about what a filter would cost."""
+    by, _ = load(a, filter_hands=False)
+    lab, conf = {}, {}
+    for f in a.precision:
+        for r in csv.DictReader(open(f, encoding="utf-8-sig")):
+            lab[(r["rec"], r["tid"])] = r["verdict"]
+            conf[(r["rec"], r["tid"])] = float(r["det_conf"])
+    gold = {}
+    for f in (a.gold or []):
+        for r in csv.DictReader(open(f, encoding="utf-8-sig")):
+            gold[(r["rec"], r["tid"])] = r["human_ownership"]
+    J = {k: v for k, v in by.items() if k in lab}
+    feat = {k: features(v) for k, v in J.items()}
+
+    def col(ks):
+        n = len(ks)
+        if not n:
+            return None
+        anom = sum(1 for k in ks if any(d["is_temporal_outlier"] for d in feat[k]))
+        rt = sum(1 for k in ks if any(d["round_trip_recovered"] for d in feat[k]))
+        frac = sorted(sum(d["is_temporal_outlier"] for d in feat[k]) / len(feat[k])
+                      for k in ks)
+        mc = sorted(max((d["center_jump_score"] for d in feat[k]), default=0)
+                    for k in ks)
+        ms = sorted(max((d["scale_jump_score"] for d in feat[k]), default=0)
+                    for k in ks)
+        return (n, anom, rt, frac[n // 2], mc[n // 2], ms[n // 2])
+
+    def show(title, groups):
+        print("\n  " + title)
+        print(f"    {'':<22}" + "".join(f"{g:>12}" for g, _ in groups))
+        rows = [col(ks) for _, ks in groups]
+        names = ["轨迹数", "有异常帧", "有往返型", "异常帧占比中位",
+                 "最大center跳中位", "最大scale跳中位"]
+        for i, nm in enumerate(names):
+            line = f"    {nm:<22}"
+            for r in rows:
+                if r is None:
+                    line += f"{'—':>12}"
+                elif i == 0:
+                    line += f"{r[0]:>12}"
+                elif i <= 2:
+                    line += f"{r[i]}/{r[0]} = {r[i]/r[0]:.0%}".rjust(12)
+                else:
+                    line += f"{r[i]:>12.2f}"
+            print(line)
+
+    H = [k for k in J if lab[k] == "hand"]
+    N = [k for k in J if lab[k] == "nohand"]
+    show("全体", [("真手", H), ("不是手", N)])
+    if gold:
+        show("真手内部（误删别人的手才是贵的那个错）",
+             [("自己的手", [k for k in H if gold.get(k) == "owner"]),
+              ("别人的手", [k for k in H if gold.get(k) == "other"])])
+
+    print("\n  === 困难格：len<=20 且 conf<0.75 ===")
+    hard = [k for k in J if len(J[k]) <= 20 and conf.get(k, 1.0) < 0.75]
+    hh = [k for k in hard if lab[k] == "hand"]
+    hn = [k for k in hard if lab[k] == "nohand"]
+    print(f"  这一格 {len(hard)} 条：真手 {len(hh)}，不是手 {len(hn)}"
+          f"（基线非手率 {len(hn)/max(1,len(hard)):.1%}）")
+    print(f"    {'':<14}{'轨迹干净':>10}{'轨迹异常':>10}{'异常率':>9}")
+    for nm, ks in (("真手", hh), ("不是手", hn)):
+        a_ = sum(1 for k in ks if any(d["is_temporal_outlier"] for d in feat[k]))
+        print(f"    {nm:<14}{len(ks)-a_:>10}{a_:>10}"
+              f"{a_/max(1,len(ks)):>9.1%}")
+    ah = sum(1 for k in hh if any(d["is_temporal_outlier"] for d in feat[k]))
+    an = sum(1 for k in hn if any(d["is_temporal_outlier"] for d in feat[k]))
+    if ah + an:
+        print(f"    「轨迹异常」里的非手比例 {an}/{an+ah} = {an/(an+ah):.1%}"
+              f"   对比这一格基线 {len(hn)/max(1,len(hard)):.1%}")
+        print("    两个数接近 = 轨迹没有提供长度和置信度之外的任何增量信息。")
+
+
+def load(a, filter_hands=True):
     rows = list(csv.DictReader(open(a.rows, encoding="utf-8-sig")))
     by = collections.defaultdict(list)
     for r in rows:
         by[(r["rec"], r["tid"])].append(r)
     for v in by.values():
         v.sort(key=lambda r: int(r["frame"]))
-    if a.hands:
+    if a.hands and filter_hands:
         keep = set()
         for f in a.hands:
             for r in csv.DictReader(open(f, encoding="utf-8-sig")):
@@ -183,9 +284,14 @@ def main():
     ap.add_argument("--rows", required=True)
     ap.add_argument("--hands", nargs="*")
     ap.add_argument("--gold", nargs="*")
+    ap.add_argument("--precision", nargs="*",
+                    help="hand_precision label csvs: run the screening probe")
     ap.add_argument("--out")
     a = ap.parse_args()
 
+    if a.precision:
+        screen(a)
+        return
     by, gold = load(a)
     dump, feat = [], {}
     for k, v in by.items():
