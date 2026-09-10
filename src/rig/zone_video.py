@@ -1,4 +1,4 @@
-"""Split the frame in two with a line, and see whether it holds through the clip.
+"""Cut the frame in two with a freehand curve, and watch whether it holds.
 
 A REGION THAT ONLY HOLDS FOR ONE FRAME IS NOT A REGION. The wearer leans, the
 head turns, the bench swings through the view -- whether `the wearer's side`
@@ -6,13 +6,22 @@ means the same pixels ten seconds later is the whole question, and a sheet of
 stills cannot ask it. So the clip plays with the line on it, and a keyframe
 goes in only where it stops being right.
 
-A LINE, NOT A SHAPE. One cut across the frame is the cheapest thing that can
-carry the claim, and it is also the easiest to be wrong about in a way anyone
-can see: an outline drawn loosely around some hands is hard to falsify, while
-a line either has the colleague's hands on the far side or it does not. Two
-endpoints also make the interpolation between keyframes total -- there is no
-vertex correspondence to invent, so the line moves smoothly wherever two
-keyframes bracket it.
+A CUT, NOT AN OUTLINE. What is being annotated is a boundary, not an object:
+the curve crosses the whole frame and everything on one side is the wearer's.
+An outline drawn loosely around some hands is hard to be wrong about; a cut
+either leaves the colleague's hands on the far side or it does not.
+
+THE CURVE IS RESAMPLED TO A FIXED NUMBER OF POINTS, and that is what makes
+keyframes work. Two freehand strokes have no correspondence between their
+points, so interpolating raw ones would blend a fast stroke into a slow one
+and produce a shape nobody drew. Resampled by arc length to the same count,
+point k of one curve means the same fraction along as point k of the other,
+and the boundary moves smoothly between any two keyframes.
+
+CLOSED AGAINST THE FRAME BORDER, NOT AGAINST ITSELF. The ends are extended
+along their own direction until they hit an edge, and the filled side is
+completed by walking the perimeter from one exit to the other. Which way round
+that walk goes is the only thing `f` changes.
 
 cam34, LEFT EYE, NOTHING STITCHED. The file is 3840x1520 side by side and the
 left half is cam3, the middle of the fan at 29.5 degrees of yaw, with cam1 at
@@ -52,12 +61,12 @@ canvas{cursor:crosshair}
 #play{position:absolute;top:0;bottom:0;background:#2a3a4a;border-radius:4px}
 #head{position:absolute;top:0;bottom:0;width:2px;background:#ffd33d}
 .kf{position:absolute;top:0;bottom:0;width:3px;background:#3f6}
-.key{font-size:11px;color:#999;max-width:900px}
+.key{font-size:11px;color:#999;max-width:920px}
 </style>
 <div id=bar>
  <button onclick="tog()">播放/暂停 (空格)</button>
  <span id=info></span>
- <span class=key><b>拖拽</b>=画一条分割线（自动延长到画面边缘）
+ <span class=key><b>按住拖拽</b>=随手画一条分割曲线（两端自动延到画面边缘）
  <b>f</b> 翻转哪一侧是自己的 <b>k</b> 打关键帧 <b>c</b>/<b>d</b> 删掉当前关键帧
  <b>,</b>/<b>.</b> 前后一帧 <b>&larr;</b>/<b>&rarr;</b> 前后一秒。
  绿色一侧=佩戴者自己的手所在的区域。</span>
@@ -68,21 +77,79 @@ canvas{cursor:crosshair}
 <div id=tl><div id=play></div><div id=head></div></div>
 <script>
 const M = __META__;
-const KEY = "zoneline:" + M.rec;
-let kfs = {};                    // frame -> {a:[x,y], b:[x,y], flip:0|1}
+const KEY = "zonecurve:" + M.rec;
+const N = 64;                    // points every stored curve is resampled to
+let kfs = {};                    // frame -> {c: [[x,y] x N], flip: 0|1}
 try { kfs = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch(e) { kfs={}; }
 const v = document.getElementById("v"), c = document.getElementById("c");
 const ctx = c.getContext("2d"), tl = document.getElementById("tl");
-let live = null;
+const W = c.width, H = c.height, P = 2*(W+H);
+let live = null, raw = null;
 const FR = 1 / M.fps;
 function times(){ return Object.keys(kfs).map(Number).sort((a,b)=>a-b); }
 function frameOf(t){ return Math.round(t * M.fps); }
 function keyOf(t){ return String(frameOf(t)); }
-// Two endpoints interpolate totally: unlike a polygon there is no vertex
-// correspondence to invent, so the line is defined at every frame between any
-// two keyframes. The side is held rather than blended -- it is a choice, not
-// a coordinate.
-function lineAt(t){
+// ARC-LENGTH RESAMPLE. Two freehand strokes have no correspondence between
+// their raw points -- a slow stroke leaves twenty where a fast one leaves
+// four -- so interpolating them directly blends nothing meaningful. At a fixed
+// count by arc length, point k of one curve is the same fraction along as
+// point k of the other, and keyframes become total.
+function resample(pts, n){
+  const d = [0];
+  for (let i=1;i<pts.length;i++)
+    d.push(d[i-1] + Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]));
+  const L = d[d.length-1] || 1, out = [];
+  let j = 0;
+  for (let k=0;k<n;k++){
+    const target = L * k / (n-1);
+    while (j < d.length-2 && d[j+1] < target) j++;
+    const seg = (d[j+1]-d[j]) || 1, a = Math.min(1, (target-d[j])/seg);
+    out.push([pts[j][0] + (pts[j+1][0]-pts[j][0])*a,
+              pts[j][1] + (pts[j+1][1]-pts[j][1])*a]);
+  }
+  return out;
+}
+// Extend a point along a direction until it meets the frame border.
+function snap(p, d){
+  const ts = [];
+  if (Math.abs(d[0]) > 1e-9){ ts.push((0-p[0])/d[0], (W-p[0])/d[0]); }
+  if (Math.abs(d[1]) > 1e-9){ ts.push((0-p[1])/d[1], (H-p[1])/d[1]); }
+  const good = ts.filter(t => t > 0).map(t => [p[0]+d[0]*t, p[1]+d[1]*t])
+    .filter(q => q[0] >= -1 && q[0] <= W+1 && q[1] >= -1 && q[1] <= H+1);
+  if (!good.length) return [Math.min(Math.max(p[0],0),W),
+                            Math.min(Math.max(p[1],0),H)];
+  return good.reduce((a,b) => Math.hypot(a[0]-p[0],a[1]-p[1]) <
+                              Math.hypot(b[0]-p[0],b[1]-p[1]) ? a : b);
+}
+function perimT(p){
+  const e = 1e-6, cl = (x,m) => Math.min(Math.max(x,0),m);
+  if (p[1] <= e) return cl(p[0],W);
+  if (p[0] >= W-e) return W + cl(p[1],H);
+  if (p[1] >= H-e) return W + H + (W - cl(p[0],W));
+  return 2*W + H + (H - cl(p[1],H));
+}
+const CORNERS = [[[W,0],W],[[W,H],W+H],[[0,H],2*W+H],[[0,0],2*W+2*H]];
+function cornersBetween(tA, tB, dir){
+  const span = dir > 0 ? ((tB-tA+P)%P) : ((tA-tB+P)%P), out = [];
+  for (const [pt,tc] of CORNERS){
+    const d = dir > 0 ? ((tc-tA+P)%P) : ((tA-tc+P)%P);
+    if (d > 1e-9 && d < span-1e-9) out.push([pt,d]);
+  }
+  out.sort((a,b)=>a[1]-b[1]);
+  return out.map(o=>o[0]);
+}
+// CLOSED AGAINST THE BORDER, NOT AGAINST ITSELF: from where the curve leaves
+// the frame, walk the perimeter back to where it entered. Which way round is
+// the only thing the side flag changes.
+function ownPoly(curve, flip){
+  const a = snap(curve[0], [curve[0][0]-curve[1][0], curve[0][1]-curve[1][1]]);
+  const n = curve.length;
+  const b = snap(curve[n-1], [curve[n-1][0]-curve[n-2][0],
+                              curve[n-1][1]-curve[n-2][1]]);
+  const mid = [a].concat(curve.slice(1, n-1), [b]);
+  return mid.concat(cornersBetween(perimT(b), perimT(a), flip ? -1 : 1));
+}
+function curveAt(t){
   if (live) return live;
   const f = frameOf(t), ts = times();
   if (!ts.length) return null;
@@ -90,65 +157,36 @@ function lineAt(t){
   for (const k of ts){ if (k <= f) lo = k; else { hi = k; break; } }
   if (lo === null) return kfs[hi];
   if (hi === null) return kfs[lo];
-  const s = (f - lo) / (hi - lo), A = kfs[lo], B = kfs[hi];
-  const mix = (p, q) => [p[0]+(q[0]-p[0])*s, p[1]+(q[1]-p[1])*s];
-  return {a: mix(A.a, B.a), b: mix(A.b, B.b), flip: A.flip};
-}
-function side(a, b, p){
-  return (b[0]-a[0])*(p[1]-a[1]) - (b[1]-a[1])*(p[0]-a[0]);
-}
-// Sutherland-Hodgman against the half-plane, so the tint is exact at any
-// angle including lines that leave through two adjacent corners.
-function clipHalf(poly, a, b, keep){
-  const out = [];
-  for (let i = 0; i < poly.length; i++){
-    const P = poly[i], Q = poly[(i+1) % poly.length];
-    const sp = side(a,b,P) * keep, sq = side(a,b,Q) * keep;
-    if (sp >= 0) out.push(P);
-    if (sp * sq < 0){
-      const t = sp / (sp - sq);
-      out.push([P[0]+(Q[0]-P[0])*t, P[1]+(Q[1]-P[1])*t]);
-    }
-  }
-  return out;
-}
-function extend(a, b){
-  const dx = b[0]-a[0], dy = b[1]-a[1], ts = [];
-  if (Math.abs(dx) > 1e-9){ ts.push((0-a[0])/dx, (c.width-a[0])/dx); }
-  if (Math.abs(dy) > 1e-9){ ts.push((0-a[1])/dy, (c.height-a[1])/dy); }
-  const pts = ts.map(t => [a[0]+dx*t, a[1]+dy*t])
-    .filter(p => p[0] >= -1 && p[0] <= c.width+1
-               && p[1] >= -1 && p[1] <= c.height+1);
-  return pts.length >= 2 ? [pts[0], pts[pts.length-1]] : [a, b];
+  const s = (f-lo)/(hi-lo), A = kfs[lo], B = kfs[hi];
+  return {c: A.c.map((p,i) => [p[0]+(B.c[i][0]-p[0])*s,
+                               p[1]+(B.c[i][1]-p[1])*s]), flip: A.flip};
 }
 function paint(){
-  ctx.clearRect(0,0,c.width,c.height);
-  const L = lineAt(v.currentTime);
-  if (L){
-    const keep = L.flip ? -1 : 1;
-    const rect = [[0,0],[c.width,0],[c.width,c.height],[0,c.height]];
-    const own = clipHalf(rect, L.a, L.b, keep);
-    if (own.length > 2){
-      ctx.beginPath(); ctx.moveTo(own[0][0], own[0][1]);
-      for (let i=1;i<own.length;i++) ctx.lineTo(own[i][0], own[i][1]);
-      ctx.closePath();
-      ctx.fillStyle = "rgba(60,220,120,.16)"; ctx.fill();
-    }
-    const e = extend(L.a, L.b);
+  ctx.clearRect(0,0,W,H);
+  const L = curveAt(v.currentTime);
+  if (L && L.c.length > 1){
+    const poly = ownPoly(L.c, L.flip);
+    ctx.beginPath(); ctx.moveTo(poly[0][0], poly[0][1]);
+    for (let i=1;i<poly.length;i++) ctx.lineTo(poly[i][0], poly[i][1]);
+    ctx.closePath();
+    ctx.fillStyle = "rgba(60,220,120,.16)"; ctx.fill();
     ctx.strokeStyle = "#ffd33d"; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(e[0][0], e[0][1]);
-    ctx.lineTo(e[1][0], e[1][1]); ctx.stroke();
-    ctx.fillStyle = "#3fc";
-    ctx.font = "13px system-ui";
-    const cx = own.reduce((s,p)=>s+p[0],0)/Math.max(1,own.length);
-    const cy = own.reduce((s,p)=>s+p[1],0)/Math.max(1,own.length);
-    ctx.fillText("自己的手这一侧", cx-45, cy);
+    ctx.beginPath();
+    ctx.moveTo(poly[0][0], poly[0][1]);
+    for (let i=1;i<L.c.length;i++) ctx.lineTo(L.c[i][0], L.c[i][1]);
+    ctx.stroke();
+    let cx=0, cy=0;
+    for (const p of poly){ cx += p[0]; cy += p[1]; }
+    ctx.fillStyle = "#3fc"; ctx.font = "13px system-ui";
+    ctx.fillText("\u81ea\u5df1\u7684\u624b\u8fd9\u4e00\u4fa7",
+                 cx/poly.length-45, cy/poly.length);
   }
   const on = kfs[keyOf(v.currentTime)];
   document.getElementById("info").innerHTML =
-    "<b>" + M.rec + "</b> 帧 " + (M.start + frameOf(v.currentTime)) + "  " +
-    v.currentTime.toFixed(2) + "s / " + M.dur.toFixed(1) + "s &nbsp; 关键帧 " +
-    times().length + (on ? " <b>（当前是关键帧）</b>" : "");
+    "<b>" + M.rec + "</b> \u5e27 " + (M.start + frameOf(v.currentTime)) +
+    "  " + v.currentTime.toFixed(2) + "s / " + M.dur.toFixed(1) +
+    "s &nbsp; \u5173\u952e\u5e27 " + times().length +
+    (on ? " <b>\uff08\u5f53\u524d\u662f\u5173\u952e\u5e27\uff09</b>" : "");
   document.getElementById("head").style.left = (v.currentTime/M.dur*100) + "%";
   document.getElementById("play").style.width = (v.currentTime/M.dur*100) + "%";
   tl.querySelectorAll(".kf").forEach(e => e.remove());
@@ -159,27 +197,41 @@ function paint(){
   }
 }
 function save(){ localStorage.setItem(KEY, JSON.stringify(kfs)); paint(); }
-let drag = null;
 c.onmousedown = e => { const r = c.getBoundingClientRect();
-  drag = [e.clientX-r.left, e.clientY-r.top]; };
+  raw = [[e.clientX-r.left, e.clientY-r.top]]; };
 c.onmousemove = e => {
-  if (!drag) return;
-  const r = c.getBoundingClientRect(), x = e.clientX-r.left, y = e.clientY-r.top;
-  if (Math.abs(x-drag[0]) < 8 && Math.abs(y-drag[1]) < 8) return;
-  const prev = kfs[keyOf(v.currentTime)] || lineAt(v.currentTime);
-  live = {a: [drag[0], drag[1]], b: [x, y], flip: prev ? prev.flip : 0};
-  // DEFAULT THE SIDE TO THE ONE THE ARMS COME FROM. The wearer's own hands
-  // enter from below on a head-mounted rig, so the half containing the bottom
-  // centre starts as theirs; `f` is there for when it does not.
+  if (!raw) return;
+  const r = c.getBoundingClientRect(), p = [e.clientX-r.left, e.clientY-r.top];
+  const q = raw[raw.length-1];
+  if (Math.hypot(p[0]-q[0], p[1]-q[1]) < 3) return;
+  raw.push(p);
+  if (raw.length < 3) return;
+  const prev = kfs[keyOf(v.currentTime)] || curveAt(v.currentTime);
+  live = {c: resample(raw, N), flip: prev ? prev.flip : 0};
+  // DEFAULT THE SIDE TO THE ONE THE ARMS COME FROM. On a head-mounted rig the
+  // wearer's own hands enter from below, so the half holding the bottom centre
+  // starts as theirs; `f` is there for when it does not.
   if (!prev){
-    const bc = [c.width/2, c.height-1];
-    if (side(live.a, live.b, bc) < 0) live.flip = 1;
+    const poly = ownPoly(live.c, 0);
+    if (!inside(poly, [W/2, H-2])) live.flip = 1;
   }
   paint();
 };
+function inside(poly, p){
+  let win = false;
+  for (let i=0, j=poly.length-1; i<poly.length; j=i++){
+    if (((poly[i][1] > p[1]) !== (poly[j][1] > p[1])) &&
+        (p[0] < (poly[j][0]-poly[i][0]) * (p[1]-poly[i][1]) /
+                ((poly[j][1]-poly[i][1]) || 1e-9) + poly[i][0])) win = !win;
+  }
+  return win;
+}
 c.onmouseup = () => {
-  if (live){ kfs[keyOf(v.currentTime)] = live; live = null; save(); }
-  drag = null;
+  if (live){ kfs[keyOf(v.currentTime)] =
+    {c: live.c.map(p => [Math.round(p[0]*10)/10, Math.round(p[1]*10)/10]),
+     flip: live.flip};
+    live = null; save(); }
+  raw = null;
 };
 tl.onclick = e => { const r = tl.getBoundingClientRect();
   v.currentTime = Math.max(0, Math.min(M.dur,
@@ -193,16 +245,12 @@ document.onkeydown = ev => {
   else if (ev.key === ".") step(FR);
   else if (ev.key === "ArrowLeft") step(-1);
   else if (ev.key === "ArrowRight") step(1);
-  else if (ev.key === "f"){
-    const k = keyOf(v.currentTime), L = lineAt(v.currentTime);
-    if (L){ kfs[k] = {a: L.a.map(Math.round), b: L.b.map(Math.round),
-                      flip: L.flip ? 0 : 1}; save(); }
-  }
-  else if (ev.key === "k"){
-    const L = lineAt(v.currentTime);
-    if (L){ kfs[keyOf(v.currentTime)] = {a: L.a.map(Math.round),
-                                         b: L.b.map(Math.round),
-                                         flip: L.flip}; save(); }
+  else if (ev.key === "f" || ev.key === "k"){
+    const L = curveAt(v.currentTime);
+    if (L) kfs[keyOf(v.currentTime)] =
+      {c: L.c.map(p => [Math.round(p[0]*10)/10, Math.round(p[1]*10)/10]),
+       flip: ev.key === "f" ? (L.flip ? 0 : 1) : L.flip};
+    save();
   }
   else if (ev.key === "c" || ev.key === "d"){
     delete kfs[keyOf(v.currentTime)]; save();
@@ -213,27 +261,23 @@ document.onkeydown = ev => {
 v.addEventListener("loadedmetadata", paint);
 (function loop(){ paint(); requestAnimationFrame(loop); })();
 function dl(){
-  // In cam3's own pixels, not the ones on screen: the clip was scaled to fit
-  // a browser and nothing downstream should have to know by how much.
+  // In cam3's own pixels, not the ones on screen. The closed polygon goes in
+  // as well as the curve: a curve plus a side is a convention someone has to
+  // reimplement, and a polygon is a thing you can test a point against.
   const s = M.full_w / M.w;
+  const up = p => [Math.round(p[0]*s), Math.round(p[1]*s)];
   const out = {recording: M.rec, camera: "cam3", source: M.source,
-    clip_start_frame: M.start, fps: M.fps,
-    cam3_size: [M.full_w, M.full_h],
-    interpolation: "linear on both endpoints between keyframes; side held",
+    clip_start_frame: M.start, fps: M.fps, cam3_size: [M.full_w, M.full_h],
+    resampled_points: N,
+    interpolation: "linear point-by-point between keyframes; side held",
     keyframes: times().map(f => {
-      const L = kfs[String(f)];
-      const a = [Math.round(L.a[0]*s), Math.round(L.a[1]*s)];
-      const b = [Math.round(L.b[0]*s), Math.round(L.b[1]*s)];
-      // The normal points into the wearer's half. `left of a to b` depends on
-      // which end was clicked first, so the vector goes in the file too.
-      const dx = b[0]-a[0], dy = b[1]-a[1];
-      const n = Math.hypot(dx, dy) || 1;
-      const sgn = L.flip ? -1 : 1;
+      const L = kfs[String(f)], poly = ownPoly(L.c, L.flip);
+      let cx=0, cy=0;
+      for (const p of poly){ cx += p[0]; cy += p[1]; }
       return {frame: M.start + f, t: +(f/M.fps).toFixed(3),
-              line_cam3: [a, b],
-              own_side: L.flip ? "right_of_a_to_b" : "left_of_a_to_b",
-              own_side_normal_cam3: [ +( sgn*(-dy)/n ).toFixed(4),
-                                      +( sgn*( dx)/n ).toFixed(4) ]};
+              curve_cam3: L.c.map(up),
+              own_polygon_cam3: poly.map(up),
+              own_side_point_cam3: up([cx/poly.length, cy/poly.length])};
     })};
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 1)],
