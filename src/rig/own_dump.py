@@ -52,7 +52,45 @@ FIELDS = ("rec", "frame", "tid", "reference_owner", "p_owner_raw",
           # classifier actually saw. Leaving it out once already meant the
           # only follow-up question worth asking -- what was it looking at --
           # could not be asked without repeating the whole run.
-          "x0", "y0", "x1", "y1")
+          "x0", "y0", "x1", "y1",
+          # THE ARM CUE IN ITS UNTHRESHOLDED FORM. `forearm_exit` already runs
+          # every frame -- it is what `rule_owner` is computed from -- and
+          # everything except one boolean was being thrown away. The wrist, the
+          # direction of the forearm, and where that ray meets the border are
+          # the quantities the literature on wearer-arm attachment actually
+          # uses; `exit_y >= 0.55H` is one threshold cut through them.
+          "wrist_x", "wrist_y", "arm_angle", "exit_edge", "exit_x", "exit_y")
+
+
+def arm_fields(d):
+    """Wrist, forearm direction and border exit, or blanks when absent.
+
+    Blank is not zero and must not become zero: a hand whose keypoints are
+    unusable has no arm evidence at all, which is a different state from an
+    arm pointing along the x axis."""
+    import math as _m
+    kp = d.get("kp")
+    out = {"wrist_x": "", "wrist_y": "", "arm_angle": "",
+           "exit_edge": d.get("edge") or "", "exit_x": "", "exit_y": ""}
+    pt = d.get("exit")
+    if pt is not None:
+        out["exit_x"], out["exit_y"] = int(pt[0]), int(pt[1])
+    if kp is None:
+        return out
+    try:
+        import numpy as _np
+        kp = _np.asarray(kp, float)
+        if kp.shape[0] < 21 or not _np.isfinite(kp).all():
+            return out
+        w = kp[0]
+        v = w - kp[1:21].mean(0)
+        out["wrist_x"], out["wrist_y"] = int(w[0]), int(w[1])
+        if float(_np.linalg.norm(v)) > 1e-6:
+            out["arm_angle"] = round(_m.degrees(_m.atan2(float(v[1]),
+                                                         float(v[0]))), 2)
+    except Exception:
+        pass
+    return out
 
 
 def logit(p, eps=1e-6):
@@ -167,7 +205,8 @@ def dump(a):
                     "side_raw": d.get("side", ""),
                     "side_conf": round(float(d.get("conf", 0.0)), 4),
                     "x0": int(d["box"][0]), "y0": int(d["box"][1]),
-                    "x1": int(d["box"][2]), "y1": int(d["box"][3])})
+                    "x1": int(d["box"][2]), "y1": int(d["box"][3]),
+                    **arm_fields(d)})
         rd.close()
     with open(a.out, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(FIELDS))
