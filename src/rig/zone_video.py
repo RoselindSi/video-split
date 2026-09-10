@@ -56,10 +56,14 @@ b{color:#ffd33d}
 video,canvas{position:absolute;left:0;top:0;width:__W__px;height:__H__px;
   border-radius:4px}
 canvas{cursor:crosshair}
-#tl{margin:0 14px;height:26px;position:relative;background:#1b1b1b;
-  border-radius:4px;cursor:pointer}
+#tl{margin:0 14px 18px;height:34px;position:relative;background:#1b1b1b;
+  border-radius:4px;cursor:pointer;touch-action:none;user-select:none}
+#tl.drag{cursor:grabbing}
 #play{position:absolute;top:0;bottom:0;background:#2a3a4a;border-radius:4px}
 #head{position:absolute;top:0;bottom:0;width:2px;background:#ffd33d}
+#grip{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;
+  border-radius:50%;background:#ffd33d;box-shadow:0 0 0 3px rgba(0,0,0,.35);
+  pointer-events:none}
 .kf{position:absolute;top:0;bottom:0;width:3px;background:#3f6}
 .key{font-size:11px;color:#999;max-width:920px}
 </style>
@@ -70,12 +74,13 @@ canvas{cursor:crosshair}
  松开鼠标也收笔，两端自动延到边缘）
  <b>f</b> 翻转哪一侧是自己的 <b>k</b> 打关键帧 <b>c</b>/<b>d</b> 删掉当前关键帧
  <b>,</b>/<b>.</b> 前后一帧 <b>&larr;</b>/<b>&rarr;</b> 前后一秒。
+ 底下的进度条可以<b>拖着拉</b>，绿色竖线是关键帧。松手后如果原来在播就继续播。
  绿色一侧=佩戴者自己的手所在的区域。</span>
  <button onclick="dl()">download JSON</button>
 </div>
 <div id=stage><video id=v src="__VIDEO__" playsinline></video>
 <canvas id=c width=__W__ height=__H__></canvas></div>
-<div id=tl><div id=play></div><div id=head></div></div>
+<div id=tl><div id=play></div><div id=head></div><div id=grip></div></div>
 <script>
 const M = __META__;
 const KEY = "zonecurve:" + M.rec;
@@ -188,15 +193,25 @@ function paint(){
     "  " + v.currentTime.toFixed(2) + "s / " + M.dur.toFixed(1) +
     "s &nbsp; \u5173\u952e\u5e27 " + times().length +
     (on ? " <b>\uff08\u5f53\u524d\u662f\u5173\u952e\u5e27\uff09</b>" : "");
-  document.getElementById("head").style.left = (v.currentTime/M.dur*100) + "%";
-  document.getElementById("play").style.width = (v.currentTime/M.dur*100) + "%";
-  tl.querySelectorAll(".kf").forEach(e => e.remove());
-  for (const k of times()){
-    const d = document.createElement("div");
-    d.className = "kf"; d.style.left = (k / M.fps / M.dur * 100) + "%";
-    tl.appendChild(d);
+  const pct = (v.currentTime/M.dur*100) + "%";
+  document.getElementById("head").style.left = pct;
+  document.getElementById("grip").style.left = pct;
+  document.getElementById("play").style.width = pct;
+  // REBUILT ONLY WHEN THE SET CHANGES. paint() runs on every animation frame,
+  // and tearing down and recreating these marks sixty times a second made the
+  // bar fight the pointer that was dragging it.
+  const sig = times().join(",");
+  if (sig !== lastKfSig){
+    lastKfSig = sig;
+    tl.querySelectorAll(".kf").forEach(e => e.remove());
+    for (const k of times()){
+      const d = document.createElement("div");
+      d.className = "kf"; d.style.left = (k / M.fps / M.dur * 100) + "%";
+      tl.appendChild(d);
+    }
   }
 }
+let lastKfSig = null;
 function save(){ localStorage.setItem(KEY, JSON.stringify(kfs)); paint(); }
 // POINTER CAPTURE, AND THE STROKE ENDS AT THE EDGE. Without capture a mouseup
 // outside the canvas never arrives, so the stroke stays live and keeps
@@ -252,9 +267,29 @@ function inside(poly, p){
   }
   return win;
 }
-tl.onclick = e => { const r = tl.getBoundingClientRect();
-  v.currentTime = Math.max(0, Math.min(M.dur,
-    (e.clientX-r.left)/r.width*M.dur)); paint(); };
+// DRAG, NOT JUST CLICK. A click that jumps is fine for finding a moment you
+// already know the time of; scrubbing is how you find the frame where the
+// boundary stops being right, which is the only reason to keyframe at all.
+// Pointer capture keeps the drag alive when the cursor leaves the bar.
+let scrub = false, wasPlaying = false;
+function seekTo(e){
+  const r = tl.getBoundingClientRect();
+  const x = Math.max(0, Math.min(r.width, e.clientX - r.left));
+  v.currentTime = Math.max(0, Math.min(M.dur - FR, x / r.width * M.dur));
+  paint();
+}
+tl.onpointerdown = e => {
+  scrub = true; wasPlaying = !v.paused; v.pause();
+  tl.classList.add("drag");
+  tl.setPointerCapture(e.pointerId);
+  seekTo(e); e.preventDefault();
+};
+tl.onpointermove = e => { if (scrub) seekTo(e); };
+tl.onpointerup = tl.onpointercancel = () => {
+  if (!scrub) return;
+  scrub = false; tl.classList.remove("drag");
+  if (wasPlaying) v.play();
+};
 function tog(){ v.paused ? v.play() : v.pause(); }
 function step(dt){ v.pause();
   v.currentTime = Math.max(0, Math.min(M.dur-FR, v.currentTime+dt)); }
