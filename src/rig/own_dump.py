@@ -134,10 +134,51 @@ def dump(a):
         raise SystemExit(f"no ownership checkpoint at {a.clf_ctx}")
     geom = geom_prior.load_model(a.geom)
 
-    rows = []
+    rows, failed = [], []
+    # RESUME, BECAUSE ONE BAD CLIP USED TO COST THE WHOLE RUN. A four-hour
+    # pass over twenty-nine recordings died on the seventh when a reader
+    # returned nothing, and the six already decoded went with it.
+    done = set()
+    if a.resume and os.path.exists(a.out):
+        for r in csv.DictReader(open(a.out, encoding="utf-8-sig")):
+            rows.append({k: r.get(k, "") for k in FIELDS})
+            done.add(r["rec"])
+        print(f"  续跑：{a.out} 里已有 {len(done)} 段 / {len(rows)} 行",
+              flush=True)
     for tag in (a.rec or sorted(clips)):
-        if tag not in clips:
+        if tag not in clips or tag in done:
             continue
+        try:
+            dump_one(a, tag, clips, model, ctx_model, ctx_device, geom, rows)
+        except Exception as e:
+            # A DECODE FAILURE IS NOT A REASON TO LOSE THE OTHER TWENTY-EIGHT.
+            # It is also not silent: the clip is named, and a batch that drops
+            # recordings has to say which ones before any rate computed on it
+            # means anything.
+            failed.append((tag, f"{type(e).__name__}: {e}".split("\n")[0]))
+            print(f"  !! {tag} 失败并跳过 -- {failed[-1][1]}", flush=True)
+    if failed:
+        print(f"\n  跳过 {len(failed)} 段：")
+        for tag, why in failed:
+            print(f"    {tag}  {why}")
+    with open(a.out, "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=list(FIELDS))
+        w.writeheader()
+        w.writerows(rows)
+    print(f"\n  {len(rows)} 行 / "
+          f"{len({(r['rec'], r['tid']) for r in rows})} 条轨迹 -> {a.out}")
+
+
+def dump_one(a, tag, clips, model, ctx_model, ctx_device, geom, rows):
+    """One recording, appended to `rows`. Raises on a decode failure."""
+    from src.rig.calibration import RigCalibration
+    from src.rig.geometry import VirtualWideCamera
+    from src.rig.render_wide import render
+    from src.rig.seam_fix import ClipReader, Prefetch
+    from src.rig.hand_detect import detect, OwnHold
+    from src.rig.hand_track import Tracker, MAX_LOST
+    from src.rig import own_ctx, demo_video
+    if True:
         databag, start = clips[tag]
         rig = RigCalibration(os.path.join(databag, "calibration.yaml"))
         vcam = VirtualWideCamera.from_rig(rig)
@@ -354,6 +395,9 @@ def main():
     ap.add_argument("--weights",
                     default="/shared/models/HaWoR/weights/external/detector.pt")
     ap.add_argument("--out", default="/workspace/own_dump.csv")
+    ap.add_argument("--resume", action="store_true",
+                    help="keep the recordings already in --out and only run "
+                         "the ones missing")
     ap.add_argument("--rows", help="report mode: the dumped csv")
     ap.add_argument("--hands", nargs="*",
                     help="hand_precision label csvs; keep only the tracks a "
