@@ -559,7 +559,13 @@ function dl(){
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([JSON.stringify(build(), null, 1)],
                                         {type:"application/json"}));
-  a.download = "wearer_zone_" + M.rec + ".json"; a.click();
+  // THE NAME CARRIES THE PAIR IT BELONGS TO. A folder of `wearer_zone.json
+  // (3)` tells you nothing about who drew it, and the collector script reads
+  // identity out of the file anyway -- but a human moving files into a repo
+  // needs to see it without opening them.
+  const who = (document.getElementById("who").value || "anon").trim()
+                .replace(/[^A-Za-z0-9_.-]+/g, "_");
+  a.download = "zone_" + M.rec + "__" + who + ".json"; a.click();
 }
 // SERVED OR NOT, THE PAGE STILL WORKS. Opened off the disk there is nowhere to
 // post to, so the button says so instead of failing silently every few seconds.
