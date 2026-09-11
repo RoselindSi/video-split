@@ -53,10 +53,22 @@ button{font:13px system-ui;padding:5px 10px;cursor:pointer}
 b{color:#ffd33d}
 #stage{position:relative;margin:10px 14px;width:__W__px}
 video{width:__W__px;border-radius:4px;display:block;background:#000}
-#mark{height:20px;position:relative;background:#1b1b1b;border-radius:3px;
-  margin-top:4px}
+#mark{height:26px;position:relative;background:#1b1b1b;border-radius:3px;
+  margin-top:4px;cursor:pointer}
 #at{position:absolute;top:0;bottom:0;width:3px;background:#f55;left:50%}
+#atlab{position:absolute;top:3px;left:50%;margin-left:7px;color:#f77;
+  font-size:11px;white-space:nowrap}
 #now{position:absolute;top:0;bottom:0;width:2px;background:#ffd33d}
+/* THE MOMENT IS IN TIME, NOT IN SPACE. A line down the middle of the frame
+   would be read as pointing AT something. This is a band that appears while
+   playback is crossing the instant, plus a signed countdown, so the question
+   `which moment am I judging` never needs the strip underneath. */
+#flash{position:absolute;left:0;right:0;top:0;height:34px;display:none;
+  background:linear-gradient(rgba(255,60,60,.85),rgba(255,60,60,0));
+  color:#fff;font:13px/22px system-ui;text-align:center;border-radius:4px 4px 0 0}
+#cd{position:absolute;right:8px;top:8px;background:rgba(0,0,0,.6);
+  color:#ffd33d;font:12px/1.6 ui-monospace,monospace;padding:1px 7px;
+  border-radius:3px}
 #list{margin:0 14px 40px;font-size:12px}
 .row{padding:3px 6px;border-bottom:1px solid #222;cursor:pointer;
   display:flex;gap:10px}
@@ -71,13 +83,18 @@ video{width:__W__px;border-radius:4px;display:block;background:#000}
  <span class=key><b>1</b> 是任务边界 &nbsp; <b>2</b> 不是（同一任务内部）
  &nbsp; <b>3</b> 说不准 &nbsp; <b>4</b> 看不清 &nbsp; <b>r</b> 重放
  &nbsp; <b>&uarr;&darr;</b> 换一个 &nbsp; <b>u</b> 撤销<br>
- 红线是候选时刻（片段正中）。判据：两段同类动作之间只有发生了
+ 每段 10 秒，<b>候选时刻在正中（第 5 秒）</b>：播到那一刻画面顶部会闪红条，
+ 右上角的计数从 −5.0s 走到 +5.0s，0 就是被问的那一刻；下面的红线是它在进度条上的位置，
+ 进度条可以点着跳。<b>问的是：在那一刻，前一个任务结束、下一个开始了吗。</b><br>
+ 判据：两段同类动作之间只有发生了
  <b>disengagement</b> 才算边界——对象脱手后重新拿取，或双手 idle／离开工作区
  后重新接触。连续动作内部的方向反转、换握、位置转移都不是边界。</span>
  <button onclick="dl()">download CSV</button>
 </div>
 <div id=stage><video id=v src="__VIDEO__" playsinline></video>
-<div id=mark><div id=at></div><div id=now></div></div></div>
+<div id=flash>候选时刻</div><div id=cd></div>
+<div id=mark><div id=at></div><div id=atlab>候选时刻</div>
+<div id=now></div></div></div>
 <div id=list></div>
 <script>
 const D = __PAYLOAD__;
@@ -102,13 +119,26 @@ function play(){
   draw();
 }
 function again(){ play(); }
-v.addEventListener("timeupdate", () => {
+function tick(){
   const it = D.items[cur];
-  if (!it) return;
-  if (v.currentTime > it.off + it.len){ v.pause(); }
-  const f = Math.max(0, Math.min(1, (v.currentTime - it.off) / it.len));
-  document.getElementById("now").style.left = (f*100) + "%";
-});
+  if (it){
+    if (v.currentTime > it.off + it.len) v.pause();
+    const rel = v.currentTime - (it.off + it.len/2);   // signed, 0 = the cut
+    const f = Math.max(0, Math.min(1, (v.currentTime - it.off) / it.len));
+    document.getElementById("now").style.left = (f*100) + "%";
+    document.getElementById("cd").textContent =
+      (rel >= 0 ? "+" : "") + rel.toFixed(1) + "s";
+    document.getElementById("flash").style.display =
+      Math.abs(rel) < 0.35 ? "block" : "none";
+  }
+  requestAnimationFrame(tick);
+}
+tick();
+document.getElementById("mark").onclick = e => {
+  const it = D.items[cur]; if (!it) return;
+  const r = e.currentTarget.getBoundingClientRect();
+  v.currentTime = it.off + (e.clientX - r.left) / r.width * it.len;
+};
 function draw(){
   D.items.forEach((it,i)=>{
     const s = st[it.key];
