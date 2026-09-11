@@ -176,8 +176,14 @@ def main():
                     help="0.0.0.0 to let other machines reach it")
     ap.add_argument("--token", default="",
                     help="require this in an X-Token header")
-    ap.add_argument("--subs", default=None,
-                    help="where submissions land; default <dir>/submissions")
+    # THE DEFAULT IS WHERE GIT CAN SEE IT. Landing next to the mp4s put the
+    # annotations in the one directory that is deliberately not tracked --
+    # the clips are too big for the repo and never change -- so the work would
+    # sit outside version control until someone moved it by hand. `annotations`
+    # under the directory you run from is the clone you are about to push.
+    ap.add_argument("--subs", default="annotations",
+                    help="where annotations land, relative to where you run "
+                         "this; default ./annotations")
     a = ap.parse_args()
 
     root = os.path.abspath(a.dir)
