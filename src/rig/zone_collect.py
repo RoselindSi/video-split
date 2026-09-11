@@ -106,6 +106,7 @@ def main():
                "submitted_at": d.get("submitted_at", ""),
                "clip_start_frame": d.get("clip_start_frame"),
                "fps": d.get("fps"), "copy_shift_px": d.get("copy_shift_px"),
+               "problem": d.get("problem", ""),
                "first_frame": min(frames) if frames else "",
                "last_frame": max(frames) if frames else "",
                "file": os.path.relpath(p, a.dir)}

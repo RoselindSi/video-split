@@ -23,6 +23,18 @@ on one recording and only the latest is interesting; a final is a claim to be
 done, so it is written under its own timestamped name and never clobbered by a
 later autosave.
 
+ONE FOLDER PER DATABAG, NAMED AFTER IT. A flat pile of json is fine until you
+are holding a label a year later and want the footage it came from; nesting
+each recording's work under its databag name makes that a `cd` instead of a
+lookup. The databag is read out of the page this server built, never out of
+the POST body -- a client-supplied path is a directory traversal, and the
+answer is already on disk locally.
+
+NOT INSIDE THE RAW CORPUS, THOUGH. The databags live in a shared incoming
+dataset that other things read and re-sync; derived labels written in there
+are indistinguishable from source data a year later and can be wiped by
+whatever refreshes it. The tree mirrors the names, so `cd` still works.
+
 A CLIP CAN BE REPORTED INSTEAD OF ANNOTATED. Black frames, a camera that was
 covered, nothing happening -- these have all happened here, and without a way
 to say so the annotator either draws a meaningless boundary or silently skips,
@@ -122,8 +134,20 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     token = ""
     subdir = ""
     users = {}
+    bags = {}                 # recording -> the databag directory's own name
     realm = "zone annotation"
     lock = threading.Lock()
+
+    def bagdir(self, rec):
+        """Where this recording's labels go: <subs>/<databag name>/.
+
+        `bags` was read from the pages on this disk, so the name is ours, not
+        something a request supplied -- and it is a bare basename joined onto
+        the annotations root, never a path from anywhere else.
+        """
+        d = os.path.join(self.subdir, slug(self.bags.get(rec, rec), rec))
+        os.makedirs(d, exist_ok=True)
+        return d
 
     def log_message(self, fmt, *args):        # one line per POST, not per GET
         if self.command == "POST":
@@ -153,6 +177,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     # ------------------------------------------------------------- reading
 
+    def written(self):
+        for dirpath, _dirs, names in os.walk(self.subdir):
+            for g in sorted(names):
+                yield dirpath, g
+
     def states(self):
         """(recording, annotator) -> its strongest state, from the filenames.
 
@@ -162,7 +191,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         """
         out = {}
         rank = {"draft": 1, "unusable": 2, "final": 3}
-        for g in sorted(os.listdir(self.subdir)):
+        for _dirpath, g in self.written():
             if not g.endswith(".json"):
                 continue
             stem = g[:-5]
@@ -180,10 +209,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def count_kf(self, rec, who):
         for suffix in ("final", "draft"):
-            for g in sorted(os.listdir(self.subdir), reverse=True):
+            for dirpath, g in sorted(self.written(), reverse=True):
                 if g.startswith(f"{rec}__{who}__{suffix}") and g.endswith(".json"):
                     try:
-                        d = json.load(open(os.path.join(self.subdir, g),
+                        d = json.load(open(os.path.join(dirpath, g),
                                            encoding="utf-8"))
                     except Exception:
                         return None
@@ -359,7 +388,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
         name = (f"{rec}__{who}__draft.json" if status == "draft" else
                 f"{rec}__{who}__{status}_{stamp.replace(':', '')}.json")
-        path = os.path.join(self.subdir, name)
+        path = os.path.join(self.bagdir(rec), name)
         tmp = path + ".part"
         kf = sum(len(e.get("keyframes", []))
                  for e in (data.get("eyes") or {}).values())
@@ -371,11 +400,33 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                       encoding="utf-8") as f:
                 if f.tell() == 0:
                     f.write("at,recording,annotator,status,keyframes,file\n")
-                f.write(f"{stamp},{rec},{who},{status},{kf},{name}\n")
+                f.write(f"{stamp},{rec},{who},{status},{kf},"
+                        f"{os.path.relpath(path, self.subdir)}\n")
         if status != "draft":
             print(f"  {status.upper():9s} {rec}  {who}  {kf} 关键帧 -> {name}",
                   flush=True)
         return self._json(200, {"ok": True, "file": name, "keyframes": kf})
+
+
+# THE PAGES ALREADY KNOW WHERE THEY CAME FROM. zone_video bakes the source
+# path into each page's metadata, so the databag name is recoverable from the
+# directory being served -- no manifest to keep in sync, and nothing about the
+# layout depends on a request.
+def read_bags(root):
+    bags = {}
+    for f in sorted(os.listdir(root)):
+        if not (f.startswith("zone_") and f.endswith(".html")):
+            continue
+        rec = f[5:-5]
+        try:
+            head = open(os.path.join(root, f), encoding="utf-8").read(8000)
+        except OSError:
+            continue
+        m = re.search(r'"source"\s*:\s*"([^"]*)"', head)
+        src = m.group(1) if m else ""
+        bag = os.path.basename(os.path.dirname(src)) if src else ""
+        bags[rec] = bag or rec
+    return bags
 
 
 def adduser(path, name):
@@ -440,6 +491,7 @@ def main():
     subs = os.path.abspath(a.subs)
     os.makedirs(subs, exist_ok=True)
     Handler.token, Handler.subdir, Handler.users = a.token, subs, users
+    Handler.bags = read_bags(root)
 
     class Server(socketserver.ThreadingTCPServer):
         allow_reuse_address = True
@@ -457,7 +509,9 @@ def main():
                     if f.startswith("zone_") and f.endswith(".html"))
         say = functools.partial(print, flush=True)   # nohup buffers otherwise
         say(f"{pages} 段录像  {root}")
-        say(f"标注结果 -> {subs}")
+        say(f"标注结果 -> {subs}/<视频包名>/")
+        named = sum(1 for r, b in Handler.bags.items() if b != r)
+        say(f"  按原视频包分目录，{named}/{len(Handler.bags)} 段能对到包名")
         say(f"网址: {scheme}://{host}:{a.port}/")
         if users:
             say(f"账号 {len(users)} 个: {', '.join(sorted(users))}")
