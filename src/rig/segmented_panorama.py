@@ -299,14 +299,15 @@ def hierarchical_six_owner(
         pair_cost = {camera: cost[camera] for camera in pair}
         fallback = geometric_owner(pair_valid, pair_cost)
         pair_owner[pair_owner < 0] = fallback[pair_owner < 0]
-        pair_semantic = {camera: semantic[camera] for camera in pair}
-        pair_owner, pair_protected, stats = regularize_semantic_owner(
-            pair_owner, pair_semantic, pair_valid, pair_cost,
-            close_px=semantic_close, dilate_px=semantic_dilate,
-            max_component_fraction=0.35)
+        pair_protected = (
+            np.asarray(semantic[left], bool)
+            | np.asarray(semantic[right], bool)
+        )
         pair_owners[module] = pair_owner
         pair_seams[module] = seam
-        pair_stats[str(module)] = stats
+        pair_stats[str(module)] = {
+            "protected_fraction": float(pair_protected.mean()),
+        }
         black = np.zeros((*shape, 3), np.float32)
         composed, filled, _ = compose_single_source(
             {camera: images[camera] for camera in pair}, pair_valid,
@@ -465,6 +466,67 @@ def overlay_regularized_match_warp(
     return global_image, global_valid
 
 
+def affine_inverse_pixel_map(source_shape, target_shape, affine):
+    """Map every target pixel back through one affine transform."""
+    import cv2
+
+    target_height, target_width = (
+        int(value) for value in target_shape[:2])
+    rows, columns = np.indices((target_height, target_width))
+    points = np.stack(
+        (columns, rows), axis=-1).astype(np.float32).reshape(-1, 1, 2)
+    mapping = cv2.perspectiveTransform(
+        points, np.linalg.inv(np.asarray(affine, np.float64))).reshape(
+            target_height, target_width, 2)
+    source_height, source_width = (
+        int(value) for value in source_shape[:2])
+    inside = (
+        np.isfinite(mapping).all(axis=2)
+        & (mapping[..., 0] >= 0.0) & (mapping[..., 0] <= source_width - 1)
+        & (mapping[..., 1] >= 0.0) & (mapping[..., 1] <= source_height - 1)
+    )
+    return mapping.astype(np.float32), inside
+
+
+def compose_inverse_match_map(
+        parent_to_source, local_active, anchor_to_parent, parent_active,
+        source_shape):
+    """Compose two inverse pixel maps along an adjacent-camera chain."""
+    import cv2
+
+    parent_to_source = np.asarray(parent_to_source, np.float32)
+    anchor_to_parent = np.asarray(anchor_to_parent, np.float32)
+    local_active = np.asarray(local_active, bool)
+    parent_active = np.asarray(parent_active, bool)
+    if parent_to_source.shape[2:] != (2,) \
+            or anchor_to_parent.shape[2:] != (2,):
+        raise ValueError("inverse maps must have two coordinate channels")
+    if local_active.shape != parent_to_source.shape[:2]:
+        raise ValueError("local active mask shape differs from its map")
+    if parent_active.shape != anchor_to_parent.shape[:2]:
+        raise ValueError("parent active mask shape differs from its map")
+    map_x = anchor_to_parent[..., 0]
+    map_y = anchor_to_parent[..., 1]
+    child_x = cv2.remap(
+        parent_to_source[..., 0], map_x, map_y, cv2.INTER_LINEAR,
+        borderMode=cv2.BORDER_CONSTANT, borderValue=-1)
+    child_y = cv2.remap(
+        parent_to_source[..., 1], map_x, map_y, cv2.INTER_LINEAR,
+        borderMode=cv2.BORDER_CONSTANT, borderValue=-1)
+    sampled_active = cv2.remap(
+        local_active.astype(np.uint8), map_x, map_y, cv2.INTER_NEAREST,
+        borderMode=cv2.BORDER_CONSTANT) > 0
+    mapping = np.stack((child_x, child_y), axis=-1)
+    height, width = (int(value) for value in source_shape[:2])
+    inside = (
+        np.isfinite(mapping).all(axis=2)
+        & (mapping[..., 0] >= 0.0) & (mapping[..., 0] <= width - 1)
+        & (mapping[..., 1] >= 0.0) & (mapping[..., 1] <= height - 1)
+    )
+    active = (sampled_active | parent_active) & inside
+    return mapping.astype(np.float32), active
+
+
 def overlay_dense_anchor_warp(
         global_image, global_valid, source_image, source_protected,
         anchor_protected, anchor_to_source, certainty, canvas_transform,
@@ -592,33 +654,54 @@ def render(args):
     )
 
     anchor = int(args.anchor)
+    if args.geometry_mode == "adjacent-chain" and anchor != 3:
+        raise ValueError("adjacent-chain geometry currently requires anchor 3")
+    anchor_rows, anchor_columns = np.indices(images[anchor].shape[:2])
+    anchor_identity = np.stack(
+        (anchor_columns, anchor_rows), axis=-1).astype(np.float32)
     camera_models = {
         anchor: {
             "homographies": [np.eye(3, dtype=np.float64)],
             "model_map": np.zeros(images[anchor].shape[:2], np.int16),
             "report": None,
+            "global_homography": np.eye(3, dtype=np.float64),
+            "inverse_mapping": anchor_identity,
+            "inverse_active": np.zeros(images[anchor].shape[:2], bool),
         }
     }
+    if args.geometry_mode == "adjacent-chain":
+        camera_order = (2, 1, 0, 4, 5)
+        parents = {2: 3, 1: 2, 0: 1, 4: 3, 5: 4}
+        if args.dense_refine:
+            raise ValueError(
+                "dense refine is not supported with adjacent-chain geometry")
+    else:
+        camera_order = tuple(camera for camera in range(6)
+                             if camera != anchor)
+        parents = {camera: anchor for camera in camera_order}
     with torch.inference_mode():
-        for camera in range(6):
-            if camera == anchor:
+        for camera in camera_order:
+            parent = parents[camera]
+            if parent not in camera_models:
+                print(
+                    f"cam{camera}->cam{parent}: parent unavailable", flush=True)
                 continue
             warp, certainty = matcher.match(
-                os.fspath(paths[camera]), os.fspath(paths[anchor]))
+                os.fspath(paths[camera]), os.fspath(paths[parent]))
             matches, scores = matcher.sample(
                 warp, certainty, num=int(args.matches))
             source, target = matcher.to_pixel_coordinates(
                 matches, *images[camera].shape[:2],
-                *images[anchor].shape[:2])
+                *images[parent].shape[:2])
             report = analyze_pair(
                 source.detach().cpu().numpy(),
                 target.detach().cpu().numpy(),
-                images[camera].shape[:2], images[anchor].shape[:2],
+                images[camera].shape[:2], images[parent].shape[:2],
                 scores.detach().cpu().numpy(), semantic[camera],
-                semantic[anchor], config)
-            report["pair"] = [camera, anchor]
+                semantic[parent], config)
+            report["pair"] = [camera, parent]
             if not report["accepted"]:
-                print(f"cam{camera}->cam{anchor}: rejected", flush=True)
+                print(f"cam{camera}->cam{parent}: rejected", flush=True)
                 continue
             segments = content_segments(
                 images[camera], semantic[camera], args.segments,
@@ -628,10 +711,15 @@ def render(args):
                 threshold_px=args.affine_threshold)
             if stable is None or int(stable_inliers.sum()) \
                     < args.min_affine_inliers:
-                print(f"cam{camera}->cam{anchor}: no stable affine", flush=True)
+                print(
+                    f"cam{camera}->cam{parent}: no stable affine", flush=True)
                 continue
-            homographies = [stable] + [
-                model["homography"] for model in report["homographies"]]
+            parent_global = camera_models[parent]["global_homography"]
+            global_stable = parent_global @ stable
+            homographies = [global_stable] + [
+                parent_global @ model["homography"]
+                for model in report["homographies"]
+            ]
             model_map = assign_segments_to_models(
                 segments, report["source"], report["labels"] + 1,
                 len(homographies), default_model=0,
@@ -641,27 +729,39 @@ def render(args):
                 segments, model_map, homographies, fallback_index=0,
                 max_delta_px=args.max_local_delta,
                 max_relative_span=args.max_local_span)
-            mesh_mapping = mesh_active = mesh_report = None
+            local_mapping, _ = affine_inverse_pixel_map(
+                images[camera].shape, images[parent].shape, stable)
+            local_active = np.zeros(images[parent].shape[:2], bool)
+            mesh_report = None
             if args.continuous_refine:
                 mesh_matches = report["labels"] >= 0
                 try:
-                    mesh_mapping, mesh_active, mesh_report = \
+                    local_mapping, local_active, mesh_report = \
                         regularized_match_map(
-                            images[camera].shape, images[anchor].shape,
+                            images[camera].shape, images[parent].shape,
                             report["source"][mesh_matches],
                             report["target"][mesh_matches], stable,
                             cell_px=args.mesh_cell,
                             smooth_sigma=args.mesh_smooth,
                             max_correction_px=args.mesh_max_correction,
                             hull_feather_px=args.mesh_feather)
+                    mesh_report["parent"] = int(parent)
                 except (ValueError, np.linalg.LinAlgError) as error:
                     print(
-                        f"cam{camera}->cam{anchor}: "
+                        f"cam{camera}->cam{parent}: "
                         f"continuous refine skipped: {error}", flush=True)
+            inverse_mapping, inverse_active = compose_inverse_match_map(
+                local_mapping, local_active,
+                camera_models[parent]["inverse_mapping"],
+                camera_models[parent]["inverse_active"],
+                images[camera].shape)
+            mesh_mapping = (
+                inverse_mapping if args.continuous_refine else None)
+            mesh_active = inverse_active if args.continuous_refine else None
             reverse_warp = reverse_certainty = None
             if args.dense_refine:
                 reverse_warp_tensor, reverse_certainty_tensor = matcher.match(
-                    os.fspath(paths[anchor]), os.fspath(paths[camera]))
+                    os.fspath(paths[parent]), os.fspath(paths[camera]))
                 reverse_warp = reverse_warp_tensor[..., 2:].detach().cpu().numpy()
                 reverse_certainty = \
                     reverse_certainty_tensor.detach().cpu().numpy()
@@ -670,6 +770,9 @@ def render(args):
                 "model_map": model_map,
                 "report": report,
                 "stable_affine_inliers": int(stable_inliers.sum()),
+                "global_homography": global_stable,
+                "inverse_mapping": inverse_mapping,
+                "inverse_active": inverse_active,
                 "mesh_mapping": mesh_mapping,
                 "mesh_active": mesh_active,
                 "mesh_report": mesh_report,
@@ -677,7 +780,7 @@ def render(args):
                 "dense_certainty": reverse_certainty,
             }
             print(
-                f"cam{camera}->cam{anchor}: "
+                f"cam{camera}->cam{parent}: "
                 f"H={report['explained_matches']} "
                 f"models={len(report['homographies'])} "
                 f"affine={int(stable_inliers.sum())} "
@@ -851,6 +954,9 @@ def main():
     parser.add_argument("--time", type=int, default=0)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--anchor", type=int, choices=range(6), default=3)
+    parser.add_argument(
+        "--geometry-mode", choices=("direct", "adjacent-chain"),
+        default="direct")
     parser.add_argument("--runtime", default="/workspace/roma_runtime")
     parser.add_argument(
         "--xfeat-source",

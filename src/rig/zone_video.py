@@ -115,8 +115,10 @@ canvas{cursor:crosshair}
  <b>,</b>/<b>.</b> 前后一帧 <b>&larr;</b>/<b>&rarr;</b> 前后一秒。
  进度条可以拖；绿色=左眼(cam3)关键帧，蓝色=右眼(cam4)。
  绿色填充一侧=佩戴者自己的手所在的区域。</span>
+ <a id=back href="./" style="color:#7cf;font-size:12px">&larr; 回列表</a>
  <input id=who placeholder="你的名字">
  <button id=subbtn onclick="submit()">提交</button>
+ <button id=badbtn onclick="report()">视频有问题</button>
  <span id=sub></span>
  <button onclick="dl()">download JSON</button>
 </div>
@@ -571,30 +573,49 @@ function dl(){
 // post to, so the button says so instead of failing silently every few seconds.
 const SERVED = location.protocol.startsWith("http");
 const who = document.getElementById("who");
-who.value = localStorage.getItem("zoneannotator") || "";
-who.onchange = () => localStorage.setItem("zoneannotator", who.value.trim());
+// THE SERVER SAYS WHO THIS IS when there are accounts; the box is then a
+// label, not a field. A typed name is how one person becomes two in the data.
+if (window.__WHO__){
+  who.value = window.__WHO__; who.readOnly = true;
+  who.style.color = "#888"; who.style.borderColor = "#333"; who.title = "登录身份";
+} else {
+  who.value = localStorage.getItem("zoneannotator") || "";
+  who.onchange = () => localStorage.setItem("zoneannotator", who.value.trim());
+  document.getElementById("back").style.display = "none";
+}
 function note(s, bad){
   const el = document.getElementById("sub");
   el.textContent = s; el.style.color = bad ? "#e88" : "#8b8";
 }
 if (!SERVED){
   document.getElementById("subbtn").disabled = true;
+  document.getElementById("badbtn").disabled = true;
   note("离线打开：用 download JSON 交回");
 }
-function post(status){
+function post(status, problem){
   const b = build();
   if (!b.annotator){ note("先填名字", true); return Promise.resolve(false); }
   return fetch("submit", {method:"POST",
       headers:{"Content-Type":"application/json"},
       body: JSON.stringify({rec: M.rec, annotator: b.annotator,
-                            status: status, data: b})})
+                            status: status, problem: problem || "", data: b})})
     .then(r => r.ok ? r.json() : Promise.reject(r.status))
-    .then(() => { note(status === "final" ? "已提交 ✓" :
-      "草稿已存 " + new Date().toLocaleTimeString()); return true; })
+    .then(() => { note({final: "已提交 ✓", unusable: "已报告问题 ✓"}[status] ||
+      ("草稿已存 " + new Date().toLocaleTimeString())); return true; })
     .catch(e => { note("存不上（" + e + "），请 download JSON", true);
                   return false; });
 }
-function submit(){ post("final"); }
+function submit(){ post("final").then(ok => { if (ok) setTimeout(next, 700); }); }
+// A CLIP CAN BE REPORTED INSTEAD OF ANNOTATED. Black frames, a covered camera,
+// nothing happening -- all of these have turned up in this corpus, and with no
+// way to say so the annotator either draws a meaningless boundary or skips
+// silently, and afterwards neither is distinguishable from `not done yet`.
+function report(){
+  const why = prompt("这段有什么问题？（黑屏／看不清／没内容／别的）");
+  if (why === null) return;
+  post("unusable", why).then(ok => { if (ok) setTimeout(next, 700); });
+}
+function next(){ if (window.__WHO__) location.href = "./"; }
 // AUTOSAVE SO A CLOSED TAB IS NOT A LOST AFTERNOON. Debounced, and silent
 // about failures after the first: an annotator with no network should see the
 // warning once, not once every edit.

@@ -137,6 +137,13 @@ def main():
     # WHO OVERLAPS WITH WHOM is the reason to collect centrally at all: two
     # people on one recording is the only thing that can tell you whether
     # `the wearer's side` means the same to both of them.
+    bad = [(rec, who, d.get("problem", ""))
+           for (rec, who), (_, d, _p) in sorted(best.items())
+           if d.get("status") == "unusable"]
+    if bad:
+        print(f"\n{len(bad)} 段被报告有问题，别拿去分析:")
+        for rec, who, why in bad:
+            print(f"  {rec}  ({who}) {why}")
     per_rec = collections.defaultdict(set)
     for rec, who in best:
         per_rec[rec].add(who)
