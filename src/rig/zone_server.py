@@ -135,6 +135,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     subdir = ""
     users = {}
     bags = {}                 # recording -> the databag directory's own name
+    local_user = "anon"       # stands in for a login when there is none
     realm = "zone annotation"
     lock = threading.Lock()
 
@@ -157,7 +158,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def whoami(self):
         if not self.users:
-            return "anon"
+            return self.local_user
         got = (self.headers.get("Authorization") or "").split(None, 1)
         if len(got) == 2 and got[0].lower() == "basic":
             try:
@@ -266,9 +267,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             raw = open(path, "rb").read()
         except OSError:
             return self.send_error(404)
-        if self.users:
-            raw = (f"<script>window.__WHO__={json.dumps(who)};</script>"
-                   ).encode() + raw
+        # Locked to the login when there are accounts; on a single-person
+        # local run there is no login to read, and making someone type their
+        # own name before the submit button works is friction that sends them
+        # to the download button instead.
+        var = "__WHO__" if self.users else "__WHO_DEFAULT__"
+        raw = (f"<script>window.{var}={json.dumps(who)};</script>"
+               ).encode() + raw
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Cache-Control", "no-store")
@@ -405,7 +410,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if status != "draft":
             print(f"  {status.upper():9s} {rec}  {who}  {kf} 关键帧 -> {name}",
                   flush=True)
-        return self._json(200, {"ok": True, "file": name, "keyframes": kf})
+        # The folder is the half worth showing: `where did my file go` is
+        # answered by the databag name, not by a filename the page already knew.
+        return self._json(200, {"ok": True, "keyframes": kf,
+                                "file": os.path.relpath(path, self.subdir)})
 
 
 # THE PAGES ALREADY KNOW WHERE THEY CAME FROM. zone_video bakes the source
@@ -492,6 +500,7 @@ def main():
     os.makedirs(subs, exist_ok=True)
     Handler.token, Handler.subdir, Handler.users = a.token, subs, users
     Handler.bags = read_bags(root)
+    Handler.local_user = slug(getpass.getuser(), "anon")
 
     class Server(socketserver.ThreadingTCPServer):
         allow_reuse_address = True

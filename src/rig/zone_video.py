@@ -120,7 +120,7 @@ canvas{cursor:crosshair}
  <button id=subbtn onclick="submit()">提交</button>
  <button id=badbtn onclick="report()">视频有问题</button>
  <span id=sub></span>
- <button onclick="dl()">download JSON</button>
+ <button id=dlbtn onclick="dl()">download JSON</button>
 </div>
 <div id=stage><video id=v src="__VIDEO__" playsinline></video>
 <canvas id=c width=__SW__ height=__H__></canvas>
@@ -579,9 +579,20 @@ if (window.__WHO__){
   who.value = window.__WHO__; who.readOnly = true;
   who.style.color = "#888"; who.style.borderColor = "#333"; who.title = "登录身份";
 } else {
-  who.value = localStorage.getItem("zoneannotator") || "";
+  who.value = localStorage.getItem("zoneannotator") || window.__WHO_DEFAULT__
+              || "";
   who.onchange = () => localStorage.setItem("zoneannotator", who.value.trim());
-  document.getElementById("back").style.display = "none";
+  if (!window.__WHO_DEFAULT__) document.getElementById("back").style.display
+                                = "none";
+}
+// THE DOWNLOAD BUTTON IS THE OFFLINE PATH, AND LOOKS LIKE IT. Served, it
+// competes with submit and wins on familiarity -- and then the file is in the
+// browser's download folder instead of next to its databag.
+if (SERVED){
+  const d = document.getElementById("dlbtn");
+  d.style.opacity = ".55"; d.style.fontSize = "11px";
+  d.title = "只在离线打开时需要。现在点提交就会直接写到服务器的 annotations/ 里。";
+  d.textContent = "另存一份 JSON";
 }
 function note(s, bad){
   const el = document.getElementById("sub");
@@ -600,7 +611,12 @@ function post(status, problem){
       body: JSON.stringify({rec: M.rec, annotator: b.annotator,
                             status: status, problem: problem || "", data: b})})
     .then(r => r.ok ? r.json() : Promise.reject(r.status))
-    .then(() => { note({final: "已提交 ✓", unusable: "已报告问题 ✓"}[status] ||
+    // WHERE IT WENT, NOT JUST THAT IT WENT. The download button drops files in
+    // the browser's download folder and people reasonably assume submit does
+    // something equally vague; naming the path it was written to is what makes
+    // submit obviously the one that puts the work where it belongs.
+    .then(j => { note({final: "已存到 " + (j.file || "服务器"),
+                       unusable: "已报告问题 → " + (j.file || "")}[status] ||
       ("草稿已存 " + new Date().toLocaleTimeString())); return true; })
     .catch(e => { note("存不上（" + e + "），请 download JSON", true);
                   return false; });
