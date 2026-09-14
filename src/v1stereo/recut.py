@@ -152,6 +152,24 @@ def main():
                 by_bag[r["databag"]].append(r)
         index = []
         for bag in sorted(by_bag)[a.shard::a.nshards]:
+            # A DATABAG CAN BE GONE, OR CARRY THE ZERO TEMPLATE. One package
+            # source no longer exists on disk, and the fleet-wide placeholder
+            # calibration (md5 53c4c6c1...) would rectify with made-up
+            # geometry. Both are recorded per row and skipped, not raised --
+            # a single missing directory should not end a shard.
+            cal = os.path.join(bag, "calibration.yaml")
+            reason = None
+            if not os.path.exists(cal):
+                reason = "no_calibration"
+            else:
+                import hashlib
+                if hashlib.md5(open(cal, "rb").read()).hexdigest().startswith("53c4c6c1"):
+                    reason = "zero_template_calibration"
+            if reason:
+                index.extend({"stem": r["stem"], "tag": r["tag"], "pkg": name,
+                              "frame": r["frame"], "label": r["y"],
+                              "status": reason} for r in by_bag[bag])
+                continue
             index.extend(cut_databag(bag, by_bag[bag], out_dir, name))
         part = os.path.join(out_dir, f"rows_{a.shard}.csv")
         os.makedirs(out_dir, exist_ok=True)
