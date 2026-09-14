@@ -18,6 +18,12 @@ The collector writes drafts continuously while someone works, so the same
 person on the same recording legitimately appears several times; taking all of
 them would multiply-count one afternoon's work.
 
+A DOWNLOAD CAN BE FILED WITHOUT BEING RETYPED. Anyone who annotated from a
+double-clicked page has their work in a browser download folder, and the only
+thing standing between it and the right directory is knowing which databag it
+belongs to -- which the file says itself. `--ingest` reads that and moves it,
+so the offline path ends in the same tree as the served one.
+
 TWO TABLES, BECAUSE THEY ANSWER DIFFERENT QUESTIONS. `index` is one row per
 person per recording -- who did what, how much of it they drew rather than
 copied -- and is what you read to see whether the batch is done. `keyframes`
@@ -48,6 +54,35 @@ def load(path):
     return d, None
 
 
+def ingest(src, dest, copy=False):
+    """File loose annotations under <dest>/<databag>/, named as the server would.
+
+    The databag comes out of the file's own `source` -- the path to the
+    cam34.mp4 it was drawn on -- so a file renamed to `zone (3).json` still
+    lands correctly, and nothing depends on what the browser called it.
+    """
+    import shutil
+    moved = 0
+    paths = ([src] if os.path.isfile(src)
+             else sorted(glob.glob(os.path.join(src, "*.json"))))
+    for p in paths:
+        d, why = load(p)
+        if d is None:
+            print(f"  跳过 {os.path.basename(p)}: {why}")
+            continue
+        rec = str(d.get("recording"))
+        who = str(d.get("annotator") or "").strip() or "anon"
+        bag = os.path.basename(os.path.dirname(str(d.get("source") or ""))) or rec
+        stamp = str(d.get("submitted_at") or "").replace(":", "") or "offline"
+        out = os.path.join(dest, bag)
+        os.makedirs(out, exist_ok=True)
+        name = f"{rec}__{who}__final_{stamp}.json"
+        (shutil.copy2 if copy else shutil.move)(p, os.path.join(out, name))
+        print(f"  {os.path.basename(p)} -> {bag}/{name}")
+        moved += 1
+    print(f"归档了 {moved} 个\n")
+
+
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__,
@@ -58,7 +93,15 @@ def main():
     ap.add_argument("--keyframes", default="zone_keyframes.csv")
     ap.add_argument("--drafts", action="store_true",
                     help="keep a draft even when that pair also has a final")
+    ap.add_argument("--ingest", metavar="SRC",
+                    help="move loose json (a browser download folder, an "
+                         "email attachment) into --dir's databag layout first")
+    ap.add_argument("--copy", action="store_true",
+                    help="--ingest copies instead of moving")
     a = ap.parse_args()
+
+    if a.ingest:
+        ingest(a.ingest, a.dir, a.copy)
 
     files = sorted(glob.glob(os.path.join(a.dir, "**", "*.json"),
                              recursive=True))
@@ -71,11 +114,16 @@ def main():
         rec = str(d.get("recording"))
         who = str(d.get("annotator") or "").strip() or "anon"
         key = (rec, who)
-        # final > draft, then later > earlier; `submitted_at` is only present
-        # on files that came through the collector, so a hand-delivered
+        # final > unusable > empty final > draft, then later > earlier.
+        # AN EMPTY FINAL DOES NOT BURY A PROBLEM REPORT: reporting a clip and
+        # then pressing submit on the blank page leaves a zero-keyframe final
+        # four seconds after the report, and ranking every final first turned
+        # `no content` into `submitted, nothing drawn`. `submitted_at` exists
+        # only on files that came through the server, so a hand-delivered
         # download sorts as the empty string and loses to a submitted one.
-        rank = (d.get("status") == "final", str(d.get("submitted_at") or ""),
-                os.path.getmtime(p))
+        nkf = sum(len(e.get("keyframes", [])) for e in d["eyes"].values())
+        prio = {"final": 3 if nkf else 1, "unusable": 2}.get(d.get("status"), 0)
+        rank = (prio, str(d.get("submitted_at") or ""), os.path.getmtime(p))
         if key not in best or rank > best[key][0]:
             best[key] = (rank, d, p)
 

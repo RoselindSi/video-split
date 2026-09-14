@@ -627,7 +627,15 @@ function post(status, problem){
     .catch(e => { note("存不上（" + e + "），请 download JSON", true);
                   return false; });
 }
-function submit(){ post("final").then(ok => { if (ok) setTimeout(next, 700); }); }
+function submit(){
+  // NOTHING DRAWN IS ALMOST NEVER WHAT SUBMIT MEANS. The one time it happened
+  // it was a second click after reporting the clip, and the empty final
+  // buried the report; a clip with nothing to split is what the problem
+  // button is for.
+  const n = Object.keys(kfs.L).length + Object.keys(kfs.R).length;
+  if (!n && !confirm("两只眼都没画区域。确定要提交空的吗？\\n（这段没内容的话，用「视频有问题」）")) return;
+  post("final").then(ok => { if (ok) setTimeout(next, 700); });
+}
 // A CLIP CAN BE REPORTED INSTEAD OF ANNOTATED. Black frames, a covered camera,
 // nothing happening -- all of these have turned up in this corpus, and with no
 // way to say so the annotator either draws a meaningless boundary or skips
@@ -637,7 +645,10 @@ function report(){
   if (why === null) return;
   post("unusable", why).then(ok => { if (ok) setTimeout(next, 700); });
 }
-function next(){ if (window.__WHO__) location.href = "./"; }
+// BACK TO THE LIST WHENEVER THERE IS ONE. This used to wait for a login, so
+// a local run stayed on the page after reporting a problem -- and the obvious
+// next click, submit, filed an empty final over the report.
+function next(){ if (SERVED) location.href = "./"; }
 // AUTOSAVE SO A CLOSED TAB IS NOT A LOST AFTERNOON. Debounced, and silent
 // about failures after the first: an annotator with no network should see the
 // warning once, not once every edit.

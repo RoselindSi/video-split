@@ -191,8 +191,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         read for counts.
         """
         out = {}
-        rank = {"draft": 1, "unusable": 2, "final": 3}
-        for _dirpath, g in self.written():
+        # An empty final ranks under a problem report, same rule as the
+        # collector -- only finals are opened, and they are a few KB.
+        rank = {"draft": 1, "final_empty": 2, "unusable": 3, "final": 4}
+        for dirpath, g in self.written():
             if not g.endswith(".json"):
                 continue
             stem = g[:-5]
@@ -203,10 +205,22 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 rec, _, rest = stem.partition("__")
                 who = rest.split("__")[0]
                 key = (rec, who)
-                if rank.get(state, 0) >= rank.get(out.get(key, ""), 0):
+                if state == "final":
+                    try:
+                        d = json.load(open(os.path.join(dirpath, g),
+                                           encoding="utf-8"))
+                        n = sum(len(e.get("keyframes", []))
+                                for e in (d.get("eyes") or {}).values())
+                    except Exception:
+                        n = 1
+                    state = "final" if n else "final_empty"
+                if rank[state] >= rank.get(out.get(key, ""), 0):
                     out[key] = state
                 break
-        return out
+        # an unusable report outranks an empty final, so anything still
+        # `final_empty` here had no report beside it and is shown as submitted
+        return {k: ("final" if v == "final_empty" else v)
+                for k, v in out.items()}
 
     def count_kf(self, rec, who):
         for suffix in ("final", "draft"):
