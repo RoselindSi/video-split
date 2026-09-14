@@ -12,11 +12,11 @@ An outline drawn loosely around some hands is hard to be wrong about; a cut
 either leaves the colleague's hands on the far side or it does not.
 
 BOTH EYES, BECAUSE ONE EYE'S CURVE DOES NOT TRANSFER. cam34.mp4 is cam3 and
-cam4 side by side on a 9.3 cm baseline. The wearer's own forearms sit at
-0.2-0.3 m, where the disparity is tens to a hundred-odd pixels, while the
-bench across the aisle is near zero -- so a boundary that sweeps from the
-near foreground to the far field is displaced by a DIFFERENT amount at each
-point along it, and no single shift maps it across. Annotating only cam3
+cam4 side by side on a 60.2 mm baseline (fx about 883 px rectified). The
+wearer's own forearms at 0.2-0.3 m are roughly 180-270 px of disparity, a
+bench two metres off about 25 -- so a boundary that sweeps from the near
+foreground to the far field is displaced by a DIFFERENT amount at each point
+along it, and no single shift maps it across. Annotating only cam3
 leaves the other eye with no zone at all, and the filter runs on both.
 
 THE SECOND EYE STARTS AS A COPY, AND SAYS SO. Drawing the same boundary twice
@@ -49,6 +49,12 @@ THE SIDE IS RECORDED AS A POLYGON, NOT AS A WORD. `left of a to b` depends on
 which end got clicked first, so the export carries the closed own-side polygon
 as well as the curve. Nothing downstream should have to reconstruct the
 convention from the order of two points.
+
+THE PAGE CAN BE REBUILT WITHOUT THE FOOTAGE. Everything a page needs to be
+re-rendered is already inside it, so improving the tool does not mean
+re-encoding gigabytes or reaching the databags again -- `--refresh` re-renders
+in place from each page's own metadata, and the mp4 beside it is untouched.
+Annotations live in the browser under the recording name, so they survive it.
 
 THE PAGE POSTS ITSELF BACK WHEN IT IS SERVED. Handing the tool to four people
 and collecting four zip files by hand is how annotations go missing; run
@@ -645,6 +651,31 @@ function queueAutosave(){
 """
 
 
+def refresh(d):
+    import re
+    n = 0
+    for f in sorted(os.listdir(d)):
+        if not (f.startswith("zone_") and f.endswith(".html")):
+            continue
+        path = os.path.join(d, f)
+        old = open(path, encoding="utf-8").read()
+        m = re.search(r"const M = (\{.*?\});", old, re.S)
+        if not m:
+            print(f"  !! {f} 里没有 metadata，跳过")
+            continue
+        meta = json.loads(m.group(1))
+        rec = meta["rec"]
+        html = (SHEET.replace("__META__", json.dumps(meta, ensure_ascii=False))
+                .replace("__VIDEO__", f"zone_{rec}.mp4")
+                .replace("__REC__", rec)
+                .replace("__SW__", str(2 * meta["w"]))
+                .replace("__H__", str(meta["h"])))
+        open(path, "w", encoding="utf-8").write(html)
+        print(f"  {f}")
+        n += 1
+    print(f"重渲染了 {n} 个页面（mp4 没动，已标的内容也没动）")
+
+
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__,
@@ -666,8 +697,16 @@ def main():
                     help="displayed width PER EYE; the export is in full "
                          "per-eye pixels")
     ap.add_argument("--crf", type=int, default=26)
-    ap.add_argument("--outdir", required=True)
+    ap.add_argument("--refresh", metavar="DIR",
+                    help="re-render the pages in DIR with the current tool, "
+                         "reading each page's own metadata; mp4s untouched")
+    ap.add_argument("--outdir")
     a = ap.parse_args()
+
+    if a.refresh:
+        return refresh(a.refresh)
+    if not a.outdir:
+        ap.error("需要 --outdir")
 
     eyes = [s.strip() for s in a.eyes.split(",")]
     if len(eyes) != 2:
