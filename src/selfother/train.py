@@ -69,6 +69,7 @@ class Crops:
 
     def __getitem__(self, i):
         import cv2
+        cv2.setNumThreads(1)      # per loader worker; the container caps tasks
         r = self.rows[i]
         path = os.path.join(self.base, r[self.col])
         img = cv2.imread(path)
@@ -205,6 +206,8 @@ def main():
         ap.error("--init imagenet 不能带 --v1_ckpt")
     if a.init == "v1" and not a.v1_ckpt:
         ap.error("--init v1 需要 --v1_ckpt")
+    import torch
+    torch.set_num_threads(8)
 
     rows = [r for r in read_index(a.root, a.split)
             if r["status"] == "ok" and r["label"] in ("0", "1")]

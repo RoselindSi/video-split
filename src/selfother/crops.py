@@ -35,6 +35,14 @@ colleagues stand to the sides. 1280x960 at fov_scale 1.2 keeps every wearer
 hand and 81% of foreign ones at an unchanged box resolution. The rest sit in
 the side modules' field, which a cam3|cam4 input cannot see at any setting.
 
+A DECODE THAT FAILS IS AN ERROR, NOT A SHORT VIDEO. Under resource pressure
+the decoder can refuse to open, or open and then hand back a frame its
+converter never filled; the first ended this stage and the second would have
+written black crops that train as confidently as real ones. So a read failure
+before the file's last frame stops the recording, a blank frame is refused,
+and every process caps its own thread pools -- sixteen of them each asking for
+all 128 cores is what exhausted the container in the first place.
+
 WHAT FALLS OUTSIDE IS COUNTED, NOT HIDDEN. A hand whose box maps off the
 canvas has no input and gets `outside_rectified`; evaluation drops it from
 every row alike and reports, by class, what that cost and how V1 did on it.
@@ -240,18 +248,27 @@ def cut_recording(rec, rows, databag, start, out_dir, quality, rect_args):
                              f"clips 文件和 dump 不是同一次运行")
         for sub in ("A", "B"):
             os.makedirs(os.path.join(out_dir, sub), exist_ok=True)
-        cap = cv2.VideoCapture(os.path.join(databag, f"{PAIR}.mp4"))
+        path = os.path.join(databag, f"{PAIR}.mp4")
+        n_threads = getattr(cv2, "CAP_PROP_N_THREADS", None)
+        cap = (cv2.VideoCapture(path, cv2.CAP_FFMPEG, [n_threads, 4])
+               if n_threads is not None else cv2.VideoCapture(path))
         if not cap.isOpened():
             raise SystemExit(f"{rec}: 打不开 {PAIR}.mp4")
+        total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
         cap.set(cv2.CAP_PROP_POS_FRAMES, int(start))
         try:
             for k in range(max(need) - start + 1):
                 ok_read, frame = cap.read()
-                if not ok_read:
-                    break
                 f = start + k
+                if not ok_read:
+                    if total and f < total - 1:
+                        raise SystemExit(f"{rec}: 第 {f} 帧解码失败（文件有 "
+                                         f"{total} 帧），不是视频到头")
+                    break
                 if f not in need:
                     continue
+                if not frame[::64, ::64].any():
+                    raise SystemExit(f"{rec}: 第 {f} 帧是全黑的，拒绝写图")
                 eye3, eye4 = split_halves(frame)
                 r3 = cv2.remap(eye3, *rect["maps3"], cv2.INTER_LINEAR,
                                borderMode=cv2.BORDER_CONSTANT)
@@ -315,6 +332,8 @@ def main():
     ap.add_argument("--nshards", type=int, default=1)
     a = ap.parse_args()
 
+    import cv2
+    cv2.setNumThreads(2)
     import json
     rect_args = {"size": tuple(a.rect_size), "fov_scale": a.fov_scale,
                  "balance": a.balance}
