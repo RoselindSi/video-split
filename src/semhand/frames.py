@@ -35,6 +35,33 @@ PKG_COLS = ("stem", "pkg", "tag", "databag", "frame", "image", "x0", "y0", "x1",
             "W", "H", "y", "status")
 
 
+def cap_decoder_threads(n=4):
+    """Make every VideoCapture in this process decode on `n` threads.
+
+    `seam_fix.ClipReader` opens three captures with FFmpeg's default of one
+    thread per core, about 440 threads a process here, and the container
+    stops at 4096: ten processes of this hit it, and the failures came back as
+    unreadable frames and swscaler errors rather than as a thread error. The
+    reader is V1's and stays untouched; the cap is applied from outside."""
+    import cv2
+    if getattr(cv2.VideoCapture, "_capped", False) or not hasattr(cv2, "CAP_PROP_N_THREADS"):
+        return
+    orig = cv2.VideoCapture
+
+    # AND A LONGER READ TIMEOUT. Under load the shared volume stalls past
+    # OpenCV's 30 s default, and a timed-out read is indistinguishable from
+    # the end of the file: the reader returns nothing and the frame is lost.
+    params = [cv2.CAP_PROP_N_THREADS, n]
+    for prop in ("CAP_PROP_OPEN_TIMEOUT_MSEC", "CAP_PROP_READ_TIMEOUT_MSEC"):
+        if hasattr(cv2, prop):
+            params += [getattr(cv2, prop), 300000]
+
+    def capped(path, *args):
+        return orig(path, *args) if args else orig(path, cv2.CAP_FFMPEG, params)
+    capped._capped = True
+    cv2.VideoCapture = capped
+
+
 def iou(a, b):
     ix = max(0.0, min(a[2], b[2]) - max(a[0], b[0]))
     iy = max(0.0, min(a[3], b[3]) - max(a[1], b[1]))
@@ -74,6 +101,7 @@ def fresh_queries(dump, stereo_root, split, pano_root, clips):
 
 def run_fresh(a):
     import cv2
+    cap_decoder_threads()
     import torch
     from ultralytics import YOLO
     from src.rig import geom_prior, own_ctx
@@ -105,6 +133,24 @@ def run_fresh(a):
         rig = RigCalibration(os.path.join(bag, "calibration.yaml"))
         vcam = VirtualWideCamera.from_rig(rig)
         vids = {k: os.path.join(bag, f"{k}.mp4") for k in ("cam12", "cam34", "cam56")}
+        try:
+            fresh_one(a, rec, bag, start, need, rig, vcam, vids, out_csv, yolo, v1, device, geom, ds)
+        except (Exception, SystemExit) as e:
+            # ONE BAD RECORDING DOES NOT TAKE THE SHARD WITH IT. Nothing is
+            # written for it, so a second pass retries exactly the gaps, and
+            # the run script refuses to go on while any remain.
+            print(f"  !! {rec} 失败，未写出 -- {type(e).__name__}: {e}", flush=True)
+
+
+def fresh_one(a, rec, bag, start, need, rig, vcam, vids, out_csv, yolo, v1, device, geom, ds):
+    import cv2
+    import torch
+    from src.rig import geom_prior, own_ctx
+    from src.rig.hand_detect import detect
+    from src.rig.own_cnn import crop_of
+    from src.rig.render_wide import render
+    from src.rig.seam_fix import ClipReader
+    if True:
         rd = ClipReader(rig, vids, start)
         cache, index, feats, fkeys = {}, [], [], []
         try:
@@ -183,8 +229,76 @@ def run_fresh(a):
               f"最大 {max(dp) if dp else float('nan'):.4f}", flush=True)
 
 
+def run_plain(a):
+    """Clean frames only, for every dumped hand on a gold track, every STRIDE-th
+    frame. No stereo filter and no V1 recomputation: the dump already holds
+    V1's deployed verdict for each of these hands, and the Qwen arms need only
+    the frame and the box."""
+    import cv2
+    cap_decoder_threads()
+    from src.rig.calibration import RigCalibration
+    from src.rig.geometry import VirtualWideCamera
+    from src.rig.render_wide import render
+    from src.rig.seam_fix import ClipReader
+    from src.selfother.labels import load_clips
+    from src.selfother.train import read_gold
+    cv2.setNumThreads(2)
+    clips = load_clips(a.clips)
+    gold = read_gold(a.gold)
+    queries = collections.defaultdict(list)
+    for r in csv.DictReader(open(a.dump, encoding="utf-8")):
+        if (r["rec"], str(r["tid"])) in gold and (int(r["frame"]) - clips[r["rec"]][1]) % STRIDE == 0:
+            queries[r["rec"]].append(r)
+    for rec in sorted(queries)[a.shard::a.nshards]:
+        out_csv = os.path.join(a.out, "fresh", rec, "index.csv")
+        if os.path.exists(out_csv):
+            print(f"  {rec}: 已有，跳过", flush=True)
+            continue
+        os.makedirs(os.path.join(a.out, "fresh", rec, "frames"), exist_ok=True)
+        bag, start = clips[rec]
+        need = collections.defaultdict(list)
+        for r in queries[rec]:
+            need[int(r["frame"])].append(r)
+        rd, index = None, []
+        try:
+            rig = RigCalibration(os.path.join(bag, "calibration.yaml"))
+            vcam = VirtualWideCamera.from_rig(rig)
+            vids = {k: os.path.join(bag, f"{k}.mp4") for k in ("cam12", "cam34", "cam56")}
+            rd, cache = ClipReader(rig, vids, start), {}
+            for k in range(max(need) - start + 1):
+                src = rd.next()
+                if not src:
+                    raise SystemExit(f"{rec}: 第 {start + k} 帧读不到")
+                f = start + k
+                if f not in need:
+                    continue
+                rgb = render(rig, vcam, src, 0.6, map_cache=cache)[0]
+                if not rgb[::32, ::32].any():
+                    raise SystemExit(f"{rec}: 第 {f} 帧渲染全黑")
+                H, W = rgb.shape[:2]
+                img = os.path.join(a.out, "fresh", rec, "frames", f"{f:06d}.jpg")
+                cv2.imwrite(img, rgb, [cv2.IMWRITE_JPEG_QUALITY, 92])
+                for r in need.pop(f):
+                    index.append({"rec": rec, "frame": f, "tid": r["tid"], "databag": bag,
+                                  "image": img, "x0": r["x0"], "y0": r["y0"], "x1": r["x1"],
+                                  "y1": r["y1"], "W": W, "H": H, "side": r["side_raw"],
+                                  "p_dump": r["p_owner_raw"], "status": "ok"})
+        except (Exception, SystemExit) as e:
+            print(f"  !! {rec} 失败，未写出 -- {type(e).__name__}: {e}", flush=True)
+            continue
+        finally:
+            if rd is not None:
+                rd.close()
+        with open(out_csv, "w", newline="", encoding="utf-8") as fh:
+            w = csv.DictWriter(fh, fieldnames=FRESH_COLS, restval="")
+            w.writeheader()
+            w.writerows(index)
+        print(f"  {rec}: {len(index)} 只手", flush=True)
+
+
 def run_pkg(a):
     import cv2
+    cap_decoder_threads()
     from src.rig import own_ctx
     from src.rig.calibration import RigCalibration
     from src.rig.geometry import VirtualWideCamera
@@ -222,6 +336,7 @@ def run_pkg(a):
         vcam = VirtualWideCamera.from_rig(rig)
         vids = {k: os.path.join(bag, f"{k}.mp4") for k in ("cam12", "cam34", "cam56")}
         cache, rd, at, rgb = {}, None, None, None
+        n_before = len(index)
         try:
             for f, r in items:
                 if f != at:
@@ -248,6 +363,14 @@ def run_pkg(a):
                 index.append(dict(base(r, f), image=img, W=W, H=H,
                                   x0=(cx - bw / 2) * W, y0=(cy - bh / 2) * H,
                                   x1=(cx + bw / 2) * W, y1=(cy + bh / 2) * H, status="ok"))
+        except (Exception, SystemExit) as e:
+            # The bag's rows are kept, marked, and counted -- a bank that
+            # silently shrinks would change what every template arm retrieves.
+            del index[n_before:]
+            index.extend(dict(base(r, f), status="bag_failed") for f, r in items)
+            print(f"  !! {os.path.basename(bag)} 失败 {len(items)} 行 -- {type(e).__name__}: {e}",
+                  flush=True)
+            continue
         finally:
             if rd is not None:
                 rd.close()
@@ -261,10 +384,11 @@ def run_pkg(a):
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--mode", choices=("fresh", "pkg"), required=True)
+    ap.add_argument("--mode", choices=("fresh", "pkg", "plain"), required=True)
     ap.add_argument("--out", default="/workspace/semhand")
     ap.add_argument("--dump", default="/workspace/own_dump_fresh.csv")
-    ap.add_argument("--clips", action="append", default=["/workspace/fresh29.txt"])
+    ap.add_argument("--clips", action="append", default=None, help="default fresh29.txt")
+    ap.add_argument("--gold", action="append", default=None, help="plain mode: gold track csvs")
     ap.add_argument("--stereo_root", default="/workspace/selfother")
     ap.add_argument("--split", default="test_fresh")
     ap.add_argument("--pano_root", default="/workspace/v1stereo/pano_fresh")
@@ -274,7 +398,8 @@ def main():
     ap.add_argument("--shard", type=int, default=0)
     ap.add_argument("--nshards", type=int, default=1)
     a = ap.parse_args()
-    (run_fresh if a.mode == "fresh" else run_pkg)(a)
+    a.clips = a.clips or ["/workspace/fresh29.txt"]
+    {"fresh": run_fresh, "pkg": run_pkg, "plain": run_plain}[a.mode](a)
 
 
 if __name__ == "__main__":
