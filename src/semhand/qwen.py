@@ -65,6 +65,59 @@ LEAK_RE = re.compile(r"\b(wearer|my|mine|own|another person|other person|someone
                      r"person's|user)\b", re.I)
 
 
+# V1'S VIEW, FOR THE SWAP EXPERIMENT. Exactly V1's three inputs and nothing
+# else: its 128 px hand crop, its 128 px context window (upscaled to the
+# processor's 256 px minimum -- no detail is added), and its fourteen geometry
+# features written out as text. No full frame and no drawn box.
+DESCRIBE_V = (
+    "These images are from a camera worn on the head of a factory worker. The first "
+    "image is a crop centred on one hand; the second is a wider crop around the same "
+    "hand. Describe only what that hand is doing. Do not say or guess whose hand it "
+    "is.\nReply with JSON only:\n"
+    '{"hand_side": "left" | "right" | "unclear", '
+    '"interaction": "<what the hand is doing, a short phrase>", '
+    '"object": "<object in contact, or none>", '
+    '"grasp": "<grasp or hand pose, a short phrase>", '
+    '"occlusion": "<what hides part of the hand, or none>", '
+    '"ambiguous_regions": "<anything that makes the hand hard to see, or none>"}')
+INTRO_V = ("These images come from a camera worn on the head of a factory worker (the "
+           "camera wearer). The first image is a crop centred on one detected hand; the "
+           "second is a wider crop around the same hand, about 2.5 times the size of the "
+           "hand's box. You cannot see the rest of the frame. Other people's hands may "
+           "also appear. A person has at most two hands.")
+QUESTION_V = ("Is the hand at the centre of the first image one of the camera wearer's own "
+              'hands? Reply with JSON only: {"wearer": true} or {"wearer": false}')
+
+
+def geom_text(g):
+    """V1's fourteen geometry features, in words (coordinates are fractions of the frame)."""
+    (cx, cy, bw, bh, dx, dy, ex, ey, eb, el, er, et, span, conf) = g
+    edge = [n for n, v in (("bottom", eb), ("left", el), ("right", er), ("top", et)) if v >= 0.5]
+    exit_txt = (f"the forearm leaves the frame through the {edge[0]} edge at x={ex:.2f}, y={ey:.2f}"
+                if edge else "the forearm does not reach the frame edge")
+    return (f"Where this hand is in the full frame (fractions of frame width/height, origin top-left): "
+            f"box centre x={cx:.2f}, y={cy:.2f}; box size {bw:.2f} x {bh:.2f}; direction from the "
+            f"fingers to the wrist ({dx:.2f}, {dy:.2f}); {exit_txt}; hand span {span:.2f} of the "
+            f"frame width; detector confidence {conf:.2f}.")
+
+
+def load_cross(root):
+    """-> {id: {hand, ctx, geom}} from crossprep's test index."""
+    out = {}
+    for p in sorted(glob.glob(os.path.join(root, "cross", "index_test_*.csv"))):
+        for r in csv.DictReader(open(p, encoding="utf-8")):
+            if r["status"] == "ok":
+                out[r["id"]] = {"hand": r["hand"], "ctx": r["ctx"], "geom": json.loads(r["geom"])}
+    return out
+
+
+def v1_image_parts(c):
+    from PIL import Image
+    n = CROP * CROP
+    return [{"type": "image", "image": Image.open(c[k]).convert("RGB").resize((CROP, CROP), Image.BICUBIC),
+             "min_pixels": n, "max_pixels": n} for k in ("hand", "ctx")]
+
+
 # ------------------------------------------------------------------ items
 
 def load_items(root):
@@ -144,7 +197,15 @@ def read_jsonl(pattern):
 
 # ------------------------------------------------------------------ prompts
 
-def content_for(arm, qid, items, descs, retrieval):
+def content_for(arm, qid, items, descs, retrieval, cross=None):
+    if arm in ("QV0", "QV1"):
+        c = cross[qid]
+        parts = [{"type": "text", "text": INTRO_V}] + v1_image_parts(c)
+        parts.append({"type": "text", "text": geom_text(c["geom"])})
+        if arm == "QV1":
+            parts.append({"type": "text", "text": f"Description: {sem_text(descs[qid])}"})
+        parts.append({"type": "text", "text": QUESTION_V})
+        return [{"role": "user", "content": parts}]
     q = items[qid]
     parts = [{"type": "text", "text": INTRO}]
     if arm in ("Q2", "Q2s", "Q2v"):
@@ -253,6 +314,8 @@ def main():
     ap.add_argument("--limit", type=int, default=0, help="smoke: first N bank + N fresh")
     ap.add_argument("--retrieval", default=None, help="default <root>/retrieval.json")
     ap.add_argument("--tiny", action="store_true", help="random 4-layer model, code path only")
+    ap.add_argument("--describe", choices=("full", "v1"), default="full",
+                    help="which view the description is written from")
     a = ap.parse_args()
     out = a.out or os.path.join(a.root, "qwen")
     os.makedirs(out, exist_ok=True)
@@ -267,15 +330,22 @@ def main():
     q = Qwen(a.model, tiny=a.tiny)
 
     # ---- describe ------------------------------------------------------
-    path = os.path.join(out, f"desc_{a.shard}.jsonl")
+    cross = load_cross(a.root) if (a.describe == "v1" or any(x.startswith("QV") for x in a.arms.split(","))) else None
+    if a.describe == "v1":
+        path = os.path.join(out, f"descv_{a.shard}.jsonl")
+        parts_of = lambda i: v1_image_parts(cross[i]) + [{"type": "text", "text": DESCRIBE_V}]
+        pool = [i for i in mine if i in cross]
+    else:
+        path = os.path.join(out, f"desc_{a.shard}.jsonl")
+        parts_of = lambda i: image_parts(items[i]) + [{"type": "text", "text": DESCRIBE}]
+        pool = mine
     done = set(read_jsonl(path))
-    todo = [i for i in mine if i not in done]
+    todo = [i for i in pool if i not in done]
     t0 = time.time()
     with open(path, "a") as fh:
         for s in range(0, len(todo), a.batch):
             chunk = todo[s:s + a.batch]
-            convs = [[{"role": "user", "content": image_parts(items[i])
-                       + [{"type": "text", "text": DESCRIBE}]}] for i in chunk]
+            convs = [[{"role": "user", "content": parts_of(i)}] for i in chunk]
             t = time.time()
             for i, raw in zip(chunk, q.describe(convs)):
                 d = parse_desc(raw)
@@ -286,7 +356,7 @@ def main():
                 print(f"  describe {s + len(chunk)}/{len(todo)}  {time.time() - t:.1f}s/批  "
                       f"{raw[:100]!r}", flush=True)
     print(f"describe 完成 {len(todo)} 条，{time.time() - t0:.0f}s", flush=True)
-    open(os.path.join(out, f"desc_done_{a.shard}"), "w").close()
+    open(os.path.join(out, f"{'descv' if a.describe == 'v1' else 'desc'}_done_{a.shard}"), "w").close()
 
     # ---- arms ----------------------------------------------------------
     fresh = [i for i in mine if items[i]["kind"] == "fresh"]
@@ -296,14 +366,20 @@ def main():
             rp = a.retrieval or os.path.join(a.root, "retrieval.json")
             while not os.path.exists(rp):
                 time.sleep(60)
-            if retrieval is None:
-                retrieval = json.load(open(rp))
-                descs = read_jsonl(os.path.join(out, "desc_*.jsonl"))
+            retrieval = json.load(open(rp))
+            descs = read_jsonl(os.path.join(out, "desc_*.jsonl"))
+        elif arm in ("QV0", "QV1"):
+            descs = read_jsonl(os.path.join(out, "descv_*.jsonl")) if arm == "QV1" else {}
+            retrieval = {i: None for i in cross}
+            if arm == "QV1":
+                retrieval = {i: None for i in cross if i in descs}
+            else:
+                descs = {i: None for i in cross}
         elif arm == "Q1":
             # Q1 reads only the hand's own description, which this shard has
             # just written, so it does not wait for retrieval.
-            descs = descs or read_jsonl(os.path.join(out, "desc_*.jsonl"))
-            retrieval = retrieval or {i: None for i in descs}
+            descs = read_jsonl(os.path.join(out, "desc_*.jsonl"))
+            retrieval = {i: None for i in descs}
         path = os.path.join(out, f"{arm}_{a.shard}.jsonl")
         done = set(read_jsonl(path))
         todo = [i for i in fresh if i not in done]
@@ -316,7 +392,7 @@ def main():
         with open(path, "a") as fh:
             for n, i in enumerate(todo):
                 t = time.time()
-                r = q.score(content_for(arm, i, items, descs, retrieval))
+                r = q.score(content_for(arm, i, items, descs, retrieval, cross))
                 fh.write(json.dumps(dict(r, id=i, sec=round(time.time() - t, 2))) + "\n")
                 fh.flush()
                 if n % 50 == 0:
