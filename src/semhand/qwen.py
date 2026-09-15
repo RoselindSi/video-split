@@ -292,13 +292,18 @@ def main():
     fresh = [i for i in mine if items[i]["kind"] == "fresh"]
     descs, retrieval = None, None
     for arm in a.arms.split(","):
-        if arm != "Q0":
+        if arm in ("Q2", "Q2s", "Q2v"):
             rp = a.retrieval or os.path.join(a.root, "retrieval.json")
             while not os.path.exists(rp):
                 time.sleep(60)
             if retrieval is None:
                 retrieval = json.load(open(rp))
                 descs = read_jsonl(os.path.join(out, "desc_*.jsonl"))
+        elif arm == "Q1":
+            # Q1 reads only the hand's own description, which this shard has
+            # just written, so it does not wait for retrieval.
+            descs = descs or read_jsonl(os.path.join(out, "desc_*.jsonl"))
+            retrieval = retrieval or {i: None for i in descs}
         path = os.path.join(out, f"{arm}_{a.shard}.jsonl")
         done = set(read_jsonl(path))
         todo = [i for i in fresh if i not in done]

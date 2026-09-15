@@ -32,11 +32,34 @@ def v1_answers(dump, items):
     return out
 
 
+def perhand_answers(pattern, items):
+    """One P(self) per hand from `semhand.qwen`, asked about that hand alone.
+    A hand with no score is reported in the corner, never silently dropped."""
+    import glob
+    p = {}
+    for f in glob.glob(pattern):
+        for line in open(f):
+            if line.strip():
+                d = json.loads(line)
+                p[d["id"]] = d["p"]
+    out = {}
+    for it in items:
+        ids = [f"{it['rec']}|{it['frame']}|{b['tid']}" for b in it["boxes"]]
+        if any(i not in p for i in ids):
+            out[it["id"]] = {"id": it["id"], "ok": False}
+            continue
+        out[it["id"]] = {"id": it["id"], "ok": True,
+                         "parsed": {"wearer": [b["n"] for b, i in zip(it["boxes"], ids) if p[i] >= 0.5]}}
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--manifest", required=True)
     ap.add_argument("--answers", help="Qwen answers")
     ap.add_argument("--v1_dump", help="use V1's deployed verdicts from this dump instead")
+    ap.add_argument("--perhand", help="semhand per-hand scores (<arm>_*.jsonl glob): wearer = P >= 0.5")
+    ap.add_argument("--title", default=None)
     ap.add_argument("--out", required=True)
     ap.add_argument("--fps", type=float, default=30.0)
     ap.add_argument("--width", type=int, default=1280)
@@ -46,6 +69,8 @@ def main():
     items = [json.loads(l) for l in open(a.manifest) if l.strip()]
     if a.v1_dump:
         answers, title = v1_answers(a.v1_dump, items), "V1 deployed"
+    elif a.perhand:
+        answers, title = perhand_answers(a.perhand, items), "Qwen3.8 per-hand"
     else:
         answers, title = {}, "Qwen3.8-27B"
         for line in open(a.answers):
@@ -56,6 +81,7 @@ def main():
     tmp = a.out + ".raw.mp4"
     writer = None
     n_bad = n_many = 0
+    title = a.title or title
     for it in items:
         img = cv2.imread(it["clean"])
         H, W = img.shape[:2]
