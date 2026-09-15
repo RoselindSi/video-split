@@ -14,22 +14,44 @@ import os
 import subprocess
 
 
+def v1_answers(dump, items):
+    """The deployed V1 verdict (`final_owner_post_cap`) in the answer format.
+
+    Same clip, same detections, same boxes as the Qwen video -- the manifest's
+    boxes were taken from this dump -- so the two videos differ only in whose
+    hands each system says are the wearer's."""
+    import csv
+    rec = {it["rec"] for it in items}
+    owner = {(r["rec"], int(r["frame"]), str(r["tid"])): r["final_owner_post_cap"] == "1"
+             for r in csv.DictReader(open(dump, encoding="utf-8")) if r["rec"] in rec}
+    out = {}
+    for it in items:
+        wearer = [b["n"] for b in it["boxes"]
+                  if owner.get((it["rec"], int(it["frame"]), str(b["tid"])))]
+        out[it["id"]] = {"id": it["id"], "ok": True, "parsed": {"wearer": wearer}}
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--manifest", required=True)
-    ap.add_argument("--answers", required=True)
+    ap.add_argument("--answers", help="Qwen answers")
+    ap.add_argument("--v1_dump", help="use V1's deployed verdicts from this dump instead")
     ap.add_argument("--out", required=True)
     ap.add_argument("--fps", type=float, default=30.0)
     ap.add_argument("--width", type=int, default=1280)
     a = ap.parse_args()
     import cv2
 
-    answers = {}
-    for line in open(a.answers):
-        if line.strip():
-            d = json.loads(line)
-            answers[d["id"]] = d
     items = [json.loads(l) for l in open(a.manifest) if l.strip()]
+    if a.v1_dump:
+        answers, title = v1_answers(a.v1_dump, items), "V1 deployed"
+    else:
+        answers, title = {}, "Qwen3.8-27B"
+        for line in open(a.answers):
+            if line.strip():
+                d = json.loads(line)
+                answers[d["id"]] = d
     items.sort(key=lambda it: it["frame"])
     tmp = a.out + ".raw.mp4"
     writer = None
@@ -56,7 +78,7 @@ def main():
         if note:
             cv2.putText(img, note, (20, H - 24), cv2.FONT_HERSHEY_SIMPLEX, 1.0,
                         (0, 0, 255), 2, cv2.LINE_AA)
-        cv2.putText(img, f"Qwen3.8-27B  frame {it['frame']}", (20, 40),
+        cv2.putText(img, f"{title}  frame {it['frame']}", (20, 40),
                     cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2, cv2.LINE_AA)
         out = cv2.resize(img, (a.width, int(a.width * H / W)), interpolation=cv2.INTER_AREA)
         if writer is None:
