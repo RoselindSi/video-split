@@ -40,7 +40,7 @@ import subprocess
 WINDOW = 400
 MIN_S = 30.0
 PER_STRATUM = 10
-SEED = 20260915
+SEED = 20260915          # batch 4; later batches pass --seed
 
 
 def bag_of(path):
@@ -90,6 +90,8 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--pool", default="/workspace/calibrated.txt")
     ap.add_argument("--out", default="/workspace/zonestereo4/batch4.txt")
+    ap.add_argument("--seed", type=int, default=SEED)
+    ap.add_argument("--per_stratum", type=int, default=PER_STRATUM)
     a = ap.parse_args()
     pool = {}
     for line in open(a.pool):
@@ -104,9 +106,11 @@ def main():
         train_devs |= {device_of(r["databag"]) for r in csv.DictReader(open(pkg, encoding="utf-8-sig"))}
     used = (train | listed_bags(["/workspace/testpkg_2/sources.csv", "/workspace/fresh29.txt",
                                  "/workspace/e2e_main2.txt"]))
-    for d in ("/workspace/zonestereo", "/workspace/zonestereo2", "/workspace/zonestereo3"):
-        used |= {os.path.basename(h)[5:-5].replace("R", "databag-26_", 1)
-                 for h in glob.glob(os.path.join(d, "zone_*.html"))}
+    # EVERY EARLIER BATCH, however it was named, plus any batch list already
+    # written: two batches picked on different seeds must not overlap.
+    used |= {os.path.basename(h)[5:-5].replace("R", "databag-26_", 1)
+             for h in glob.glob("/workspace/zonestereo*/zone_*.html")}
+    used |= listed_bags(sorted(glob.glob("/workspace/zonestereo*/batch*.txt")))
     qwen_bags = {os.path.basename(p)[:-6] for p in glob.glob("/shared/ownership_labels/v1/labels/*/*.jsonl")}
     excluded = used | qwen_bags
     print(f"候选池 {len(pool)}；排除：训练/测试/区域批次 {len(used)}，Qwen 窗口标签 {len(qwen_bags)}；"
@@ -121,7 +125,7 @@ def main():
              else "seen_day_new_device" if ndev else None)
         if s:
             strata[s].append(path)
-    rng = random.Random(SEED)
+    rng = random.Random(a.seed)
     picked, log = [], []
     for s in ("new_day_new_device", "new_day_seen_device", "seen_day_new_device"):
         cands = strata[s][:]
@@ -130,7 +134,7 @@ def main():
         n_ok = 0
         print(f"  {s}: 候选 {len(cands)} 段，{len({device_of(p) for p in cands})} 台设备", flush=True)
         for path in cands:
-            if n_ok >= PER_STRATUM:
+            if n_ok >= a.per_stratum:
                 break
             dev = device_of(path)
             if dev in devs:
@@ -158,7 +162,7 @@ def main():
         print(f"    选中 {n_ok}", flush=True)
     os.makedirs(os.path.dirname(a.out), exist_ok=True)
     with open(a.out, "w") as f:
-        f.write(f"# batch 4, blind, seed {SEED}, {WINDOW} frames per clip; see src/semhand/pick_batch.py\n")
+        f.write(f"# blind, seed {a.seed}, {WINDOW} frames per clip; see src/semhand/pick_batch.py\n")
         for s, path, st, en in picked:
             f.write(f"{path}:{st}:{en}\n")
     with open(a.out.replace(".txt", "_strata.txt"), "w") as f:
