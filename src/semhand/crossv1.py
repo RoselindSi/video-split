@@ -89,15 +89,22 @@ def read_rows(root, mode):
         for p in glob.glob(os.path.join(root, "fresh", "*", "index.csv")):
             frames.update({f"{r['rec']}|{r['frame']}|{r['tid']}": r
                            for r in csv.DictReader(open(p, encoding="utf-8"))})
-    rows = []
+    rows, orphan = [], 0
     for k, r in sorted(idx.items()):
-        f = frames[k]
+        f = frames.get(k)
+        if f is None:
+            # A recording whose render failed part way wrote crops but no
+            # frame index; its rows have no image and are dropped, counted.
+            orphan += 1
+            continue
         row = {"id": k, "hand": r["hand"], "ctx": r["ctx"], "image": f["image"],
                "g": np.asarray(json.loads(r["geom"]), np.float32),
                "box": [float(f[c]) for c in ("x0", "y0", "x1", "y1")]}
         if mode == "bank":
             row.update(y=int(r["y"]), tag=r["tag"])
         rows.append(row)
+    if orphan:
+        print(f"  {orphan} 行没有对应的帧索引（渲染失败的录像），已丢弃", flush=True)
     return rows
 
 
