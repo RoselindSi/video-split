@@ -37,10 +37,16 @@ from src.semhand.holdreplay import invert_prior, key, replay
 
 
 def read_zone_gold(path):
+    """Zone-derived labels (`label` 0/1) or a human gold file (`track_truth` /
+    `human_ownership`), so the same evaluator reads both references."""
     g = {}
-    for r in csv.DictReader(open(path, encoding="utf-8")):
+    for r in csv.DictReader(open(path, encoding="utf-8-sig")):
         if r.get("label") in ("0", "1"):
             g[(r["rec"], str(r["tid"]))] = "owner" if r["label"] == "1" else "other"
+        else:
+            t = r.get("track_truth") or r.get("human_ownership")
+            if t in ("owner", "other"):
+                g[(r["rec"], str(r["tid"]))] = t
     return g
 
 
