@@ -314,9 +314,14 @@ def main():
     ap.add_argument("--limit", type=int, default=0, help="smoke: first N bank + N fresh")
     ap.add_argument("--retrieval", default=None, help="default <root>/retrieval.json")
     ap.add_argument("--tiny", action="store_true", help="random 4-layer model, code path only")
+    ap.add_argument("--frame_wh", default=None,
+                    help="WxH for the full-frame view (default 1280x704, the panorama's aspect)")
     ap.add_argument("--describe", choices=("full", "v1"), default="full",
                     help="which view the description is written from")
     a = ap.parse_args()
+    if a.frame_wh:
+        global FRAME_WH
+        FRAME_WH = tuple(int(v) for v in a.frame_wh.lower().split("x"))
     out = a.out or os.path.join(a.root, "qwen")
     os.makedirs(out, exist_ok=True)
 

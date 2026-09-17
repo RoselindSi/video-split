@@ -194,6 +194,63 @@ def score(a):
               f"  → 全量估计漏检的别人的手约 {full['C'] * c['other'] / n:.0f} 个")
 
 
+def q1prep(a):
+    """Write the audited boxes where `semhand.qwen` reads items, one row each."""
+    import csv
+    key = json.load(open(a.key))
+    d = os.path.join(a.root, "fresh", "audit")
+    os.makedirs(d, exist_ok=True)
+    with open(os.path.join(d, "index.csv"), "w", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=("rec", "frame", "tid", "databag", "image",
+                                           "x0", "y0", "x1", "y1", "status"))
+        w.writeheader()
+        for it in key["items"]:
+            img = os.path.join(Q, "samples", it["window_id"], it["camera"], f"frame_{it['frame_idx']:03d}.jpg")
+            assert os.path.exists(img), img
+            x0, y0, x1, y1 = it["box"]
+            w.writerow({"rec": "audit", "frame": it["i"], "tid": 0, "databag": it["recording"],
+                        "image": img, "x0": x0, "y0": y0, "x1": x1, "y1": y1, "status": "ok"})
+    print(f"-> {d}/index.csv  {len(key['items'])} 条")
+
+
+def q1score(a):
+    import glob
+    key = json.load(open(a.key))
+    ans = json.load(open(a.answers))["answers"]
+    q1 = {}
+    for f in glob.glob(os.path.join(a.root, "qwen", "Q1_*.jsonl")):
+        for line in open(f):
+            if line.strip():
+                r = json.loads(line)
+                q1[int(r["id"].split("|")[1])] = r["p"]
+    names = {"A": "Qwen编号 owner / GPT-6 other", "B": "Qwen编号 other / GPT-6 owner",
+             "C": "只有 GPT-6，other", "D": "只有 GPT-6，owner", "E": "两边都 owner", "F": "两边都 other"}
+    by = collections.defaultdict(collections.Counter)
+    for it in key["items"]:
+        h = ans.get(str(it["i"]))
+        if h not in ("owner", "other") or it["i"] not in q1:
+            continue
+        mine = "owner" if q1[it["i"]] >= 0.5 else "other"
+        by[it["stratum"]][(h, mine)] += 1
+    print(f"Q1 已判 {len(q1)} / {len(key['items'])}（只统计人判为 owner/other 的框）")
+    print(f"  {'类别':<30}{'对':>5}{'错':>5}   {'人=别人 Q1=自己':>14}{'人=自己 Q1=别人':>14}   对照:编号Qwen对 / GPT-6对")
+    tot = collections.Counter()
+    for s in "ABCDEF":
+        c = by[s]
+        right = c[("owner", "owner")] + c[("other", "other")]
+        wrong = c[("other", "owner")] + c[("owner", "other")]
+        tot["right"] += right
+        tot["wrong"] += wrong
+        ref = {"A": ("owner", "other"), "B": ("other", "owner"), "E": ("owner", "owner"), "F": ("other", "other"),
+               "C": (None, "other"), "D": (None, "owner")}[s]
+        qn = sum(v for (h, _), v in c.items() if h == ref[0]) if ref[0] else None
+        gp = sum(v for (h, _), v in c.items() if h == ref[1])
+        n = right + wrong
+        print(f"  {s} {names[s]:<28}{right:>5}{wrong:>5}   {c[('other', 'owner')]:>14}{c[('owner', 'other')]:>14}   "
+              f"{'-' if qn is None else qn}/{n}  {gp}/{n}")
+    print(f"  合计 对 {tot['right']} 错 {tot['wrong']}")
+
+
 PAGE = r"""<meta charset="utf-8"><title>手部归属抽检</title>
 <style>
 body{font-family:-apple-system,system-ui,sans-serif;margin:0;background:#15171a;color:#e8e8e8}
@@ -244,12 +301,13 @@ show();
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--mode", choices=("build", "score"), required=True)
+    ap.add_argument("--mode", choices=("build", "score", "q1prep", "q1score"), required=True)
+    ap.add_argument("--root", default="/workspace/audit_q1")
     ap.add_argument("--out", default="/workspace/audit_gpt6_qwen")
     ap.add_argument("--key", default="/workspace/audit_gpt6_qwen/audit_key.json")
     ap.add_argument("--answers")
     a = ap.parse_args()
-    (build if a.mode == "build" else score)(a)
+    {"build": build, "score": score, "q1prep": q1prep, "q1score": q1score}[a.mode](a)
 
 
 if __name__ == "__main__":
