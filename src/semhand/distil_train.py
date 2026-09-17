@@ -79,6 +79,25 @@ def with_labels(rows, labels):
     return keep
 
 
+def write_preds(root, arm, trows, p):
+    """Add or replace one arm's column in <root>/student/pred.csv."""
+    d = os.path.join(root, "student")
+    os.makedirs(d, exist_ok=True)
+    path = os.path.join(d, "pred.csv")
+    old = {}
+    if os.path.exists(path):
+        old = {r["id"]: r for r in csv.DictReader(open(path))}
+    cols = [c for c in (list(old[next(iter(old))].keys()) if old else ["id"]) if c != "id"]
+    cols = sorted(set(cols) | {arm})
+    with open(path, "w", newline="") as fh:
+        w = csv.writer(fh)
+        w.writerow(["id"] + cols)
+        for n, r in enumerate(trows):
+            row = dict(old.get(r["id"], {}))
+            row[arm] = f"{p[n]:.6f}"
+            w.writerow([r["id"]] + [row.get(c, "") for c in cols])
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -92,11 +111,29 @@ def main():
     ap.add_argument("--seeds", type=int, default=3)
     ap.add_argument("--epochs", type=int, default=12)
     ap.add_argument("--out", default="/workspace/distil/student")
+    ap.add_argument("--predict_only", action="store_true",
+                    help="load <out>/<arm>_seed*.pt and only predict on --test_root")
     a = ap.parse_args()
     import torch
     device = "cuda" if torch.cuda.is_available() else "cpu"
     torch.set_num_threads(4)
     os.makedirs(a.out, exist_ok=True)
+    if a.predict_only:
+        from src.rig import own_ctx
+        tests = {root: read_rows(root, "test") for root in (a.test_root or [])}
+        for arm in a.arms.split(","):
+            models = []
+            for path in sorted(glob.glob(os.path.join(a.out, f"{arm}_seed*.pt"))):
+                ck = torch.load(path, map_location=device, weights_only=False)
+                m = own_ctx.build(ck["arm"]).to(device)
+                m.load_state_dict(ck["state"])
+                models.append(m)
+            if not models:
+                raise SystemExit(f"没有 {arm} 的权重")
+            for root, trows in tests.items():
+                write_preds(root, arm, trows, predict(models, trows, VIEW[arm], device))
+                print(f"  {arm} ({len(models)} seeds) -> {root}: {len(trows)} 只手", flush=True)
+        return
 
     teach = with_labels(read_rows(a.distil_root, "test"), qwen_labels(a.distil_root))
     print(f"teacher rows {len(teach)}（自己 {sum(r['y'] == 1 for r in teach)} / 别人 "
@@ -125,22 +162,7 @@ def main():
             print(f"  {arm} seed {seed}: dev F1 {best['f1']:.3f} (epoch {best['epoch']}), "
                   f"{len(rows)} 行", flush=True)
         for root, trows in tests.items():
-            p = predict(models, trows, view, device)
-            d = os.path.join(root, "student")
-            os.makedirs(d, exist_ok=True)
-            path = os.path.join(d, "pred.csv")
-            old = {}
-            if os.path.exists(path):
-                old = {r["id"]: r for r in csv.DictReader(open(path))}
-            cols = [c for c in (list(old[next(iter(old))].keys()) if old else ["id"]) if c != "id"]
-            cols = sorted(set(cols) | {arm})
-            with open(path, "w", newline="") as fh:
-                w = csv.writer(fh)
-                w.writerow(["id"] + cols)
-                for n, r in enumerate(trows):
-                    row = dict(old.get(r["id"], {}))
-                    row[arm] = f"{p[n]:.6f}"
-                    w.writerow([r["id"]] + [row.get(c, "") for c in cols])
+            write_preds(root, arm, trows, predict(models, trows, view, device))
             print(f"  {arm} -> {root}: {len(trows)} 只手", flush=True)
     json.dump(report, open(os.path.join(a.out, "dev.json"), "w"), indent=1, default=float)
     print(f"-> {a.out}")
