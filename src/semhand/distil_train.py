@@ -40,6 +40,11 @@ trained on the pool's Q1 rows PLUS rows from GPT-6's frames:
     S_wide_g6     GPT-6's label on every sampled hand
     S_wide_g6and  only the hands where Q1 and GPT-6 agree
 Monocular frames are letterboxed into the panorama-shaped input, not stretched.
+A third arm, added 2026-09-17 before any GPT-6 student was scored, because the
+incumbent S_wide_h carries V1's 1,013 human hands and the two arms above do not:
+    S_wide_hg6and  the pool's Q1 rows + V1's 1,013 human hands + the agreeing
+                   GPT-6 hands
+It is read by the same rule as the other two (as amended in `g6_final.py`).
 They are compared with S_wide on the held-out zone batches (4-6, and 7-9 once
 labelled) at the post-processing the ablation chose (geom_w 0.25, no cap):
 an arm replaces S_wide only if its foreign frames called self are fewer on
@@ -63,9 +68,9 @@ import numpy as np
 
 from src.semhand.crossv1 import Views, fit, loader, predict, read_rows
 
-ARMS = ("S_wide", "S_v1", "S_wide_h", "S_wide_z", "S_wide_g6", "S_wide_g6and")
+ARMS = ("S_wide", "S_v1", "S_wide_h", "S_wide_z", "S_wide_g6", "S_wide_g6and", "S_wide_hg6and")
 VIEW = {"S_wide": "VQ", "S_v1": "VV", "S_wide_h": "VQ", "S_wide_z": "VQ",
-        "S_wide_g6": "VQ", "S_wide_g6and": "VQ"}
+        "S_wide_g6": "VQ", "S_wide_g6and": "VQ", "S_wide_hg6and": "VQ"}
 
 
 def qwen_labels(root, arm="Q1"):
@@ -182,10 +187,10 @@ def main():
     tests = {root: read_rows(root, "test") for root in (a.test_root or [])}
 
     extra = {}
-    for arm, mode in (("S_wide_g6", "all"), ("S_wide_g6and", "and")):
+    for arm, mode in (("S_wide_g6", "all"), ("S_wide_g6and", "and"), ("S_wide_hg6and", "and")):
         if arm in a.arms.split(","):
             g = g6_rows(a.g6_root, mode)
-            extra[arm] = teach + g
+            extra[arm] = teach + g + (human if arm == "S_wide_hg6and" else [])
             print(f"{arm}: 蒸馏池 {len(teach)} + GPT-6 图 {len(g)} 行（GPT-6 图里 自己 "
                   f"{sum(x['y'] == 1 for x in g)} / 别人 {sum(x['y'] == 0 for x in g)}）", flush=True)
 

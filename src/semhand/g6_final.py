@@ -16,7 +16,8 @@ bar, so the incumbent becomes the one that ships:
     arms    S_wide_g6 and S_wide_g6and read at that same post-processing
 and (a) now reads "fewer foreign frames called self than S_wide_h". The rest
 of the rule is unchanged. Known confound, stated now: S_wide_h carries V1's
-1,013 human hands and the GPT-6 arms do not.
+1,013 human hands and the first two GPT-6 arms do not; S_wide_hg6and, added
+before scoring, carries both, and is read by the same rule.
 
 ADDED BEFORE TRAINING (2026-09-17), NOT A CHANGE TO THE RULE:
     gate    if Q1 agrees with GPT-6 on fewer than 80% of GPT-6's hands, the
@@ -34,7 +35,7 @@ from src.semhand.distil_ablate import load, name, show
 from src.semhand.final_789 import BASE, check
 
 INC = ("S_wide_h", (0.0, None))
-ARMS = (("S_wide_g6", (0.0, None)), ("S_wide_g6and", (0.0, None)))
+ARMS = (("S_wide_g6", (0.0, None)), ("S_wide_g6and", (0.0, None)), ("S_wide_hg6and", (0.0, None)))
 
 
 def main():
@@ -44,7 +45,7 @@ def main():
     ap.add_argument("--old", action="append", default=[])
     ap.add_argument("--out", default="/workspace/distil/student/g6_final.json")
     a = ap.parse_args()
-    students = ("S_wide", "S_wide_h", "S_wide_g6", "S_wide_g6and")
+    students = ("S_wide", "S_wide_h", "S_wide_g6", "S_wide_g6and", "S_wide_hg6and")
     tab, counts, recs = load(a.new, students)
     keep = {k: v for k, v in tab.items() if k == BASE or (k[0] in students and k[1] in ("raw", (0.25, None), (0.0, None)))}
     show(keep, "第七+八+九批")
