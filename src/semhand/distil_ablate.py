@@ -44,12 +44,12 @@ CAPS = (2, None)
 STUDENTS = ("S_v1", "S_wide", "S_wide_h")
 
 
-def settings_for(rows, gold, preds, prior, by_key):
+def settings_for(rows, gold, preds, prior, by_key, students=STUDENTS):
     """-> {(arm, setting): labels}; setting is 'raw' or (geom_w, cap)."""
     ident = lambda r: f"{r['rec']}|{r['frame']}|{r['tid']}"
     out = {("V1 deployed", "shipped"): {key(r): by_key[key(r)]["final_owner_post_cap"] == "1" for r in rows}}
     arms = {"V1 cls": {key(r): float(by_key[key(r)]["p_owner_raw"]) for r in rows}}
-    for arm in STUDENTS:
+    for arm in students:
         if arm in preds:
             arms[arm] = {key(r): preds[arm][ident(r)] for r in rows}
     for arm, p in arms.items():
@@ -59,7 +59,7 @@ def settings_for(rows, gold, preds, prior, by_key):
     return out
 
 
-def load(specs):
+def load(specs, students=STUDENTS):
     import csv
     rows_all, gold_all, labels_all = [], {}, {}
     for spec in specs:
@@ -75,7 +75,7 @@ def load(specs):
                     preds.setdefault(arm, {})[r["id"]] = float(v)
         rows_all += rows
         gold_all.update(gold)
-        for k, lab in settings_for(rows, gold, preds, prior, by_key).items():
+        for k, lab in settings_for(rows, gold, preds, prior, by_key, students).items():
             labels_all.setdefault(k, {}).update(lab)
     recs = sorted({r["rec"] for r in rows_all})
     counts = {k: per_recording(rows_all, lab, gold_all) for k, lab in labels_all.items()}
