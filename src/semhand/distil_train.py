@@ -141,6 +141,8 @@ def main():
     ap.add_argument("--test_root", action="append", default=None)
     ap.add_argument("--arms", default=",".join(ARMS))
     ap.add_argument("--seeds", type=int, default=3)
+    ap.add_argument("--seed_list", default=None,
+                    help="comma list: train only these seeds (one process per seed, run in parallel)")
     ap.add_argument("--epochs", type=int, default=12)
     ap.add_argument("--out", default="/workspace/distil/student")
     ap.add_argument("--g6_root", default="/workspace/g6teach")
@@ -195,7 +197,8 @@ def main():
             rows = teach + (human if arm == "S_wide_h" else zone if arm == "S_wide_z" else [])
         view = VIEW[arm]
         models = []
-        for seed in range(a.seeds):
+        seeds = [int(x) for x in a.seed_list.split(",")] if a.seed_list else range(a.seeds)
+        for seed in seeds:
             m, best = fit(view, rows, seed, device, epochs=a.epochs)
             torch.save({"state": {k: v.cpu() for k, v in m.state_dict().items()},
                         "arm": "both_geom" if view == "VV" else "both", "view": view,
@@ -208,7 +211,8 @@ def main():
         for root, trows in tests.items():
             write_preds(root, arm, trows, predict(models, trows, view, device))
             print(f"  {arm} -> {root}: {len(trows)} 只手", flush=True)
-    json.dump(report, open(os.path.join(a.out, "dev.json"), "w"), indent=1, default=float)
+    tag = f"_{a.arms}_{a.seed_list}".replace(",", "-") if a.seed_list else ""
+    json.dump(report, open(os.path.join(a.out, f"dev{tag}.json"), "w"), indent=1, default=float)
     print(f"-> {a.out}")
 
 
