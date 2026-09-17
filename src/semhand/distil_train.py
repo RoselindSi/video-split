@@ -30,17 +30,20 @@ zone batch, through V1's own post-processing (prior + OwnHold + cap), against
     (4) at least one of M1, M2 strictly better with a 95% recording-bootstrap
         interval of the difference that excludes zero
 
-TWO TEACHERS (added 2026-09-17, written before GPT-6 labelled the pool). The
+TWO TEACHERS (added 2026-09-17; revised the same day before any of it ran,
+because no GPT-6 API access exists -- only GPT-6's finished shared labels).
+GPT-6 labelled monocular frames from recordings our pool never touches, so the
+agreement filter runs on GPT-6's hands: Q1 judges them (`g6_prep.py`), and the
 blind audit showed Q1's remaining privacy-direction errors are mostly boxes
-GPT-6 gets right (11 of 13 on the disagreement strata). Two more arms, same
-view, recipe and seeds as S_wide:
-    S_wide_and   train only on hands where Q1 and GPT-6 agree
-    S_wide_cons  owner only when both say owner; every other hand -- a
-                 disagreement or a GPT-6 "cannot tell" -- is trained as other
+GPT-6 gets right. Two arms, same view, recipe and seeds as S_wide, each
+trained on the pool's Q1 rows PLUS rows from GPT-6's frames:
+    S_wide_g6     GPT-6's label on every sampled hand
+    S_wide_g6and  only the hands where Q1 and GPT-6 agree
+Monocular frames are letterboxed into the panorama-shaped input, not stretched.
 They are compared with S_wide on the held-out zone batches (4-6, and 7-9 once
 labelled) at the post-processing the ablation chose (geom_w 0.25, no cap):
-a two-teacher arm replaces S_wide only if its foreign frames called self are
-fewer on 7-9 AND it still passes the four criteria against V1 deployed there.
+an arm replaces S_wide only if its foreign frames called self are fewer on
+7-9 AND it still passes the four criteria against V1 deployed there.
 
 Raw (unsmoothed) numbers are reported beside it, and fresh29 / e2e_main2 are
 reported as secondary because both have been scored many times. A student that
@@ -60,62 +63,25 @@ import numpy as np
 
 from src.semhand.crossv1 import Views, fit, loader, predict, read_rows
 
-ARMS = ("S_wide", "S_v1", "S_wide_h", "S_wide_z", "S_wide_and", "S_wide_cons")
+ARMS = ("S_wide", "S_v1", "S_wide_h", "S_wide_z", "S_wide_g6", "S_wide_g6and")
 VIEW = {"S_wide": "VQ", "S_v1": "VV", "S_wide_h": "VQ", "S_wide_z": "VQ",
-        "S_wide_and": "VQ", "S_wide_cons": "VQ"}
+        "S_wide_g6": "VQ", "S_wide_g6and": "VQ"}
 
 
-def gpt6_labels(root):
-    """-> {id: True | False | None} from gpt6_teacher's answers."""
-    out = {}
-    p = os.path.join(root, "gpt6", "answers.jsonl")
-    for line in open(p):
-        if line.strip():
-            d = json.loads(line)
-            out[d["id"]] = d["wearer"]
-    return out
-
-
-def two_teacher(q1, g6, mode):
-    """Combine Q1 (1 wearer / 0 other) with GPT-6 (True / False / None)."""
-    out = {}
-    for k, y in q1.items():
-        if k not in g6:
-            continue
-        g = g6[k]
-        if mode == "and":
-            if g is not None and int(g) == y:
-                out[k] = y
-        else:                                            # cons
-            out[k] = 1 if (y == 1 and g is True) else 0
-    return out
-
-
-def qwen_labels(root, arm="Q1"):
-    out = {}
-    for f in glob.glob(os.path.join(root, "qwen", f"{arm}_*.jsonl")):
-        for line in open(f):
-            if line.strip():
-                d = json.loads(line)
-                out[d["id"]] = int(d["p"] >= 0.5)
-    return out
-
-
-def zone_labels(path):
-    """-> {id: y} from `selfother.labels` output (1 = the wearer's own hand)."""
-    out = {}
-    for r in csv.DictReader(open(path, encoding="utf-8")):
-        if r.get("label") in ("0", "1"):
-            out[f"{r['rec']}|{r['frame']}|{r['tid']}"] = int(r["label"])
-    return out
-
-
-def with_labels(rows, labels):
-    keep = []
-    for r in rows:
-        if r["id"] in labels:
-            keep.append(dict(r, y=labels[r["id"]], tag=r["id"].split("|")[0]))
-    return keep
+def g6_rows(root, mode):
+    """Rows from GPT-6's monocular frames (g6_prep), labelled by GPT-6 or by agreement."""
+    q1 = qwen_labels(root)
+    rows = []
+    for p in sorted(glob.glob(os.path.join(root, "fresh", "*", "index.csv"))):
+        for r in csv.DictReader(open(p, encoding="utf-8")):
+            ident = f"{r['rec']}|{r['frame']}|{r['tid']}"
+            g = 1 if r["gpt6"] == "owner" else 0
+            if mode == "and" and q1.get(ident) != g:
+                continue
+            rows.append({"id": ident, "image": r["image"], "mono": True, "y": g, "tag": r["recording"],
+                         "box": [float(r[c]) for c in ("x0", "y0", "x1", "y1")],
+                         "g": np.zeros(14, np.float32)})
+    return rows
 
 
 def write_preds(root, arm, trows, p):
@@ -150,6 +116,7 @@ def main():
     ap.add_argument("--seeds", type=int, default=3)
     ap.add_argument("--epochs", type=int, default=12)
     ap.add_argument("--out", default="/workspace/distil/student")
+    ap.add_argument("--g6_root", default="/workspace/g6teach")
     ap.add_argument("--predict_only", action="store_true",
                     help="load <out>/<arm>_seed*.pt and only predict on --test_root")
     a = ap.parse_args()
@@ -186,16 +153,12 @@ def main():
     tests = {root: read_rows(root, "test") for root in (a.test_root or [])}
 
     extra = {}
-    if any(x in a.arms for x in ("S_wide_and", "S_wide_cons")):
-        q1 = qwen_labels(a.distil_root)
-        g6 = gpt6_labels(a.distil_root)
-        base_rows = read_rows(a.distil_root, "test")
-        for mode in ("and", "cons"):
-            lab = two_teacher(q1, g6, mode)
-            extra[f"S_wide_{mode}"] = with_labels(base_rows, lab)
-            r = extra[f"S_wide_{mode}"]
-            print(f"two-teacher {mode}: {len(r)} 行（自己 {sum(x['y'] == 1 for x in r)} / 别人 "
-                  f"{sum(x['y'] == 0 for x in r)}）；GPT-6 覆盖 {len(g6)}", flush=True)
+    for arm, mode in (("S_wide_g6", "all"), ("S_wide_g6and", "and")):
+        if arm in a.arms.split(","):
+            g = g6_rows(a.g6_root, mode)
+            extra[arm] = teach + g
+            print(f"{arm}: 蒸馏池 {len(teach)} + GPT-6 图 {len(g)} 行（GPT-6 图里 自己 "
+                  f"{sum(x['y'] == 1 for x in g)} / 别人 {sum(x['y'] == 0 for x in g)}）", flush=True)
 
     report = {}
     for arm in a.arms.split(","):

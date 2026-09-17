@@ -54,7 +54,9 @@ class Views:
         from src.semhand.qwen import views
         cv2.setNumThreads(1)
         r = self.rows[i]
-        if self.arm == "VQ":
+        if self.arm == "VQ" and r.get("mono"):
+            h, c = mono_views(r)
+        elif self.arm == "VQ":
             frame, crop = views({"image": r["image"], "box": r["box"]})
             h = np.asarray(crop.resize((CROP_PX, CROP_PX), Image.BICUBIC))
             c = np.asarray(frame.resize(FRAME_PX, Image.BICUBIC))
@@ -67,6 +69,27 @@ class Views:
             c = np.clip(c.astype(np.float32) * a + b, 0, 255).astype(np.uint8)
         g = r["g"] if self.arm == "VV" else np.zeros(14, np.float32)
         return norm_rgb(h), norm_rgb(c), torch.from_numpy(g), int(r.get("y", -1))
+
+
+def mono_views(r):
+    """A monocular frame in Qwen's view without stretching it: the box drawn at the
+    same relative width, the frame letterboxed into FRAME_PX, and the same crop."""
+    from PIL import Image, ImageDraw
+    img = Image.open(r["image"]).convert("RGB")
+    W, H = img.size
+    x0, y0, x1, y1 = r["box"]
+    s = min(FRAME_PX[0] / W, FRAME_PX[1] / H)
+    fw, fh = max(1, int(round(W * s))), max(1, int(round(H * s)))
+    small = img.resize((fw, fh), Image.BICUBIC)
+    ImageDraw.Draw(small).rectangle([x0 * s, y0 * s, x1 * s, y1 * s], outline=(0, 230, 0),
+                                    width=max(1, int(round(4 * FRAME_PX[0] / 1280))))
+    canvas = Image.new("RGB", FRAME_PX, (128, 128, 128))
+    canvas.paste(small, ((FRAME_PX[0] - fw) // 2, (FRAME_PX[1] - fh) // 2))
+    side = max(x1 - x0, y1 - y0) * 1.6
+    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    crop = img.crop((int(cx - side / 2), int(cy - side / 2), int(cx + side / 2),
+                     int(cy + side / 2))).resize((CROP_PX, CROP_PX), Image.BICUBIC)
+    return np.asarray(crop), np.asarray(canvas)
 
 
 def loader(rows, arm, augment, shuffle, batch=32):
