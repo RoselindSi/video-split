@@ -66,17 +66,19 @@ def invert_prior(dump_rows):
     return out
 
 
-def replay(rows, p, prior):
+def replay(rows, p, prior, geom_w=GEOM_W, cap=MAX_OWNER):
     """-> {key: held verdict} for `rows` (any subset of frames), given
-    {key: P(self)} and {key: prior}."""
+    {key: P(self)} and {key: prior}. `geom_w` and `cap` default to V1's
+    shipped values; the ablation moves them."""
     hold, rec, out = None, None, {}
     for rc, f, fr in frames_of(rows):
         if rc != rec:
             hold, rec = _hold(), rc
+            hold.max_owner = cap
         flags = []
         for r in fr:
             k = key(r)
-            flags.append((None, min(1.0, max(0.0, (1 - GEOM_W) * p[k] + GEOM_W * prior[k]))))
+            flags.append((None, min(1.0, max(0.0, (1 - geom_w) * p[k] + geom_w * prior[k]))))
         res = hold.update([None] * len(fr), flags, ids=[int(r["tid"]) for r in fr])
         for r, (lab, _) in zip(fr, res):
             out[key(r)] = bool(lab)
