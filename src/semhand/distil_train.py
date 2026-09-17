@@ -68,6 +68,33 @@ VIEW = {"S_wide": "VQ", "S_v1": "VV", "S_wide_h": "VQ", "S_wide_z": "VQ",
         "S_wide_g6": "VQ", "S_wide_g6and": "VQ"}
 
 
+def qwen_labels(root, arm="Q1"):
+    out = {}
+    for f in glob.glob(os.path.join(root, "qwen", f"{arm}_*.jsonl")):
+        for line in open(f):
+            if line.strip():
+                d = json.loads(line)
+                out[d["id"]] = int(d["p"] >= 0.5)
+    return out
+
+
+def zone_labels(path):
+    """-> {id: y} from `selfother.labels` output (1 = the wearer's own hand)."""
+    out = {}
+    for r in csv.DictReader(open(path, encoding="utf-8")):
+        if r.get("label") in ("0", "1"):
+            out[f"{r['rec']}|{r['frame']}|{r['tid']}"] = int(r["label"])
+    return out
+
+
+def with_labels(rows, labels):
+    keep = []
+    for r in rows:
+        if r["id"] in labels:
+            keep.append(dict(r, y=labels[r["id"]], tag=r["id"].split("|")[0]))
+    return keep
+
+
 def g6_rows(root, mode):
     """Rows from GPT-6's monocular frames (g6_prep), labelled by GPT-6 or by agreement."""
     q1 = qwen_labels(root)

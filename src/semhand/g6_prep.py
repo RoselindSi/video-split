@@ -30,6 +30,7 @@ import hashlib
 import json
 import os
 import random
+import re
 import shutil
 
 G = "/shared/ownership_labels/boxes_gpt6_qwen50958_v1"
@@ -61,8 +62,11 @@ def main():
         shutil.copyfile(os.path.join(G, "labels_completed.jsonl"), snap)
     sha = hashlib.sha256(open(snap, "rb").read()).hexdigest()
 
-    excl = bags(["/workspace/e2e_main2.txt", "/workspace/fresh29.txt"]
-                + glob.glob("/workspace/zonestereo*/batch*.txt"))
+    # Only the clip lists themselves (batch<N>.txt): the folders also hold
+    # batch<N>_excluded_bags.txt, which is a whole exclusion list, not a batch.
+    lists = [p for p in glob.glob("/workspace/zonestereo*/batch*.txt")
+             if re.fullmatch(r"batch\d+\.txt", os.path.basename(p))]
+    excl = bags(["/workspace/e2e_main2.txt", "/workspace/fresh29.txt"] + lists)
     excl |= {os.path.basename(r["databag"]) for r in json.load(open("/workspace/distil/pool.json"))}
     audit_imgs = set()
     key = "/workspace/audit_gpt6_qwen/audit_key.json"
