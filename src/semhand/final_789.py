@@ -71,7 +71,7 @@ def main():
         ship = None
     print(f"\n=== 事先写定的规则选出：{name(ship) if ship else '都未通过，保持 S_wide w0.5 cap2 作为候选'} ===")
     if a.old:
-        t2, _, _ = load(a.new + a.old)
+        t2, _, _ = load(a.new + a.old, ("S_wide", "S_wide_h"))   # only arms predicted on every batch
         show({k: v for k, v in t2.items() if k in (A, B, BASE)}, "第四到九批合并（描述性）")
     json.dump({"results": res, "ship": name(ship) if ship else None}, open(a.out, "w"),
               indent=1, ensure_ascii=False, default=float)
