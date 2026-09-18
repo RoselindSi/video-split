@@ -68,9 +68,10 @@ import numpy as np
 
 from src.semhand.crossv1 import Views, fit, loader, predict, read_rows
 
-ARMS = ("S_wide", "S_v1", "S_wide_h", "S_wide_z", "S_wide_g6", "S_wide_g6and", "S_wide_hg6and")
+ARMS = ("S_wide", "S_v1", "S_wide_h", "S_wide_z", "S_wide_g6", "S_wide_g6and", "S_wide_hg6and",
+        "S_wide_g6_v2")
 VIEW = {"S_wide": "VQ", "S_v1": "VV", "S_wide_h": "VQ", "S_wide_z": "VQ",
-        "S_wide_g6": "VQ", "S_wide_g6and": "VQ", "S_wide_hg6and": "VQ"}
+        "S_wide_g6": "VQ", "S_wide_g6and": "VQ", "S_wide_hg6and": "VQ", "S_wide_g6_v2": "VQ"}
 
 
 def qwen_labels(root, arm="Q1"):
@@ -190,7 +191,8 @@ def main():
     tests = {root: read_rows(root, "test") for root in (a.test_root or [])}
 
     extra = {}
-    for arm, mode in (("S_wide_g6", "all"), ("S_wide_g6and", "and"), ("S_wide_hg6and", "and")):
+    for arm, mode in (("S_wide_g6", "all"), ("S_wide_g6and", "and"), ("S_wide_hg6and", "and"),
+                      ("S_wide_g6_v2", "all")):
         if arm in a.arms.split(","):
             g = g6_rows(a.g6_root, mode)
             extra[arm] = teach + g + (human if arm == "S_wide_hg6and" else [])
