@@ -198,14 +198,15 @@ def main():
             # measures how much of the FACE a hand covers, not how much of the
             # hand the face covers.
             fa = 0.0
-            for f in info.get("faces") or []:
+            for f in info.get("faces_covered") or info.get("faces") or []:
                 ix = max(0, min(x1, f[2]) - max(x0, f[0]))
                 iy = max(0, min(y1, f[3]) - max(y0, f[1]))
                 fa = max(fa, ix * iy / max(1, (x1 - x0) * (y1 - y0)))
-            big = max([(f[2] - f[0]) * (f[3] - f[1]) / float(W * H)
-                       for f in info.get("faces") or []], default=0.0)
+            cov = info.get("faces_covered") or info.get("faces") or []
+            big = max([(f[2] - f[0]) * (f[3] - f[1]) / float(W * H) for f in cov],
+                      default=0.0)
             rows.append({"face_on_hand": round(fa, 4), "biggest_face": round(big, 4),
-                         "n_faces": len(info.get("faces") or []),
+                         "n_faces": len(info.get("faces_covered") or info.get("faces") or []),
                          "frame": info["frame"], "box": i,
                          "own": int(info["own"][i]), "p": info["p_owner"][i],
                          "covered": round(float(sub.mean()) if sub.size else 0.0, 4),

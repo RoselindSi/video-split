@@ -347,8 +347,15 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
             # plausible face.
             faces, faces_vetoed = face_mask.split_on_hands(faces, raw_dets)
             n_face += len(faces)
-            rgb, _ = face_mask.cover(clean, hold.update(faces,
-                                                        shape=clean.shape))
+            # WHAT IS COVERED IS THE HELD LIST, NOT THIS FRAME'S DETECTIONS. A
+            # face keeps its mosaic for HOLD_FRAMES after the detector stops
+            # proposing it, so a frame with no detection at all can still have
+            # a large region mosaicked -- and an audit that records the
+            # proposals reads those frames as "nothing was covered here",
+            # which is how a face box was first mistaken for not being the
+            # thing that destroyed the wearer's hand.
+            faces_covered = hold.update(faces, shape=clean.shape)
+            rgb, face_mask_px = face_mask.cover(clean, faces_covered)
         if student is not None:
             # THE DISTILLED STUDENT. It reads the whole frame with the box and
             # a zoom on it, so it gets the same `clean` frame the render
@@ -462,6 +469,9 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
                     "p_owner": [round(float(p), 3) for _, p in flags],
                     "faces": [[int(v) for v in f[:4]] for f in faces]
                               if fdet is not None else [],
+                    # The boxes the mosaic actually went on, held ones included.
+                    "faces_covered": [[int(v) for v in f[:4]] for f in faces_covered]
+                                     if fdet is not None else [],
                     # Proposed and then discarded by the hand veto. Without
                     # this a vetoed face looks exactly like a face the
                     # detector never found, and the two need opposite fixes.
