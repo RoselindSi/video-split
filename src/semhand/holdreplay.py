@@ -21,12 +21,13 @@ GEOM_W = 0.5
 MAX_OWNER = 2
 
 
-def _hold():
+def _hold(reconfirm=2):
     from src.rig.demo_video import MAX_PREDICTION_AGE
     from src.rig.hand_detect import OwnHold
     from src.rig.hand_track import MAX_LOST
     return OwnHold(geom=None, rule_w=0.0, max_owner=MAX_OWNER,
-                   state_ttl=max(MAX_LOST, MAX_PREDICTION_AGE))
+                   state_ttl=max(MAX_LOST, MAX_PREDICTION_AGE),
+                   self_reconfirm_frames=reconfirm)
 
 
 def frames_of(rows):
@@ -66,7 +67,7 @@ def invert_prior(dump_rows):
     return out
 
 
-def replay(rows, p, prior, geom_w=GEOM_W, cap=MAX_OWNER, reacquire=False):
+def replay(rows, p, prior, geom_w=GEOM_W, cap=MAX_OWNER, reacquire=False, reconfirm=2):
     """-> {key: held verdict} for `rows` (any subset of frames), given
     {key: P(self)} and {key: prior}. `geom_w` and `cap` default to V1's
     shipped values; the ablation moves them.
@@ -77,19 +78,22 @@ def replay(rows, p, prior, geom_w=GEOM_W, cap=MAX_OWNER, reacquire=False):
     frames confirm it. A hand the detector drops for a frame therefore gets
     covered on the frame it comes back, with no label change on either side of
     the gap. Off by default, because the dumps every published number was
-    measured on were written without it."""
+    measured on were written without it. An integer raises the bar: the
+    deployed rule is 1 (any gap at all), and `reacquire=2` would leave the
+    one-frame detector hiccups alone -- which is a proposal to measure, not
+    the shipped behaviour."""
     hold, rec, out = None, None, {}
     last = {}
     for rc, f, fr in frames_of(rows):
         if rc != rec:
-            hold, rec, last = _hold(), rc, {}
+            hold, rec, last = _hold(reconfirm), rc, {}
             hold.max_owner = cap
         flags, rq = [], set()
         for r in fr:
             k = key(r)
             flags.append((None, min(1.0, max(0.0, (1 - geom_w) * p[k] + geom_w * prior[k]))))
             tid = int(r["tid"])
-            if reacquire and last.get(tid, f) < f - 1:
+            if reacquire and f - last.get(tid, f) - 1 >= int(reacquire):
                 rq.add(tid)
         res = hold.update([None] * len(fr), flags, ids=[int(r["tid"]) for r in fr],
                           reacquired=rq)

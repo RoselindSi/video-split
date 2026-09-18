@@ -212,6 +212,12 @@ def main():
         "student 上线配置 +重获": replay(rows, p_student, prior, geom_w=0.0, cap=None,
                                         reacquire=True),
         "V1 上线配置 +重获": replay(rows, p_v1, prior, reacquire=True),
+        # The candidate fix: still drop the stale history on a reacquisition,
+        # but judge the frame the hand returns on its own evidence instead of
+        # covering it while two frames confirm.
+        "student +重获(确认1)": replay(rows, p_student, prior, geom_w=0.0, cap=None,
+                                      reacquire=True, reconfirm=1),
+        "V1 +重获(确认1)": replay(rows, p_v1, prior, reacquire=True, reconfirm=1),
     }
     out = {"gold_owner": show(rows, labels, gold, "owner", "M1 的口径：有 gold 的自己手轨迹"),
            "gold_other": show(rows, labels, gold, "other", "别人的手（有 gold）"),
