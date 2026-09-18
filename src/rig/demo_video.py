@@ -157,6 +157,24 @@ def _report_trace(rows, path):
     return drops
 
 
+def _to_h264(path, verbose=True):
+    """Re-encode the finished file in place, if ffmpeg is here. -> True if done."""
+    import shutil
+    import subprocess
+    if not shutil.which("ffmpeg") or not os.path.exists(path):
+        return False
+    tmp = path + ".h264.mp4"
+    r = subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", path,
+                        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "23",
+                        "-movflags", "+faststart", tmp])
+    if r.returncode != 0 or not os.path.exists(tmp):
+        if verbose:
+            print("  (ffmpeg failed; leaving the MPEG-4 Part 2 file as it is)")
+        return False
+    os.replace(tmp, path)
+    return True
+
+
 def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         dilate, sigma, fps, verbose=True, face_model=None, face_conf=None,
         trace_path=None, geom=None, geom_w=0.5, max_owner=None, student=None,
@@ -493,6 +511,12 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
               "the frame's suppression non-empty.")
     if writer is not None:
         writer.release()
+        # MPEG-4 Part 2 is what OpenCV can write here, and several players --
+        # including the one the person reviewing these clips uses -- will not
+        # open it. The picture is finished at this point; this only changes
+        # the container and codec, in place, and is skipped if ffmpeg is
+        # missing rather than failing a render that already succeeded.
+        _to_h264(out_path, verbose)
     if trace:
         import csv
         with open(trace_path, "w", newline="") as f:
