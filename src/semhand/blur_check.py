@@ -20,16 +20,111 @@ id, because an id change is one of the ways the cover blinks.
 from __future__ import annotations
 
 import argparse
+import collections
 import csv
 import os
+
+
+def read(path):
+    rows = list(csv.DictReader(open(path, encoding="utf-8")))
+    for r in rows:
+        r["frame"], r["own"] = int(r["frame"]), int(r["own"])
+        r["covered"], r["oth_px"] = float(r["covered"]), int(r["oth_px"])
+    return rows
+
+
+def gold_of(rows, dump_path, gold_paths, rec):
+    """Attach human track gold to each measured hand, by frame and overlap.
+
+    The run's own `own` flag cannot answer "was the WEARER's hand covered":
+    on the frame a verdict flips, that hand's flag already says foreign. The
+    dump carries the track ids for the same detections, and the gold is on
+    those ids."""
+    from src.selfother.train import read_gold
+    gold = read_gold(gold_paths)
+    dump = collections.defaultdict(list)
+    for r in csv.DictReader(open(dump_path, encoding="utf-8")):
+        if r["rec"] == rec:
+            dump[int(r["frame"])].append(r)
+    n = 0
+    for r in rows:
+        box = [float(r[c]) for c in ("x0", "y0", "x1", "y1")]
+        best, bg = 0.0, None
+        for q in dump[r["frame"]]:
+            v = _iou(box, [float(q[c]) for c in ("x0", "y0", "x1", "y1")])
+            if v > best:
+                best, bg = v, q
+        r["gold"] = gold.get((rec, str(bg["tid"]))) if bg is not None and best >= 0.5 else None
+        r["tid"] = bg["tid"] if bg is not None and best >= 0.5 else None
+        n += r["gold"] is not None
+    return n
+
+
+def _iou(a, b):
+    x0, y0 = max(a[0], b[0]), max(a[1], b[1])
+    x1, y1 = min(a[2], b[2]), min(a[3], b[3])
+    i = max(0.0, x1 - x0) * max(0.0, y1 - y0)
+    u = (a[2] - a[0]) * (a[3] - a[1]) + (b[2] - b[0]) * (b[3] - b[1]) - i
+    return i / u if u > 0 else 0.0
+
+
+def compare(paths, thr=0.15, dump=None, gold_paths=(), rec=None):
+    """What the two runs put on screen, hand by hand and frame by frame."""
+    for path in paths:
+        rows = read(path)
+        if dump:
+            n = gold_of(rows, dump, list(gold_paths), rec)
+            g = [r for r in rows if r["gold"] == "owner"]
+            hit = [r for r in g if r["covered"] >= thr]
+            frames = sorted({r["frame"] for r in hit})
+            runs = 1 + sum(1 for i in range(1, len(frames)) if frames[i] != frames[i - 1] + 1)
+            print(f"\n{os.path.basename(path)}  真的盖到主人的手："
+                  f"{len(hit)} / {len(g)} 手帧（{len(hit) / max(1, len(g)):.2%}），"
+                  f"{len(frames)} 帧、{runs if frames else 0} 段"
+                  f"（对上 gold 的手帧 {n}）")
+            for r in hit[:10]:
+                print(f"    frame {r['frame']} tid {r['tid']}  own={r['own']} "
+                      f"p={r['p']}  盖住 {r['covered']:.0%}")
+        frames = sorted({r["frame"] for r in rows})
+        own = [r for r in rows if r["own"]]
+        hit = [r for r in own if r["covered"] >= thr]
+        # The cover appearing and disappearing on screen at all: the thing a
+        # viewer reads as flicker even when no label moved.
+        px = {f: max(r["oth_px"] for r in rows if r["frame"] == f) for f in frames}
+        on = [px[f] > 0 for f in frames]
+        sw = sum(1 for i in range(1, len(on)) if on[i] != on[i - 1])
+        runs = []
+        cur = 0
+        for v in on:
+            if v:
+                cur += 1
+            elif cur:
+                runs.append(cur)
+                cur = 0
+        if cur:
+            runs.append(cur)
+        print(f"\n{os.path.basename(path)}")
+        print(f"  {len(frames)} 帧、{len(rows)} 只手；判为自己 {len(own)}、判为别人 "
+              f"{len(rows) - len(own)}")
+        print(f"  自己的手被盖住 >= {thr:.0%} 的：{len(hit)} 只手帧"
+              f"（{len(hit) / max(1, len(own)):.1%}），涉及 {len({r['frame'] for r in hit})} 帧")
+        print(f"  画面上有遮挡的帧 {sum(on)}/{len(frames)}；开关切换 {sw} 次；"
+              f"连续遮挡段 {len(runs)} 段，最短 {min(runs) if runs else 0} 帧、"
+              f"中位 {sorted(runs)[len(runs) // 2] if runs else 0} 帧")
+        short = [r for r in runs if r <= 3]
+        print(f"  其中 <=3 帧的遮挡闪现 {len(short)} 段  <- 看起来最像闪烁的东西")
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--databag", required=True)
-    ap.add_argument("--out", required=True, help="the .mp4 the run writes")
-    ap.add_argument("--csv", required=True, help="per-hand coverage")
+    ap.add_argument("--compare", nargs="+", help="read CSVs written earlier and stop")
+    ap.add_argument("--dump", help="with --compare: the dump whose track ids carry the gold")
+    ap.add_argument("--gold", action="append", default=[])
+    ap.add_argument("--rec", default="R0824_160752")
+    ap.add_argument("--databag")
+    ap.add_argument("--out", help="the .mp4 the run writes")
+    ap.add_argument("--csv", help="per-hand coverage")
     ap.add_argument("--start", type=int, default=78)
     ap.add_argument("--n", type=int, default=400)
     ap.add_argument("--stride", type=int, default=1)
@@ -41,6 +136,10 @@ def main():
     ap.add_argument("--no_cap", action="store_true")
     ap.add_argument("--weights", default="/shared/models/HaWoR/weights/external/detector.pt")
     a = ap.parse_args()
+    if a.compare:
+        return compare(a.compare, dump=a.dump, gold_paths=a.gold, rec=a.rec)
+    if not (a.databag and a.out and a.csv):
+        ap.error("--databag, --out 和 --csv 一起给，或者只给 --compare")
     import numpy as np
     from ultralytics import YOLO
     from src.rig import demo_video, face_mask, geom_prior, own_cnn

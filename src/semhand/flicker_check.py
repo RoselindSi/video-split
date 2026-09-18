@@ -115,18 +115,33 @@ def eye_flips(rows, lab, thr=0.3):
     return (100.0 * f / n if n else float("nan")), n, changed_id, ev
 
 
+def seen_flips(seq):
+    """Flips between a track's consecutive APPEARANCES, gaps included: the
+    pipeline's own FlipCount counts this way, and the frame the hand comes
+    back is exactly where the reacquire reset lands."""
+    n = f = 0
+    for v in seq.values():
+        for i in range(1, len(v)):
+            n += 1
+            f += v[i][1] != v[i - 1][1]
+    return (100.0 * f / n if n else float("nan")), n, f
+
+
 def show(rows, labels, gold, want, title):
     print(f"\n{title}")
-    print(f"  {'':<26}{'每帧 翻转/100':>13}{'对数':>6}{'翻转轨迹':>9}{'单帧闪烁':>9}   "
-          f"{'每3帧 翻转/100':>14}{'对数':>6}")
+    print(f"  {'':<28}{'每帧 翻转/100':>13}{'对数':>6}{'翻转轨迹':>9}{'单帧闪烁':>9}   "
+          f"{'跨空档 翻转/100':>15}{'次数':>6}   {'每3帧 翻转/100':>14}")
     out = {}
     for n, lab in labels.items():
         s1 = tracks(rows, lab, gold, 1, want)
         r1, n1, t1, ntr, b1 = flips(s1, 1)
+        rs, ns, fs = seen_flips(s1)
         r3, n3, _, _, _ = flips(tracks(rows, lab, gold, 3, want), 3)
         out[n] = {"per_frame": r1, "pairs_1": n1, "tracks_flipping": t1, "tracks": ntr,
-                  "blips": b1, "per_3_frames": r3, "pairs_3": n3}
-        print(f"  {n:<26}{r1:>13.2f}{n1:>6}{f'{t1}/{ntr}':>9}{b1:>9}   {r3:>14.2f}{n3:>6}")
+                  "blips": b1, "per_appearance": rs, "appearance_pairs": ns,
+                  "appearance_flips": fs, "per_3_frames": r3, "pairs_3": n3}
+        print(f"  {n:<28}{r1:>13.2f}{n1:>6}{f'{t1}/{ntr}':>9}{b1:>9}   "
+              f"{rs:>15.2f}{fs:>6}   {r3:>14.2f}")
     return out
 
 
@@ -192,11 +207,16 @@ def main():
         "student held (w0, no cap)": replay(rows, p_student, prior, geom_w=0.0, cap=None),
         "student held (w0, cap2)": replay(rows, p_student, prior, geom_w=0.0, cap=2),
         "student held (w0.5, cap2)": replay(rows, p_student, prior, geom_w=0.5, cap=2),
+        # The live pipeline's reacquire reset, which no dump carries and no
+        # published M1 models. This is the video's configuration.
+        "student 上线配置 +重获": replay(rows, p_student, prior, geom_w=0.0, cap=None,
+                                        reacquire=True),
+        "V1 上线配置 +重获": replay(rows, p_v1, prior, reacquire=True),
     }
     out = {"gold_owner": show(rows, labels, gold, "owner", "M1 的口径：有 gold 的自己手轨迹"),
            "gold_other": show(rows, labels, gold, "other", "别人的手（有 gold）"),
            "all": show(rows, labels, gold, "all", "视频里看得到的全部轨迹（含没有 gold 的）")}
-    for arm in ("V1 deployed", "student held (w0, no cap)"):
+    for arm in ("V1 deployed", "student 上线配置 +重获"):
         out.setdefault("events", {})[arm] = where(rows, labels, gold, arm, "all")
 
     seq = tracks(rows, labels["V1 deployed"], gold, 1, "owner")

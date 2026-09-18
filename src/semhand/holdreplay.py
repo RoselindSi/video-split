@@ -66,20 +66,35 @@ def invert_prior(dump_rows):
     return out
 
 
-def replay(rows, p, prior, geom_w=GEOM_W, cap=MAX_OWNER):
+def replay(rows, p, prior, geom_w=GEOM_W, cap=MAX_OWNER, reacquire=False):
     """-> {key: held verdict} for `rows` (any subset of frames), given
     {key: P(self)} and {key: prior}. `geom_w` and `cap` default to V1's
-    shipped values; the ablation moves them."""
+    shipped values; the ablation moves them.
+
+    `reacquire` adds the one thing the dump cannot carry: the live pipeline
+    tells OwnHold which tracks the tracker LOST and found again, and a
+    reacquired track that was the wearer's is reset to `other` until two
+    frames confirm it. A hand the detector drops for a frame therefore gets
+    covered on the frame it comes back, with no label change on either side of
+    the gap. Off by default, because the dumps every published number was
+    measured on were written without it."""
     hold, rec, out = None, None, {}
+    last = {}
     for rc, f, fr in frames_of(rows):
         if rc != rec:
-            hold, rec = _hold(), rc
+            hold, rec, last = _hold(), rc, {}
             hold.max_owner = cap
-        flags = []
+        flags, rq = [], set()
         for r in fr:
             k = key(r)
             flags.append((None, min(1.0, max(0.0, (1 - geom_w) * p[k] + geom_w * prior[k]))))
-        res = hold.update([None] * len(fr), flags, ids=[int(r["tid"]) for r in fr])
+            tid = int(r["tid"])
+            if reacquire and last.get(tid, f) < f - 1:
+                rq.add(tid)
+        res = hold.update([None] * len(fr), flags, ids=[int(r["tid"]) for r in fr],
+                          reacquired=rq)
+        for r in fr:
+            last[int(r["tid"])] = f
         for r, (lab, _) in zip(fr, res):
             out[key(r)] = bool(lab)
     return out
