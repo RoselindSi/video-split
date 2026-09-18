@@ -81,9 +81,14 @@ def main():
             if not os.path.exists(f):
                 continue
             s = score(join_gold(read(f), dump, labels, rec))
-            log = os.path.join(a.dir, "logs", f"{rec}_{arm}.log")
-            m = re.search(r"TRACK-LEVEL FLIPS: (\d+)", open(log).read()) if os.path.exists(log) else None
-            s["flips"] = int(m.group(1)) if m else None
+            m = None
+            for log in (os.path.join(a.dir, "logs", f"{rec}_{arm}.log"),
+                        os.path.join(a.dir, "logs", f"{arm}.log")):
+                if os.path.exists(log):
+                    m = re.search(r"TRACK-LEVEL FLIPS: (\d+)", open(log).read())
+                    if m:
+                        break
+            s["flips"] = int(m.group(1)) if m else -1
             report[f"{rec}|{arm}"] = s
             for k, v in s.items():
                 if v is not None and k != "own_pixels":
