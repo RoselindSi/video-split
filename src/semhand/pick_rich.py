@@ -44,10 +44,10 @@ SCAN_FRAMES = 12
 MIN_HANDS = 3
 WINDOW = 400
 PER_BATCH = 30
-SEED = 20260917
+SEED = 20260917          # batches 7-9; later batches pass --seed and --batches
 
 
-def candidates(pool_list):
+def candidates(pool_list, seed=SEED):
     used = listed_bags(["/workspace/otherpkg_1/sources.csv", "/workspace/crops/trainpkg_T1/sources.csv",
                         "/workspace/testpkg_2/sources.csv", "/workspace/fresh29.txt",
                         "/workspace/e2e_main2.txt"])
@@ -66,7 +66,7 @@ def candidates(pool_list):
     for bag, path in sorted(pool.items()):
         by[(device_of(path), day_of(bag))].append(path)
     keys = sorted(by)
-    random.Random(SEED).shuffle(keys)
+    random.Random(seed).shuffle(keys)
     order, r = [], 0
     while any(len(by[k]) > r for k in keys):
         order += [by[k][r] for k in keys if len(by[k]) > r]
@@ -85,8 +85,8 @@ def scan(a):
     from src.semhand.frames import cap_decoder_threads
     cap_decoder_threads()
     cv2.setNumThreads(2)
-    order, _ = candidates(a.pool_list)
-    mine = order[:SCAN_RECORDINGS][a.shard::a.nshards]
+    order, _ = candidates(a.pool_list, a.seed)
+    mine = order[:a.scan][a.shard::a.nshards]
     yolo = YOLO(a.weights)
     out = os.path.join(a.out, f"scan_{a.shard}.jsonl")
     done = set()
@@ -126,7 +126,7 @@ def scan(a):
 
 
 def pick(a):
-    order, n_used = candidates(a.pool_list)
+    order, n_used = candidates(a.pool_list, a.seed)
     scanned = {}
     for p in glob.glob(os.path.join(a.out, "scan_*.jsonl")):
         for line in open(p):
@@ -134,7 +134,7 @@ def pick(a):
                 r = json.loads(line)
                 scanned[r["databag"]] = r
     rich = []
-    for path in order[:SCAN_RECORDINGS]:
+    for path in order[:a.scan]:
         r = scanned.get(path)
         if not r or r["status"] != "ok" or not r["counts"]:
             continue
@@ -143,14 +143,15 @@ def pick(a):
             start = min(max(0, f - WINDOW // 2), r["n_frames"] - WINDOW - 1)
             rich.append((path, start, k, sum(c >= MIN_HANDS for c in r["counts"].values())))
     print(f"扫描 {len(scanned)} 段（排除 {n_used}）；有 >= {MIN_HANDS} 只手的帧的段 {len(rich)}")
-    batches = {7: [], 8: [], 9: []}
-    for i, item in enumerate(rich[:3 * PER_BATCH]):
-        batches[7 + i % 3].append(item)
+    nums = [int(x) for x in a.batches.split(",")]
+    batches = {n: [] for n in nums}
+    for i, item in enumerate(rich[:len(nums) * a.per_batch]):
+        batches[nums[i % len(nums)]].append(item)
     for n, items in batches.items():
         d = f"/workspace/zonestereo{n}"
         os.makedirs(d, exist_ok=True)
         with open(os.path.join(d, f"batch{n}.txt"), "w") as fh:
-            fh.write(f"# detector-enriched (>= {MIN_HANDS} hands in a scanned frame), seed {SEED}; "
+            fh.write(f"# detector-enriched (>= {MIN_HANDS} hands in a scanned frame), seed {a.seed}; "
                      f"see src/semhand/pick_rich.py\n")
             for path, s, k, m in items:
                 fh.write(f"{path}:{s}:{s + WINDOW}\n")
@@ -170,6 +171,10 @@ def main():
     ap.add_argument("--weights", default="/shared/models/HaWoR/weights/external/detector.pt")
     ap.add_argument("--shard", type=int, default=0)
     ap.add_argument("--nshards", type=int, default=1)
+    ap.add_argument("--batches", default="7,8,9")
+    ap.add_argument("--per_batch", type=int, default=PER_BATCH)
+    ap.add_argument("--scan", type=int, default=SCAN_RECORDINGS)
+    ap.add_argument("--seed", type=int, default=SEED)
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
     (scan if a.mode == "scan" else pick)(a)
