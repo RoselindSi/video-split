@@ -64,6 +64,49 @@ def full_rate(rows):
     return tot == 0 or step1 / tot > 0.5
 
 
+def shape_of(rows, gold, off, on, p, prior, geom_w, min_gap):
+    """A count of covered frames says nothing about how they sit in time.
+
+    One wrong frame at the moment a hand returns is a blink; the same hand
+    held foreign for ten frames afterwards is the EMA having been wiped and
+    having to climb back over the 0.70 hysteresis. These are different faults
+    with different fixes, so they are separated: for every own-hand frame the
+    rule changed, is it the frame the hand came back on, or the tail after
+    it -- and what was the blended score on the frame that went wrong."""
+    seen, by_track = {}, collections.defaultdict(list)
+    ret, low = set(), []
+    for r in sorted(rows, key=lambda r: (r["rec"], int(r["frame"]))):
+        t, f = (r["rec"], str(r["tid"])), int(r["frame"])
+        if f - seen.get(t, f) - 1 >= min_gap:
+            ret.add((t, f))
+        seen[t] = f
+        if gold.get(t) == "owner" and off[key(r)] and not on[key(r)]:
+            by_track[t].append(f)
+            if (t, f) in ret:
+                low.append(min(1.0, max(0.0, (1 - geom_w) * p[key(r)]
+                                        + geom_w * prior[key(r)])))
+    runs, first = [], 0
+    for t, fs in by_track.items():
+        fs.sort()
+        cur = 1
+        for i in range(1, len(fs)):
+            if fs[i] == fs[i - 1] + 1:
+                cur += 1
+            else:
+                runs.append(cur)
+                cur = 1
+        runs.append(cur)
+        first += sum(1 for f in fs if (t, f) in ret)
+    runs.sort()
+    return {"frames": sum(runs), "runs": len(runs),
+            "median_run": runs[len(runs) // 2] if runs else 0,
+            "max_run": runs[-1] if runs else 0,
+            "on_the_return_frame": first, "in_the_tail": sum(runs) - first,
+            "return_blend_median": sorted(low)[len(low) // 2] if low else None,
+            "return_blend_over_half": sum(1 for v in low if v >= 0.5),
+            "return_frames_wrong": len(low)}
+
+
 def one(dump_path, labels_path, pred_path, arm, geom_w, cap, policies=((1, 2),)):
     dump = list(csv.DictReader(open(dump_path, encoding="utf-8")))
     gold = read_zone_gold(labels_path)
@@ -102,7 +145,8 @@ def one(dump_path, labels_path, pred_path, arm, geom_w, cap, policies=((1, 2),))
         for c in per.values():
             tot.update(c)
         by_gap[f"{mg}|{rc}"] = {"totals": dict(tot),
-                      "per_recording": {k: dict(v) for k, v in per.items()}}
+                      "per_recording": {k: dict(v) for k, v in per.items()},
+                      "shape": shape_of(rows, gold, off, on, p, prior, geom_w, mg)}
     nre, ntr_gap, ntr = gaps_of(rows)
     return {"hand_frames": len(rows), "tracks": ntr, "tracks_with_gap": ntr_gap,
             "reacquisitions": nre, "by_min_gap": by_gap,
