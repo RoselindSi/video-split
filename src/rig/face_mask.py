@@ -375,14 +375,32 @@ def split_on_hands(faces, dets, frac=HAND_OVERLAP_VETO):
 
 
 def _worst_overlap(f, dets):
-    """Largest fraction of THIS FACE's area covered by any hand box. -> float"""
+    """How much this face and a hand are the same thing, either way round.
+
+    MEASURED BOTH WAYS BECAUSE THE FAILURE COMES IN TWO SIZES, and only one of
+    them was covered. Against the FACE's area this catches a small false face
+    sitting inside a hand box -- fingers read as a head. Against the HAND's
+    area it catches the opposite and larger failure: a false face box big
+    enough to swallow the hand, whose overlap with its own area is negligible,
+    so the old test scored it near zero and kept it. On one recording that box
+    grew to 60% of the frame, PAD took the mosaic to nearly all of it, and 51
+    frames of the wearer's hands were destroyed while the classifier called
+    them self at p 0.90-1.00 and no hand was covered at all.
+
+    THE COST IS REAL AND IS NOT MEASURED HERE. A genuine face with a small
+    hand box over it now scores 1.0 on the hand side and loses its cover. What
+    saves that case today is that it needs a hand detection ON the face, and
+    what would settle it is a human looking at the frames this rule changes --
+    which has not been done. Returned as the larger of the two fractions."""
     fa = max(1, (f[2] - f[0]) * (f[3] - f[1]))
     worst = 0.0
     for d in dets:
         x0, y0, x1, y1 = [int(v) for v in d["box"]]
         ix = max(0, min(f[2], x1) - max(f[0], x0))
         iy = max(0, min(f[3], y1) - max(f[1], y0))
-        worst = max(worst, ix * iy / float(fa))
+        inter = float(ix * iy)
+        ha = max(1, (x1 - x0) * (y1 - y0))
+        worst = max(worst, inter / fa, inter / ha)
     return worst
 
 
@@ -734,6 +752,14 @@ def _self_test():
     big_hand = [{"box": (0, 0, 900, 900)}]
     chk("a small face inside a large hand is still dropped",
         drop_on_hands([on_hand], big_hand) == [])
+    # The other direction, which the old test could not see: a face box large
+    # enough to swallow the hand is that hand, and its overlap with its own
+    # area is small precisely because it is so large.
+    swallowing = (0, 0, 900, 900, 0.9)
+    chk("a face box that swallows a hand is dropped",
+        drop_on_hands([swallowing], hand) == [])
+    chk("...and a large face with no hand inside it is kept",
+        drop_on_hands([swallowing], [{"box": (1200, 1200, 1300, 1300)}]) == [swallowing])
     chk("with no hands detected nothing is vetoed",
         drop_on_hands([on_hand], []) == [on_hand])
 
