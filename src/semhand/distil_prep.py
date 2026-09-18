@@ -34,6 +34,7 @@ import hashlib
 import json
 import os
 import random
+import re
 
 import numpy as np
 
@@ -47,6 +48,55 @@ PER_WINDOW = 10              # frames per window
 STRIDE = 10                  # frames between samples inside a window
 MIN_FRAMES = 2000            # a recording must be long enough to spread over
 SEED = 20260916
+
+
+def pick_from_scans(a):
+    """A second pool, enriched for other people's hands, from scans already done.
+
+    `pick_rich --mode scan` counted hand detections in 12 spread frames of 780
+    candidate recordings while choosing zone batches 7-11. The recordings it
+    scanned but no batch used are free, and the frames where it counted three
+    or more hands are where other people are. Windows are centred on those
+    frames, so the pool's foreign-hand share rises without any ownership model
+    choosing anything."""
+    import collections
+    used = listed_bags(["/workspace/otherpkg_1/sources.csv",
+                        "/workspace/crops/trainpkg_T1/sources.csv",
+                        "/workspace/testpkg_2/sources.csv",
+                        "/workspace/fresh29.txt", "/workspace/e2e_main2.txt"])
+    used |= {bag_of(l.split(":")[0]) for p in glob.glob("/workspace/zonestereo*/batch*.txt")
+             if re.fullmatch(r"batch\d+\.txt", os.path.basename(p))
+             for l in open(p) if l.strip() and not l.startswith("#")}
+    used |= {bag_of(r["databag"]) for r in json.load(open(a.pool))} if os.path.exists(a.pool) else set()
+    scanned = {}
+    for d in a.scans.split(","):
+        for p in glob.glob(os.path.join(d, "scan_*.jsonl")):
+            for line in open(p):
+                if line.strip():
+                    r = json.loads(line)
+                    scanned[r["databag"]] = r
+    out = []
+    for path, r in sorted(scanned.items()):
+        if bag_of(path) in used or r.get("status") != "ok" or not r.get("counts"):
+            continue
+        hot = sorted(((int(f), c) for f, c in r["counts"].items()), key=lambda t: -t[1])
+        if hot[0][1] < 3:
+            continue
+        frames = set()
+        for f, c in hot[:WINDOWS]:
+            if c < 2:
+                break
+            for k in range(-PER_WINDOW // 2, PER_WINDOW // 2):
+                g = f + k * STRIDE
+                if 0 <= g < r["n_frames"] - 1:
+                    frames.add(g)
+        out.append({"databag": path, "rec": bag_of(path).replace("databag-26_", "R"),
+                    "frames": sorted(frames)})
+    json.dump(out, open(a.out_pool, "w"), indent=1)
+    days = collections.Counter(day_of(bag_of(r["databag"])) for r in out)
+    print(f"-> {a.out_pool}  {len(out)} 段（扫描过 {len(scanned)}，排除已用 {len(used)}），"
+          f"{len({device_of(r['databag']) for r in out})} 台设备，{len(days)} 天，"
+          f"共 {sum(len(r['frames']) for r in out)} 帧")
 
 
 def pick(a):
@@ -195,7 +245,9 @@ def prep(a):
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--mode", choices=("pool", "prep"), required=True)
+    ap.add_argument("--mode", choices=("pool", "prep", "pool_from_scans"), required=True)
+    ap.add_argument("--scans", default="/workspace/richscan,/workspace/richscan10")
+    ap.add_argument("--out_pool", default="/workspace/distil2/pool.json")
     ap.add_argument("--out", default="/workspace/distil")
     ap.add_argument("--pool", default="/workspace/distil/pool.json")
     ap.add_argument("--pool_list", default="/workspace/calibrated.txt")
@@ -203,7 +255,7 @@ def main():
     ap.add_argument("--shard", type=int, default=0)
     ap.add_argument("--nshards", type=int, default=1)
     a = ap.parse_args()
-    (pick if a.mode == "pool" else prep)(a)
+    {"pool": pick, "pool_from_scans": pick_from_scans, "prep": prep}[a.mode](a)
 
 
 if __name__ == "__main__":

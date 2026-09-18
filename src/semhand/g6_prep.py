@@ -55,9 +55,11 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--out", default="/workspace/g6teach")
+    ap.add_argument("--per_rec", type=int, default=PER_REC)
+    ap.add_argument("--snapshot", default=None, help="default <out>/gpt6_labels_snapshot.jsonl")
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
-    snap = os.path.join(a.out, "gpt6_labels_snapshot.jsonl")
+    snap = a.snapshot or os.path.join(a.out, "gpt6_labels_snapshot.jsonl")
     if not os.path.exists(snap):
         shutil.copyfile(os.path.join(G, "labels_completed.jsonl"), snap)
     sha = hashlib.sha256(open(snap, "rb").read()).hexdigest()
@@ -99,7 +101,7 @@ def main():
         imgs = by_rec[rec][:]
         rng.shuffle(imgs)
         tag = rec.replace("databag-26_", "G")
-        for k, (r, hands) in enumerate(imgs[:PER_REC]):
+        for k, (r, hands) in enumerate(imgs[:a.per_rec]):
             for t, h in enumerate(hands):
                 x0, y0, x1, y1 = h["box_xyxy"]
                 rows.append({"rec": tag, "frame": k, "tid": t, "databag": rec,
@@ -114,7 +116,7 @@ def main():
             w.writeheader()
             w.writerows([r for r in rows if r["rec"] == rec_tag])
     lab = collections.Counter(r["gpt6"] for r in rows)
-    json.dump({"snapshot_sha256": sha, "per_rec": PER_REC, "seed": SEED, "dropped_images": dropped,
+    json.dump({"snapshot_sha256": sha, "per_rec": a.per_rec, "seed": SEED, "dropped_images": dropped,
                "recordings": len({r['rec'] for r in rows}), "hands": len(rows), "gpt6_labels": lab},
               open(os.path.join(a.out, "prep.json"), "w"), indent=1)
     print(f"快照 sha256 {sha[:12]}；丢弃 {dict(dropped)}")

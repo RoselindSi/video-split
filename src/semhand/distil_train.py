@@ -138,7 +138,8 @@ def write_preds(root, arm, trows, p):
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--distil_root", default="/workspace/distil")
+    ap.add_argument("--distil_root", action="append", default=None,
+                    help="repeatable; every root's Q1-labelled rows are pooled")
     ap.add_argument("--bank_root", default="/workspace/semhand", help="V1's human rows")
     ap.add_argument("--zone_root", action="append", default=None,
                     help="roots whose zone labels join training (not the held-out batch)")
@@ -158,6 +159,7 @@ def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     torch.set_num_threads(4)
     os.makedirs(a.out, exist_ok=True)
+    a.distil_root = a.distil_root or ["/workspace/distil"]
     if a.predict_only:
         from src.rig import own_ctx
         tests = {root: read_rows(root, "test") for root in (a.test_root or [])}
@@ -175,7 +177,8 @@ def main():
                 print(f"  {arm} ({len(models)} seeds) -> {root}: {len(trows)} 只手", flush=True)
         return
 
-    teach = with_labels(read_rows(a.distil_root, "test"), qwen_labels(a.distil_root))
+    teach = [r for root in a.distil_root
+             for r in with_labels(read_rows(root, "test"), qwen_labels(root))]
     print(f"teacher rows {len(teach)}（自己 {sum(r['y'] == 1 for r in teach)} / 别人 "
           f"{sum(r['y'] == 0 for r in teach)}），{len({r['tag'] for r in teach})} 段录像", flush=True)
     human = read_rows(a.bank_root, "bank")
