@@ -33,6 +33,11 @@ AMBER = (40, 190, 250)
 NEW_TRACK_CONF = 0.60
 CONTINUE_TRACK_CONF = 0.25
 MAX_PREDICTION_AGE = 2
+# Frames a REACQUIRED hand must support `self` before the cover comes off it,
+# passed through to `OwnHold` so a render can be made with the shipped value
+# and with the alternative under test. 2 is the shipped rule and covers the
+# frame a dropped hand returns on, whatever the classifier says about it.
+SELF_RECONFIRM_FRAMES = 2
 
 
 def _bar(width, text, height=BAR_H, bg=(28, 28, 30), fg=(235, 235, 235)):
@@ -184,7 +189,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         predict_motion=True, safe_association=True, safe_reacquire=True,
         min_conf=None, bridge=None, panorama_mode="baseline",
         panorama_fit_frames=0, panorama_depth=True, panorama_flow=False,
-        ctx=None, frame_hook=None):
+        ctx=None, frame_hook=None, self_reconfirm=SELF_RECONFIRM_FRAMES):
     import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
@@ -232,8 +237,13 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         rich_association=safe_association,
         max_assoc_cost=MAX_ASSOC_COST if safe_association else None,
         unmatched_cost=UNMATCHED_COST if safe_association else None)
+    # How many frames a REACQUIRED hand must support `self` before the cover
+    # comes off it. The shipped 2 means the frame a dropped hand returns is
+    # covered whatever the classifier says; 1 keeps the history reset and
+    # judges that frame on its own evidence.
     ownhold = OwnHold(geom=geom, geom_w=geom_w, max_owner=max_owner,
-                      state_ttl=tracker.max_lost)
+                      state_ttl=tracker.max_lost,
+                      self_reconfirm_frames=self_reconfirm)
     flips = FlipCount()
     # Three quantities the architecture argument turns on and
     # nothing has ever recorded. They decide nothing.
@@ -655,6 +665,9 @@ def main():
                          "unmatched assignments")
     ap.add_argument("--inherit_self_on_reacquire", action="store_true",
                     help="ablation only: restore the unsafe old ownership hold")
+    ap.add_argument("--self_reconfirm", type=int, default=SELF_RECONFIRM_FRAMES,
+                    help="frames a reacquired hand must support `self` before the "
+                         "cover comes off it; 2 covers the frame it returns")
     ap.add_argument("--max_owner", type=int, default=2,
                     help="most hands one frame may call the wearer's")
     ap.add_argument("--no_cap", action="store_true",
@@ -803,6 +816,7 @@ def main():
                      predict_motion=not a.no_motion_prediction,
                      safe_association=not a.legacy_association,
                      safe_reacquire=not a.inherit_self_on_reacquire,
+                     self_reconfirm=a.self_reconfirm,
                      bridge=a.bridge, min_conf=a.min_conf,
                      panorama_mode=a.panorama,
                      panorama_fit_frames=a.pano_fit_frames,

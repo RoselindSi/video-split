@@ -225,6 +225,17 @@ def main():
     for arm in ("V1 deployed", "student 上线配置 +重获"):
         out.setdefault("events", {})[arm] = where(rows, labels, gold, arm, "all")
 
+    # The other side of the proposed change: relaxing the reset can only
+    # UNCOVER hands, so count the foreign hand-frames it would expose.
+    print("\n把「回来先糊一帧」改成「按当帧证据判」的两面（相对上线配置）")
+    for arm, base, alt in (("student", "student 上线配置 +重获", "student +重获(确认1)"),
+                           ("V1", "V1 上线配置 +重获", "V1 +重获(确认1)")):
+        exp = sum(1 for r in rows if gold.get((r["rec"], str(r["tid"]))) == "other"
+                  and not labels[base][key(r)] and labels[alt][key(r)])
+        saved = sum(1 for r in rows if gold.get((r["rec"], str(r["tid"]))) == "owner"
+                    and not labels[base][key(r)] and labels[alt][key(r)])
+        print(f"  {arm:<10}少糊自己的手 {saved} 手帧，多漏别人的手 {exp} 手帧")
+
     seq = tracks(rows, labels["V1 deployed"], gold, 1, "owner")
     lens = sorted(len(v) for v in seq.values())
     print(f"\n轨迹碎片化（自己手 gold 轨迹）：{len(lens)} 条覆盖 {sum(lens)} 帧手，"

@@ -136,6 +136,9 @@ def main():
     ap.add_argument("--no_cap", action="store_true")
     ap.add_argument("--inherit_self_on_reacquire", action="store_true",
                     help="ablation: do not reset a reacquired self track (the flicker's source)")
+    ap.add_argument("--self_reconfirm", type=int, default=2,
+                    help="frames a reacquired hand must support `self`; 2 is shipped, "
+                         "1 judges the frame it returns on its own evidence")
     ap.add_argument("--weights", default="/shared/models/HaWoR/weights/external/detector.pt")
     a = ap.parse_args()
     if a.compare:
@@ -191,7 +194,7 @@ def main():
         face_model=face_mask.MODEL, face_conf=face_mask.MIN_CONF,
         geom=geom_prior.load_model(a.geom), geom_w=geom_w, student=student, ctx=ctx,
         max_owner=None if a.no_cap else 2, panorama_mode="baseline", frame_hook=hook,
-        safe_reacquire=not a.inherit_self_on_reacquire)
+        safe_reacquire=not a.inherit_self_on_reacquire, self_reconfirm=a.self_reconfirm)
     with open(a.csv, "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(rows[0]))
         w.writeheader()
