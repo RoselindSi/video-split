@@ -133,7 +133,7 @@ class DemoVideoDropoutRegressionTest(unittest.TestCase):
                     "src.rig.hand_detect.detect",
                     side_effect=fake_detect), mock.patch(
                     "cv2.VideoWriter", side_effect=_Writer):
-                written, disagreements, faces = demo_video.run(
+                written, disagreements, faces, _flips = demo_video.run(
                     rig=object(), videos={}, out_path=out_path, start=100,
                     n=4, stride=1, model=object(), cnn=None, device="cpu",
                     dilate=10, sigma=14.0, fps=12.0, verbose=False,

@@ -146,7 +146,9 @@ def _run(face_script, detections, n):
              mock.patch("src.rig.face_mask.load_detector",
                         return_value=_StubYuNet(face_script)), \
              mock.patch("cv2.VideoWriter", side_effect=_Writer):
-            written, _dis, faces = demo_video.run(
+            # `run` gained a fourth return -- the flip report -- and these
+            # tests have been unpacking three ever since.
+            written, _dis, faces, _flips = demo_video.run(
                 rig=object(), videos={}, out_path=out_path, start=0, n=n,
                 stride=1, model=object(), cnn=None, device="cpu", dilate=10,
                 sigma=14.0, fps=12.0, verbose=False,

@@ -17,7 +17,9 @@ from src.rig.multi_homography import (
     transformed_support_points,
 )
 from src.rig.segmented_panorama import (
+    affine_inverse_pixel_map,
     canvas_from_footprints,
+    compose_inverse_match_map,
     compose_frequency_selective_blend,
     content_segments,
     enforce_anchor_authority,
@@ -326,6 +328,30 @@ class MultiHomographyTest(unittest.TestCase):
         self.assertTrue(np.all(result[active] == (20, 80, 160)))
         self.assertTrue(np.all(result[~active] == 0))
         np.testing.assert_array_equal(valid, active)
+
+    def test_inverse_maps_compose_along_camera_chain(self):
+        shape = (12, 20)
+        yy, xx = np.indices(shape)
+        parent_to_source = np.stack((xx + 2, yy), axis=-1).astype(np.float32)
+        anchor_to_parent = np.stack((xx + 3, yy + 1), axis=-1).astype(
+            np.float32)
+        active = np.ones(shape, bool)
+        mapping, composed_active = compose_inverse_match_map(
+            parent_to_source, active, anchor_to_parent,
+            np.zeros(shape, bool), (20, 30))
+        np.testing.assert_allclose(mapping[5, 5], [10, 6], atol=1e-5)
+        self.assertTrue(composed_active[5, 5])
+
+    def test_affine_inverse_map_uses_target_coordinates(self):
+        affine = np.asarray([
+            [1, 0, 5],
+            [0, 1, -2],
+            [0, 0, 1],
+        ], np.float64)
+        mapping, inside = affine_inverse_pixel_map(
+            (20, 30), (12, 20), affine)
+        np.testing.assert_allclose(mapping[5, 10], [5, 7], atol=1e-5)
+        self.assertTrue(inside[5, 10])
 
 
 if __name__ == "__main__":

@@ -141,5 +141,40 @@ class HandTrackingPolicyTest(unittest.TestCase):
         self.assertEqual(model.kwargs["conf"], 0.0)
 
 
+class ShippedDefaultsTest(unittest.TestCase):
+    """The two policy numbers the pipeline now ships, and what they mean.
+
+    Both were measured before being changed: the reconfirm frame cost 1,173
+    covered own-hand frames over 145 recordings to keep 103 of a colleague's,
+    and the grace keeps 144 own hand-frames for 17 of a colleague's. They are
+    asserted here because the values live in `demo_video` and a silent revert
+    would look exactly like nothing."""
+
+    def test_a_reacquired_self_hand_is_judged_on_the_frame_it_returns(self):
+        from src.rig.demo_video import SELF_RECONFIRM_FRAMES
+        hand = _det(400, owner=True, owner_p=0.95)
+        hold = OwnHold(rule_w=0.0, self_reconfirm_frames=SELF_RECONFIRM_FRAMES)
+        hold.update([hand], [(True, 0.95)], ids=[7])
+        hold.update([], [], ids=[])                       # the detector drops it
+        back = hold.update([hand], [(True, 0.95)], ids=[7], reacquired={7})[0][0]
+        self.assertTrue(back)
+        # ...and the evidence still has to say so: a hand that comes back
+        # looking foreign is covered, which is what the reset is for.
+        hold2 = OwnHold(rule_w=0.0, self_reconfirm_frames=SELF_RECONFIRM_FRAMES)
+        hold2.update([hand], [(True, 0.95)], ids=[7])
+        hold2.update([], [], ids=[])
+        self.assertFalse(hold2.update([_det(405, owner=False, owner_p=0.40)],
+                                      [(False, 0.40)], ids=[7],
+                                      reacquired={7})[0][0])
+
+    def test_a_new_box_counts_as_beside_a_hand_only_when_it_touches_one(self):
+        from src.rig.demo_video import NEAR_SELF, NEW_HAND_GRACE, _touches
+        self.assertGreaterEqual(NEW_HAND_GRACE, 1)
+        palm, fingers = [100, 200, 200, 300], [100, 120, 200, 200]
+        self.assertTrue(_touches(fingers, palm, NEAR_SELF * 100))
+        across_the_bench = [800, 120, 900, 200]
+        self.assertFalse(_touches(across_the_bench, palm, NEAR_SELF * 100))
+
+
 if __name__ == "__main__":
     unittest.main()

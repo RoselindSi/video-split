@@ -33,11 +33,28 @@ AMBER = (40, 190, 250)
 NEW_TRACK_CONF = 0.60
 CONTINUE_TRACK_CONF = 0.25
 MAX_PREDICTION_AGE = 2
-# Frames a REACQUIRED hand must support `self` before the cover comes off it,
-# passed through to `OwnHold` so a render can be made with the shipped value
-# and with the alternative under test. 2 is the shipped rule and covers the
-# frame a dropped hand returns on, whatever the classifier says about it.
-SELF_RECONFIRM_FRAMES = 2
+# Frames a REACQUIRED hand must support `self` before the cover comes off it.
+# It was 2, which covers the frame a dropped hand returns on WHATEVER the
+# classifier says -- and the detector drops a hand for a frame constantly, 63
+# times in one 400-frame clip, so the wearer's hands blinked under the cover
+# about one and a half times a second. Over 145 recordings that rule kept a
+# colleague's hand covered on 103 frames and covered the wearer's own on 1,173.
+#
+# At 1 the history is still thrown away on a reacquisition -- a returning box
+# inherits no verdict -- but the frame it returns on is judged on its own
+# evidence. On four held-out recordings that takes own-hand flips from 45 to 2
+# and leaves 2 more of a colleague's frames uncovered; on the clip this was
+# first seen on, from 20 to 0 and none.
+SELF_RECONFIRM_FRAMES = 1
+
+# Track age up to which a box touching a hand already called the wearer's is
+# left uncovered: the detector splitting one hand into a palm and a set of
+# fingers, where the second box cannot have the hand's id and so has no
+# history to be judged by. Over 145 recordings this keeps 144 own hand-frames
+# and exposes 17 of a colleague's; without the adjacency half of the test it
+# would be 144 against 1,130, which is why it is not simply "new tracks are
+# not covered".
+NEW_HAND_GRACE = 2
 
 
 def _bar(width, text, height=BAR_H, bg=(28, 28, 30), fg=(235, 235, 235)):
@@ -206,7 +223,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         min_conf=None, bridge=None, panorama_mode="baseline",
         panorama_fit_frames=0, panorama_depth=True, panorama_flow=False,
         ctx=None, frame_hook=None, self_reconfirm=SELF_RECONFIRM_FRAMES,
-        new_hand_grace=0):
+        new_hand_grace=NEW_HAND_GRACE):
     import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
@@ -726,7 +743,7 @@ def main():
                          "unmatched assignments")
     ap.add_argument("--inherit_self_on_reacquire", action="store_true",
                     help="ablation only: restore the unsafe old ownership hold")
-    ap.add_argument("--new_hand_grace", type=int, default=0,
+    ap.add_argument("--new_hand_grace", type=int, default=NEW_HAND_GRACE,
                     help="do not cover a box this new (track age) when it touches a hand "
                          "already called the wearer's: the detector splitting one hand")
     ap.add_argument("--self_reconfirm", type=int, default=SELF_RECONFIRM_FRAMES,
