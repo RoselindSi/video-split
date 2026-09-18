@@ -30,6 +30,8 @@ def read(path):
     for r in rows:
         r["frame"], r["own"] = int(r["frame"]), int(r["own"])
         r["covered"], r["oth_px"] = float(r["covered"]), int(r["oth_px"])
+        for c in ("x0", "y0", "x1", "y1"):
+            r[c] = float(r[c])
     return rows
 
 
@@ -82,7 +84,15 @@ def compare(paths, thr=0.15, dump=None, gold_paths=(), rec=None):
                   f"{len(hit)} / {len(g)} 手帧（{len(hit) / max(1, len(g)):.2%}），"
                   f"{len(frames)} 帧、{runs if frames else 0} 段"
                   f"（对上 gold 的手帧 {n}）")
-            for r in hit[:10]:
+            # The wearer's hands are what the downstream model is meant to
+            # learn from, so ANY damage to those pixels counts, not only the
+            # frames a viewer would call blurred.
+            any_hit = [r for r in g if r["covered"] > 0.01]
+            px = sum(r["covered"] * (r["x1"] - r["x0"]) * (r["y1"] - r["y0"]) for r in g)
+            tot = sum((r["x1"] - r["x0"]) * (r["y1"] - r["y0"]) for r in g)
+            print(f"    任何破坏（盖住 >1%）：{len(any_hit)} 手帧（{len(any_hit) / max(1, len(g)):.2%}）；"
+                  f"主人手像素被破坏 {px / max(1, tot):.3%}")
+            for r in hit[:6]:
                 print(f"    frame {r['frame']} tid {r['tid']}  own={r['own']} "
                       f"p={r['p']}  盖住 {r['covered']:.0%}")
         frames = sorted({r["frame"] for r in rows})
@@ -136,6 +146,8 @@ def main():
     ap.add_argument("--no_cap", action="store_true")
     ap.add_argument("--inherit_self_on_reacquire", action="store_true",
                     help="ablation: do not reset a reacquired self track (the flicker's source)")
+    ap.add_argument("--new_hand_grace", type=int, default=0,
+                    help="spare a box this new when it touches a hand already called self")
     ap.add_argument("--self_reconfirm", type=int, default=2,
                     help="frames a reacquired hand must support `self`; 2 is shipped, "
                          "1 judges the frame it returns on its own evidence")
@@ -180,7 +192,21 @@ def main():
             x0, y0 = max(0, x0), max(0, y0)
             x1, y1 = min(W, x1), min(H, y1)
             sub = diff[y0:y1, x0:x1]
-            rows.append({"frame": info["frame"], "box": i,
+            # The face masker is the other thing that changes these pixels, and
+            # on one recording it was the ONLY thing: a false face box large
+            # enough to swallow the frame is not vetoed, because the veto
+            # measures how much of the FACE a hand covers, not how much of the
+            # hand the face covers.
+            fa = 0.0
+            for f in info.get("faces") or []:
+                ix = max(0, min(x1, f[2]) - max(x0, f[0]))
+                iy = max(0, min(y1, f[3]) - max(y0, f[1]))
+                fa = max(fa, ix * iy / max(1, (x1 - x0) * (y1 - y0)))
+            big = max([(f[2] - f[0]) * (f[3] - f[1]) / float(W * H)
+                       for f in info.get("faces") or []], default=0.0)
+            rows.append({"face_on_hand": round(fa, 4), "biggest_face": round(big, 4),
+                         "n_faces": len(info.get("faces") or []),
+                         "frame": info["frame"], "box": i,
                          "own": int(info["own"][i]), "p": info["p_owner"][i],
                          "covered": round(float(sub.mean()) if sub.size else 0.0, 4),
                          "x0": x0, "y0": y0, "x1": x1, "y1": y1,
@@ -194,7 +220,8 @@ def main():
         face_model=face_mask.MODEL, face_conf=face_mask.MIN_CONF,
         geom=geom_prior.load_model(a.geom), geom_w=geom_w, student=student, ctx=ctx,
         max_owner=None if a.no_cap else 2, panorama_mode="baseline", frame_hook=hook,
-        safe_reacquire=not a.inherit_self_on_reacquire, self_reconfirm=a.self_reconfirm)
+        safe_reacquire=not a.inherit_self_on_reacquire, self_reconfirm=a.self_reconfirm,
+        new_hand_grace=a.new_hand_grace)
     with open(a.csv, "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(rows[0]))
         w.writeheader()

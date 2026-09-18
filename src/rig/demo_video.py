@@ -48,7 +48,7 @@ def _bar(width, text, height=BAR_H, bg=(28, 28, 30), fg=(235, 235, 235)):
     return b
 
 
-def annotate(rgb, dets, own_flags, m_oth=None):
+def annotate(rgb, dets, own_flags, m_oth=None, kept=()):
     """Top panel: the decision, drawn. -> BGR image
 
     The region bound for suppression is tinted here rather than only blurred
@@ -70,7 +70,13 @@ def annotate(rgb, dets, own_flags, m_oth=None):
         lab = f"{'self' if is_own else 'other'} own {p:.2f}"
         if det_conf is not None:
             lab += f" det {float(det_conf):.2f}"
-        if bool(d.get("rule_owner")) != bool(is_own):
+        if any(d is k for k in kept):
+            # Called foreign and NOT covered, because it is a new box against a
+            # hand already called the wearer's. Named on the panel: a spared box
+            # and a box nobody proposed look identical in the output otherwise.
+            lab += "  kept (new, beside self)"
+            col = AMBER
+        elif bool(d.get("rule_owner")) != bool(is_own):
             # The only frames worth arguing about. Marked so a viewer can
             # find them instead of taking the agreement on trust.
             lab += "  != rule"
@@ -162,6 +168,16 @@ def _report_trace(rows, path):
     return drops
 
 
+NEAR_SELF = 0.25
+
+
+def _touches(a, b, slack):
+    """True when box `a` overlaps `b` or comes within `slack` pixels of it."""
+    dx = max(a[0], b[0]) - min(a[2], b[2])
+    dy = max(a[1], b[1]) - min(a[3], b[3])
+    return max(dx, dy) <= slack
+
+
 def _to_h264(path, verbose=True):
     """Re-encode the finished file in place, if ffmpeg is here. -> True if done."""
     import shutil
@@ -189,7 +205,8 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         predict_motion=True, safe_association=True, safe_reacquire=True,
         min_conf=None, bridge=None, panorama_mode="baseline",
         panorama_fit_frames=0, panorama_depth=True, panorama_flow=False,
-        ctx=None, frame_hook=None, self_reconfirm=SELF_RECONFIRM_FRAMES):
+        ctx=None, frame_hook=None, self_reconfirm=SELF_RECONFIRM_FRAMES,
+        new_hand_grace=0):
     import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
@@ -249,7 +266,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     # nothing has ever recorded. They decide nothing.
     runs = LowConfRuns()
     frag = Fragmentation()
-    n_dup = n_dropped = n_demoted = 0
+    n_dup = n_dropped = n_demoted = n_kept_new = 0
     vcam = VirtualWideCamera.from_rig(rig)
     panorama = None
     panorama_fit = {}
@@ -366,6 +383,35 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         n_demoted += len(demoted)
         own = [d for d, (o, _) in zip(dets, flags) if o]
         oth = [d for d, (o, _) in zip(dets, flags) if not o]
+        # A SECOND BOX ON A HAND ALREADY FOUND. The detector sometimes puts one
+        # box on a palm and another on the fingers above it. The tracker cannot
+        # give the extra box the hand's id -- the hand has it -- so it starts a
+        # track of its own with no history, and `OwnHold` has one frame's
+        # probability to judge it by. On the clip that prompted this it read
+        # 0.32 and covered the wearer's own fingers while the palm below stayed
+        # sharp. Sparing a box that is BOTH new AND touching a hand already
+        # called the wearer's is measured over 145 recordings as 144 own
+        # hand-frames kept against 17 frames of a colleague's hand exposed; the
+        # same rule without the adjacency test is 70 against 91, which is why
+        # it is not "new tracks are not covered".
+        kept_new = []
+        if new_hand_grace and own:
+            ob = [d["box"] for d in own]
+            spare = []
+            for d, tid in zip(dets, tids):
+                if tid is None or any(d is q for q in own):
+                    continue
+                age = tracker.tracks.get(tid, {}).get("age", 99)
+                if age > new_hand_grace:
+                    continue
+                b = [float(v) for v in d["box"]]
+                side = max(b[2] - b[0], b[3] - b[1])
+                if any(_touches(b, [float(v) for v in q], NEAR_SELF * side) for q in ob):
+                    spare.append(d)
+            if spare:
+                oth = [d for d in oth if not any(d is s for s in spare)]
+                kept_new = spare
+                n_kept_new += len(spare)
         # A track the detector lost for a few frames is still a hand. Its box
         # is advanced by the track velocity, then bounded by the prediction
         # horizon. Covering it is the difference between a cover that survives
@@ -471,7 +517,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
                 print(f"    [{k+1}/{n}] {el:.0f}s, "
                       f"{el/(k+1)*(n-k-1):.0f}s left", flush=True)
             continue
-        panel = compose(rgb, annotate(rgb, dets, flags, m_oth), sup,
+        panel = compose(rgb, annotate(rgb, dets, flags, m_oth, kept=kept_new), sup,
                         len(own), len(oth), start + k * stride, dis,
                         float((alpha > 0.5).mean()), cfg=cfg)
         if writer is None:
@@ -489,6 +535,11 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
                   f"{el/(k+1)*(n-k-1):.0f}s left", flush=True)
     rd.close()
     if verbose:
+        if new_hand_grace:
+            print(f"\n  NEW BOXES SPARED beside a hand already called the wearer's: "
+                  f"{n_kept_new} hand-frames (age <= {new_hand_grace}, gap <= "
+                  f"{NEAR_SELF:.2f} of the box). These are the detector splitting "
+                  f"one hand in two.")
         fr = flips.report()
         print(f"\n  TRACK-LEVEL FLIPS: {fr['flips']} over {fr['tracks']} "
               f"tracks and {fr['hand_frames']} hand-frames "
@@ -665,6 +716,9 @@ def main():
                          "unmatched assignments")
     ap.add_argument("--inherit_self_on_reacquire", action="store_true",
                     help="ablation only: restore the unsafe old ownership hold")
+    ap.add_argument("--new_hand_grace", type=int, default=0,
+                    help="do not cover a box this new (track age) when it touches a hand "
+                         "already called the wearer's: the detector splitting one hand")
     ap.add_argument("--self_reconfirm", type=int, default=SELF_RECONFIRM_FRAMES,
                     help="frames a reacquired hand must support `self` before the "
                          "cover comes off it; 2 covers the frame it returns")
@@ -817,6 +871,7 @@ def main():
                      safe_association=not a.legacy_association,
                      safe_reacquire=not a.inherit_self_on_reacquire,
                      self_reconfirm=a.self_reconfirm,
+                     new_hand_grace=a.new_hand_grace,
                      bridge=a.bridge, min_conf=a.min_conf,
                      panorama_mode=a.panorama,
                      panorama_fit_frames=a.pano_fit_frames,
