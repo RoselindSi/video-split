@@ -22,6 +22,7 @@ the whole difference lives in the cases the rule gets wrong.
 from __future__ import annotations
 
 import os
+import sys
 
 import numpy as np
 
@@ -158,7 +159,7 @@ def _report_trace(rows, path):
 
 def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         dilate, sigma, fps, verbose=True, face_model=None, face_conf=None,
-        trace_path=None, geom=None, geom_w=0.5, max_owner=None,
+        trace_path=None, geom=None, geom_w=0.5, max_owner=None, student=None,
         max_prediction_age=MAX_PREDICTION_AGE,
         new_track_conf=NEW_TRACK_CONF,
         continue_conf=CONTINUE_TRACK_CONF,
@@ -303,7 +304,15 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
             n_face += len(faces)
             rgb, _ = face_mask.cover(clean, hold.update(faces,
                                                         shape=clean.shape))
-        if ctx is not None:
+        if student is not None:
+            # THE DISTILLED STUDENT. It reads the whole frame with the box and
+            # a zoom on it, so it gets the same `clean` frame the render
+            # produced and nothing is cut for it here. Its prior weight is 0
+            # and its cap is off (see `semhand.distil_ablate`); both are set
+            # where the run is configured, not here.
+            from src.semhand import student as student_mod
+            flags = student_mod.predict(student[0], student[1], clean, dets)
+        elif ctx is not None:
             # HAND + SURROUNDING WINDOW + GEOMETRY, one head. The hand-only
             # classifier recalls 0.644 of foreign hands on the frozen set and
             # this recalls 0.83 at equal or better precision, having trained
@@ -626,6 +635,10 @@ def main():
                     help="most hands one frame may call the wearer's")
     ap.add_argument("--no_cap", action="store_true",
                     help="lift the two-hand cap")
+    ap.add_argument("--clf_student", metavar="GLOB",
+                    help="the distilled student's checkpoints (a glob over its "
+                         "seeds). Reads the whole frame plus the hand's box; "
+                         "sets --geom_w 0 and --no_cap unless you pass them.")
     ap.add_argument("--clf_ctx",
                     help="an own_ctx checkpoint: ownership from the hand, "
                          "the surrounding window and the geometry together. "
@@ -711,6 +724,22 @@ def main():
     geom = geom_prior.load_model(a.geom)
     if a.geom and geom is None:
         raise SystemExit(f"--geom {a.geom} not found")
+    student = None
+    if a.clf_student:
+        from src.semhand import student as student_mod
+        models, sdev = student_mod.load(a.clf_student)
+        if not models:
+            raise SystemExit(f"--clf_student {a.clf_student} matched no checkpoint")
+        student = (models, sdev)
+        # The prior and the cap were fitted for V1's classifier and measured
+        # to hurt this one; they go off unless the caller insisted.
+        argv = " ".join(sys.argv)
+        if "--geom_w" not in argv:
+            a.geom_w = 0.0
+        if "--max_owner" not in argv:
+            a.no_cap = True
+        print(f"  ownership by the distilled student ({len(models)} seeds)  "
+              f"<- geom_w {a.geom_w}, cap {'off' if a.no_cap else a.max_owner}")
     ctx_model = ctx_arm = None
     if a.clf_ctx:
         from src.rig import own_ctx
@@ -742,7 +771,7 @@ def main():
                      YOLO(a.weights), cnn, device, a.dilate, a.sigma, a.fps,
                      face_model=None if a.no_faces else a.face_model,
                      face_conf=a.face_conf, trace_path=a.trace,
-                     geom=geom, geom_w=a.geom_w,
+                     geom=geom, geom_w=a.geom_w, student=student,
                      max_owner=None if a.no_cap else a.max_owner,
                      max_prediction_age=a.max_prediction_age,
                      new_track_conf=a.new_track_conf,
