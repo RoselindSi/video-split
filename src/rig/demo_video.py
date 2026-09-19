@@ -223,7 +223,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         min_conf=None, bridge=None, panorama_mode="baseline",
         panorama_fit_frames=0, panorama_depth=True, panorama_flow=False,
         ctx=None, frame_hook=None, self_reconfirm=SELF_RECONFIRM_FRAMES,
-        new_hand_grace=NEW_HAND_GRACE):
+        new_hand_grace=NEW_HAND_GRACE, max_face_frac=None):
     import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
@@ -262,7 +262,8 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
 
     fdet = face_mask.load_detector(face_model, face_conf) if face_model \
         else None
-    hold = face_mask.Hold()
+    hold = face_mask.Hold(max_frac=max_face_frac
+                          if max_face_frac is not None else face_mask.MAX_FACE_FRAC)
     # Without a fitted prior this falls back to the single exit-height rule,
     # which is what every render before this one used.
     tracker = Tracker(
@@ -743,6 +744,10 @@ def main():
                          "unmatched assignments")
     ap.add_argument("--inherit_self_on_reacquire", action="store_true",
                     help="ablation only: restore the unsafe old ownership hold")
+    ap.add_argument("--max_face_frac", type=float, default=None,
+                    help="refuse a face box wider than this fraction of the frame. 0.18 "
+                         "refuses all 25 boxes inspected over ten recordings, every one a "
+                         "false positive, and would also refuse a face 37.5% wide")
     ap.add_argument("--new_hand_grace", type=int, default=NEW_HAND_GRACE,
                     help="do not cover a box this new (track age) when it touches a hand "
                          "already called the wearer's: the detector splitting one hand")
@@ -899,6 +904,7 @@ def main():
                      safe_reacquire=not a.inherit_self_on_reacquire,
                      self_reconfirm=a.self_reconfirm,
                      new_hand_grace=a.new_hand_grace,
+                     max_face_frac=a.max_face_frac,
                      bridge=a.bridge, min_conf=a.min_conf,
                      panorama_mode=a.panorama,
                      panorama_fit_frames=a.pano_fit_frames,

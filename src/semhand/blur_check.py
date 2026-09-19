@@ -151,6 +151,11 @@ def main():
     ap.add_argument("--self_reconfirm", type=int, default=2,
                     help="frames a reacquired hand must support `self`; 2 is shipped, "
                          "1 judges the frame it returns on its own evidence")
+    ap.add_argument("--max_face_frac", type=float, default=None)
+    ap.add_argument("--new_track_conf", type=float, default=None,
+                    help="score a detection needs to START a track; 0.60 ships, and 56.6% of a "
+                         "colleague's hands never reach it")
+    ap.add_argument("--continue_conf", type=float, default=None)
     ap.add_argument("--weights", default="/shared/models/HaWoR/weights/external/detector.pt")
     a = ap.parse_args()
     if a.compare:
@@ -222,7 +227,9 @@ def main():
         geom=geom_prior.load_model(a.geom), geom_w=geom_w, student=student, ctx=ctx,
         max_owner=None if a.no_cap else 2, panorama_mode="baseline", frame_hook=hook,
         safe_reacquire=not a.inherit_self_on_reacquire, self_reconfirm=a.self_reconfirm,
-        new_hand_grace=a.new_hand_grace)
+        new_hand_grace=a.new_hand_grace, max_face_frac=a.max_face_frac,
+        **({} if a.new_track_conf is None else {"new_track_conf": a.new_track_conf}),
+        **({} if a.continue_conf is None else {"continue_conf": a.continue_conf}))
     with open(a.csv, "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(rows[0]))
         w.writeheader()
