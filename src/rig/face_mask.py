@@ -128,9 +128,26 @@ HOLD_FRAMES = 12
 # face in the recording, is the widest box in the frame.
 #
 # A rule for "too big to be a face" cannot be learned from a sample with no
-# big faces in it. `Hold` still takes `max_frac`, so a caller with a measured
-# value can pass one; the default asserts nothing.
-MAX_FACE_FRAC = None
+# big faces in it -- so it was learned from a sample that has both, by looking.
+# Over ten recordings, 5,404 proposals: every box that would actually be
+# mosaicked (score >= 0.35, surviving the hand veto) and covers 5% or more of
+# the frame's AREA was cropped and inspected, all 25 of them. All 25 are false:
+# a stove with pots, a tray of food, a workbench of black parts, a patch of
+# skin. Not one is a face.
+#
+# THIS NUMBER IS A WIDTH, not an area -- `Hold.update` compares it against the
+# frame's width -- and the two populations separate on that axis as cleanly as
+# on area. The boxes that get mosaicked and are not those 25 run a median 3.7%
+# of the frame's width and a p99 of 13.2%; the 25 start at 18.4% and run a
+# median 61.6%. At 0.18 all 25 are refused and 2 of the other 2,866 go with
+# them, both wide and flat rather than face-shaped.
+#
+# WHAT THIS STILL CANNOT SAY is that a real face never gets this wide. Those
+# ten recordings contain no face close enough to the camera to fill 288 pixels,
+# which is exactly the case 0.055 was withdrawn for. A face that wide in a
+# future recording goes uncovered, and the evidence for the number would have
+# to be re-made on a corpus that has one.
+MAX_FACE_FRAC = 0.18
 
 # The detector bounds a face from brow to chin. Ears, hairline and jaw are
 # outside that and carry identity, so the box is grown before it is used.
