@@ -17,6 +17,14 @@ model.
 This writes that pile as a labelling package in the layout `label_tool`
 serves: the crop, the whole frame with the box drawn on it, and one row per
 box. Labelling it closes the only gap left in the comparison.
+
+A HEAD DETECTOR HAS TO BE MATCHED BY CONTAINMENT, NOT BY IoU. A head box
+holds the face box inside it and is roughly twice its area, so their IoU sits
+near 0.3 even when they name the same person, and an IoU test would file
+hundreds of heads that cover an already-judged face as unknown -- asking for
+labels nobody needs and inflating the pile the decision rests on. `--match
+covers` scores a proposal by how much of the known box it contains, which is
+the same rule the comparison was run under.
 """
 from __future__ import annotations
 
@@ -34,13 +42,25 @@ def main():
                     help="packages whose labelled boxes define what is already known")
     ap.add_argument("--thresh", type=float, default=0.35,
                     help="the working point being argued about, not the scan floor")
-    ap.add_argument("--match_iou", type=float, default=0.3)
+    ap.add_argument("--match_iou", type=float, default=0.3,
+                    help="the bar a proposal clears to count as already judged")
+    ap.add_argument("--match", choices=("iou", "covers"), default="iou",
+                    help="covers: fraction of the KNOWN box the proposal "
+                         "contains. Use it for a head detector")
     ap.add_argument("--crop_px", type=int, default=192)
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
     import cv2
     from src.rig import face_mask
     from src.rig.face_compare import box_of, iou, labelled
+
+    def covers(prop, known):
+        x0, y0 = max(prop[0], known[0]), max(prop[1], known[1])
+        x1, y1 = min(prop[2], known[2]), min(prop[3], known[3])
+        inter = max(0.0, x1 - x0) * max(0.0, y1 - y0)
+        return inter / max(1.0, (known[2] - known[0]) * (known[3] - known[1]))
+
+    match = covers if a.match == "covers" else iou
 
     pkgs = a.pkg or sorted(glob.glob("/workspace/facepkg_*"))
     frames = labelled(pkgs)
@@ -66,7 +86,7 @@ def main():
         rec = os.path.basename(ctx)[:-4].rsplit("_f", 1)[0]
         j = 0
         for p in face_mask.detect_faces(det, img):
-            if any(iou(g, list(p[:4])) >= a.match_iou for g in known):
+            if any(match(list(p[:4]), g) >= a.match_iou for g in known):
                 continue                       # somebody has judged this one
             x0, y0, x1, y1 = (int(v) for v in p[:4])
             if x1 - x0 < 4 or y1 - y0 < 4:

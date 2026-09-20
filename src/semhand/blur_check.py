@@ -146,6 +146,8 @@ def main():
     ap.add_argument("--no_cap", action="store_true")
     ap.add_argument("--inherit_self_on_reacquire", action="store_true",
                     help="ablation: do not reset a reacquired self track (the flicker's source)")
+    ap.add_argument("--grace_log", help="per-event provenance of every box "
+                                        "the new-hand grace spared, with its anchor")
     ap.add_argument("--new_hand_grace", type=int, default=0,
                     help="spare a box this new when it touches a hand already called self")
     ap.add_argument("--self_reconfirm", type=int, default=2,
@@ -228,6 +230,7 @@ def main():
         max_owner=None if a.no_cap else 2, panorama_mode="baseline", frame_hook=hook,
         safe_reacquire=not a.inherit_self_on_reacquire, self_reconfirm=a.self_reconfirm,
         new_hand_grace=a.new_hand_grace, max_face_frac=a.max_face_frac,
+        grace_log=a.grace_log,
         **({} if a.new_track_conf is None else {"new_track_conf": a.new_track_conf}),
         **({} if a.continue_conf is None else {"continue_conf": a.continue_conf}))
     with open(a.csv, "w", newline="") as fh:

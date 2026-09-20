@@ -223,7 +223,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         min_conf=None, bridge=None, panorama_mode="baseline",
         panorama_fit_frames=0, panorama_depth=True, panorama_flow=False,
         ctx=None, frame_hook=None, self_reconfirm=SELF_RECONFIRM_FRAMES,
-        new_hand_grace=NEW_HAND_GRACE, max_face_frac=None):
+        new_hand_grace=NEW_HAND_GRACE, max_face_frac=None, grace_log=None):
     import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
@@ -314,6 +314,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     mc, writer = {}, None
     n_predicted = 0
     trace = [] if trace_path else None
+    grace_rows = [] if grace_log else None
     n_dis = n_written = n_face = 0
     t0 = time.time()
     for k in range(n):
@@ -419,20 +420,45 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         # hand-frames kept against 17 frames of a colleague's hand exposed; the
         # same rule without the adjacency test is 70 against 91, which is why
         # it is not "new tracks are not covered".
+        # WHO THE ANCHOR WAS, not merely that there was one. The rule leaves a
+        # box uncovered because a hand BESIDE it was called the wearer's, so
+        # the exemption is worth exactly what that verdict is worth -- and 29
+        # audited tracks that are not hands at all (knees, rags, machine
+        # parts, blank floor) include several called the wearer's on every
+        # frame they lived. An anchor like that would hand out exemptions.
+        # Counting spared frames cannot tell the two apart, so each event is
+        # logged with BOTH track ids and the anchor can be sent to the same
+        # audit as the thing it exempted.
         kept_new = []
         if new_hand_grace and own:
-            ob = [d["box"] for d in own]
+            anchors = [(d, tid, p) for d, tid, (o, p) in zip(dets, tids, flags) if o]
             spare = []
-            for d, tid in zip(dets, tids):
-                if tid is None or any(d is q for q in own):
+            for d, tid, (o_, p_) in zip(dets, tids, flags):
+                if tid is None or o_:
                     continue
                 age = tracker.tracks.get(tid, {}).get("age", 99)
                 if age > new_hand_grace:
                     continue
                 b = [float(v) for v in d["box"]]
                 side = max(b[2] - b[0], b[3] - b[1])
-                if any(_touches(b, [float(v) for v in q], NEAR_SELF * side) for q in ob):
-                    spare.append(d)
+                hit = next((a for a in anchors
+                            if _touches(b, [float(v) for v in a[0]["box"]],
+                                        NEAR_SELF * side)), None)
+                if hit is None:
+                    continue
+                spare.append(d)
+                if grace_rows is not None:
+                    ad, atid, ap = hit
+                    ab = [float(v) for v in ad["box"]]
+                    grace_rows.append({
+                        "frame": start + k * stride, "tid": tid, "age": age,
+                        "p": round(float(p_), 4),
+                        "conf": round(float(d.get("score", d.get("conf", 0)) or 0), 4),
+                        "x0": int(b[0]), "y0": int(b[1]),
+                        "x1": int(b[2]), "y1": int(b[3]),
+                        "anchor_tid": atid, "anchor_p": round(float(ap), 4),
+                        "ax0": int(ab[0]), "ay0": int(ab[1]),
+                        "ax1": int(ab[2]), "ay1": int(ab[3])})
             if spare:
                 oth = [d for d in oth if not any(d is s for s in spare)]
                 kept_new = spare
@@ -613,6 +639,19 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
             w.writeheader()
             w.writerows(trace)
         _report_trace(trace, trace_path)
+    if grace_rows is not None:
+        import csv
+        with open(grace_log, "w", newline="") as f:
+            cols = ["frame", "tid", "age", "p", "conf", "x0", "y0", "x1", "y1",
+                    "anchor_tid", "anchor_p", "ax0", "ay0", "ax1", "ay1"]
+            w = csv.DictWriter(f, fieldnames=cols)
+            w.writeheader()
+            w.writerows(grace_rows)
+        if verbose:
+            anc = {r["anchor_tid"] for r in grace_rows}
+            print(f"\n  GRACE 放行 {len(grace_rows)} 帧，来自 "
+                  f"{len({r['tid'] for r in grace_rows})} 条被放行的轨迹，"
+                  f"锚点是 {len(anc)} 条轨迹 -> {grace_log}")
     # The flip report is computed either way; returning it lets a
     # caller that runs quietly still measure flicker, which is the
     # other end of every trade this pipeline makes against over-blur.
@@ -825,6 +864,11 @@ def main():
     ap.add_argument("--trace", help="write a per-frame CSV of every quantity "
                                     "between the label and the suppressed "
                                     "pixels, and attribute each dropout")
+    ap.add_argument("--grace_log", help="write one row per box the new-hand "
+                                        "grace left uncovered, WITH the track "
+                                        "that anchored the exemption. Counting "
+                                        "spared frames cannot say whether the "
+                                        "anchor was a hand at all")
     ap.add_argument("--self_test", action="store_true")
     a = ap.parse_args()
 
@@ -904,7 +948,7 @@ def main():
                      safe_reacquire=not a.inherit_self_on_reacquire,
                      self_reconfirm=a.self_reconfirm,
                      new_hand_grace=a.new_hand_grace,
-                     max_face_frac=a.max_face_frac,
+                     max_face_frac=a.max_face_frac, grace_log=a.grace_log,
                      bridge=a.bridge, min_conf=a.min_conf,
                      panorama_mode=a.panorama,
                      panorama_fit_frames=a.pano_fit_frames,
