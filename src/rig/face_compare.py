@@ -68,7 +68,12 @@ def labelled(pkgs):
             if not os.path.exists(ctx):
                 continue
             m = stem_re.match(r["stem"])
-            frame = (os.path.basename(d), m.group(1), m.group(2)) if m else (d, r["stem"], "")
+            # THE PACKAGE IS NOT PART OF THE FRAME'S IDENTITY. Keying on it
+            # too makes the same recording and frame, harvested into two
+            # packages, two frames: the detector runs twice on it, its
+            # proposals are collected twice, and a downstream package built
+            # from them writes both under one name and loses 162 of 901.
+            frame = (m.group(1), m.group(2)) if m else (r["stem"], "")
             ctx = frame_ctx.setdefault(frame, ctx)      # one image per frame
             key = (r["stem"], round(float(r["w_frac"]), 4), round(float(r["conf"]), 3))
             if key in seen:
