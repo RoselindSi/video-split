@@ -223,7 +223,8 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         min_conf=None, bridge=None, panorama_mode="baseline",
         panorama_fit_frames=0, panorama_depth=True, panorama_flow=False,
         ctx=None, frame_hook=None, self_reconfirm=SELF_RECONFIRM_FRAMES,
-        new_hand_grace=NEW_HAND_GRACE, max_face_frac=None, grace_log=None):
+        new_hand_grace=NEW_HAND_GRACE, max_face_frac=None, grace_log=None,
+        assoc_log=None):
     import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
@@ -315,6 +316,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     n_predicted = 0
     trace = [] if trace_path else None
     grace_rows = [] if grace_log else None
+    assoc_rows = [] if assoc_log else None
     n_dis = n_written = n_face = 0
     t0 = time.time()
     for k in range(n):
@@ -342,6 +344,16 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         raw_ids = tracker.update(raw_dets, rgb.shape,
                                  new_track_conf=new_track_conf,
                                  continue_conf=continue_conf)
+        if assoc_rows is not None:
+            for u in tracker.unmatched:
+                assoc_rows.append({
+                    "frame": start + k * stride, "tid": u["tid"],
+                    "lost": u["lost"], "why": u["why"],
+                    "conf": u.get("conf", ""), "iou": u.get("iou", ""),
+                    "cost": ("" if not np.isfinite(u.get("cost", np.inf))
+                             else round(float(u["cost"]), 4)),
+                    "stage": u.get("stage", ""),
+                    "taken_by": "" if u.get("taken_by") is None else u["taken_by"]})
         keep_i = [i for i, tid in enumerate(raw_ids) if tid is not None]
         # A detection with no id is not passed on: no box, no classification,
         # no cover. Measure the wait that creates before changing it.
@@ -639,6 +651,19 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
             w.writeheader()
             w.writerows(trace)
         _report_trace(trace, trace_path)
+    if assoc_rows is not None:
+        import csv
+        with open(assoc_log, "w", newline="") as f:
+            cols = ["frame", "tid", "lost", "why", "conf", "iou", "cost",
+                    "stage", "taken_by"]
+            w = csv.DictWriter(f, fieldnames=cols)
+            w.writeheader()
+            w.writerows(assoc_rows)
+        if verbose:
+            import collections as _c
+            why = _c.Counter(r["why"] for r in assoc_rows)
+            print(f"\n  活着却没拿到框的 {len(assoc_rows)} 轨迹帧，原因: "
+                  f"{dict(why.most_common())} -> {assoc_log}")
     if grace_rows is not None:
         import csv
         with open(grace_log, "w", newline="") as f:
@@ -864,6 +889,9 @@ def main():
     ap.add_argument("--trace", help="write a per-frame CSV of every quantity "
                                     "between the label and the suppressed "
                                     "pixels, and attribute each dropout")
+    ap.add_argument("--assoc_log", help="write one row per LIVE track that got "
+                                        "no detection, with the cheapest candidate "
+                                        "and the rule that refused it")
     ap.add_argument("--grace_log", help="write one row per box the new-hand "
                                         "grace left uncovered, WITH the track "
                                         "that anchored the exemption. Counting "
@@ -949,6 +977,7 @@ def main():
                      self_reconfirm=a.self_reconfirm,
                      new_hand_grace=a.new_hand_grace,
                      max_face_frac=a.max_face_frac, grace_log=a.grace_log,
+                     assoc_log=a.assoc_log,
                      bridge=a.bridge, min_conf=a.min_conf,
                      panorama_mode=a.panorama,
                      panorama_fit_frames=a.pano_fit_frames,

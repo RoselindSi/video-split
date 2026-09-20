@@ -460,6 +460,7 @@ class Tracker:
         self.low_matches = set()
         self.new_ids = set()
         self.provenance = []
+        self.unmatched = []
 
     def _predicted_boxes(self, shape):
         out = {}
@@ -606,6 +607,50 @@ class Tracker:
             tid = self._start(dets[det_i])
             ids[det_i] = tid
             self.provenance[det_i] = "new_high"
+
+        # WHY A LIVE TRACK WENT WITHOUT A BOX. 15 of the mined own-hand gaps
+        # have a detection sitting on the interpolated position at 0.27-0.57,
+        # above the 0.25 continuation floor, while the track was still within
+        # its lost budget -- so the score was never the reason and the failure
+        # is somewhere in the association. Which part cannot be read off the
+        # output: an unmatched track and a refused pair look the same
+        # afterwards. This records, per unmatched live track, the cheapest
+        # candidate and the rule that refused it, computed BEFORE the lost and
+        # age counters move so the cost is the one the assignment saw.
+        self.unmatched = []
+        for tid in live:
+            if tid in matched_tracks:
+                continue
+            best = None
+            for i, d in enumerate(dets):
+                conf = float(d.get("conf", 1.0))
+                if new_track_conf is not None and conf < continue_conf:
+                    continue
+                value = self._cost(tid, d, predicted[tid], shape)
+                if best is not None and not value < best["cost"]:
+                    continue
+                best = {"det": i, "conf": round(conf, 4),
+                        "cost": value,
+                        "iou": round(box_iou(predicted[tid], d["box"]), 3),
+                        "taken_by": ids[i],
+                        "stage": ("high" if new_track_conf is None
+                                  or conf >= new_track_conf else "low")}
+            if best is None:
+                why = "no_candidate"
+            elif not np.isfinite(best["cost"]):
+                why = "distance_gate"
+            elif (self.max_assoc_cost is not None
+                  and best["cost"] > self.max_assoc_cost):
+                why = "cost_gate"
+            elif best["taken_by"] is not None:
+                why = "taken_by_other_track"
+            elif (self.unmatched_cost is not None
+                  and best["cost"] > self.unmatched_cost):
+                why = "unmatched_cost_preferred"
+            else:
+                why = "unexplained"
+            self.unmatched.append(dict(best or {}, tid=tid, why=why,
+                                       lost=self.tracks[tid]["lost"]))
 
         for tid in live:
             if tid in matched_tracks:
