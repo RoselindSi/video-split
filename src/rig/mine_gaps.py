@@ -110,12 +110,27 @@ def main():
         from src.semhand.distil_eval import read_zone_gold
         labels = read_zone_gold(a.labels)
     tracks = own_tracks(dump, a.rec, labels)
+    # WHO ELSE IS STANDING THERE. A gap in one track's frames is not a gap in
+    # the picture when another track has taken the hand over: the tracker
+    # renames a hand more often than it loses one, and 16 of the first 175
+    # mined frames were that rename rather than a miss. Two things follow, and
+    # both need the other tracks' boxes at that frame.
+    others = collections.defaultdict(list)
+    for r in dump:
+        if r["rec"] == a.rec:
+            others[int(r["frame"])].append(
+                (str(r["tid"]), [float(r[c]) for c in ("x0", "y0", "x1", "y1")]))
     want = collections.defaultdict(list)          # frame -> [(tid, box)]
+    handoff = 0
     for tid, frames in tracks.items():
         for f, box in gaps_of(frames):
+            if any(t != tid and iou(box, b) >= 0.3 for t, b in others.get(f, ())):
+                handoff += 1                      # the hand is there, renamed
+                continue
             want[f].append((tid, box))
     print(f"{a.rec}: 自己的手轨迹 {len(tracks)} 条，断档帧 {len(want)} 帧、"
-          f"{sum(len(v) for v in want.values())} 只手")
+          f"{sum(len(v) for v in want.values())} 只手"
+          + (f"（另有 {handoff} 帧是同一只手换了 track id，不算断档）" if handoff else ""))
     if not want:
         return
 
@@ -152,10 +167,19 @@ def main():
             cv2.rectangle(vis, (x0, y0), (x1, y1), (0, 200, 255), 2)
             cv2.putText(vis, f"{float(d['conf']):.2f}", (x0, max(12, y0 - 4)),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 200, 255), 1, cv2.LINE_AA)
+        # A detection another track already owns is not evidence about this
+        # one. Without this, a colleague's hand standing next to the gap reads
+        # as "the detector proposed it at 0.79" and the frame is filed under a
+        # threshold problem it does not have.
+        taken = [b for t, b in others.get(f, ())
+                 if not any(t == tid for tid, _ in want[f])]
         for tid, box in want[f]:
             best, bc = 0.0, 0.0
             for d in props:
-                v = iou(box, [float(x) for x in d["box"]])
+                db = [float(x) for x in d["box"]]
+                if any(iou(db, tb) >= 0.5 for tb in taken):
+                    continue
+                v = iou(box, db)
                 if v > best:
                     best, bc = v, float(d["conf"])
             kind = "proposed" if best >= 0.3 else "missing"
