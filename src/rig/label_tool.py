@@ -40,7 +40,11 @@ import re
 import numpy as np
 
 STEM_RE = re.compile(r"^(.*?)f(\d{6})_h(\d+)$")
-LABELS = ("owner", "other", "skip")
+# THE MERGE MUST ACCEPT WHAT THE SHEET CAN EMIT. These were the only three
+# answers when the only question was ownership; a sheet built with a third
+# answer wrote `nothand` into its CSV and the merge dropped 91 of 400 rows
+# without saying so -- the count it printed was of what it had kept.
+LABELS = ("owner", "other", "nothand", "skip")
 
 
 def load_rows(pkg, csv_only=False, verbose=True):
@@ -238,12 +242,15 @@ def merge_csv(pkg, label_csv, verbose=True):
     The mode travels with the labels and is written into every row. A training
     sheet and a test sheet look identical once they are CSVs of stem,label,
     and a set that was ranked by the model cannot be used to measure it."""
-    got = {}
+    got, unknown = {}, {}
     mode = ""
     for r in csv.DictReader(open(label_csv, encoding="utf-8-sig")):
-        if r.get("label") in LABELS:
-            got[r["stem"]] = r["label"]
-            mode = r.get("mode", mode)
+        lab = (r.get("label") or "").strip()
+        mode = r.get("mode", mode) or mode
+        if lab in LABELS:
+            got[r["stem"]] = lab
+        elif lab:
+            unknown[lab] = unknown.get(lab, 0) + 1
     q = os.path.join(pkg, "hands.csv")
     rows = list(csv.DictReader(open(q, encoding="utf-8-sig"))) \
         if os.path.exists(q) else []
@@ -266,6 +273,9 @@ def merge_csv(pkg, label_csv, verbose=True):
         w.writeheader()
         for r in rows:
             w.writerow(r)
+    if unknown:
+        print(f"  !! {sum(unknown.values())} rows carry a label this build does "
+              f"not know: {unknown}. They are NOT merged.")
     n = {k: sum(1 for v in got.values() if v == k) for k in LABELS}
     if verbose:
         print(f"  merged {len(got)} labels into {q} "
