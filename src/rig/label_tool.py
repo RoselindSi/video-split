@@ -167,7 +167,7 @@ def _thumb(path, size=160, quality=80, by_width=False):
 
 
 def build_sheet(rows, out_path, mode, pkg, thumb=96, ctx_px=760, ctx_q=70,
-                verbose=True):
+                verbose=True, vocab=("owner", "other"), title=None):
     """Write the labelling sheet. -> number of crops in it.
 
     THE WHOLE FRAME IS THE PRIMARY IMAGE AND THE CROP IS THE INSET. The first
@@ -195,9 +195,18 @@ def build_sheet(rows, out_path, mode, pkg, thumb=96, ctx_px=760, ctx_q=70,
                             else round(float(r["p_other"]), 3)),
                       "img": _thumb(r["_crop"], thumb),
                       "ctx": c})
+    # THE WORDS ON THE SHEET ARE THE QUESTION BEING ASKED, and they were
+    # hard-coded for hands. A face package labelled through this tool stores
+    # `owner` and `other`, and the only way to find out that they meant `is a
+    # face` and `is not` was to open the crops and look -- which is how the
+    # first 1,085 face labels nearly went unread. The stored values stay as
+    # they are, so every merge and every reader keeps working; what changes is
+    # what the person labelling is asked.
     payload = json.dumps({"mode": mode, "pkg": os.path.basename(pkg),
-                          "items": items})
-    html = _HTML.replace("__PAYLOAD__", payload)
+                          "vocab": list(vocab), "items": items})
+    html = (_HTML.replace("__PAYLOAD__", payload)
+            .replace("__TITLE__", title or f"{vocab[0]} / {vocab[1]}")
+            .replace("__POS__", vocab[0]).replace("__NEG__", vocab[1]))
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(html)
     if verbose:
@@ -256,7 +265,7 @@ def merge_csv(pkg, label_csv, verbose=True):
 
 
 _HTML = """<!doctype html><meta charset="utf-8">
-<title>hand ownership</title>
+<title>__TITLE__</title>
 <style>
  body{font:13px system-ui;margin:0;background:#111;color:#eee;
       display:flex;flex-direction:column;height:100vh;overflow:hidden}
@@ -283,7 +292,7 @@ _HTML = """<!doctype html><meta charset="utf-8">
 <div id=bar>
  <span id=mode></span>
  <span id=prog></span>
- <span><b>1</b> owner &nbsp; <b>2</b> other &nbsp; <b>3</b> skip
+ <span><b>1</b> __POS__ &nbsp; <b>2</b> __NEG__ &nbsp; <b>3</b> skip
    &nbsp; <b>&larr; &rarr;</b> move &nbsp; <b>u</b> undo</span>
  <span style="color:#888">yellow box = this hand &nbsp;
    magenta line = wrist to where the forearm leaves the frame</span>
@@ -448,9 +457,13 @@ def main():
     b = sub.add_parser("build", help="write a labelling sheet")
     b.add_argument("--pkg", required=True)
     b.add_argument("--out", required=True)
-    b.add_argument("--mode", choices=("rank", "random"), required=True,
+    b.add_argument("--mode", choices=("rank", "random", "enriched"), required=True,
                    help="rank: order by p(other), for TRAINING data. "
-                        "random: unbiased, the only kind a TEST set may use.")
+                        "random: unbiased, the only kind a TEST set may use. "
+                        "enriched: random WITHIN a pool someone already filtered "
+                        "-- the face negatives are picked by size and score, and "
+                        "a rate computed on them would be the filter's, not the "
+                        "model's. It orders like random and stamps the truth.")
     b.add_argument("--model", default="/workspace/own_cnn.pt")
     b.add_argument("--limit", type=int, default=120,
                    help="hands per sheet. Each carries a full frame now, so "
@@ -463,6 +476,11 @@ def main():
                         "mode, seed and checkpoint.")
     b.add_argument("--per_recording", type=int, default=20)
     b.add_argument("--seed", type=int, default=0)
+    b.add_argument("--vocab", default="owner,other",
+                   help="the two words the sheet asks with, e.g. `是脸,不是脸`. "
+                        "The stored values are always owner/other, so nothing "
+                        "downstream changes; this is what the labeller reads.")
+    b.add_argument("--title", default=None)
     b.add_argument("--thumb", type=int, default=96)
     b.add_argument("--csv_only", action="store_true",
                    help="label only the hands the sweep's cap actually kept. "
@@ -505,7 +523,12 @@ def main():
                      limit=a.limit, seed=a.seed, offset=a.offset)
     if not sel:
         raise SystemExit("nothing left to label in this package")
-    build_sheet(sel, a.out, a.mode, a.pkg, thumb=a.thumb, ctx_px=a.ctx_px)
+    voc = tuple((a.vocab.split(",") + ["other"])[:2])
+    build_sheet(sel, a.out, a.mode, a.pkg, thumb=a.thumb, ctx_px=a.ctx_px,
+                vocab=voc, title=a.title)
+    if voc != ("owner", "other"):
+        print(f"  The sheet asks `{voc[0]}` / `{voc[1]}`; the CSV still says "
+              f"owner/other.\n  {voc[0]} -> owner, {voc[1]} -> other.")
     print("\n  Copy the sheet down, open it, label with 1/2/3, press "
           "`download CSV`,\n  copy that back up, and merge it with "
           f"`merge --pkg {a.pkg} --csv <file>`.")
@@ -513,6 +536,10 @@ def main():
         print("  This sheet is RANKED. It is training data. Measuring the "
               "model on crops\n  chosen because the model scored them high "
               "reports its own bias back.")
+    elif a.mode == "enriched":
+        print("  This sheet is ENRICHED: the pool was filtered before the draw, "
+              "so it is\n  training data too. A rate computed on it belongs to "
+              "the filter.")
     else:
         print("  This sheet is RANDOM, so it can carry a test set. Keep it "
               "in a package\n  of its own -- a ranked and a random sheet are "
