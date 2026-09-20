@@ -167,7 +167,7 @@ def _thumb(path, size=160, quality=80, by_width=False):
 
 
 def build_sheet(rows, out_path, mode, pkg, thumb=96, ctx_px=760, ctx_q=70,
-                verbose=True, vocab=("owner", "other"), title=None):
+                verbose=True, vocab=("owner", "other"), title=None, values=None):
     """Write the labelling sheet. -> number of crops in it.
 
     THE WHOLE FRAME IS THE PRIMARY IMAGE AND THE CROP IS THE INSET. The first
@@ -202,11 +202,22 @@ def build_sheet(rows, out_path, mode, pkg, thumb=96, ctx_px=760, ctx_q=70,
     # first 1,085 face labels nearly went unread. The stored values stay as
     # they are, so every merge and every reader keeps working; what changes is
     # what the person labelling is asked.
+    # THE NUMBER OF ANSWERS IS A PROPERTY OF THE QUESTION. Two plus skip was
+    # the hand question; "is this the wearer's hand" on a frame where the
+    # detector found nothing has three real answers, because a green box on
+    # SOMEONE ELSE'S hand and a green box on no hand at all are different
+    # facts about different stages -- the tracker and the interpolation.
+    vals = list(values or ["owner", "other", "skip"][:len(vocab)] + ["skip"])
+    if vals[-1] != "skip":
+        vals.append("skip")
+    words = list(vocab) + ["skip"] * (len(vals) - len(vocab))
+    keys = {str(i + 1): v for i, v in enumerate(vals)}
+    legend = " &nbsp; ".join(f"<b>{i + 1}</b> {w}" for i, w in enumerate(words))
     payload = json.dumps({"mode": mode, "pkg": os.path.basename(pkg),
-                          "vocab": list(vocab), "items": items})
+                          "vocab": words, "keys": keys, "items": items})
     html = (_HTML.replace("__PAYLOAD__", payload)
-            .replace("__TITLE__", title or f"{vocab[0]} / {vocab[1]}")
-            .replace("__POS__", vocab[0]).replace("__NEG__", vocab[1]))
+            .replace("__TITLE__", title or " / ".join(words[:-1]))
+            .replace("__KEYS__", legend))
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(html)
     if verbose:
@@ -259,8 +270,8 @@ def merge_csv(pkg, label_csv, verbose=True):
     if verbose:
         print(f"  merged {len(got)} labels into {q} "
               f"({added} rows were new)")
-        print(f"  owner {n['owner']}   other {n['other']}   "
-              f"skip {n['skip']}   mode={mode or 'unstamped'}")
+        print("  " + "   ".join(f"{k} {v}" for k, v in sorted(n.items()))
+              + f"   mode={mode or 'unstamped'}")
     return n
 
 
@@ -284,7 +295,7 @@ _HTML = """<!doctype html><meta charset="utf-8">
     cursor:pointer;background:#1a1a1a}
  .t img{width:100%;display:block;border-radius:1px}
  .owner{border-color:#2ea043} .other{border-color:#d9534f}
- .skip{border-color:#888;opacity:.4}
+ .nothand{border-color:#d9a13b} .skip{border-color:#888;opacity:.4}
  .cur{outline:3px solid #ffd33d;outline-offset:1px}
  button{font:13px system-ui;padding:5px 10px;cursor:pointer}
  b{color:#ffd33d} .warn{color:#d9534f}
@@ -292,7 +303,7 @@ _HTML = """<!doctype html><meta charset="utf-8">
 <div id=bar>
  <span id=mode></span>
  <span id=prog></span>
- <span><b>1</b> __POS__ &nbsp; <b>2</b> __NEG__ &nbsp; <b>3</b> skip
+ <span>__KEYS__
    &nbsp; <b>&larr; &rarr;</b> move &nbsp; <b>u</b> undo</span>
  <span style="color:#888">yellow box = this hand &nbsp;
    magenta line = wrist to where the forearm leaves the frame</span>
@@ -350,9 +361,8 @@ function set(v){
   draw();
 }
 document.onkeydown = e => {
-  if(e.key==="1") set("owner");
-  else if(e.key==="2") set("other");
-  else if(e.key==="3") set("skip");
+  const K = D.keys || {"1":"owner","2":"other","3":"skip"};
+  if(K[e.key]) set(K[e.key]);
   else if(e.key==="ArrowRight") { cur=Math.min(cur+1,D.items.length-1); draw(); }
   else if(e.key==="ArrowLeft") { cur=Math.max(cur-1,0); draw(); }
   else if(e.key==="u") { const h=hist.pop(); if(h){ if(h[1]===undefined)
@@ -480,6 +490,10 @@ def main():
                    help="the two words the sheet asks with, e.g. `是脸,不是脸`. "
                         "The stored values are always owner/other, so nothing "
                         "downstream changes; this is what the labeller reads.")
+    b.add_argument("--values", default=None,
+                   help="what each word is stored as, same order as --vocab. "
+                        "Defaults to owner,other. A third answer needs its own "
+                        "value or it merges into one of the first two.")
     b.add_argument("--title", default=None)
     b.add_argument("--thumb", type=int, default=96)
     b.add_argument("--csv_only", action="store_true",
@@ -523,9 +537,10 @@ def main():
                      limit=a.limit, seed=a.seed, offset=a.offset)
     if not sel:
         raise SystemExit("nothing left to label in this package")
-    voc = tuple((a.vocab.split(",") + ["other"])[:2])
+    voc = tuple(a.vocab.split(","))
+    vals = a.values.split(",") if a.values else None
     build_sheet(sel, a.out, a.mode, a.pkg, thumb=a.thumb, ctx_px=a.ctx_px,
-                vocab=voc, title=a.title)
+                vocab=voc, title=a.title, values=vals)
     if voc != ("owner", "other"):
         print(f"  The sheet asks `{voc[0]}` / `{voc[1]}`; the CSV still says "
               f"owner/other.\n  {voc[0]} -> owner, {voc[1]} -> other.")
