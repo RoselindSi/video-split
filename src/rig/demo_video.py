@@ -224,7 +224,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         panorama_fit_frames=0, panorama_depth=True, panorama_flow=False,
         ctx=None, frame_hook=None, self_reconfirm=SELF_RECONFIRM_FRAMES,
         new_hand_grace=NEW_HAND_GRACE, max_face_frac=None, grace_log=None,
-        assoc_log=None, veto_held=False):
+        assoc_log=None, veto_held=False, reacquire_edge=None):
     import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
@@ -272,7 +272,8 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         predict_motion=predict_motion,
         rich_association=safe_association,
         max_assoc_cost=MAX_ASSOC_COST if safe_association else None,
-        unmatched_cost=UNMATCHED_COST if safe_association else None)
+        unmatched_cost=UNMATCHED_COST if safe_association else None,
+        **({} if reacquire_edge is None else {"reacquire_edge": reacquire_edge}))
     # How many frames a REACQUIRED hand must support `self` before the cover
     # comes off it. The shipped 2 means the frame a dropped hand returns is
     # covered whatever the classifier says; 1 keeps the history reset and
@@ -914,6 +915,10 @@ def main():
     ap.add_argument("--trace", help="write a per-frame CSV of every quantity "
                                     "between the label and the suppressed "
                                     "pixels, and attribute each dropout")
+    ap.add_argument("--reacquire_edge", type=float, default=None,
+                    help="penalty for a forearm-exit label that changed while "
+                         "the track was lost. 1.50 ships; 0.40 is the value "
+                         "used when the track was never lost")
     ap.add_argument("--veto_held", action="store_true",
                     help="apply the hand veto to HELD face boxes too, not "
                          "only to this frame's proposals")
@@ -1006,6 +1011,7 @@ def main():
                      new_hand_grace=a.new_hand_grace,
                      max_face_frac=a.max_face_frac, grace_log=a.grace_log,
                      assoc_log=a.assoc_log, veto_held=a.veto_held,
+                     reacquire_edge=a.reacquire_edge,
                      bridge=a.bridge, min_conf=a.min_conf,
                      panorama_mode=a.panorama,
                      panorama_fit_frames=a.pano_fit_frames,

@@ -443,7 +443,8 @@ class Tracker:
     def __init__(self, gate_frac=GATE_FRAC, max_lost=MAX_LOST,
                  predict_motion=True, rich_association=True,
                  max_assoc_cost=MAX_ASSOC_COST,
-                 unmatched_cost=UNMATCHED_COST):
+                 unmatched_cost=UNMATCHED_COST,
+                 reacquire_edge=REACQUIRE_EDGE_MISMATCH):
         self.gate_frac = float(gate_frac)
         self.max_lost = int(max_lost)
         self.predict_motion = bool(predict_motion)
@@ -452,6 +453,11 @@ class Tracker:
                                else float(max_assoc_cost))
         self.unmatched_cost = (None if unmatched_cost is None
                                else float(unmatched_cost))
+        # Named rather than baked in, because it is the single term that
+        # decides 53 of the 54 refusals of a box that overlapped the
+        # prediction, and the experiment that answers whether it should be
+        # that large has to be able to vary it without editing a constant.
+        self.reacquire_edge = float(reacquire_edge)
         self.tracks = {}
         self._next = 0
         self.n_new = 0
@@ -472,7 +478,13 @@ class Tracker:
             out[tid] = _state_box(state, shape)
         return out
 
-    def _cost(self, tid, det, predicted_box, shape):
+    def _cost(self, tid, det, predicted_box, shape, terms=None):
+        """`terms`, if given, is filled with each addend by name.
+
+        A refused pair reports one number, and one number cannot say whether
+        the distance, the shape or a single categorical penalty was what
+        pushed it over the gate -- REACQUIRE_EDGE_MISMATCH alone is 1.50
+        against a gate of 1.60, so it can refuse a pair the geometry liked."""
         H, W = shape[:2]
         track = self.tracks[tid]
         uncertainty = 1.0 + 0.25 * min(track["lost"], 3)
@@ -483,27 +495,31 @@ class Tracker:
             return np.inf
         td = _diag(predicted_box)
         sc = abs(_diag(det["box"]) - td) / max(td, 1.0)
-        cost = (W_DIST * dist / max(gate, 1.0)
-                + W_IOU * (1.0 - box_iou(predicted_box, det["box"]))
-                + W_SCALE * min(sc, 2.0))
+        part = {"dist": W_DIST * dist / max(gate, 1.0),
+                "iou": W_IOU * (1.0 - box_iou(predicted_box, det["box"])),
+                "scale": W_SCALE * min(sc, 2.0)}
         if not self.rich_association:
-            return cost
+            if terms is not None:
+                terms.update(part)
+            return sum(part.values())
 
         old_pose, new_pose = _normalised_pose(track["det"]), \
             _normalised_pose(det)
         if old_pose is not None and new_pose is not None \
                 and old_pose.shape == new_pose.shape:
             pose = float(np.linalg.norm(old_pose - new_pose, axis=1).mean())
-            cost += W_POSE * min(pose, 2.0)
+            part["pose"] = W_POSE * min(pose, 2.0)
 
         old_edge, new_edge = track["det"].get("edge"), det.get("edge")
         if old_edge and new_edge and old_edge != new_edge:
-            cost += (REACQUIRE_EDGE_MISMATCH if track["lost"] > 0
-                     else EDGE_MISMATCH)
+            part["edge"] = (self.reacquire_edge if track["lost"] > 0
+                            else EDGE_MISMATCH)
         old_side, new_side = track["det"].get("side"), det.get("side")
         if old_side and new_side and old_side != new_side:
-            cost += SIDE_MISMATCH
-        return cost
+            part["side"] = SIDE_MISMATCH
+        if terms is not None:
+            terms.update(part)
+        return sum(part.values())
 
     def _associate(self, tids, det_indices, dets, predicted, shape):
         if not tids or not det_indices:
@@ -626,11 +642,13 @@ class Tracker:
                 conf = float(d.get("conf", 1.0))
                 if new_track_conf is not None and conf < continue_conf:
                     continue
-                value = self._cost(tid, d, predicted[tid], shape)
+                part = {}
+                value = self._cost(tid, d, predicted[tid], shape, terms=part)
                 if best is not None and not value < best["cost"]:
                     continue
                 best = {"det": i, "conf": round(conf, 4),
                         "cost": value,
+                        "terms": {k: round(v, 3) for k, v in part.items()},
                         "iou": round(box_iou(predicted[tid], d["box"]), 3),
                         "taken_by": ids[i],
                         "stage": ("high" if new_track_conf is None
