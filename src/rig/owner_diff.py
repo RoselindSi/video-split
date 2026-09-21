@@ -60,10 +60,15 @@ def main():
     ap.add_argument("--match", type=float, default=0.3)
     ap.add_argument("--weights",
                     default="/shared/models/HaWoR/weights/external/detector.pt")
+    ap.add_argument("--owner_detector", action="store_true",
+                    help="the weights name ownership themselves. Attributing a "
+                         "loss means asking THAT detector whether it saw the "
+                         "hand, so the re-detection has to use the same model "
+                         "the arm under audit used")
     ap.add_argument("--out", help="write a per-frame CSV of the attribution")
     a = ap.parse_args()
     from ultralytics import YOLO
-    from src.rig.hand_detect import detect
+    from src.rig.hand_detect import detect, owner_detect
     from src.rig.seam_fix import RawCameraReader
 
     jobs = {}
@@ -76,7 +81,9 @@ def main():
     B_own, _ = load(os.path.join(a.theirs, a.rec + ".csv"))
     frames = list(range(start, start + n))
     want = [f for f in frames if f not in A_own and f in B_own]
-    print("%s：Rolan 有 OWNER 而我们没有的帧 %d 个" % (a.rec, len(want)))
+    lost, kept = os.path.basename(a.ours.rstrip("/")), os.path.basename(a.theirs.rstrip("/"))
+    print("%s：%s 有 OWNER 而 %s 没有的帧 %d 个（归因对象 = %s）"
+          % (a.rec, kept, lost, len(want), lost))
     if not want:
         return
 
@@ -95,7 +102,8 @@ def main():
                 break
         if img is None:
             break
-        props = detect(model, img, min_conf=a.floor)
+        props = (owner_detect(model, img, min_conf=a.floor) if a.owner_detector
+                 else detect(model, img, min_conf=a.floor))
         for target in B_own[f]:
             best, bc = 0.0, 0.0
             for d in props:
@@ -107,7 +115,7 @@ def main():
             if best < a.match:
                 why = "检测器没看到"
             elif not mine and bc < a.ship_floor:
-                why = "分数低于 0.25 被门槛扔掉"
+                why = "分数低于续接门槛被扔掉"
             elif not mine:
                 why = "检测到了但关联丢掉"
             elif any(own for _, own, _ in mine):
@@ -120,7 +128,7 @@ def main():
                          "x0": int(target[0]), "y0": int(target[1]),
                          "x1": int(target[2]), "y1": int(target[3])})
     rd.close()
-    print("\n  %-28s %6s" % ("我们为什么丢了它", "帧次"))
+    print("\n  %-28s %6s" % ("%s 为什么丢了它" % lost, "帧次"))
     for k, v in tally.most_common():
         print("  %-28s %6d  (%.0f%%)" % (k, v, 100.0 * v / sum(tally.values())))
     if a.out and rows:
