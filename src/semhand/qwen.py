@@ -229,7 +229,14 @@ def content_for(arm, qid, items, descs, retrieval, cross=None):
 # ------------------------------------------------------------------ model
 
 class Qwen:
-    def __init__(self, path, tiny=False):
+    def __init__(self, path, tiny=False, answer_prefix=None, question=None):
+        # THE ASSERTION HAS TO CHECK THE PREFIX THAT WILL BE USED. It was
+        # checking the module's own, which says nothing about a caller asking
+        # a different question through the same class -- and the whole point
+        # of the check is that ` true` is still one token in THIS context.
+        prefix = ANSWER_PREFIX if answer_prefix is None else answer_prefix
+        quest = QUESTION if question is None else question
+        self.answer_prefix = prefix
         import torch
         os.environ.setdefault("FORCE_QWENVL_VIDEO_READER", "torchvision")
         from transformers import AutoConfig, AutoModelForImageTextToText, AutoProcessor
@@ -258,12 +265,12 @@ class Qwen:
         # THE ANSWER TOKENS, CHECKED IN CONTEXT. ` true` is one token on its
         # own; what matters is that it is still the next token after the
         # prefix once the chat template sits in front of it.
-        msgs = [{"role": "user", "content": [{"type": "text", "text": QUESTION}]}]
+        msgs = [{"role": "user", "content": [{"type": "text", "text": quest}]}]
         head = self.template(msgs)
         tok = self.proc.tokenizer
-        a = tok.encode(head + ANSWER_PREFIX, add_special_tokens=False)
+        a = tok.encode(head + prefix, add_special_tokens=False)
         for word, tid in ((" true", TRUE_ID), (" false", FALSE_ID)):
-            b = tok.encode(head + ANSWER_PREFIX + word + "}", add_special_tokens=False)
+            b = tok.encode(head + prefix + word + "}", add_special_tokens=False)
             assert b[:len(a)] == a and b[len(a)] == tid, (word, b[len(a) - 2:])
 
     def template(self, msgs):
@@ -287,7 +294,7 @@ class Qwen:
         return self.proc.batch_decode(out[:, x["input_ids"].shape[1]:], skip_special_tokens=True)
 
     def score(self, conv):
-        x = self.inputs([conv], suffix=ANSWER_PREFIX)
+        x = self.inputs([conv], suffix=self.answer_prefix)
         with self.torch.no_grad():
             try:
                 logits = self.model(**x, logits_to_keep=1).logits[0, -1].float()

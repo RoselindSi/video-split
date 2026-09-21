@@ -589,8 +589,14 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
             try:
                 frame_hook(k, clean, sup, {
                     "frame": start + k * stride,
+                    # THE DETECTOR ALREADY SAYS WHICH HAND IT IS. Its two
+                    # classes are `left` and `right`, the tracker has been
+                    # charging SIDE_MISMATCH on them all along, and nothing
+                    # downstream recorded it -- so the wearer's two hands were
+                    # indistinguishable in every measurement taken so far.
                     "dets": [{"box": [int(v) for v in d["box"]],
-                              "conf": float(d.get("conf", 1.0))}
+                              "conf": float(d.get("conf", 1.0)),
+                              "side": d.get("side")}
                              for d in dets],
                     "raw_dets": [{"box": [int(v) for v in d["box"]],
                                   "conf": float(d.get("conf", 1.0))}

@@ -253,6 +253,7 @@ def main():
                          "covered": round(float(sub.mean()) if sub.size else 0.0, 4),
                          "x0": x0, "y0": y0, "x1": x1, "y1": y1,
                          "conf": round(float(d["conf"]), 3),
+                         "side": d.get("side") or "",
                          "n_det": len(info["dets"]), "oth_px": info["oth_px"],
                          "veto_px": info["veto_px"]})
 
