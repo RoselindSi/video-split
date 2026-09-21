@@ -160,6 +160,7 @@ def main():
     ap.add_argument("--face_conf", type=float, default=None)
     ap.add_argument("--max_face_frac", type=float, default=None,
                     help="drop a face box wider than this fraction of the frame")
+    ap.add_argument("--reacquire_log", help="one row per reacquisition")
     ap.add_argument("--reacquire_edge", type=float, default=None,
                     help="1.50 ships; 0.40 is the never-lost value")
     ap.add_argument("--veto_held", action="store_true",
@@ -253,7 +254,7 @@ def main():
         safe_reacquire=not a.inherit_self_on_reacquire, self_reconfirm=a.self_reconfirm,
         new_hand_grace=a.new_hand_grace, max_face_frac=a.max_face_frac,
         grace_log=a.grace_log, assoc_log=a.assoc_log, veto_held=a.veto_held,
-        reacquire_edge=a.reacquire_edge,
+        reacquire_edge=a.reacquire_edge, reacquire_log=a.reacquire_log,
         **({} if a.new_track_conf is None else {"new_track_conf": a.new_track_conf}),
         **({} if a.continue_conf is None else {"continue_conf": a.continue_conf}))
     with open(a.csv, "w", newline="") as fh:

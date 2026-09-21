@@ -467,6 +467,7 @@ class Tracker:
         self.new_ids = set()
         self.provenance = []
         self.unmatched = []
+        self.reacquire_events = []
 
     def _predicted_boxes(self, shape):
         out = {}
@@ -549,6 +550,7 @@ class Tracker:
         state = _box_state(det["box"])
         self.tracks[tid] = {
             "box": np.asarray(det["box"], dtype=int),
+            "last_obs": np.asarray(det["box"], dtype=int),
             "det": dict(det), "state": state,
             "velocity": np.zeros(4, float), "lost": 0, "age": 1,
         }
@@ -557,9 +559,22 @@ class Tracker:
         self.new_ids.add(tid)
         return tid
 
-    def _match(self, tid, det):
+    def _match(self, tid, det, cost=None, terms=None):
         track = self.tracks[tid]
         was_lost = track["lost"] > 0
+        if was_lost:
+            # THE BOX THE HAND WAS LAST SEEN IN, not the one prediction moved
+            # it to. A reacquisition is the only decision the reacquire
+            # penalty changes, so it is the only place the trade between
+            # fragmentation and identity theft can be judged -- and judging it
+            # needs the two ends of the gap side by side, which means keeping
+            # the last OBSERVED box rather than the coasted one.
+            self.reacquire_events.append({
+                "tid": tid, "lost": int(track["lost"]),
+                "from": [int(v) for v in track.get("last_obs", track["box"])],
+                "to": [int(v) for v in det["box"]],
+                "cost": None if cost is None else round(float(cost), 4),
+                "terms": dict(terms or {})})
         observed = _box_state(det["box"])
         measured = observed - track["state"]
         if track["age"] <= 1:
@@ -570,6 +585,7 @@ class Tracker:
         track.update({"box": np.asarray(det["box"], dtype=int),
                       "det": dict(det), "state": observed,
                       "velocity": velocity, "lost": 0,
+                      "last_obs": np.asarray(det["box"], dtype=int),
                       "age": track["age"] + 1})
         if was_lost:
             self.reacquired.add(tid)
@@ -585,6 +601,7 @@ class Tracker:
         """
         ids = [None] * len(dets)
         self.reacquired, self.low_matches, self.new_ids = set(), set(), set()
+        self.reacquire_events = []
         self.provenance = ["dropped" for _ in dets]
         live = sorted(self.tracks)
         predicted = self._predicted_boxes(shape)
@@ -609,7 +626,10 @@ class Tracker:
             remaining_dets = [i for i in candidates if i not in matched_dets]
             for tid, det_i in self._associate(remaining_tracks, remaining_dets,
                                                dets, predicted, shape):
-                self._match(tid, dets[det_i])
+                part = {}
+                value = self._cost(tid, dets[det_i], predicted[tid], shape,
+                                   terms=part)
+                self._match(tid, dets[det_i], cost=value, terms=part)
                 ids[det_i] = tid
                 self.provenance[det_i] = f"matched_{stage}"
                 matched_tracks.add(tid)

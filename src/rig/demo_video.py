@@ -224,7 +224,8 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         panorama_fit_frames=0, panorama_depth=True, panorama_flow=False,
         ctx=None, frame_hook=None, self_reconfirm=SELF_RECONFIRM_FRAMES,
         new_hand_grace=NEW_HAND_GRACE, max_face_frac=None, grace_log=None,
-        assoc_log=None, veto_held=False, reacquire_edge=None):
+        assoc_log=None, veto_held=False, reacquire_edge=None,
+        reacquire_log=None):
     import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
@@ -318,6 +319,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     trace = [] if trace_path else None
     grace_rows = [] if grace_log else None
     assoc_rows = [] if assoc_log else None
+    reacq_rows = [] if reacquire_log else None
     n_dis = n_written = n_face = 0
     t0 = time.time()
     for k in range(n):
@@ -346,6 +348,17 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         raw_ids = tracker.update(raw_dets, rgb.shape,
                                  new_track_conf=new_track_conf,
                                  continue_conf=continue_conf)
+        if reacq_rows is not None:
+            for e in tracker.reacquire_events:
+                reacq_rows.append({
+                    "frame": start + k * stride, "tid": e["tid"],
+                    "lost": e["lost"], "cost": e["cost"],
+                    "fx0": e["from"][0], "fy0": e["from"][1],
+                    "fx1": e["from"][2], "fy1": e["from"][3],
+                    "tx0": e["to"][0], "ty0": e["to"][1],
+                    "tx1": e["to"][2], "ty1": e["to"][3],
+                    "terms": ";".join(f"{a}={round(b, 3)}"
+                                      for a, b in sorted(e["terms"].items()))})
         if assoc_rows is not None:
             for u in tracker.unmatched:
                 assoc_rows.append({
@@ -677,6 +690,16 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
             w.writeheader()
             w.writerows(trace)
         _report_trace(trace, trace_path)
+    if reacq_rows is not None:
+        import csv
+        with open(reacquire_log, "w", newline="") as f:
+            cols = ["frame", "tid", "lost", "cost", "fx0", "fy0", "fx1", "fy1",
+                    "tx0", "ty0", "tx1", "ty1", "terms"]
+            w = csv.DictWriter(f, fieldnames=cols)
+            w.writeheader()
+            w.writerows(reacq_rows)
+        if verbose:
+            print(f"\n  重新接回 {len(reacq_rows)} 次 -> {reacquire_log}")
     if assoc_rows is not None:
         import csv
         with open(assoc_log, "w", newline="") as f:
@@ -915,6 +938,9 @@ def main():
     ap.add_argument("--trace", help="write a per-frame CSV of every quantity "
                                     "between the label and the suppressed "
                                     "pixels, and attribute each dropout")
+    ap.add_argument("--reacquire_log", help="one row per reacquisition, with "
+                                            "the box the hand was last seen "
+                                            "in and the box it was given")
     ap.add_argument("--reacquire_edge", type=float, default=None,
                     help="penalty for a forearm-exit label that changed while "
                          "the track was lost. 1.50 ships; 0.40 is the value "
@@ -1012,6 +1038,7 @@ def main():
                      max_face_frac=a.max_face_frac, grace_log=a.grace_log,
                      assoc_log=a.assoc_log, veto_held=a.veto_held,
                      reacquire_edge=a.reacquire_edge,
+                     reacquire_log=a.reacquire_log,
                      bridge=a.bridge, min_conf=a.min_conf,
                      panorama_mode=a.panorama,
                      panorama_fit_frames=a.pano_fit_frames,
