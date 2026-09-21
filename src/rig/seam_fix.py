@@ -581,6 +581,52 @@ class ClipReader:
             c.release()
 
 
+class RawCameraReader:
+    """One physical camera, read straight off its pair video. No rig, no render.
+
+    The wide render exists to put six fisheye views into one rectified
+    picture, and everything downstream is calibrated to that picture: the
+    tracker's gate is a fraction of ITS diagonal, the face size cap a fraction
+    of ITS width, the ownership student was distilled on ITS field of view.
+    Reading a camera raw changes all of those at once, which is exactly why
+    the switch has to be a separate input path rather than a flag buried in
+    the renderer -- so the two can be run against each other on the same
+    frames and the difference attributed.
+
+    `camN` lives in `camMN.mp4`, left half for the lower-numbered camera and
+    right for the higher, which `split_halves` established by rectifying both
+    ways and comparing disparity rather than by assuming.
+    """
+
+    def __init__(self, videos, camera, start):
+        import cv2
+        n = int(str(camera).replace("cam", ""))
+        pair = f"cam{n - 1}{n}" if n % 2 == 0 else f"cam{n}{n + 1}"
+        if pair not in videos:
+            raise SystemExit(f"{camera} 在 {pair}.mp4 里，但没给这个文件")
+        self.left = (n % 2 == 1)
+        self.cap = cv2.VideoCapture(videos[pair])
+        if not self.cap.isOpened():
+            raise SystemExit(f"cannot open {videos[pair]}")
+        self.cap.set(cv2.CAP_PROP_POS_FRAMES, int(start))
+        self.camera, self.pair = str(camera), pair
+
+    def next(self, skip=0):
+        """-> the camera's own frame, or None at end of file."""
+        from src.rig.render_wide import split_halves
+        for _ in range(skip):
+            if not self.cap.grab():
+                return None
+        ok, img = self.cap.read()
+        if not ok:
+            return None
+        l, r = split_halves(img)
+        return l if self.left else r
+
+    def close(self):
+        self.cap.release()
+
+
 class Prefetch:
     """A ClipReader read on its own thread. -> same `next`/`close` interface.
 
@@ -628,7 +674,7 @@ class Prefetch:
                 self.q.put(e if isinstance(e, Exception)
                            else RuntimeError(str(e)))
                 return
-            if not src and first:
+            if src is None and first:
                 # Nothing at all on the very first read is a failure, not an
                 # empty clip: the caller asked for a frame that the reader was
                 # positioned on. Saying so beats a silent zero-frame video.
@@ -639,7 +685,7 @@ class Prefetch:
                 return
             first = False
             self.q.put(src)
-            if not src:
+            if src is None:
                 return
 
     def next(self, skip=0):
@@ -651,7 +697,7 @@ class Prefetch:
         if isinstance(got, Exception):
             self._ended = True
             raise got
-        if not got:
+        if got is None:
             self._ended = True
         return got
 

@@ -225,12 +225,12 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         ctx=None, frame_hook=None, self_reconfirm=SELF_RECONFIRM_FRAMES,
         new_hand_grace=NEW_HAND_GRACE, max_face_frac=None, grace_log=None,
         assoc_log=None, veto_held=False, reacquire_edge=None,
-        reacquire_log=None):
+        reacquire_log=None, camera=None):
     import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
     from src.rig.render_wide import render
-    from src.rig.seam_fix import ClipReader, Prefetch
+    from src.rig.seam_fix import ClipReader, Prefetch, RawCameraReader
     from src.rig.hand_detect import detect, masks_from, OwnHold
     from src.rig.hand_track import (Tracker, FlipCount, MAX_LOST,
                                     duplicate_pairs, LowConfRuns,
@@ -288,7 +288,14 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     runs = LowConfRuns()
     frag = Fragmentation()
     n_dup = n_dropped = n_demoted = n_kept_new = 0
-    vcam = VirtualWideCamera.from_rig(rig)
+    # ONE CAMERA, UNRENDERED, when a camera is named. The wide render is what
+    # every constant downstream was fitted to -- the association gate is a
+    # fraction of its diagonal, the face size cap a fraction of its width, the
+    # ownership student was distilled on its field of view -- so reading a
+    # camera raw is a DIFFERENT INPUT, not a different resolution. It gets its
+    # own reader rather than a flag inside the renderer, so the two can be run
+    # on the same frames and the difference attributed.
+    vcam = None if camera else VirtualWideCamera.from_rig(rig)
     panorama = None
     panorama_fit = {}
     if panorama_mode == "depth":
@@ -313,7 +320,11 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
             panorama_fit = panorama.fit(_samples())
     elif panorama_mode != "baseline":
         raise ValueError("panorama_mode must be 'baseline' or 'depth'")
-    rd = Prefetch(ClipReader(rig, videos, start), skip=max(0, stride - 1))
+    rd = Prefetch(RawCameraReader(videos, camera, start) if camera
+                  else ClipReader(rig, videos, start),
+                  skip=max(0, stride - 1))
+    if camera and verbose:
+        print(f"  输入：{camera} 原始帧，不做拼接渲染")
     mc, writer = {}, None
     n_predicted = 0
     trace = [] if trace_path else None
@@ -326,10 +337,13 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         # The stride is the prefetcher's now: it applies skip=0 to the first
         # frame and the stride thereafter, on its own thread.
         src = rd.next()
-        if not src:
-            break
+        if src is None:      # end of file. A frame is not falsy; an array has
+            break            # no truth value at all, and a dict could be empty
+
         pano_stats = {}
-        if panorama is not None:
+        if camera:
+            rgb = src                       # the camera's own frame, untouched
+        elif panorama is not None:
             rgb, _, pano_stats, _ = panorama.render(src)
         else:
             try:
@@ -956,6 +970,10 @@ def main():
     ap.add_argument("--trace", help="write a per-frame CSV of every quantity "
                                     "between the label and the suppressed "
                                     "pixels, and attribute each dropout")
+    ap.add_argument("--camera", help="read ONE camera's raw frames (e.g. cam3) "
+                                     "instead of the stitched wide render. "
+                                     "Every constant downstream was fitted to "
+                                     "the render, so this is a different input")
     ap.add_argument("--reacquire_log", help="one row per reacquisition, with "
                                             "the box the hand was last seen "
                                             "in and the box it was given")
@@ -1056,7 +1074,7 @@ def main():
                      max_face_frac=a.max_face_frac, grace_log=a.grace_log,
                      assoc_log=a.assoc_log, veto_held=a.veto_held,
                      reacquire_edge=a.reacquire_edge,
-                     reacquire_log=a.reacquire_log,
+                     reacquire_log=a.reacquire_log, camera=a.camera,
                      bridge=a.bridge, min_conf=a.min_conf,
                      panorama_mode=a.panorama,
                      panorama_fit_frames=a.pano_fit_frames,
