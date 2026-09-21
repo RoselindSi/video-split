@@ -225,7 +225,8 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         ctx=None, frame_hook=None, self_reconfirm=SELF_RECONFIRM_FRAMES,
         new_hand_grace=NEW_HAND_GRACE, max_face_frac=None, grace_log=None,
         assoc_log=None, veto_held=False, reacquire_edge=None,
-        reacquire_log=None, camera=None, owner_detector=None):
+        reacquire_log=None, camera=None, owner_detector=None,
+        gate_frac=None):
     import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
@@ -275,6 +276,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         rich_association=safe_association,
         max_assoc_cost=MAX_ASSOC_COST if safe_association else None,
         unmatched_cost=UNMATCHED_COST if safe_association else None,
+        **({} if gate_frac is None else {"gate_frac": gate_frac}),
         **({} if reacquire_edge is None else {"reacquire_edge": reacquire_edge}))
     # How many frames a REACQUIRED hand must support `self` before the cover
     # comes off it. The shipped 2 means the frame a dropped hand returns is
@@ -986,6 +988,12 @@ def main():
     ap.add_argument("--trace", help="write a per-frame CSV of every quantity "
                                     "between the label and the suppressed "
                                     "pixels, and attribute each dropout")
+    ap.add_argument("--gate_frac", type=float, default=None,
+                    help="how far a hand may move between frames, as a "
+                         "fraction of the frame diagonal. 0.15 was fitted to "
+                         "the wide render; measured on 7,028 real cam3 "
+                         "movements the p99 is 0.031 and the largest seen is "
+                         "0.088")
     ap.add_argument("--owner_detector", help="a detector whose classes are "
                                             "owner_hand/other_hand; replaces "
                                             "the hand detector AND the "
@@ -1095,7 +1103,7 @@ def main():
                      assoc_log=a.assoc_log, veto_held=a.veto_held,
                      reacquire_edge=a.reacquire_edge,
                      reacquire_log=a.reacquire_log, camera=a.camera,
-                     owner_detector=a.owner_detector,
+                     owner_detector=a.owner_detector, gate_frac=a.gate_frac,
                      bridge=a.bridge, min_conf=a.min_conf,
                      panorama_mode=a.panorama,
                      panorama_fit_frames=a.pano_fit_frames,
