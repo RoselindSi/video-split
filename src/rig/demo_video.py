@@ -224,7 +224,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         panorama_fit_frames=0, panorama_depth=True, panorama_flow=False,
         ctx=None, frame_hook=None, self_reconfirm=SELF_RECONFIRM_FRAMES,
         new_hand_grace=NEW_HAND_GRACE, max_face_frac=None, grace_log=None,
-        assoc_log=None):
+        assoc_log=None, veto_held=False):
     import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
@@ -340,6 +340,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         # face sits directly above a colleague's hands, so that is precisely
         # where the two would collide.
         clean = rgb
+        face_mask_px = None
         raw_dets = detect(model, clean, min_conf=continue_conf)
         raw_ids = tracker.update(raw_dets, rgb.shape,
                                  new_track_conf=new_track_conf,
@@ -353,7 +354,9 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
                     "cost": ("" if not np.isfinite(u.get("cost", np.inf))
                              else round(float(u["cost"]), 4)),
                     "stage": u.get("stage", ""),
-                    "taken_by": "" if u.get("taken_by") is None else u["taken_by"]})
+                    "taken_by": "" if u.get("taken_by") is None else u["taken_by"],
+                    "terms": ";".join(f"{k}={v}" for k, v in
+                                      sorted(u.get("terms", {}).items()))})
         keep_i = [i for i, tid in enumerate(raw_ids) if tid is not None]
         # A detection with no id is not passed on: no box, no classification,
         # no cover. Measure the wait that creates before changing it.
@@ -386,6 +389,20 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
             # which is how a face box was first mistaken for not being the
             # thing that destroyed the wearer's hand.
             faces_covered = hold.update(faces, shape=clean.shape)
+            if veto_held:
+                # THE HOLD OUTLIVES THE VETO. `split_on_hands` filters this
+                # frame's proposals, but a box already in the hold keeps its
+                # mosaic for HOLD_FRAMES whatever arrives underneath it, so a
+                # hand moving into a face box that was admitted while the
+                # bench was clear is mosaicked and nothing stops it. That is
+                # how one false box held a 59%-of-frame mosaic over the
+                # wearer's hand for 17 frames. Off by default: dropping a
+                # held box also uncovers a REAL face for as long as a hand
+                # passes in front of it, which is a privacy cost and has to be
+                # measured, not assumed.
+                faces_covered, _ = face_mask.split_on_hands(
+                    [tuple(f) + (1.0,) for f in faces_covered], raw_dets)
+                faces_covered = [tuple(f[:4]) for f in faces_covered]
             rgb, face_mask_px = face_mask.cover(clean, faces_covered)
         if student is not None:
             # THE DISTILLED STUDENT. It reads the whole frame with the box and
@@ -528,6 +545,14 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
                     # The boxes the mosaic actually went on, held ones included.
                     "faces_covered": [[int(v) for v in f[:4]] for f in faces_covered]
                                      if fdet is not None else [],
+                    # THE PIXELS, NOT THE BOXES. `cover` grows every box by
+                    # PAD of its own size before mosaicking, so a measurement
+                    # taken against the boxes misses the third of the mask
+                    # that lies outside them -- and on the worst run in the
+                    # corpus it reported a face mask as touching 0% of the
+                    # wearer's hand on five frames where that mask had in
+                    # fact destroyed between 67% and 99% of it.
+                    "face_px": face_mask_px,
                     # Proposed and then discarded by the hand veto. Without
                     # this a vetoed face looks exactly like a face the
                     # detector never found, and the two need opposite fixes.
@@ -655,7 +680,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         import csv
         with open(assoc_log, "w", newline="") as f:
             cols = ["frame", "tid", "lost", "why", "conf", "iou", "cost",
-                    "stage", "taken_by"]
+                    "stage", "taken_by", "terms"]
             w = csv.DictWriter(f, fieldnames=cols)
             w.writeheader()
             w.writerows(assoc_rows)
@@ -889,6 +914,9 @@ def main():
     ap.add_argument("--trace", help="write a per-frame CSV of every quantity "
                                     "between the label and the suppressed "
                                     "pixels, and attribute each dropout")
+    ap.add_argument("--veto_held", action="store_true",
+                    help="apply the hand veto to HELD face boxes too, not "
+                         "only to this frame's proposals")
     ap.add_argument("--assoc_log", help="write one row per LIVE track that got "
                                         "no detection, with the cheapest candidate "
                                         "and the rule that refused it")
@@ -977,7 +1005,7 @@ def main():
                      self_reconfirm=a.self_reconfirm,
                      new_hand_grace=a.new_hand_grace,
                      max_face_frac=a.max_face_frac, grace_log=a.grace_log,
-                     assoc_log=a.assoc_log,
+                     assoc_log=a.assoc_log, veto_held=a.veto_held,
                      bridge=a.bridge, min_conf=a.min_conf,
                      panorama_mode=a.panorama,
                      panorama_fit_frames=a.pano_fit_frames,

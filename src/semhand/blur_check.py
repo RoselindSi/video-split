@@ -155,7 +155,10 @@ def main():
     ap.add_argument("--self_reconfirm", type=int, default=2,
                     help="frames a reacquired hand must support `self`; 2 is shipped, "
                          "1 judges the frame it returns on its own evidence")
-    ap.add_argument("--max_face_frac", type=float, default=None)
+    ap.add_argument("--max_face_frac", type=float, default=None,
+                    help="drop a face box wider than this fraction of the frame")
+    ap.add_argument("--veto_held", action="store_true",
+                    help="apply the hand veto to held face boxes too")
     ap.add_argument("--new_track_conf", type=float, default=None,
                     help="score a detection needs to START a track; 0.60 ships, and 56.6% of a "
                          "colleague's hands never reach it")
@@ -206,11 +209,22 @@ def main():
             # enough to swallow the frame is not vetoed, because the veto
             # measures how much of the FACE a hand covers, not how much of the
             # hand the face covers.
-            fa = 0.0
-            for f in info.get("faces_covered") or info.get("faces") or []:
-                ix = max(0, min(x1, f[2]) - max(x0, f[0]))
-                iy = max(0, min(y1, f[3]) - max(y0, f[1]))
-                fa = max(fa, ix * iy / max(1, (x1 - x0) * (y1 - y0)))
+            # MEASURED ON THE MASK, NOT ON THE BOXES. `cover` grows each box
+            # by PAD of its own size, so the mosaic reaches a third further
+            # than the box in every direction. Against the boxes this read
+            # 0.00 on five frames of R0825_102941 where the mosaic had in fact
+            # destroyed 67-99% of the wearer's hand -- the measurement said
+            # the face masker was innocent of the exact damage it was doing.
+            fpx = info.get("face_px")
+            if fpx is not None:
+                fsub = fpx[y0:y1, x0:x1]
+                fa = float(fsub.mean()) if fsub.size else 0.0
+            else:
+                fa = 0.0
+                for f in info.get("faces_covered") or info.get("faces") or []:
+                    ix = max(0, min(x1, f[2]) - max(x0, f[0]))
+                    iy = max(0, min(y1, f[3]) - max(y0, f[1]))
+                    fa = max(fa, ix * iy / max(1, (x1 - x0) * (y1 - y0)))
             cov = info.get("faces_covered") or info.get("faces") or []
             big = max([(f[2] - f[0]) * (f[3] - f[1]) / float(W * H) for f in cov],
                       default=0.0)
@@ -232,7 +246,7 @@ def main():
         max_owner=None if a.no_cap else 2, panorama_mode="baseline", frame_hook=hook,
         safe_reacquire=not a.inherit_self_on_reacquire, self_reconfirm=a.self_reconfirm,
         new_hand_grace=a.new_hand_grace, max_face_frac=a.max_face_frac,
-        grace_log=a.grace_log, assoc_log=a.assoc_log,
+        grace_log=a.grace_log, assoc_log=a.assoc_log, veto_held=a.veto_held,
         **({} if a.new_track_conf is None else {"new_track_conf": a.new_track_conf}),
         **({} if a.continue_conf is None else {"continue_conf": a.continue_conf}))
     with open(a.csv, "w", newline="") as fh:
