@@ -44,7 +44,14 @@ STEM_RE = re.compile(r"^(.*?)f(\d{6})_h(\d+)$")
 # answers when the only question was ownership; a sheet built with a third
 # answer wrote `nothand` into its CSV and the merge dropped 91 of 400 rows
 # without saying so -- the count it printed was of what it had kept.
-LABELS = ("owner", "other", "nothand", "skip")
+#
+# `unsure` is here because a sheet asking whether two boxes hold the same
+# physical hand needs four real answers plus skip: same, different, not a
+# hand at all, and cannot tell. Folding "cannot tell" into any of the other
+# three would put a judgement nobody made into the numerator or the
+# denominator, and folding it into `skip` would lose the difference between
+# "I looked and could not say" and "I did not look".
+LABELS = ("owner", "other", "nothand", "unsure", "skip")
 
 
 def load_rows(pkg, csv_only=False, verbose=True):
