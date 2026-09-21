@@ -594,10 +594,15 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
                     # charging SIDE_MISMATCH on them all along, and nothing
                     # downstream recorded it -- so the wearer's two hands were
                     # indistinguishable in every measurement taken so far.
+                    # AND THE TRACK ID, without which a chain built by
+                    # overlap afterwards cannot be told from the tracker's own
+                    # identity: "the post-processing merged two hands" and
+                    # "the tracker swapped them" look the same in the output
+                    # and are repaired in different places.
                     "dets": [{"box": [int(v) for v in d["box"]],
                               "conf": float(d.get("conf", 1.0)),
-                              "side": d.get("side")}
-                             for d in dets],
+                              "side": d.get("side"), "tid": t}
+                             for d, t in zip(dets, tids)],
                     "raw_dets": [{"box": [int(v) for v in d["box"]],
                                   "conf": float(d.get("conf", 1.0))}
                                  for d in raw_dets],

@@ -254,6 +254,7 @@ def main():
                          "x0": x0, "y0": y0, "x1": x1, "y1": y1,
                          "conf": round(float(d["conf"]), 3),
                          "side": d.get("side") or "",
+                         "tid": "" if d.get("tid") is None else d["tid"],
                          "n_det": len(info["dets"]), "oth_px": info["oth_px"],
                          "veto_px": info["veto_px"]})
 
