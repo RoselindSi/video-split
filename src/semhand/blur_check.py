@@ -155,6 +155,9 @@ def main():
     ap.add_argument("--self_reconfirm", type=int, default=2,
                     help="frames a reacquired hand must support `self`; 2 is shipped, "
                          "1 judges the frame it returns on its own evidence")
+    ap.add_argument("--face_model", default=None,
+                    help="a different face/head detector; default is the shipped one")
+    ap.add_argument("--face_conf", type=float, default=None)
     ap.add_argument("--max_face_frac", type=float, default=None,
                     help="drop a face box wider than this fraction of the frame")
     ap.add_argument("--veto_held", action="store_true",
@@ -241,7 +244,8 @@ def main():
     n, dis, nf, _ = demo_video.run(
         rig, vids, a.out, a.start, a.n, a.stride, YOLO(a.weights),
         *own_cnn.load_model(None), 10, 14.0, a.fps,
-        face_model=face_mask.MODEL, face_conf=face_mask.MIN_CONF,
+        face_model=a.face_model or face_mask.MODEL,
+        face_conf=face_mask.MIN_CONF if a.face_conf is None else a.face_conf,
         geom=geom_prior.load_model(a.geom), geom_w=geom_w, student=student, ctx=ctx,
         max_owner=None if a.no_cap else 2, panorama_mode="baseline", frame_hook=hook,
         safe_reacquire=not a.inherit_self_on_reacquire, self_reconfirm=a.self_reconfirm,
