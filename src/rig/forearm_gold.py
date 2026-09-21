@@ -15,6 +15,19 @@ pixels outside that box.
 
 THE SAMPLE IS RANDOM over frames where an own hand was delivered. Picking
 frames near a large mask would measure the picking.
+
+AND THE VISIBILITY SPLIT IS PART OF THE QUESTION, not a separate sheet. A
+frame with no forearm in it answers "not blurred" and inflates the clean rate
+with frames that had nothing to blur, which is the same mistake as counting a
+hand that was out of shot as a hand the pipeline lost. So the three answers
+are visible-and-clean, visible-and-blurred, and not in shot, and only the
+first two form the denominator.
+
+WHAT THIS SAMPLE CANNOT SAY. It is drawn from frames where the pipeline DID
+deliver an own hand, so it estimates a conditional quantity: given that the
+hand came through, did the arm. Frames where the hand itself was lost are
+outside it, and a clean result here does not mean the arm is continuous
+through the recording.
 """
 from __future__ import annotations
 

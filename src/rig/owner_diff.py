@@ -128,9 +128,12 @@ def main():
                          "x0": int(target[0]), "y0": int(target[1]),
                          "x1": int(target[2]), "y1": int(target[3])})
     rd.close()
-    print("\n  %-28s %6s" % ("%s 为什么丢了它" % lost, "帧次"))
+    n_box = sum(tally.values())
+    print("\n  归因单位是『框次』不是『帧』：%d 帧里有 %d 个 OWNER 框"
+          % (len(want), n_box))
+    print("  %-28s %6s %7s" % ("%s 为什么丢了它" % lost, "框次", "占框次"))
     for k, v in tally.most_common():
-        print("  %-28s %6d  (%.0f%%)" % (k, v, 100.0 * v / sum(tally.values())))
+        print("  %-28s %6d %6.0f%%" % (k, v, 100.0 * v / n_box))
     if a.out and rows:
         with open(a.out, "w", newline="") as fh:
             w = csv.DictWriter(fh, fieldnames=list(rows[0]))
