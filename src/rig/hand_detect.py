@@ -244,6 +244,41 @@ MASK_MARGIN = 0.30
 MASK_MAX_SIDE = 192
 
 
+def owner_detect(model, rgb, imgsz=IMGSZ, min_conf=MIN_CONF):
+    """A detector that names ownership itself. -> the same dicts `detect` makes.
+
+    Rolan's seven models are ordinary YOLO detectors with two classes,
+    `owner_hand` and `other_hand`, so the verdict arrives with the box and the
+    whole chain behind it -- the distilled student, `OwnHold`'s smoothing,
+    `max_owner` -- has nothing left to decide. That is the point of trying
+    them: not a better classifier, one stage instead of four.
+
+    WHAT IS NOT THERE. No keypoints, so no `forearm_exit`, so no `edge` and no
+    `side`: the two categorical terms that between them carry up to 0.65 of
+    the tracker's 1.35 unmatched budget simply do not fire, and association
+    falls back on geometry alone. Whether that is a loss or a mercy is a
+    measurement, not a guess -- on the render those two terms were refusing
+    pairs the geometry liked.
+
+    `rule_owner` is set from the class as well, so a demo that draws "the rule
+    disagrees" does not report a disagreement with a rule that was never
+    consulted."""
+    res = model(rgb, imgsz=imgsz, conf=float(min_conf), verbose=False)[0]
+    out = []
+    if res.boxes is None or len(res.boxes) == 0:
+        return out
+    boxes = res.boxes.xyxy.cpu().numpy()
+    conf = res.boxes.conf.cpu().numpy()
+    cls = res.boxes.cls.cpu().numpy().astype(int)
+    for b, c, k in zip(boxes, conf, cls):
+        own = str(model.names.get(int(k), k)).startswith("owner")
+        out.append({"box": b.astype(int), "kp": None, "conf": float(c),
+                    "side": None, "edge": None, "exit": None,
+                    "rule_owner": own, "owner": own,
+                    "owner_p": float(c) if own else 1.0 - float(c)})
+    return out
+
+
 def masks_from(rgb, dets, pad=0.15, iters=3, max_side=MASK_MAX_SIDE):
     """GrabCut inside each detection's box. -> binary mask
 

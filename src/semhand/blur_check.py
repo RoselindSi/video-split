@@ -160,6 +160,8 @@ def main():
     ap.add_argument("--face_conf", type=float, default=None)
     ap.add_argument("--max_face_frac", type=float, default=None,
                     help="drop a face box wider than this fraction of the frame")
+    ap.add_argument("--owner_detector", help="detector whose classes are "
+                                             "owner_hand/other_hand")
     ap.add_argument("--camera", help="read one camera raw (e.g. cam3) instead "
                                     "of the stitched wide render")
     ap.add_argument("--reacquire_log", help="one row per reacquisition")
@@ -263,7 +265,7 @@ def main():
         new_hand_grace=a.new_hand_grace, max_face_frac=a.max_face_frac,
         grace_log=a.grace_log, assoc_log=a.assoc_log, veto_held=a.veto_held,
         reacquire_edge=a.reacquire_edge, reacquire_log=a.reacquire_log,
-        camera=a.camera,
+        camera=a.camera, owner_detector=a.owner_detector,
         **({} if a.new_track_conf is None else {"new_track_conf": a.new_track_conf}),
         **({} if a.continue_conf is None else {"continue_conf": a.continue_conf}))
     with open(a.csv, "w", newline="") as fh:

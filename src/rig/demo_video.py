@@ -225,13 +225,14 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         ctx=None, frame_hook=None, self_reconfirm=SELF_RECONFIRM_FRAMES,
         new_hand_grace=NEW_HAND_GRACE, max_face_frac=None, grace_log=None,
         assoc_log=None, veto_held=False, reacquire_edge=None,
-        reacquire_log=None, camera=None):
+        reacquire_log=None, camera=None, owner_detector=None):
     import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
     from src.rig.render_wide import render
     from src.rig.seam_fix import ClipReader, Prefetch, RawCameraReader
-    from src.rig.hand_detect import detect, masks_from, OwnHold
+    from src.rig.hand_detect import (detect, owner_detect, masks_from,
+                                     OwnHold)
     from src.rig.hand_track import (Tracker, FlipCount, MAX_LOST,
                                     duplicate_pairs, LowConfRuns,
                                     Fragmentation,
@@ -288,6 +289,19 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     runs = LowConfRuns()
     frag = Fragmentation()
     n_dup = n_dropped = n_demoted = n_kept_new = 0
+    owner_model = None
+    if owner_detector:
+        # A detector that names ownership itself replaces four stages: the
+        # hand detector, the distilled student, OwnHold's smoothing and the
+        # owner cap all exist to turn a box into a verdict, and this arrives
+        # with one. The smoothing still runs -- a per-frame verdict still
+        # flickers -- but it is now smoothing the detector's opinion rather
+        # than a separate classifier's.
+        from ultralytics import YOLO as _YOLO
+        owner_model = _YOLO(owner_detector)
+        if verbose:
+            print(f"  归属来自检测器本身：{os.path.basename(owner_detector)} "
+                  f"{owner_model.names}")
     # ONE CAMERA, UNRENDERED, when a camera is named. The wide render is what
     # every constant downstream was fitted to -- the association gate is a
     # fraction of its diagonal, the face size cap a fraction of its width, the
@@ -369,7 +383,9 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         # where the two would collide.
         clean = rgb
         face_mask_px = None
-        raw_dets = detect(model, clean, min_conf=continue_conf)
+        raw_dets = (owner_detect(owner_model, clean, min_conf=continue_conf)
+                    if owner_model is not None
+                    else detect(model, clean, min_conf=continue_conf))
         raw_ids = tracker.update(raw_dets, rgb.shape,
                                  new_track_conf=new_track_conf,
                                  continue_conf=continue_conf)
@@ -970,6 +986,10 @@ def main():
     ap.add_argument("--trace", help="write a per-frame CSV of every quantity "
                                     "between the label and the suppressed "
                                     "pixels, and attribute each dropout")
+    ap.add_argument("--owner_detector", help="a detector whose classes are "
+                                            "owner_hand/other_hand; replaces "
+                                            "the hand detector AND the "
+                                            "ownership classifier")
     ap.add_argument("--camera", help="read ONE camera's raw frames (e.g. cam3) "
                                      "instead of the stitched wide render. "
                                      "Every constant downstream was fitted to "
@@ -1075,6 +1095,7 @@ def main():
                      assoc_log=a.assoc_log, veto_held=a.veto_held,
                      reacquire_edge=a.reacquire_edge,
                      reacquire_log=a.reacquire_log, camera=a.camera,
+                     owner_detector=a.owner_detector,
                      bridge=a.bridge, min_conf=a.min_conf,
                      panorama_mode=a.panorama,
                      panorama_fit_frames=a.pano_fit_frames,
