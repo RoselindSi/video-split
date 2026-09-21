@@ -320,7 +320,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     grace_rows = [] if grace_log else None
     assoc_rows = [] if assoc_log else None
     reacq_rows = [] if reacquire_log else None
-    n_dis = n_written = n_face = 0
+    n_dis = n_written = n_face = n_blank = 0
     t0 = time.time()
     for k in range(n):
         # The stride is the prefetcher's now: it applies skip=0 to the first
@@ -336,6 +336,17 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
                 rgb, _, _, _ = render(rig, vcam, src, 0.6, map_cache=mc)
             except TypeError:
                 rgb, _, _, _ = render(rig, vcam, src, 0.6)
+        # A FRAME THAT DID NOT DECODE IS NOT A FRAME WITH NOTHING IN IT.
+        # Under load ffmpeg's scaler fails to allocate -- "Failed
+        # initializing scaling graph (Resource temporarily unavailable)" --
+        # and hands back a blank picture. The pipeline then finds no hands and
+        # no faces in it and records that as fact, so a run that lost 95 of
+        # 400 frames to thread exhaustion reported 400 frames, no dropouts,
+        # and a lower rate of everything. Counted here and refused at the end:
+        # a measurement taken on frames that were never decoded is not a
+        # measurement.
+        if float(rgb.std()) < 1.0:
+            n_blank += 1
         # EVERY DECISION IS MADE ON THE UNTOUCHED FRAME. The detector and the
         # ownership classifier both read `clean`; only the panels are drawn on
         # the covered copy. Classifying on the mosaic would let the privacy
@@ -726,6 +737,13 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
             print(f"\n  GRACE 放行 {len(grace_rows)} 帧，来自 "
                   f"{len({r['tid'] for r in grace_rows})} 条被放行的轨迹，"
                   f"锚点是 {len(anc)} 条轨迹 -> {grace_log}")
+    if n_blank:
+        msg = (f"!! {n_blank} / {n_written} 帧解码后是空白（多半是并发太高，"
+               f"ffmpeg 分不到线程）。这些帧会被当成『没有手也没有脸』计入，"
+               f"任何比率都会被压低 —— 降低并发后重跑。")
+        print("\n  " + msg, flush=True)
+        if n_blank > 0.02 * max(1, n_written):
+            raise RuntimeError(msg)
     # The flip report is computed either way; returning it lets a
     # caller that runs quietly still measure flicker, which is the
     # other end of every trade this pipeline makes against over-blur.
