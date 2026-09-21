@@ -51,6 +51,14 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--ours", default="/workspace/cam3_base")
     ap.add_argument("--theirs", default="/workspace/cam3_rolan")
+    ap.add_argument("--own", action="store_true",
+                    help="harvest the OWN-hand boxes instead of the foreign "
+                         "ones. The two questions are different and the "
+                         "samples are not interchangeable: the 31.7% "
+                         "not-a-hand rate measured on Rolan's extra foreign "
+                         "boxes was drawn with the own ones skipped, so it "
+                         "says nothing about how much of its coverage gain "
+                         "is real")
     ap.add_argument("--reverse", action="store_true",
                     help="the boxes OURS has and theirs does not. The same "
                          "question has to be asked in both directions or the "
@@ -87,13 +95,14 @@ def main():
         for f, dets in yours.items():
             have = [b for b, _, _ in mine.get(f, [])]
             for box, own, conf in dets:
-                if own:
-                    continue                 # ownership disagreement, not this
+                if own != a.own:
+                    continue
                 if any(iou(box, g) >= a.match_iou for g in have):
                     continue
                 extra.append((rec, f, box, conf))
-    print("两臂对齐后，%s独有的『别人的手』框 %d 个"
-          % ("我们" if a.reverse else "Rolan", len(extra)))
+    print("两臂对齐后，%s独有的『%s』框 %d 个"
+          % ("前者" if a.reverse else "后者",
+             "自己的手" if a.own else "别人的手", len(extra)))
     if not extra:
         return
     # RANDOM, NOT BY SCORE. Score is what is under suspicion, and a sheet
