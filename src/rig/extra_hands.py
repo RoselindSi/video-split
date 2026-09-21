@@ -51,6 +51,11 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--ours", default="/workspace/cam3_base")
     ap.add_argument("--theirs", default="/workspace/cam3_rolan")
+    ap.add_argument("--reverse", action="store_true",
+                    help="the boxes OURS has and theirs does not. The same "
+                         "question has to be asked in both directions or the "
+                         "comparison is one detector audited and the other "
+                         "taken on trust")
     ap.add_argument("--jobs", default="/workspace/cam3_jobs.txt")
     ap.add_argument("--match_iou", type=float, default=0.3)
     ap.add_argument("--limit", type=int, default=300, help="boxes to sample")
@@ -77,6 +82,8 @@ def main():
         if rec not in jobs or not os.path.exists(ours):
             continue
         mine, yours = boxes_of(ours), boxes_of(p)
+        if a.reverse:
+            mine, yours = yours, mine
         for f, dets in yours.items():
             have = [b for b, _, _ in mine.get(f, [])]
             for box, own, conf in dets:
@@ -85,7 +92,8 @@ def main():
                 if any(iou(box, g) >= a.match_iou for g in have):
                     continue
                 extra.append((rec, f, box, conf))
-    print("两臂对齐后，Rolan 独有的『别人的手』框 %d 个" % len(extra))
+    print("两臂对齐后，%s独有的『别人的手』框 %d 个"
+          % ("我们" if a.reverse else "Rolan", len(extra)))
     if not extra:
         return
     # RANDOM, NOT BY SCORE. Score is what is under suspicion, and a sheet
@@ -141,7 +149,8 @@ def main():
                              "h_frac": round((y1 - y0) / float(H), 5),
                              "cx_frac": round(cx / float(W), 5),
                              "cy_frac": round(cy / float(H), 5),
-                             "model": "enhanced_8m2", "label": "", "label_mode": ""})
+                             "model": "ours" if a.reverse else "enhanced_8m2",
+                             "label": "", "label_mode": ""})
         rd.close()
         print(f"  {rec}: {len(by_rec[rec])} 框", flush=True)
     with open(os.path.join(a.out, "hands.csv"), "w", newline="") as fh:
