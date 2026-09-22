@@ -23,6 +23,20 @@ at `{"hand":` and P(hand) is the softmax over the next-token logits for
 ` true` against ` false`, so nothing is generated and nothing can fail to
 parse.
 
+WHAT IT MEASURED, on 88 items, 53 hands and 35 not:
+
+    P(hand) on real hands    median 0.994, p25 0.971
+    P(hand) on non-hands     median 0.000, p75 0.053
+    AUC                      0.950
+    at 0.60                  46 of 53 kept, 34 of 35 blocked, 92.0% balanced
+
+Every one of the seven errors is a real hand rejected, five with p below
+0.14 -- confident mistakes that moving the threshold does not recover. As a
+gate this turns C1's addition from 61% real hands into roughly 98%, costing
+about four of the thirty real frames it gains. The answer tokens hold
+essentially all the probability mass (median 1.000), so the model is not
+trying to say something else.
+
 TWO STEPS BECAUSE TWO ENVIRONMENTS. The frames come out of the rig venv,
 which has OpenCV and the readers; the model lives in the Qwen venv, which has
 PIL and numpy and no cv2. So `--prep` writes the two views per item as files
