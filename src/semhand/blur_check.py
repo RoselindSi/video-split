@@ -125,6 +125,23 @@ def compare(paths, thr=0.15, dump=None, gold_paths=(), rec=None):
         print(f"  其中 <=3 帧的遮挡闪现 {len(short)} 段  <- 看起来最像闪烁的东西")
 
 
+def _load_decisions(path):
+    """-> {frame: {tid: (own, side, is_hand)}} or None.
+
+    Keyed on the track id because that is what the pass decided over and what
+    the render has in hand; keying on geometry would re-introduce the
+    box-matching that has gone wrong here before."""
+    if not path:
+        return None
+    out = {}
+    for r in csv.DictReader(open(path, encoding="utf-8")):
+        out.setdefault(int(r["frame"]), {})[r["tid"]] = (
+            int(r["own"]), r.get("side") or "", int(r.get("is_hand") or 1))
+    print(f"  轨迹级决策：{sum(len(v) for v in out.values())} 条，"
+          f"覆盖 {len(out)} 帧")
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -163,6 +180,9 @@ def main():
                          "(default 0.35 -> 2.89x the area)")
     ap.add_argument("--face_csv", help="one row per MOSAICKED face box: the "
                     "population the size cap would be applied to")
+    ap.add_argument("--decisions", help="a <rec>.decisions.csv from "
+                    "`rig.post_pass`: the track-level verdicts replayed into "
+                    "this render, so the delivered pixels carry them")
     ap.add_argument("--max_face_frac", type=float, default=None,
                     help="drop a face box wider than this fraction of the frame")
     ap.add_argument("--gate_frac", type=float, default=None,
@@ -309,6 +329,7 @@ def main():
         grace_log=a.grace_log, assoc_log=a.assoc_log, veto_held=a.veto_held,
         reacquire_edge=a.reacquire_edge, reacquire_log=a.reacquire_log,
         camera=a.camera, owner_detector=a.owner_detector,
+        decisions=_load_decisions(a.decisions),
         gate_frac=a.gate_frac,
         **({} if a.new_track_conf is None else {"new_track_conf": a.new_track_conf}),
         **({} if a.continue_conf is None else {"continue_conf": a.continue_conf}))

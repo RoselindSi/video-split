@@ -226,7 +226,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         new_hand_grace=NEW_HAND_GRACE, max_face_frac=None, grace_log=None,
         assoc_log=None, veto_held=False, reacquire_edge=None,
         reacquire_log=None, camera=None, owner_detector=None,
-        gate_frac=None, face_pad=None):
+        gate_frac=None, face_pad=None, decisions=None):
     import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
@@ -347,7 +347,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     grace_rows = [] if grace_log else None
     assoc_rows = [] if assoc_log else None
     reacq_rows = [] if reacquire_log else None
-    n_dis = n_written = n_face = n_blank = 0
+    n_dis = n_written = n_face = n_blank = n_overridden = 0
     t0 = time.time()
     for k in range(n):
         # The stride is the prefetcher's now: it applies skip=0 to the first
@@ -502,6 +502,34 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         flags = ownhold.update(
             dets, flags, shape=rgb.shape, ids=tids,
             reacquired=tracker.reacquired if safe_reacquire else ())
+        if decisions is not None:
+            # THE TRACK-LEVEL DECISIONS, APPLIED WHERE THE FRAME-LEVEL ONES
+            # END. Whether a box is a hand, whose it is and which hand it is
+            # are three questions that need the whole track, so they are
+            # decided by a pass over a finished run and replayed here. The
+            # render is deterministic given the configuration, so the track
+            # ids match the ones the pass read; a frame whose ids have moved
+            # means the two runs are not the same run, and that is worth a
+            # crash rather than a silently mismatched mask.
+            key = start + k * stride
+            row = decisions.get(key)
+            if row is not None:
+                # Track ids are ints here and text in the CSV. Comparing them
+                # raw made the guard below fire on every frame of a run that
+                # matched perfectly -- a type mismatch wearing the costume of
+                # a real one.
+                ids = [str(t) for t in tids]
+                missing = [t for t in ids if t not in row]
+                if missing:
+                    raise RuntimeError(
+                        "frame %d: track ids %r are not in the decisions; "
+                        "the run that produced them is not this run"
+                        % (key, missing))
+                flags = [(bool(row[t][0]), p) for t, (_o, p) in zip(ids, flags)]
+                for d, t in zip(dets, ids):
+                    if row[t][1]:
+                        d["side"] = row[t][1]
+                n_overridden += sum(1 for t in ids if row[t][0] == 0)
         flips.update(tids, [o for o, _ in flags])
         demoted = list(ownhold.last_demoted)
         n_demoted += len(demoted)
@@ -808,6 +836,8 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     # The flip report is computed either way; returning it lets a
     # caller that runs quietly still measure flicker, which is the
     # other end of every trade this pipeline makes against over-blur.
+    if decisions is not None:
+        print(f"  轨迹级决策：{n_overridden} 个框被改判为不是佩戴者的手")
     return n_written, n_dis, n_face, flips.report()
 
 
