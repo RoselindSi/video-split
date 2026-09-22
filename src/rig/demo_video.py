@@ -525,11 +525,19 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
                         "frame %d: track ids %r are not in the decisions; "
                         "the run that produced them is not this run"
                         % (key, missing))
+                # CHANGES, not states, and counted BEFORE the assignment.
+                # The first version counted every box the decisions call
+                # foreign -- mostly boxes that were already foreign -- and
+                # reported 3,166 overrides on a recording where 314 flags
+                # actually moved. Counting after the assignment would have
+                # reported zero, which is the same mistake facing the other
+                # way.
+                n_overridden += sum(1 for t, (o, _p) in zip(ids, flags)
+                                    if bool(row[t][0]) != o)
                 flags = [(bool(row[t][0]), p) for t, (_o, p) in zip(ids, flags)]
                 for d, t in zip(dets, ids):
                     if row[t][1]:
                         d["side"] = row[t][1]
-                n_overridden += sum(1 for t in ids if row[t][0] == 0)
         flips.update(tids, [o for o, _ in flags])
         demoted = list(ownhold.last_demoted)
         n_demoted += len(demoted)
@@ -837,7 +845,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     # caller that runs quietly still measure flicker, which is the
     # other end of every trade this pipeline makes against over-blur.
     if decisions is not None:
-        print(f"  轨迹级决策：{n_overridden} 个框被改判为不是佩戴者的手")
+        print(f"  轨迹级决策：{n_overridden} 个框的归属被改判")
     return n_written, n_dis, n_face, flips.report()
 
 
