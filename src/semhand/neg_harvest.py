@@ -29,6 +29,21 @@ never been run on. Those 795 have no overlap with the six.
 NOTHING IS LABELLED BY THE DETECTOR'S SCORE. It was tried for this exact job
 and reached 53.3% balanced accuracy on the band where the decision is made,
 with the non-hands scoring HIGHER. The score is recorded and not used.
+
+WHAT IT PRODUCED, AND WHAT A PERSON SAID ABOUT IT. 100 recordings, 9,832
+boxes, 756 called not-a-hand. 140 of them went back blind -- 100 negatives
+stratified over four width bands, 40 accepted boxes shuffled in -- and 98 of
+the 100 are not hands, with the controls 40 for 40. By band the precision is
+96, 100, 96, 100, which is flat, so the higher non-hand RATE above 340 px
+(10.6% against 5.4%) is benches and parts bins being large rather than the
+probe losing its footing there. Both errors sit at the threshold, p 0.042 and
+0.047.
+
+TWO THINGS THAT CAME OUT BACKWARDS. Non-hands are WIDER than hands, 299 px
+against 272, so "large means hand" is false and there is no geometric
+shortcut here any more than there was in the detector score. And only 87
+boxes of 9,832 land between 0.10 and 0.60: the model is almost never
+undecided, which is not the same as being right and is why the 140 went out.
 """
 from __future__ import annotations
 
