@@ -178,7 +178,8 @@ def _thumb(path, size=160, quality=80, by_width=False):
 
 
 def build_sheet(rows, out_path, mode, pkg, thumb=96, ctx_px=760, ctx_q=70,
-                verbose=True, vocab=("owner", "other"), title=None, values=None):
+                verbose=True, vocab=("owner", "other"), title=None, values=None,
+                legend=""):
     """Write the labelling sheet. -> number of crops in it.
 
     THE WHOLE FRAME IS THE PRIMARY IMAGE AND THE CROP IS THE INSET. The first
@@ -223,12 +224,22 @@ def build_sheet(rows, out_path, mode, pkg, thumb=96, ctx_px=760, ctx_q=70,
         vals.append("skip")
     words = list(vocab) + ["skip"] * (len(vals) - len(vocab))
     keys = {str(i + 1): v for i, v in enumerate(vals)}
-    legend = " &nbsp; ".join(f"<b>{i + 1}</b> {w}" for i, w in enumerate(words))
+    keybar = " &nbsp; ".join(f"<b>{i + 1}</b> {w}" for i, w in enumerate(words))
     payload = json.dumps({"mode": mode, "pkg": os.path.basename(pkg),
                           "vocab": words, "keys": keys, "items": items})
+    # THE LEGEND IS NO LONGER A CONSTANT, and it should never have been one.
+    # It read "yellow box = this hand, magenta line = wrist to where the
+    # forearm leaves the frame" on every sheet this tool has ever written,
+    # because every sheet used to be drawn by `extract`. A later package
+    # coloured one box per GROUP and put a letter on each, and the stale
+    # legend then told the labeller that the amber box was the hand under
+    # audit -- an instruction to mislabel, printed in the same bar as the key
+    # bindings. A caller that draws its own pictures says what they mean, and
+    # saying nothing is safer than saying the last package's sentence.
     html = (_HTML.replace("__PAYLOAD__", payload)
             .replace("__TITLE__", title or " / ".join(words[:-1]))
-            .replace("__KEYS__", legend))
+            .replace("__KEYS__", keybar)
+            .replace("__LEGEND__", legend or ""))
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(html)
     if verbose:
@@ -322,8 +333,7 @@ _HTML = """<!doctype html><meta charset="utf-8">
  <span id=prog></span>
  <span>__KEYS__
    &nbsp; <b>&larr; &rarr;</b> move &nbsp; <b>u</b> undo</span>
- <span style="color:#888">yellow box = this hand &nbsp;
-   magenta line = wrist to where the forearm leaves the frame</span>
+ <span style="color:#888">__LEGEND__</span>
  <button onclick="dl()">download CSV</button>
 </div>
 <div id=main>
@@ -512,6 +522,11 @@ def main():
                         "Defaults to owner,other. A third answer needs its own "
                         "value or it merges into one of the first two.")
     b.add_argument("--title", default=None)
+    b.add_argument("--legend", default="",
+                   help="what the colours and marks on the pictures mean. "
+                        "Empty by default: a package that draws its own "
+                        "boxes says so itself, and the wrong legend is an "
+                        "instruction to mislabel")
     b.add_argument("--thumb", type=int, default=96)
     b.add_argument("--csv_only", action="store_true",
                    help="label only the hands the sweep's cap actually kept. "
@@ -557,7 +572,7 @@ def main():
     voc = tuple(a.vocab.split(","))
     vals = a.values.split(",") if a.values else None
     build_sheet(sel, a.out, a.mode, a.pkg, thumb=a.thumb, ctx_px=a.ctx_px,
-                vocab=voc, title=a.title, values=vals)
+                vocab=voc, title=a.title, values=vals, legend=a.legend)
     if voc != ("owner", "other"):
         print(f"  The sheet asks `{voc[0]}` / `{voc[1]}`; the CSV still says "
               f"owner/other.\n  {voc[0]} -> owner, {voc[1]} -> other.")
