@@ -32,6 +32,27 @@ PROPOSED-BUT-LOW IS NOT MISSING. The detector runs at a floor far under the
 shipped one, so a hand it saw and scored 0.12 is separated from a hand it
 never proposed at all. Those need different fixes and the shipped thresholds
 turn the first into the second.
+
+WHAT IT MEASURED. 507 frames over 281 recordings, 1,800 audited boxes. The
+detector finds 96.0% of the wearer's hands and 70.5% of everyone else's; at
+the shipped floor for continuing a track, 92.7% against 58.1%; at the floor
+for starting one, 85.9% against 43.6%.
+
+AND THE GAP IS SIZE, NOT OWNERSHIP. By width, foreign hands go 6.2% under 40
+px, 32.3% at 40-60, 70.4% at 60-100, 85.8% at 100-160 and 96.5% above 160 --
+which is the wearer's own rate. A colleague's hand is a median 87 px across
+and the wearer's is 300. The detector is not biased against other people; it
+is bad at small hands and other people are far away. That is the same axis
+the hand-ness probe fails on, two independent components with one weakness.
+
+THE THRESHOLD TURNS SEEING INTO NOT SEEING. Of foreign hands, 29.5% are never
+proposed at any score and another 26.8% are proposed below 0.60 -- so 56.4%
+cannot start a track, never reach the ownership head, and are never covered.
+For the wearer those figures are 4.0% and 10.1%.
+
+ONE CAVEAT ON THE HEADLINE. The frames come from windows enriched for
+`has_other`, so the MIX of sizes is not the deployment mix and 70.5% is not a
+deployment rate. The per-band numbers are what transfers.
 """
 from __future__ import annotations
 
