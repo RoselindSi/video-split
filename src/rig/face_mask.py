@@ -222,6 +222,168 @@ class _YuNet:
         pass
 
 
+class _CrowdHead:
+    """CrowdHuman YOLOv5m, used for its HEAD class, behind the same two calls.
+
+    A DIFFERENT QUESTION, NOT A BETTER DETECTOR. This finds heads, and a head
+    is visible when a face is not: the faces this corpus loses are profiles and
+    downturned faces over a bench, 28 of 28 of which the shipped face detector
+    proposes at no score at all. Covering a head also covers more pixels than
+    covering a face, and whether that is the right trade is a decision about
+    what the recording is for, not a measurement.
+
+    THREE THINGS DIFFER FROM THE OTHER TWO BACKENDS and each one silently
+    ruins the output on its own. The tensor is (1, 25200, 7) -- one row per
+    candidate, not one column. The score is objectness TIMES class probability,
+    and either alone is wrong. And there are two classes, person and head, so
+    the class index is part of the query rather than an afterthought.
+
+    IT IS A PICKLED MODEL OBJECT, not a graph: the checkpoint holds a YOLOv5
+    `Model` that only unpickles when `models` and `utils` resolve to the
+    package's own modules, and its Detect layer carries grid buffers in the
+    shape an older release used. Both are handled at load, once.
+    """
+
+    kind = "crowdhead"
+    SIDE = 640
+    CLASS = 1                                  # 0 person, 1 head
+
+    def __init__(self, path, min_conf, nms=0.45, device=None):
+        import sys
+        import cv2
+        import torch
+        import yolov5.models, yolov5.models.common, yolov5.models.yolo
+        import yolov5.utils, yolov5.utils.general
+        for n in ("models", "models.yolo", "models.common", "utils",
+                  "utils.general"):
+            sys.modules[n] = sys.modules["yolov5." + n]
+        self.cv2, self.torch = cv2, torch
+        ck = torch.load(path, map_location="cpu", weights_only=False)
+        m = ck["model"].float().eval()
+        det = m.model[-1]
+        for name in ("grid", "anchor_grid"):   # shapes from an older release
+            det._buffers.pop(name, None)
+            det.__dict__.pop(name, None)
+        det.grid = [torch.empty(0) for _ in range(det.nl)]
+        det.anchor_grid = [torch.empty(0) for _ in range(det.nl)]
+        det.dynamic = True
+        self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+        self.net = m.to(self.device)
+        self.min_conf = float(min_conf)
+        self.nms = float(nms)
+
+    def detect(self, bgr):
+        cv2, torch = self.cv2, self.torch
+        H, W = bgr.shape[:2]
+        r = min(self.SIDE / float(W), self.SIDE / float(H))
+        nw, nh = int(round(W * r)), int(round(H * r))
+        pad = np.zeros((self.SIDE, self.SIDE, 3), np.uint8)
+        pad[:nh, :nw] = cv2.resize(bgr, (nw, nh))
+        x = torch.from_numpy(pad[:, :, ::-1].copy()).permute(2, 0, 1)[None]
+        x = x.float().div(255.0).to(self.device)
+        with torch.no_grad():
+            y = self.net(x)
+        a = (y[0] if isinstance(y, (list, tuple)) else y)[0].cpu().numpy()
+        score = a[:, 4] * a[:, 5 + self.CLASS]     # objectness x class
+        keep = np.where(score >= self.min_conf)[0]
+        if not len(keep):
+            return []
+        b, sc = a[keep, :4] / r, score[keep]
+        boxes = [[int(cx - bw / 2), int(cy - bh / 2), int(bw), int(bh)]
+                 for cx, cy, bw, bh in b]
+        idx = cv2.dnn.NMSBoxes(boxes, [float(v) for v in sc], self.min_conf, self.nms)
+        out = []
+        for i in np.asarray(idx).reshape(-1):
+            x0, y0, bw, bh = boxes[int(i)]
+            out.append((max(0, x0), max(0, y0), min(W, x0 + bw), min(H, y0 + bh),
+                        float(sc[int(i)])))
+        return out
+
+
+class _Scrfd:
+    """SCRFD through cv2.dnn, behind the same two calls.
+
+    NINE OUTPUTS, NOT ONE, and the shapes are what identify them rather than
+    the names, which the export left as numbers. At 640 there are 12800
+    anchors at stride 8, 3200 at 16 and 800 at 32 -- two per cell -- so a
+    tensor whose last axis is 1 is a score head, 4 a box head and 10 the
+    keypoints this does not use. Confirmed by running the file, not by
+    reading someone else's decoder.
+
+    THE BOX IS NOT A BOX. YOLO predicts centre and size in pixels; SCRFD
+    predicts the DISTANCE from an anchor centre to each of the four edges, in
+    units of that head's stride. Forgetting either the multiply or the anchor
+    centre produces boxes that are plausible in shape and wrong in place.
+
+    LETTERBOX, NOT STRETCH. The input is a fixed square and the panorama is
+    1.78:1, so a straight resize hands the detector a face squeezed to 56% of
+    its width -- the distortion `_YoloFace.detect_tiled` exists to work
+    around. Fitting the frame inside the square and padding keeps faces the
+    shape the model was trained on, and one ratio undoes it.
+    """
+
+    kind = "scrfd"
+    SIDE = 640
+    STRIDES = (8, 16, 32)
+    NUM_ANCHORS = 2
+
+    def __init__(self, path, min_conf, nms=0.4):
+        import cv2
+        self.cv2 = cv2
+        self.net = cv2.dnn.readNetFromONNX(path)
+        self.names = self.net.getUnconnectedOutLayersNames()
+        self.min_conf = float(min_conf)
+        self.nms = float(nms)
+        self._centres = {}
+
+    def _centres_for(self, stride):
+        """Anchor centres in input pixels, in the order the model flattens."""
+        if stride not in self._centres:
+            n = self.SIDE // stride
+            ys, xs = np.mgrid[:n, :n]
+            c = (np.stack([xs, ys], -1).reshape(-1, 2) * stride).astype(np.float32)
+            self._centres[stride] = np.repeat(c, self.NUM_ANCHORS, axis=0)
+        return self._centres[stride]
+
+    def detect(self, bgr):
+        cv2 = self.cv2
+        H, W = bgr.shape[:2]
+        r = min(self.SIDE / float(W), self.SIDE / float(H))
+        nw, nh = int(round(W * r)), int(round(H * r))
+        pad = np.zeros((self.SIDE, self.SIDE, 3), np.uint8)
+        pad[:nh, :nw] = cv2.resize(bgr, (nw, nh))
+        blob = cv2.dnn.blobFromImage(pad, 1 / 128.0, (self.SIDE, self.SIDE),
+                                     (127.5, 127.5, 127.5), swapRB=True)
+        self.net.setInput(blob)
+        outs = self.net.forward(self.names)
+        boxes, scores = [], []
+        for i, stride in enumerate(self.STRIDES):
+            sc = np.asarray(outs[i]).reshape(-1)
+            bb = np.asarray(outs[i + len(self.STRIDES)]).reshape(-1, 4)
+            keep = np.where(sc >= self.min_conf)[0]
+            if not len(keep):
+                continue
+            c = self._centres_for(stride)[keep]
+            d = bb[keep] * stride
+            x0 = (c[:, 0] - d[:, 0]) / r
+            y0 = (c[:, 1] - d[:, 1]) / r
+            x1 = (c[:, 0] + d[:, 2]) / r
+            y1 = (c[:, 1] + d[:, 3]) / r
+            for j in range(len(keep)):
+                boxes.append([int(x0[j]), int(y0[j]),
+                              int(x1[j] - x0[j]), int(y1[j] - y0[j])])
+                scores.append(float(sc[keep[j]]))
+        if not boxes:
+            return []
+        keep = cv2.dnn.NMSBoxes(boxes, scores, self.min_conf, self.nms)
+        out = []
+        for i in np.asarray(keep).reshape(-1):
+            x, y, w, h = boxes[int(i)]
+            out.append((max(0, x), max(0, y), min(W, x + w), min(H, y + h),
+                        scores[int(i)]))
+        return out
+
+
 class _YoloFace:
     """A YOLOv8 face head through cv2.dnn, behind the same two calls.
 
@@ -337,11 +499,18 @@ def load_detector(model_path=MODEL, min_conf=MIN_CONF):
             model_path = MODEL_FALLBACK
         else:
             return None
+    if str(model_path).endswith(".pt"):
+        # A torch checkpoint here is the CrowdHuman head model; the face
+        # detectors are all ONNX.
+        return _CrowdHead(model_path, min_conf)
     if str(model_path).endswith(".onnx"):
         # Both are ONNX; the file name says which head it is. Guessing from
         # the graph would be cleverer and would fail silently on a rename.
-        if "yolo" in os.path.basename(model_path).lower():
+        name = os.path.basename(model_path).lower()
+        if "yolo" in name:
             return _YoloFace(model_path, min_conf)
+        if "scrfd" in name or "det_10g" in name:
+            return _Scrfd(model_path, min_conf)
         return _YuNet(model_path, min_conf)
     # THE GUARD HAS TO COVER THE CONSTRUCTION, NOT ONLY THE IMPORT. MediaPipe
     # loads its native library lazily, inside create_from_options, so wrapping
@@ -372,7 +541,10 @@ def detect_faces(det, rgb, tiles=None):
     section was measured against the whole-frame call."""
     if tiles and hasattr(det, "detect_tiled"):
         return det.detect_tiled(rgb, int(tiles[0]), int(tiles[1]))
-    if getattr(det, "kind", None) in ("yunet", "yolo"):
+    # Every OpenCV backend answers the same call; only MediaPipe needs its own
+    # image type. Listing the names one by one is how a new backend silently
+    # fell through to MediaPipe and died on a missing libEGL.
+    if getattr(det, "kind", None) in ("yunet", "yolo", "scrfd", "crowdhead"):
         return det.detect(rgb)
     import cv2
     import mediapipe as mp
