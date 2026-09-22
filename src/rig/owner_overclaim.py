@@ -26,8 +26,25 @@ accepts is counted without a person looking.
 THE MERGE IS SWEPT BECAUSE IT IS A GUESS. Single-linkage on centre distance
 in units of box size, from 0 (merge nothing) upward. Reporting one value
 would hide that the answer moves with it; the sweep makes the sensitivity
-part of the result, and the final count is taken at a setting that merges
-generously, so what survives is a floor rather than an estimate.
+part of the result -- and in the end the sheet was built at 0, every box
+drawn and lettered, so the person answered "how many different hands" and
+the merge never entered the count at all.
+
+WHAT IT CAME TO. On the lower continue threshold: 273 candidate frames and
+852 boxes; the probe removed 266 boxes (31%), leaving 45 frames; a person
+judged all 45 and found three or more distinct hands on 17. Seventeen frames
+of 2,143 delivered -- 0.79%, six tenths of a second of eighty -- all in
+R0826_102020 and all inside f5161-5164, f5166-5169 and f5339-5347. The other
+five recordings produced none.
+
+AND C1 IS NOT WHAT CAUSES IT. Sixteen of those seventeen frames are already
+at three boxes in the shipped configuration; C1 adds f5166 and nothing more.
+The 3.0-3.8pp gap measured before this filter existed was between CANDIDATE
+rates, and candidates are mostly machine parts and second boxes on one hand,
+which C1 admits in the baseline's proportion.
+
+STILL A FLOOR. Two boxes of which one belongs to a colleague is the common
+case, and counting to three will never see it.
 """
 from __future__ import annotations
 
