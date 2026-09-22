@@ -142,24 +142,32 @@ HOLD_FRAMES = 12
 # median 61.6%. At 0.18 all 25 are refused and 2 of the other 2,866 go with
 # them, both wide and flat rather than face-shaped.
 #
-# IT IS STILL OFF, because the one case it would break is defended by a test
-# and by a decision this project already made: `test_a_large_face_is_covered_
-# now_that_the_cap_is_off` covers a face 37.5% of the frame wide, on the
-# grounds that a colleague standing close is the most identifiable person in
-# the recording. Those ten recordings contain no such face, so they cannot
-# say the case is rare -- only that it did not happen in them.
-#
-# SHAPE DOES NOT SEPARATE THE TWO EITHER, which was the obvious way out: 8 of
-# the 25 false boxes are near-square (aspect <= 1.3), some of them 51-62% of
-# the width, so no rule on size and shape together refuses all 25 and keeps a
+# SHAPE DOES NOT SEPARATE THE TWO, which was the obvious way out: 8 of the 25
+# false boxes are near-square (aspect <= 1.3), some of them 51-62% of the
+# width, so no rule on size and shape together refuses all 25 and keeps a
 # square face at 37.5%.
 #
-# 0.18 is therefore a measured value with nowhere to live yet. It is passed
-# per-run (`--max_face_frac`) so the trade can be watched and the residual
-# damage measured; what would settle it is a second opinion on the large boxes
-# -- the same detector on the SOURCE camera image, where the panorama's warp
-# is not there to invent one.
-MAX_FACE_FRAC = None
+# IT IS ON, AND THE CASE IT BREAKS IS REAL AND WAS ACCEPTED ON PURPOSE. The
+# second opinion the earlier note asked for -- the same detector on the SOURCE
+# camera image, with no panorama warp to invent a box -- has now been taken.
+# Over six cam3 recordings, 4,733 mosaicked boxes, every box wider than 0.18
+# collapses into 13 episodes and all 13 were inspected. Twelve are false: a
+# blank wall four times, a restaurant table twice, a wok of food twice, wire
+# and a foot on the ground twice, a bin of black parts, a blurred corner. The
+# thirteenth (R0824_120917 f951, width 0.27, detector score 0.907 -- the
+# highest of the thirteen) is a colleague leaning into the camera, and the cap
+# uncovers them.
+#
+# So the ten-recording fit was not wrong about its own corpus and was wrong
+# about the world: a large true face is not rare, it is roughly one in eighty
+# seconds of this material. Turning the cap on trades that face for the 8.6%
+# of delivered frames whose mosaic covers a tenth or more of the picture,
+# which falls to 0.8%. The trade was put to the user with the leak stated and
+# taken; it is not a finding that the leak does not exist.
+#
+# `--max_face_frac 0` turns it off for a run, and 0 is falsy so the check in
+# `Hold.update` is skipped entirely.
+MAX_FACE_FRAC = 0.18
 MEASURED_FACE_FRAC = 0.18
 
 # The detector bounds a face from brow to chin. Ears, hairline and jaw are

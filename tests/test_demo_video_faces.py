@@ -227,31 +227,52 @@ class FaceCoverRenderTest(unittest.TestCase):
                 _detail(src[y0:y1, x0:x1]), delta=1e-6,
                 msg="the wearer's own hand was mosaicked")
 
-    def test_a_large_face_is_covered_now_that_the_cap_is_off(self):
-        """The close colleague is the one worth covering, and the size cap
-        was refusing exactly them.
+    def test_a_box_wider_than_the_cap_is_refused_even_when_it_is_a_face(self):
+        """The cap is on, and this is the cost it was turned on knowing.
 
-        This test asserted the opposite until the cap came off. It was fitted
-        on detections harvested at a 0.30 score floor, in a corpus where a
-        face near the camera is rare, so it learned `too big to be a face`
-        from a sample with no big faces -- and then refused the largest,
-        nearest, most identifiable face in the recording. A face this size is
-        not implausible; it is a person standing close."""
+        This test asserted the opposite twice. The cap was first fitted on ten
+        recordings with no close face in them, so it learned `too big to be a
+        face` from a sample with no big faces; the test came off the fit and
+        asserted that a face 37.5% of the frame wide gets covered.
+
+        The second opinion has since been taken on cam3 SOURCE frames, where
+        the panorama's warp cannot invent a box. Thirteen episodes exceed the
+        cap there; twelve are walls, tables, food and machine parts, and one
+        is a colleague leaning into the camera at width 0.27. So a large true
+        face is not rare -- about one per eighty seconds of this material --
+        and the cap does uncover it.
+
+        The trade was stated in those terms and taken: the mosaic covers a
+        tenth or more of the delivered picture on 8.6% of frames with the cap
+        off and 0.8% with it on, and the wearer's forearm goes under the
+        mosaic on every one of the nine judged frames above that line. This
+        test records the accepted leak rather than a claim that none exists;
+        `--max_face_frac 0` restores the old behaviour for a run."""
         n = 2
         _w, _faces, clean, panels = _run(
             [[FACE_TOO_BIG + (0.99,)]],
             [list(self.own) for _ in range(n)], n)
         x0, y0, x1, y1 = FACE_TOO_BIG
         for panel, src in zip(panels, clean):
-            self.assertLess(
+            self.assertAlmostEqual(
                 _detail(_output_panel(panel)[y0:y1, x0:x1]),
-                _detail(src[y0:y1, x0:x1]) * 0.5,
-                msg="a large face was left uncovered")
+                _detail(src[y0:y1, x0:x1]), delta=1e-6,
+                msg="the size cap did not refuse an oversized box")
+
+    def test_the_cap_can_be_turned_off_for_a_run(self):
+        """The leak is a default, not a property of the code. A caller that
+        would rather keep the close colleague covered passes 0 and gets the
+        old behaviour, so the decision stays visible at the call site."""
+        hold = face_mask.Hold(frames=1, max_frac=0)
+        shape = (WIDTH, WIDTH, 3)
+        self.assertEqual(len(hold.update([FACE_TOO_BIG + (0.99,)], shape=shape)),
+                         1, "max_frac=0 still refused an oversized box")
 
     def test_the_size_cap_still_works_when_a_caller_sets_one(self):
-        """Removing the default is not removing the mechanism. A caller with
-        a value measured on their own data can still pass one, so this keeps
-        the code path alive that the default no longer exercises."""
+        """The default is one value, not the only one. A caller with a figure
+        measured on their own material passes it, and 0.055 is tighter than
+        the 0.18 now shipped, so this pins the mechanism rather than the
+        constant that happens to be in it."""
         hold = face_mask.Hold(frames=1, max_frac=0.055)
         big = [FACE_TOO_BIG + (0.99,)]
         small = [FACE + (0.99,)]
