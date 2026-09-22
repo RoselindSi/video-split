@@ -308,6 +308,7 @@ def main():
                          "n_faces": len(info.get("faces_covered") or info.get("faces") or []),
                          "frame": info["frame"], "box": i,
                          "own": int(info["own"][i]), "p": info["p_owner"][i],
+                         "not_hand": int((info.get("not_hand") or [False] * len(info["dets"]))[i]),
                          "covered": round(float(sub.mean()) if sub.size else 0.0, 4),
                          "x0": x0, "y0": y0, "x1": x1, "y1": y1,
                          "conf": round(float(d["conf"]), 3),

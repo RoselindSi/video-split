@@ -427,6 +427,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         dets = [raw_dets[i] for i in keep_i]
         tids = [raw_ids[i] for i in keep_i]
         provenance = [tracker.provenance[i] for i in keep_i]
+        not_hand = set()
         if fdet is not None:
             faces = face_mask.detect_faces(fdet, clean)
             # The hand detector runs first for a reason: it is the better
@@ -538,11 +539,22 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
                 for d, t in zip(dets, ids):
                     if row[t][1]:
                         d["side"] = row[t][1]
+                # THE THIRD STATE, WHICH `own` CANNOT HOLD. A box the pass
+                # judged not to be a hand is not the wearer's and is not a
+                # person either, so it belongs in neither list: delivering it
+                # puts bench clutter in the training stream, and covering it
+                # destroys a patch of bench to hide a machine part. Collapsing
+                # it into `own=0` on the first attempt mosaicked 287 boxes of
+                # parts bin on one recording, which is what a reader watching
+                # the output noticed and no counter did.
+                not_hand = {i for i, t in enumerate(ids) if row[t][2] == 0}
         flips.update(tids, [o for o, _ in flags])
         demoted = list(ownhold.last_demoted)
         n_demoted += len(demoted)
-        own = [d for d, (o, _) in zip(dets, flags) if o]
-        oth = [d for d, (o, _) in zip(dets, flags) if not o]
+        own = [d for i, (d, (o, _)) in enumerate(zip(dets, flags))
+               if o and i not in not_hand]
+        oth = [d for i, (d, (o, _)) in enumerate(zip(dets, flags))
+               if not o and i not in not_hand]
         # A SECOND BOX ON A HAND ALREADY FOUND. The detector sometimes puts one
         # box on a palm and another on the fingers above it. The tracker cannot
         # give the extra box the hand's id -- the hand has it -- so it starts a
@@ -655,6 +667,10 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
                                   "conf": float(d.get("conf", 1.0))}
                                  for d in raw_dets],
                     "own": [bool(o) for o, _ in flags],
+                    # Neither delivered nor covered: the third state, so a
+                    # reader of the CSV can tell a box that was dropped from
+                    # one that was mosaicked.
+                    "not_hand": [i in not_hand for i in range(len(dets))],
                     "p_owner": [round(float(p), 3) for _, p in flags],
                     "faces": [[int(v) for v in f[:4]] for f in faces]
                               if fdet is not None else [],
