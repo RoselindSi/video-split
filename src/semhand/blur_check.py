@@ -158,6 +158,11 @@ def main():
     ap.add_argument("--face_model", default=None,
                     help="a different face/head detector; default is the shipped one")
     ap.add_argument("--face_conf", type=float, default=None)
+    ap.add_argument("--face_pad", type=float, default=None,
+                    help="grow each face box by this fraction before mosaicking "
+                         "(default 0.35 -> 2.89x the area)")
+    ap.add_argument("--face_csv", help="one row per MOSAICKED face box: the "
+                    "population the size cap would be applied to")
     ap.add_argument("--max_face_frac", type=float, default=None,
                     help="drop a face box wider than this fraction of the frame")
     ap.add_argument("--gate_frac", type=float, default=None,
@@ -205,12 +210,45 @@ def main():
             raise SystemExit(f"--clf_ctx {a.clf_ctx} not found")
         ctx = (m, dev)
     rows = []
+    face_rows = []
 
     def hook(k, clean, sup, info=None):
         if info is None:
             return
         diff = np.abs(sup.astype(np.int16) - clean.astype(np.int16)).max(2) > 8
         H, W = diff.shape
+        # ONE ROW PER BOX THAT GOT A MOSAIC, hands or no hands in the frame.
+        # The per-hand rows below are written only where a hand was delivered,
+        # so a frame mosaicked from edge to edge with no hand in it leaves no
+        # trace in them at all -- and the size cap has to be decided on every
+        # box it would refuse, not on the ones that happened to share a frame
+        # with a hand.
+        det_now = list(zip(info.get("faces") or [], info.get("faces_conf") or []))
+        for f in info.get("faces_covered") or []:
+            best, bc = 0.0, -1.0
+            for g, c in det_now:
+                ix = max(0, min(f[2], g[2]) - max(f[0], g[0]))
+                iy = max(0, min(f[3], g[3]) - max(f[1], g[1]))
+                inter = ix * iy
+                union = ((f[2] - f[0]) * (f[3] - f[1])
+                         + (g[2] - g[0]) * (g[3] - g[1]) - inter)
+                v = inter / union if union > 0 else 0.0
+                if v > best:
+                    best, bc = v, c
+            face_rows.append({
+                "frame": info["frame"],
+                "x0": f[0], "y0": f[1], "x1": f[2], "y1": f[3],
+                "w_frac": round((f[2] - f[0]) / float(W), 5),
+                "h_frac": round((f[3] - f[1]) / float(H), 5),
+                "area_frac": round((f[2] - f[0]) * (f[3] - f[1]) / float(W * H), 5),
+                # A held box has no detection behind it this frame, which is
+                # the difference between "the detector says so now" and "the
+                # detector said so up to twelve frames ago".
+                "from_det": int(best >= 0.5),
+                "conf": round(bc, 3) if best >= 0.5 else "",
+                "n_covered": len(info.get("faces_covered") or []),
+                "face_px_frac": round(float(info["face_px"].mean()), 5)
+                                if info.get("face_px") is not None else ""})
         for i, d in enumerate(info["dets"]):
             x0, y0, x1, y1 = (int(v) for v in d["box"])
             x0, y0 = max(0, x0), max(0, y0)
@@ -267,6 +305,7 @@ def main():
         max_owner=None if a.no_cap else 2, panorama_mode="baseline", frame_hook=hook,
         safe_reacquire=not a.inherit_self_on_reacquire, self_reconfirm=a.self_reconfirm,
         new_hand_grace=a.new_hand_grace, max_face_frac=a.max_face_frac,
+        face_pad=a.face_pad,
         grace_log=a.grace_log, assoc_log=a.assoc_log, veto_held=a.veto_held,
         reacquire_edge=a.reacquire_edge, reacquire_log=a.reacquire_log,
         camera=a.camera, owner_detector=a.owner_detector,
@@ -277,6 +316,12 @@ def main():
         w = csv.DictWriter(fh, fieldnames=list(rows[0]))
         w.writeheader()
         w.writerows(rows)
+    if a.face_csv and face_rows:
+        with open(a.face_csv, "w", newline="") as fh:
+            w = csv.DictWriter(fh, fieldnames=list(face_rows[0]))
+            w.writeheader()
+            w.writerows(face_rows)
+        print(f"-> {a.face_csv} ({len(face_rows)} 个打了码的人脸框)")
     own = [r for r in rows if r["own"]]
     hit = [r for r in own if r["covered"] >= 0.15]
     print(f"\n{n} 帧、{len(rows)} 只手；被判为自己的手 {len(own)} 只，"

@@ -226,7 +226,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         new_hand_grace=NEW_HAND_GRACE, max_face_frac=None, grace_log=None,
         assoc_log=None, veto_held=False, reacquire_edge=None,
         reacquire_log=None, camera=None, owner_detector=None,
-        gate_frac=None):
+        gate_frac=None, face_pad=None):
     import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
@@ -460,7 +460,19 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
                 faces_covered, _ = face_mask.split_on_hands(
                     [tuple(f) + (1.0,) for f in faces_covered], raw_dets)
                 faces_covered = [tuple(f[:4]) for f in faces_covered]
-            rgb, face_mask_px = face_mask.cover(clean, faces_covered)
+            # THE PAD IS THE MASK'S AREA, SQUARED. Every box is grown by this
+            # fraction of its own size on each side before the mosaic goes on,
+            # so 0.35 multiplies the covered area by 1.7^2 = 2.89 -- and on a
+            # frame with a dozen faces that factor is the difference between a
+            # dozen patches and a mosaicked picture. 120 judged frames put the
+            # wearer's forearm under the mosaic on 9, and all 9 sit above 10%
+            # of the frame while none of the 111 clean ones do, so this is the
+            # dial the arm damage is on. Per-run rather than edited in place:
+            # shrinking it uncovers the jaw and hairline the pad exists for,
+            # which is a privacy cost that has to be watched, not assumed.
+            rgb, face_mask_px = face_mask.cover(
+                clean, faces_covered,
+                pad=face_mask.PAD if face_pad is None else float(face_pad))
         if student is not None:
             # THE DISTILLED STUDENT. It reads the whole frame with the box and
             # a zoom on it, so it gets the same `clean` frame the render
@@ -610,6 +622,12 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
                     "p_owner": [round(float(p), 3) for _, p in flags],
                     "faces": [[int(v) for v in f[:4]] for f in faces]
                               if fdet is not None else [],
+                    # The score each surviving proposal carried. Without it a
+                    # covered box cannot be told from the detection that put
+                    # it there, and the question "is this big box a face"
+                    # cannot be asked of the score at all.
+                    "faces_conf": [float(f[4]) if len(f) > 4 else -1.0
+                                   for f in faces] if fdet is not None else [],
                     # The boxes the mosaic actually went on, held ones included.
                     "faces_covered": [[int(v) for v in f[:4]] for f in faces_covered]
                                      if fdet is not None else [],
@@ -922,6 +940,9 @@ def main():
                     help="refuse a face box wider than this fraction of the frame. 0.18 "
                          "refuses all 25 boxes inspected over ten recordings, every one a "
                          "false positive, and would also refuse a face 37.5% wide")
+    ap.add_argument("--face_pad", type=float, default=None,
+                    help="grow each face box by this fraction of its own size before "
+                         "mosaicking (default 0.35, which triples the covered area)")
     ap.add_argument("--new_hand_grace", type=int, default=NEW_HAND_GRACE,
                     help="do not cover a box this new (track age) when it touches a hand "
                          "already called the wearer's: the detector splitting one hand")
@@ -1110,7 +1131,8 @@ def main():
                      safe_reacquire=not a.inherit_self_on_reacquire,
                      self_reconfirm=a.self_reconfirm,
                      new_hand_grace=a.new_hand_grace,
-                     max_face_frac=a.max_face_frac, grace_log=a.grace_log,
+                     max_face_frac=a.max_face_frac, face_pad=a.face_pad,
+                     grace_log=a.grace_log,
                      assoc_log=a.assoc_log, veto_held=a.veto_held,
                      reacquire_edge=a.reacquire_edge,
                      reacquire_log=a.reacquire_log, camera=a.camera,
