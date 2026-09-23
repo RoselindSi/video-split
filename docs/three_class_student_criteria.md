@@ -109,3 +109,45 @@ it gets more data, not a larger coefficient.
 Nothing here removes the 27B from the loop for the measurements it is already
 doing. The student replaces it **in the shipped pipeline**, where 0.6 s a box
 is not available; the probe remains what audits the student.
+
+
+---
+
+# Result: the first attempt failed S, and the reason was the carrier
+
+Trained 2026-09-23. Dev looked fine -- ownership F1 0.958 to 0.963 across
+three seeds, class-2 recall near 100% at ~97% precision. On the held-out pool
+it called 97.9% of 6,703 boxes not-a-hand, in every width band.
+
+**S, the provenance control, is what it failed.** The 4,668 control positives
+written beside the negatives -- boxes the probe called hands, never trained
+on -- come back 242 of 256 as class 2 through the training path itself. The
+bar was 0.12 and the value is 0.945.
+
+The carrier, not the labels:
+
+    teacher rows, classes 0/1     1600x900    rendered panorama, render(0.6m)
+    all five evaluation roots     1600x900    the same
+    the negatives, class 2        1920x1520   raw fisheye camera half
+    the held-out pool             1920x1520   the same
+
+So class 2 was separable by geometry alone and the model took it. The labels
+are not at fault: 178 of 180 blind judgements say the negatives are negatives.
+
+**And a second thing, larger and older.** Every number that accepted the
+shipped two-class student -- flips 0.04, foreign frames 27, own frames 99.47%
+-- was measured on 1600x900 renders, while `demo_video --camera cam3` hands it
+a 1920x1520 raw half. Aspect 1.26 against 1.78, squeezed to the same 1280x704.
+The student has been running outside its training distribution on every cam3
+run this project has made.
+
+That does not invalidate the cam3 measurements themselves: coverage, the 17
+confirmed false OWNER claims and the ownership vote were measured on cam3
+output against human gold, not extrapolated from panorama. What it invalidates
+is the evidence behind CHOOSING this student for cam3.
+
+**Two ways out, and they are not equivalent.** Harvest the negatives from
+rendered frames, matching the teacher pool -- limited by calibration, which
+exists for 15 of 40 databags. Or move the whole pool to raw frames, which
+means re-deriving the teacher labels and re-running every acceptance test, and
+which is the direction deployment has already gone without anyone deciding it.
