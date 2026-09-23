@@ -54,15 +54,34 @@ class FaceVerdictTest(unittest.TestCase):
         self.assertEqual(h.update([BIG], shape=SHAPE), [BIG[:4]])
         self.assertEqual(h.unjudged, 1)
 
-    def test_small_boxes_are_never_asked(self):
-        """Below the cap the probe's not-a-face verdict is right 74 times in
-        100, against 13 of 13 above it. A gate built on the first number would
-        trade a measured leak for an unmeasured one, so nothing under the cap
-        is filtered at all -- with or without verdicts."""
-        for v in (None, {SMALL[:4]: False}):
+    def test_a_small_box_with_no_verdict_is_kept(self):
+        """The default below the cap, and it covers most boxes there. A row is
+        written only where the model was confident, so no row means nobody
+        answered and the mosaic stays."""
+        for v in (None, {}, {(1, 2, 3, 4): False}):
             h = face_mask.Hold(frames=1, max_frac=0.18, verdicts=v)
             self.assertEqual(h.update([SMALL], shape=SHAPE), [SMALL[:4]],
-                             "a box under the cap was filtered")
+                             "a box under the cap was filtered without a verdict")
+
+    def test_a_small_box_can_now_be_refused_and_this_test_changed(self):
+        """It asserted the opposite until the evidence was read by score.
+
+        Aggregated over every score it gave, face-ness on small boxes was
+        right 74 times in 100 -- unusable, and this test said nothing under
+        the cap may be filtered. Split by score, all of its errors sit at
+        p >= 0.060 and below 0.05 it is 78 for 78 over two sheets, lower bound
+        95.3%. The nearest error at 0.060 makes 0.05 a boundary rather than a
+        round number.
+
+        So a verdict may refuse a small box, and `face_verdicts` writes a row
+        for one only when it is under that threshold. What this buys is half
+        the small-box mosaic -- 2,382 frame instances of 4,406 -- off tables,
+        food and bench."""
+        h = face_mask.Hold(frames=1, max_frac=0.18,
+                           verdicts={SMALL[:4]: False})
+        self.assertEqual(h.update([SMALL], shape=SHAPE), [])
+        self.assertEqual(len(h.refused), 1)
+        self.assertEqual(h.unjudged, 0, "a small box must not count as unjudged")
 
     def test_a_kept_box_still_gets_its_hold(self):
         """Admission and persistence are separate; a box kept by a verdict

@@ -685,29 +685,32 @@ class Hold:
         this range, and covering it destroys the bench this pipeline exists to
         keep."""
         self.refused = []
-        if self.max_frac and shape is not None:
+        if (self.max_frac or self.verdicts) and shape is not None:
             W = shape[1]
             keep = []
             for b in boxes:
-                if (b[2] - b[0]) <= self.max_frac * W:
-                    keep.append(b)
-                    continue
-                # OVER THE CAP: ask, if there is anything to ask.
+                over = self.max_frac and (b[2] - b[0]) > self.max_frac * W
                 v = self.verdicts.get(tuple(int(x) for x in b[:4]))
-                if v is None:
-                    if self.verdicts:
-                        # Verdicts were supplied and this box is not in them,
-                        # so the run that produced them is not this run. It is
-                        # covered rather than dropped -- the safe side of a
-                        # question about a face -- and counted, loudly.
-                        self.unjudged += 1
-                        keep.append(b)
-                    else:
-                        self.refused.append(b)
+                if v is False:
+                    # An answer, and it is no. Over the cap this replaces the
+                    # size rule; under it, this is the only way a box is ever
+                    # refused, and a row exists only where the model was
+                    # confident -- see `face_verdicts` for the threshold and
+                    # the 78 of 78 behind it.
+                    self.refused.append(b)
                 elif v:
                     keep.append(b)
-                else:
+                elif over and self.verdicts:
+                    # Verdicts were supplied and this over-cap box is not in
+                    # them, so the run that produced them is not this run. It
+                    # is covered rather than dropped -- the safe side of a
+                    # question about a face -- and counted, loudly.
+                    self.unjudged += 1
+                    keep.append(b)
+                elif over:
                     self.refused.append(b)
+                else:
+                    keep.append(b)
             boxes = keep
         for it in self.items:
             it[4] -= 1

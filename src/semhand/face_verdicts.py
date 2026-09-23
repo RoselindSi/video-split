@@ -14,12 +14,21 @@ hold lasts and the verdict follows them without needing to know which frame is
 which. Keying on the frame as well would miss every held frame, which is most
 of them.
 
-ONLY BOXES OVER THE CAP ARE WRITTEN. Below it nothing is asked and nothing
-changes: the probe's not-a-face verdict is right 74 times in 100 down there,
-against 13 of 13 above, and a gate built on the first number would trade a
-measured privacy leak for an unmeasured one. What the small boxes did buy is a
-number -- about 59% of them are not faces -- and that is a fact about the
-detector, not a licence to act on this model's opinion of them.
+BELOW THE CAP, ONLY THE CONFIDENT REJECTIONS ARE WRITTEN, and that threshold
+was earned rather than picked. Aggregated over every score, face-ness on small
+boxes is right 74 times in 100 and unusable. Split by score, every error it
+made sits at p >= 0.060, and below 0.05 it is 78 for 78 across two sheets --
+lower bound 95.3%. The nearest error at 0.060 is what makes 0.05 a boundary
+instead of a round number.
+
+So a small box gets a row only when p <= SMALL_THR, and the row says "not a
+face". Everything else down there gets no row and keeps its mosaic, which is
+the old behaviour. Half the small-box mosaic comes off: 2,382 frame instances
+of 4,406, from tables, food and bench.
+
+THE SAMPLE IS SIX RECORDINGS. 78 of 78 says this region is clean on cam3, not
+that it is clean anywhere; the threshold needs re-confirming on new material
+before it travels.
 
 THE DEFAULT IS TO KEEP THE MOSAIC. A box with no answer, or an answer that is
 not confidently negative, stays covered. Dropping one wrongly puts a
@@ -46,7 +55,10 @@ def main():
     ap.add_argument("--jobs", default="/workspace/cam3_jobs.txt")
     ap.add_argument("--cap", type=float, default=0.18)
     ap.add_argument("--thr", type=float, default=0.50,
-                    help="below this the box is dropped; everything else is kept")
+                    help="over the cap: below this the box is dropped")
+    ap.add_argument("--small_thr", type=float, default=0.05,
+                    help="under the cap: a box is dropped only below this, "
+                         "where the verdict was 78/78; 0 disables")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
 
@@ -72,12 +84,19 @@ def main():
         # The stems were built from the SAME episode grouping, ordered by the
         # episode's middle frame, so the index rebuilds identically here.
         out = []
+        n_small = 0
         for j, e in enumerate(sorted(eps, key=lambda x: x["frame"])):
-            if e["w_frac"] <= a.cap:
-                continue
             stem = "%s_f%06d_h%d" % (rec, e["frame"], j)
             pf = P.get(stem)
-            is_face = 1 if (pf is None or pf > a.thr) else 0
+            if e["w_frac"] <= a.cap:
+                # No row unless the model was confident; no row means the
+                # mosaic stays, which is what happened before this existed.
+                if not a.small_thr or pf is None or pf > a.small_thr:
+                    continue
+                is_face = 0
+                n_small += 1
+            else:
+                is_face = 1 if (pf is None or pf > a.thr) else 0
             # EVERY COORDINATE THE EPISODE TOUCHED. One row per episode left
             # the rest unjudged, and an unjudged box is covered -- so the cap
             # came off for 46 of 53 boxes in one recording and the delivered
@@ -88,9 +107,10 @@ def main():
                             "p_face": "" if pf is None else round(pf, 4),
                             "w_frac": round(e["w_frac"], 4),
                             "n_frames": len(e["frames"]), "stem": stem})
-            tot += 1
-            kept += is_face
-            dropped += 1 - is_face
+            if e["w_frac"] > a.cap:
+                tot += 1
+                kept += is_face
+                dropped += 1 - is_face
         # A FILE FOR EVERY RECORDING, EMPTY OR NOT. Writing only the ones
         # with something in them makes "no over-cap boxes here" and "the path
         # is wrong" look identical to the render, and the render would then
@@ -104,12 +124,14 @@ def main():
             w.writeheader()
             w.writerows(out)
         if out:
-            print("  %-16s 超过 cap 的 %d 段 -> 保留 %d、撤掉 %d"
+            print("  %-16s %d 行（大框保留 %d、大框撤掉 %d、小框撤掉 %d 段）"
                   % (rec, len(out), sum(r["is_face"] for r in out),
-                     sum(1 - r["is_face"] for r in out)))
+                     sum(1 for r in out if not r["is_face"]
+                         and float(r["w_frac"]) > a.cap), n_small))
         else:
-            print("  %-16s 没有超过 cap 的框（写了空表）" % rec)
-    print("\n合计 %d 段超过 cap：判为脸保留 %d，判为不是脸撤掉 %d" % (tot, kept, dropped))
+            print("  %-16s 无可撤的框（写了空表）" % rec)
+    print("\n超过 cap 的 %d 段：判为脸保留 %d，判为不是脸撤掉 %d" % (tot, kept, dropped))
+    print("小框（<=%.2f 宽）里 p<=%.2f 的段也写了撤掉的行" % (a.cap, a.small_thr))
     print("-> %s/<rec>.faceverdict.csv" % a.out)
 
 
