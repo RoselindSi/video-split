@@ -66,6 +66,7 @@ import random
 
 import numpy as np
 
+from src.semhand import crossv1
 from src.semhand.crossv1 import Views, fit, loader, predict, read_rows
 
 ARMS = ("S_wide", "S_v1", "S_wide_h", "S_wide_z", "S_wide_g6", "S_wide_g6and", "S_wide_hg6and",
@@ -258,7 +259,29 @@ def main():
             print(f"  {arm} seed {seed}: dev F1 {best['f1']:.3f} (epoch {best['epoch']}), "
                   f"{len(rows)} 行", flush=True)
         for root, trows in tests.items():
-            write_preds(root, arm, trows, predict(models, trows, view, device))
+            if a.n_out < 3:
+                write_preds(root, arm, trows,
+                            predict(models, trows, view, device))
+                continue
+            # A DIFFERENT COLUMN AND A DIFFERENT NUMBER, both on purpose.
+            #
+            # The column: writing into `S_wide_g6` would overwrite the
+            # incumbent's predictions with the challenger's, in the file the
+            # comparison reads. The evaluation would then compare a model
+            # against itself and report a tie.
+            #
+            # The number: `predict` returns P(class 1) out of the softmax, and
+            # under three classes that is P(owner) with the rest split between
+            # `other` and `not a hand`. Against a two-class P(owner) it is
+            # deflated by whatever mass the third class took, so every
+            # threshold moves for a reason that has nothing to do with
+            # ownership. The ownership column is renormalised over the two
+            # classes that ARE ownership, and the third is its own column so
+            # it can be read rather than inferred from what is missing.
+            pr = crossv1.predict_multi(models, trows, view, device)
+            own = pr[:, 1] / np.maximum(1e-9, pr[:, 0] + pr[:, 1])
+            write_preds(root, arm + "_3c", trows, own)
+            write_preds(root, arm + "_nothand", trows, pr[:, 2])
             print(f"  {arm} -> {root}: {len(trows)} 只手", flush=True)
     tag = f"_{a.arms}_{a.seed_list}".replace(",", "-") if a.seed_list else ""
     json.dump(report, open(os.path.join(a.out, f"dev{tag}.json"), "w"), indent=1, default=float)
