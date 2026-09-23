@@ -57,43 +57,59 @@ def iou(a, b):
     return i / u if u > 0 else 0.0
 
 
-def episodes(rows, gap=2, min_iou=0.3):
-    """Frame instances of one held box -> one item. -> [{frames, box, w_frac}]
+ANCHOR_IOU = 0.85
 
-    A box that survives twelve frames of hold is one decision seen twelve
-    times. Asking twelve times would multiply both the cost and the apparent
-    weight of a single detection."""
+
+def episodes(rows, gap=2, min_iou=ANCHOR_IOU):
+    """Box instances -> groups that are ONE box, not one chain. -> [{frames, box, boxes, w_frac}]
+
+    THE FIRST VERSION CHAINED AND THAT WAS THE BUG. It matched each box
+    against the PREVIOUS one at IoU 0.3, so a detection drifting a few pixels
+    a frame walked a group across the scene: 102 frames, 102 distinct
+    coordinates, centres spanning 339 px, first and last box overlapping by
+    nothing at all. One question was asked -- of the middle frame -- and its
+    answer was then applied to every coordinate in the chain, including boxes
+    the model had never been shown. That is how a verdict of "not a face",
+    scored on a box with IoU 0.000 to a face, uncovered that face.
+
+    Matching against the group's ANCHOR instead of its previous member is the
+    whole fix. A held box repeats its coordinates exactly and still collapses;
+    a box that moves far enough to be a different thing starts a new group and
+    gets asked its own question. On cam3 this turns 565 chains into 1,626
+    groups whose members span at most nine coordinates, and the cost of asking
+    is unchanged in the only way that matters -- it is still offline.
+
+    THE GAP STAYS, because a hold that outlives a detection by a frame or two
+    is the same box; what it cannot do any more is carry the group somewhere
+    else while it waits.
+    """
     by_f = collections.defaultdict(list)
     for r in rows:
         by_f[int(r["frame"])].append(r)
-    live, out = [], []
+    out = []
     for f in sorted(by_f):
         for r in by_f[f]:
             box = [int(r[c]) for c in ("x0", "y0", "x1", "y1")]
-            for L in live:
-                if L["last"] >= f - gap and iou(L["box"], box) > min_iou:
-                    L["last"], L["box"] = f, box
-                    # EVERY COORDINATE THE EPISODE PASSED THROUGH, not just
-                    # the last. A held box is re-emitted at the detection's
-                    # position each time the detector refreshes it, so one
-                    # episode covers dozens of distinct four-tuples -- 53 in
-                    # one recording. Keeping only `box` wrote a verdict for
-                    # one of them and left the other 46 unjudged, which the
-                    # render then covered, which turned the cap off.
-                    L["boxes"].add(tuple(box))
+            for L in out:
+                if L["last"] >= f - gap and iou(L["anchor"], box) > min_iou:
+                    L["last"] = f
                     L["frames"].append(f)
+                    L["boxes"].add(tuple(box))
                     L["w_frac"] = max(L["w_frac"], float(r["w_frac"]))
                     if r.get("conf"):
                         L["confs"].append(float(r["conf"]))
                     break
             else:
-                live.append({"last": f, "box": box, "frames": [f],
-                             "boxes": {tuple(box)},
-                             "w_frac": float(r["w_frac"]),
-                             "confs": [float(r["conf"])] if r.get("conf") else []})
-    out = live
+                out.append({"anchor": box, "box": box, "last": f,
+                            "frames": [f], "boxes": {tuple(box)},
+                            "w_frac": float(r["w_frac"]),
+                            "confs": [float(r["conf"])] if r.get("conf") else []})
     for e in out:
-        e["frame"] = e["frames"][len(e["frames"]) // 2]
+        # THE SCORED FRAME MUST HOLD THE ANCHOR, because the anchor is what
+        # every member is within IoU of. Scoring some other member and sharing
+        # the answer backwards is the chaining mistake in miniature.
+        e["frame"] = e["frames"][0]
+        e["box"] = e["anchor"]
     return out
 
 
