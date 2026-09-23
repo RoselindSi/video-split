@@ -277,8 +277,18 @@ class Pairs:
                 torch.from_numpy(r["g"]), int(r["y"]))
 
 
-def build(arm, n_geom=len(GEOM), target_mask=False, mask_branch=False):
+def build(arm, n_geom=len(GEOM), target_mask=False, mask_branch=False,
+          n_out=2):
     """-> a model for one arm of the ablation.
+
+    `n_out` IS THE NUMBER OF ANSWERS, NOT A CAPACITY KNOB. It was fixed at two
+    because ownership is a bit: the wearer's or somebody else's. A box on a
+    machine part is neither, and giving it the first answer puts bench clutter
+    in the training stream while giving it the second mosaics a parts bin to
+    hide nothing. Three lets the model say so. Old checkpoints load under the
+    default and keep their two-way head; the value is not read from the
+    weights, so a three-class checkpoint must be built with n_out=3 or the
+    load will fail loudly rather than silently truncating.
 
     Two trunks and not one shared trunk. The hand crop and a 2.5x window are
     different distributions -- one is filled by a hand, the other is mostly
@@ -343,7 +353,7 @@ def build(arm, n_geom=len(GEOM), target_mask=False, mask_branch=False):
                 d += 64
             self.head = nn.Sequential(
                 nn.Dropout(0.3), nn.Linear(d, 128), nn.ReLU(),
-                nn.Linear(128, 2))
+                nn.Linear(128, n_out))
 
         def forward(self, h, c, g):
             parts = []

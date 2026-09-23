@@ -131,14 +131,15 @@ def read_rows(root, mode):
     return rows
 
 
-def fit(arm, rows, seed, device, epochs=12):
+def fit(arm, rows, seed, device, epochs=12, n_out=2):
     import torch
     from src.rig import own_ctx
     torch.manual_seed(seed)
     random.seed(seed)
     np.random.seed(seed)
     tr, dv = own_ctx.split_by_recording(rows, 0.25, seed)
-    model = own_ctx.build("both_geom" if arm == "VV" else "both").to(device)
+    model = own_ctx.build("both_geom" if arm == "VV" else "both",
+                          n_out=n_out).to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=3e-4, weight_decay=1e-4)
     ce = torch.nn.CrossEntropyLoss()
     best, state = None, None
@@ -149,14 +150,53 @@ def fit(arm, rows, seed, device, epochs=12):
             opt.zero_grad()
             loss.backward()
             opt.step()
-        p = predict([model], dv, arm, device)
-        sc = own_ctx.scores((p >= 0.5).astype(int), np.array([r["y"] for r in dv]))
-        print(f"    {arm} seed {seed} epoch {e + 1:>2}  dev F1 {sc['f1']:.3f}", flush=True)
+        if n_out == 2:
+            p = predict([model], dv, arm, device)
+            sc = own_ctx.scores((p >= 0.5).astype(int),
+                                np.array([r["y"] for r in dv]))
+            extra = ""
+        else:
+            # THE SELECTION METRIC STAYS THE OWNERSHIP ONE. The third class
+            # is there to remove bench clutter from the stream, not to be
+            # optimised for, and picking the epoch on a three-way accuracy
+            # would let a model trade the decision that matters for the one
+            # that is easy -- non-hands are 13% of the rows and the easiest
+            # 13% there is. So the epoch is chosen on owner-vs-other over the
+            # rows that ARE hands, and the third class is reported beside it.
+            pr = predict_multi([model], dv, arm, device)
+            y = np.array([r["y"] for r in dv])
+            hands = y < 2
+            sc = own_ctx.scores(pr[hands].argmax(1).clip(0, 1), y[hands])
+            n2 = int((pr.argmax(1) == 2).sum())
+            hit = int(((pr.argmax(1) == 2) & (y == 2)).sum())
+            extra = (f"  非手 {hit}/{int((y == 2).sum())} 召回，"
+                     f"判非手 {n2} 个")
+        print(f"    {arm} seed {seed} epoch {e + 1:>2}  dev F1 {sc['f1']:.3f}"
+              + extra, flush=True)
         if best is None or (sc["f1"] == sc["f1"] and sc["f1"] > best["f1"]):
             best = dict(sc, epoch=e + 1)
             state = {k: v.detach().clone() for k, v in model.state_dict().items()}
     model.load_state_dict(state)
     return model, best
+
+
+def predict_multi(models, rows, arm, device):
+    """-> (n, n_out) averaged probabilities, for a head wider than two.
+
+    `predict` returns P(class 1) and is what every existing caller expects; a
+    three-class model behind that signature would silently report P(owner) as
+    if the remaining mass were all `other`, which is exactly the reading that
+    hides the new class."""
+    import torch
+    out = []
+    for m in models:
+        m.eval()
+    with torch.no_grad():
+        for h, c, g, _ in loader(rows, arm, False, False, batch=128):
+            h, c, g = h.to(device), c.to(device), g.to(device)
+            out.append(np.mean([torch.softmax(m(h, c, g), 1).cpu().numpy()
+                                for m in models], 0))
+    return np.concatenate(out) if out else np.zeros((0, 2))
 
 
 def predict(models, rows, arm, device):
