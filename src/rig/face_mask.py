@@ -649,10 +649,20 @@ class Hold:
     that merely touches another is not evidence they are the same face, and
     accepting it is what let one track eat the frame."""
 
-    def __init__(self, frames=HOLD_FRAMES, min_iou=0.2, max_frac=MAX_FACE_FRAC):
+    def __init__(self, frames=HOLD_FRAMES, min_iou=0.2, max_frac=MAX_FACE_FRAC,
+                 verdicts=None):
         self.frames = int(frames)
         self.min_iou = float(min_iou)
         self.max_frac = max_frac
+        # A SECOND OPINION IN PLACE OF THE SIZE RULE. `verdicts` maps a box to
+        # whether a person or a model called it a face. When it is supplied,
+        # a box wider than the cap is refused only if the verdict says it is
+        # not a face, instead of being refused for being wide. On the thirteen
+        # boxes over the cap in eighty seconds of cam3 the two disagree once,
+        # and that once is a colleague leaning into the camera.
+        self.verdicts = verdicts or {}
+        self.refused = []                      # boxes this frame's cap dropped
+        self.unjudged = 0                      # over-cap boxes with no verdict
         self.items = []                        # [[x0, y0, x1, y1, ttl]]
 
     @staticmethod
@@ -674,10 +684,31 @@ class Hold:
         small. A detection wider than `max_frac` of the frame is not a face at
         this range, and covering it destroys the bench this pipeline exists to
         keep."""
+        self.refused = []
         if self.max_frac and shape is not None:
             W = shape[1]
-            boxes = [b for b in boxes
-                     if (b[2] - b[0]) <= self.max_frac * W]
+            keep = []
+            for b in boxes:
+                if (b[2] - b[0]) <= self.max_frac * W:
+                    keep.append(b)
+                    continue
+                # OVER THE CAP: ask, if there is anything to ask.
+                v = self.verdicts.get(tuple(int(x) for x in b[:4]))
+                if v is None:
+                    if self.verdicts:
+                        # Verdicts were supplied and this box is not in them,
+                        # so the run that produced them is not this run. It is
+                        # covered rather than dropped -- the safe side of a
+                        # question about a face -- and counted, loudly.
+                        self.unjudged += 1
+                        keep.append(b)
+                    else:
+                        self.refused.append(b)
+                elif v:
+                    keep.append(b)
+                else:
+                    self.refused.append(b)
+            boxes = keep
         for it in self.items:
             it[4] -= 1
         for b in boxes:

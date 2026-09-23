@@ -57,6 +57,30 @@ SELF_RECONFIRM_FRAMES = 1
 NEW_HAND_GRACE = 2
 
 
+def load_face_verdicts(path):
+    """-> {(x0,y0,x1,y1): bool} or None.
+
+    Keyed on the box because a held box keeps the coordinates of the detection
+    that created it, so one entry covers every frame the hold lasts."""
+    if not path:
+        return None
+    import csv
+    if not os.path.exists(path):
+        # `face_verdicts` writes a file for every recording, so a missing one
+        # is a wrong path and not an empty answer. Guessing between the two is
+        # how a privacy switch ends up off without anyone deciding it.
+        raise FileNotFoundError(
+            "%s: no verdicts here. `semhand.face_verdicts` writes one file "
+            "per recording, empty when nothing exceeds the cap." % path)
+    out = {}
+    for r in csv.DictReader(open(path, encoding="utf-8")):
+        out[tuple(int(r[c]) for c in ("x0", "y0", "x1", "y1"))] = \
+            r["is_face"] == "1"
+    n_drop = sum(1 for v in out.values() if not v)
+    print(f"  人脸第二意见：{len(out)} 个框，其中判为不是脸的 {n_drop} 个")
+    return out
+
+
 def _bar(width, text, height=BAR_H, bg=(28, 28, 30), fg=(235, 235, 235)):
     import cv2
     b = np.full((height, width, 3), bg, np.uint8)
@@ -226,7 +250,8 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         new_hand_grace=NEW_HAND_GRACE, max_face_frac=None, grace_log=None,
         assoc_log=None, veto_held=False, reacquire_edge=None,
         reacquire_log=None, camera=None, owner_detector=None,
-        gate_frac=None, face_pad=None, decisions=None):
+        gate_frac=None, face_pad=None, decisions=None,
+        face_verdicts=None):
     import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
@@ -267,7 +292,8 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     fdet = face_mask.load_detector(face_model, face_conf) if face_model \
         else None
     hold = face_mask.Hold(max_frac=max_face_frac
-                          if max_face_frac is not None else face_mask.MAX_FACE_FRAC)
+                          if max_face_frac is not None else face_mask.MAX_FACE_FRAC,
+                          verdicts=face_verdicts)
     # Without a fitted prior this falls back to the single exit-height rule,
     # which is what every render before this one used.
     tracker = Tracker(
@@ -994,6 +1020,9 @@ def main():
                     help="refuse a face box wider than this fraction of the frame. 0.18 "
                          "refuses all 25 boxes inspected over ten recordings, every one a "
                          "false positive, and would also refuse a face 37.5% wide")
+    ap.add_argument("--face_verdicts",
+                    help="a <rec>.faceverdict.csv from `semhand.face_verdicts`: "
+                         "the size cap becomes a question instead of a refusal")
     ap.add_argument("--face_pad", type=float, default=None,
                     help="grow each face box by this fraction of its own size before "
                          "mosaicking (default 0.35, which triples the covered area)")
@@ -1186,6 +1215,7 @@ def main():
                      self_reconfirm=a.self_reconfirm,
                      new_hand_grace=a.new_hand_grace,
                      max_face_frac=a.max_face_frac, face_pad=a.face_pad,
+                     face_verdicts=load_face_verdicts(a.face_verdicts),
                      grace_log=a.grace_log,
                      assoc_log=a.assoc_log, veto_held=a.veto_held,
                      reacquire_edge=a.reacquire_edge,

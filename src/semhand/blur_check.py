@@ -175,6 +175,9 @@ def main():
     ap.add_argument("--face_model", default=None,
                     help="a different face/head detector; default is the shipped one")
     ap.add_argument("--face_conf", type=float, default=None)
+    ap.add_argument("--face_verdicts",
+                    help="a <rec>.faceverdict.csv: the size cap becomes a "
+                         "question instead of a refusal")
     ap.add_argument("--face_pad", type=float, default=None,
                     help="grow each face box by this fraction before mosaicking "
                          "(default 0.35 -> 2.89x the area)")
@@ -327,6 +330,7 @@ def main():
         safe_reacquire=not a.inherit_self_on_reacquire, self_reconfirm=a.self_reconfirm,
         new_hand_grace=a.new_hand_grace, max_face_frac=a.max_face_frac,
         face_pad=a.face_pad,
+        face_verdicts=demo_video.load_face_verdicts(a.face_verdicts),
         grace_log=a.grace_log, assoc_log=a.assoc_log, veto_held=a.veto_held,
         reacquire_edge=a.reacquire_edge, reacquire_log=a.reacquire_log,
         camera=a.camera, owner_detector=a.owner_detector,
