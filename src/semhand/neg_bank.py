@@ -208,7 +208,15 @@ def main():
             if got is None:
                 continue
             img, W, H = got
-            tag = "nothand" if y == Y_NOTHAND else "hand_unowned"
+            # `tag` IS THE RECORDING AND NOTHING ELSE. `split_by_recording`
+            # groups on it to keep whole recordings on one side of the dev
+            # split, so writing the class name here made all 3,235 negatives
+            # one giant pseudo-recording -- which then landed wholly in train,
+            # leaving the dev side with no class-2 rows at all and the epoch
+            # selection blind to the class it was added for. Nothing raised;
+            # the log said `非手 0/0` and the ownership F1 looked fine. The
+            # class lives in `y`, which already carries it.
+            tag = r["rec"]
             pkg.append({"stem": r["stem"], "pkg": "neg_harvest", "tag": tag,
                         "databag": r["rec"], "frame": r["frame"], "image": img,
                         "x0": r["box"][0], "y0": r["box"][1],
