@@ -53,6 +53,19 @@ For the wearer those figures are 4.0% and 10.1%.
 ONE CAVEAT ON THE HEADLINE. The frames come from windows enriched for
 `has_other`, so the MIX of sizes is not the deployment mix and 70.5% is not a
 deployment rate. The per-band numbers are what transfers.
+
+AND RESOLUTION IS NOT THE FIX, which is what the size sweep was for. Running
+1024, 1536 and 1920 on the same decoded frames -- exactly paired -- the
+foreign-hand recall at the shipped new-track threshold is 44.3%, 44.2%,
+44.1%. Identical. Meanwhile the wearer's own recall at that threshold falls
+from 85.5% to 78.5% to 75.7%, so the larger input is a net loss.
+
+Per band it is clear why: foreign hands at 40-60 px go 31.4% to 39.4% to
+41.6%, which is a real gain on 137 boxes, while 100-160 and 160+ get WORSE
+(96.3% to 92.3%). A bigger input helps the smallest band and costs everywhere
+else, and the weighted result is zero. Whatever strands 56% of other people's
+hands below the admission bar, it is not the number of pixels they are drawn
+with.
 """
 from __future__ import annotations
 
