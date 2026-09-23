@@ -153,6 +153,16 @@ def main():
     ap.add_argument("--epochs", type=int, default=12)
     ap.add_argument("--out", default="/workspace/distil/student")
     ap.add_argument("--g6_root", default="/workspace/g6teach")
+    # THE THIRD CLASS IS A ROOT, NOT A FLAG. Its rows are y=2 and they are
+    # read by the same `read_rows(root, "bank")` as everything else, so the
+    # only thing that changes is the number of answers the head has. Passing
+    # it without --n_out 3 is refused below rather than silently training a
+    # two-way head on three-way labels, which would put every machine part
+    # into whichever class the loss finds cheaper.
+    ap.add_argument("--nothand_root", action="append", default=None,
+                    help="a bank of y=2 rows from `semhand.neg_bank`")
+    ap.add_argument("--n_out", type=int, default=2,
+                    help="3 adds `not a hand` as a third answer")
     ap.add_argument("--predict_only", action="store_true",
                     help="load <out>/<arm>_seed*.pt and only predict on --test_root")
     a = ap.parse_args()
@@ -190,6 +200,25 @@ def main():
         zone += z
     tests = {root: read_rows(root, "test") for root in (a.test_root or [])}
 
+    nothand = []
+    for root in (a.nothand_root or []):
+        rows_nh = read_rows(root, "bank")
+        # The control rows the harvest wrote alongside the negatives are hands
+        # whose OWNERSHIP nobody labelled. They exist to be predicted on, not
+        # trained on: given a y of 1 they would teach "anything from the new
+        # pass that is a hand is the wearer's", which is the shortcut this
+        # pool was built to test for.
+        rows_nh = [r for r in rows_nh if int(r.get("y", -1)) == 2]
+        print(f"nothand rows {root}: {len(rows_nh)}", flush=True)
+        nothand += rows_nh
+    if nothand and a.n_out < 3:
+        raise SystemExit("--nothand_root needs --n_out 3: a two-way head "
+                         "trained on y=2 rows puts every machine part into "
+                         "whichever class the loss finds cheaper")
+    if a.n_out >= 3 and not nothand:
+        raise SystemExit("--n_out 3 with no --nothand_root: the third class "
+                         "would have no examples and never fire")
+
     extra = {}
     for arm, mode in (("S_wide_g6", "all"), ("S_wide_g6and", "and"), ("S_wide_hg6and", "and"),
                       ("S_wide_g6_v2", "all")):
@@ -205,13 +234,23 @@ def main():
             rows = extra[arm]
         else:
             rows = teach + (human if arm == "S_wide_h" else zone if arm == "S_wide_z" else [])
+        rows = rows + nothand
+        if nothand:
+            n2 = sum(1 for r in rows if int(r.get("y", -1)) == 2)
+            print(f"{arm}: 训练池 {len(rows)} 行 —— 别人 "
+                  f"{sum(1 for r in rows if int(r.get('y', -1)) == 0)} / 自己 "
+                  f"{sum(1 for r in rows if int(r.get('y', -1)) == 1)} / 不是手 "
+                  f"{n2}（{n2 / max(1, len(rows)):.1%}，现实约 7%，"
+                  f"不做逆频率加权）", flush=True)
         view = VIEW[arm]
         models = []
         seeds = [int(x) for x in a.seed_list.split(",")] if a.seed_list else range(a.seeds)
         for seed in seeds:
-            m, best = fit(view, rows, seed, device, epochs=a.epochs)
+            m, best = fit(view, rows, seed, device, epochs=a.epochs,
+                          n_out=a.n_out)
             torch.save({"state": {k: v.cpu() for k, v in m.state_dict().items()},
-                        "arm": "both_geom" if view == "VV" else "both", "view": view,
+                        "arm": "both_geom" if view == "VV" else "both",
+                        "n_out": a.n_out, "view": view,
                         "train_rows": len(rows), "dev": best},
                        os.path.join(a.out, f"{arm}_seed{seed}.pt"))
             models.append(m)
