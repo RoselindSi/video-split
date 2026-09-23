@@ -177,16 +177,31 @@ def main():
         tests = {root: read_rows(root, "test") for root in (a.test_root or [])}
         for arm in a.arms.split(","):
             models = []
+            n_out = a.n_out
             for path in sorted(glob.glob(os.path.join(a.out, f"{arm}_seed*.pt"))):
                 ck = torch.load(path, map_location=device, weights_only=False)
-                m = own_ctx.build(ck["arm"]).to(device)
+                # THE WIDTH COMES FROM THE CHECKPOINT. Building at the default
+                # and loading a three-class state dict fails on the head's
+                # shape, which is the right failure -- but only if the width
+                # is read rather than assumed, so it is written at save time
+                # and read here.
+                n_out = int(ck.get("n_out", 2))
+                m = own_ctx.build(ck["arm"], n_out=n_out).to(device)
                 m.load_state_dict(ck["state"])
                 models.append(m)
             if not models:
                 raise SystemExit(f"没有 {arm} 的权重")
             for root, trows in tests.items():
-                write_preds(root, arm, trows, predict(models, trows, VIEW[arm], device))
-                print(f"  {arm} ({len(models)} seeds) -> {root}: {len(trows)} 只手", flush=True)
+                if n_out < 3:
+                    write_preds(root, arm, trows,
+                                predict(models, trows, VIEW[arm], device))
+                else:
+                    pr = crossv1.predict_multi(models, trows, VIEW[arm], device)
+                    own = pr[:, 1] / np.maximum(1e-9, pr[:, 0] + pr[:, 1])
+                    write_preds(root, arm + "_3c", trows, own)
+                    write_preds(root, arm + "_nothand", trows, pr[:, 2])
+                print(f"  {arm} ({len(models)} seeds, n_out={n_out}) -> {root}: "
+                      f"{len(trows)} 只手", flush=True)
         return
 
     teach = [r for root in a.distil_root
