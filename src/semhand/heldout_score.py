@@ -40,6 +40,8 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--views", default="/workspace/heldout_views")
+    ap.add_argument("--frames", required=True,
+                    help="clean native frames from `semhand.clean_frames`")
     ap.add_argument("--ckpt", required=True, help="glob over the seeds")
     ap.add_argument("--thr", type=float, default=0.5,
                     help="class 2 fires when it is the argmax; this only "
@@ -76,11 +78,18 @@ def main():
             hs, cs = [], []
             keep = []
             for r in chunk:
-                # THE FRAME IS REBUILT FROM THE CLEAN IMAGE, through the same
-                # `qwen.views` the training used. The harvest's own jpgs have
-                # the box drawn before the resize and a rectangle inside the
-                # crop; feeding those here would measure a different input.
-                img = os.path.join(a.views, r["stem"] + "_full.jpg")
+                # THE CLEAN NATIVE FRAME, through the same `qwen.views` the
+                # training used. The first version passed the harvest's
+                # `_full.jpg` -- 1280 wide with the box already drawn -- while
+                # the index carries native 1920x1520 coordinates, so `views`
+                # computed a scale of 1.0, drew the box off the edge and cut
+                # the crop from the wrong place. Every box came back looking
+                # like nothing, and the run reported 100% not-a-hand in every
+                # band from a model whose dev precision was 97%. The comment
+                # here said "from the clean image" while the line below did
+                # not; now it does.
+                img = os.path.join(a.frames, r["rec"], r["cam"],
+                                   "%06d.jpg" % int(r["frame"]))
                 if not os.path.exists(img):
                     continue
                 frame, crop = views({"image": img,
