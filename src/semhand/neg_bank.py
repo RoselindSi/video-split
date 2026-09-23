@@ -87,6 +87,12 @@ def main():
     ap.add_argument("--seed", type=int, default=53)
     ap.add_argument("--min_px", type=int, default=150)
     ap.add_argument("--out", required=True)
+    # SPLIT BY RECORDING, because that is where the cost is. Each recording
+    # costs one seek into a 28,000-frame file and then a short walk, so the
+    # work divides cleanly and four workers are four times faster. Each shard
+    # writes its own index; merging them is a concatenation.
+    ap.add_argument("--shard", type=int, default=0)
+    ap.add_argument("--nshard", type=int, default=1)
     ap.add_argument("--dry", action="store_true")
     a = ap.parse_args()
 
@@ -139,6 +145,11 @@ def main():
         if p is None:
             continue
         by_vid[(p, cam, rec)].append(f)
+    if a.nshard > 1:
+        keys = sorted(by_vid)
+        mine = {k for i, k in enumerate(keys) if i % a.nshard == a.shard}
+        by_vid = {k: v for k, v in by_vid.items() if k in mine}
+        print("分片 %d/%d：%d 条录像" % (a.shard, a.nshard, len(by_vid)))
 
     written = {}
     for (p, cam, rec), fs in sorted(by_vid.items()):
@@ -147,9 +158,24 @@ def main():
             continue
         d = os.path.join(a.out, "frames", rec, cam)
         os.makedirs(d, exist_ok=True)
+        # RESUMABLE, because a four-hour job that has to start over on any
+        # interruption is a four-hour job nobody can interrupt. A frame
+        # already on disk is the same frame.
+        todo = [f for f in sorted(fs)
+                if not os.path.exists(os.path.join(d, "%06d.jpg" % f))]
+        for f in sorted(fs):
+            q = os.path.join(d, "%06d.jpg" % f)
+            if os.path.exists(q):
+                import cv2 as _c
+                im = _c.imread(q)
+                if im is not None:
+                    written[(rec, cam, f)] = (q, im.shape[1], im.shape[0])
+        if not todo:
+            print("  %-28s %s  已存在，跳过" % (rec, cam), flush=True)
+            continue
         cap = cv2.VideoCapture(v)
         at = -1
-        for f in sorted(fs):
+        for f in todo:
             # The harvest read consecutive frames from one anchor, so these
             # are clustered; walking forward is cheap and seeking is not.
             if 0 <= f - at <= 240:
@@ -193,12 +219,14 @@ def main():
                           "geom": json.dumps([0.0] * 14),
                           "p_v1_jpeg": "", "p_dump": round(r["conf"], 4),
                           "y": y, "tag": tag, "status": "ok"})
-    with open(os.path.join(a.out, "pkg", "index_nothand.csv"), "w",
+    suffix = "" if a.nshard == 1 else "_%d" % a.shard
+    with open(os.path.join(a.out, "pkg", "index_nothand%s.csv" % suffix), "w",
               newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=PKG_COLS)
         w.writeheader()
         w.writerows(pkg)
-    with open(os.path.join(a.out, "cross", "index_bank_nothand.csv"), "w",
+    with open(os.path.join(a.out, "cross",
+                           "index_bank_nothand%s.csv" % suffix), "w",
               newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=CROSS_COLS)
         w.writeheader()
