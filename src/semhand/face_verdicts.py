@@ -14,21 +14,27 @@ hold lasts and the verdict follows them without needing to know which frame is
 which. Keying on the frame as well would miss every held frame, which is most
 of them.
 
-BELOW THE CAP, ONLY THE CONFIDENT REJECTIONS ARE WRITTEN, and that threshold
-was earned rather than picked. Aggregated over every score, face-ness on small
-boxes is right 74 times in 100 and unusable. Split by score, every error it
-made sits at p >= 0.060, and below 0.05 it is 78 for 78 across two sheets --
-lower bound 95.3%. The nearest error at 0.060 is what makes 0.05 a boundary
-instead of a round number.
+BELOW THE CAP NOTHING IS DROPPED, AND THAT DECISION WAS MADE TWICE. Split by
+score, face-ness on small boxes looked usable: every error in two sheets sat
+at p >= 0.060 and below 0.05 it was 78 for 78. The gate was turned on at 0.05
+and 136 episodes of mosaic came off.
 
-So a small box gets a row only when p <= SMALL_THR, and the row says "not a
-face". Everything else down there gets no row and keeps its mosaic, which is
-the old behaviour. Half the small-box mosaic comes off: 2,382 frame instances
-of 4,406, from tables, food and bench.
+Two of them were faces. A woman at p=1.7e-05 and a man at p=0.0, the second on
+a box the detector had scored 0.81, both found by watching the delivered video
+rather than by any number. They were among the 58 episodes the sheets never
+reached, and missing both by chance had probability 0.18 -- the sample was not
+unlucky, the reading of it was wrong.
 
-THE SAMPLE IS SIX RECORDINGS. 78 of 78 says this region is clean on cam3, not
-that it is clean anywhere; the threshold needs re-confirming on new material
-before it travels.
+78 of 78 has a lower bound of 95.3%, which over 136 episodes permits about six
+wrong drops. Precision is simply the wrong quantity to gate a privacy decision
+on. What is needed is a bound on faces uncovered, and no sample this size can
+give a tight one; the region would have to be clean over several hundred
+judged episodes before it is worth the trade, and it would still be six
+recordings.
+
+The mechanism stays behind `--small_thr` because the measurement is real and
+the finding -- about 59% of small mosaics are not faces -- is worth acting on
+one day. The default does not use it.
 
 THE DEFAULT IS TO KEEP THE MOSAIC. A box with no answer, or an answer that is
 not confidently negative, stays covered. Dropping one wrongly puts a
@@ -56,9 +62,18 @@ def main():
     ap.add_argument("--cap", type=float, default=0.18)
     ap.add_argument("--thr", type=float, default=0.50,
                     help="over the cap: below this the box is dropped")
-    ap.add_argument("--small_thr", type=float, default=0.05,
-                    help="under the cap: a box is dropped only below this, "
-                         "where the verdict was 78/78; 0 disables")
+    # OFF. 78 of 78 was not enough and the bound said so: its lower limit is
+    # 95.3%, which over 136 episodes permits about six wrong drops, and two
+    # were found by watching the output -- a woman's face at p=1.7e-05 and a
+    # man's at 0.0, the second on a box the detector scored 0.81. Both were
+    # among the 58 episodes the sheets did not reach; missing both by chance
+    # had probability 0.18, so the sample was not unlucky, the reading of it
+    # was wrong. Precision is the wrong quantity to gate a privacy decision
+    # on: what is needed is a bound on faces uncovered, and 78 of 78 does not
+    # give a tight one. The mechanism stays; the default does not use it.
+    ap.add_argument("--small_thr", type=float, default=0.0,
+                    help="under the cap: drop a box only below this. 0 = off, "
+                         "which is the shipped setting -- see the note above")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
 

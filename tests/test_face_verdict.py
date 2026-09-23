@@ -63,8 +63,21 @@ class FaceVerdictTest(unittest.TestCase):
             self.assertEqual(h.update([SMALL], shape=SHAPE), [SMALL[:4]],
                              "a box under the cap was filtered without a verdict")
 
-    def test_a_small_box_can_now_be_refused_and_this_test_changed(self):
-        """It asserted the opposite until the evidence was read by score.
+    def test_a_small_box_can_be_refused_by_a_verdict_but_none_is_written(self):
+        """The mechanism works and the shipped default does not use it.
+
+        It was turned on at p<=0.05 on the strength of 78 correct rejections
+        out of 78, and it uncovered two real faces -- p=1.7e-05 and p=0.0, the
+        second on a box the detector scored 0.81 -- both found by watching the
+        video. 78 of 78 bounds precision at 95.3%, which over 136 episodes
+        permits about six wrong drops, so the sample was not unlucky and the
+        reading of it was wrong. Precision is the wrong quantity to gate a
+        privacy decision on.
+
+        `face_verdicts` therefore writes no rows for small boxes by default,
+        and this test drives `Hold` directly to keep the mechanism honest.
+
+        The original note, kept because it is the evidence that was over-read:
 
         Aggregated over every score it gave, face-ness on small boxes was
         right 74 times in 100 -- unusable, and this test said nothing under
