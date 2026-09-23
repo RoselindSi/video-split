@@ -73,6 +73,14 @@ def episodes(rows, gap=2, min_iou=0.3):
             for L in live:
                 if L["last"] >= f - gap and iou(L["box"], box) > min_iou:
                     L["last"], L["box"] = f, box
+                    # EVERY COORDINATE THE EPISODE PASSED THROUGH, not just
+                    # the last. A held box is re-emitted at the detection's
+                    # position each time the detector refreshes it, so one
+                    # episode covers dozens of distinct four-tuples -- 53 in
+                    # one recording. Keeping only `box` wrote a verdict for
+                    # one of them and left the other 46 unjudged, which the
+                    # render then covered, which turned the cap off.
+                    L["boxes"].add(tuple(box))
                     L["frames"].append(f)
                     L["w_frac"] = max(L["w_frac"], float(r["w_frac"]))
                     if r.get("conf"):
@@ -80,6 +88,7 @@ def episodes(rows, gap=2, min_iou=0.3):
                     break
             else:
                 live.append({"last": f, "box": box, "frames": [f],
+                             "boxes": {tuple(box)},
                              "w_frac": float(r["w_frac"]),
                              "confs": [float(r["conf"])] if r.get("conf") else []})
     out = live

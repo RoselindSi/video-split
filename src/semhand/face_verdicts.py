@@ -78,17 +78,11 @@ def main():
             stem = "%s_f%06d_h%d" % (rec, e["frame"], j)
             pf = P.get(stem)
             is_face = 1 if (pf is None or pf > a.thr) else 0
-            # Every frame this box appears on, not only the middle one.
-            seen = set()
-            for r in rows:
-                b = tuple(int(r[c]) for c in ("x0", "y0", "x1", "y1"))
-                if b in seen:
-                    continue
-                if abs(b[2] - b[0] - (e["box"][2] - e["box"][0])) > 2:
-                    continue
-                if b != tuple(e["box"]):
-                    continue
-                seen.add(b)
+            # EVERY COORDINATE THE EPISODE TOUCHED. One row per episode left
+            # the rest unjudged, and an unjudged box is covered -- so the cap
+            # came off for 46 of 53 boxes in one recording and the delivered
+            # mask got BIGGER than with no second opinion at all.
+            for b in sorted(e["boxes"]):
                 out.append({"x0": b[0], "y0": b[1], "x1": b[2], "y1": b[3],
                             "is_face": is_face,
                             "p_face": "" if pf is None else round(pf, 4),

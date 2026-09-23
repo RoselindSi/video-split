@@ -888,6 +888,14 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     # other end of every trade this pipeline makes against over-blur.
     if decisions is not None:
         print(f"  轨迹级决策：{n_overridden} 个框的归属被改判")
+    if face_verdicts is not None:
+        # UNJUDGED IS A FAILURE COUNT, NOT A DETAIL. An over-cap box with no
+        # verdict is covered, so a verdict table that misses them turns the
+        # size cap off without changing a line of it -- which is exactly what
+        # happened, and nothing said so until the delivered mask was measured.
+        print(f"  人脸第二意见：超过 cap 但没有判读的框 {hold.unjudged} 个"
+              + ("（这些被盖住了；不为 0 就说明两次运行对不上）"
+                 if hold.unjudged else ""))
     return n_written, n_dis, n_face, flips.report()
 
 
