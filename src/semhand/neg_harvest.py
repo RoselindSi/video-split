@@ -238,7 +238,10 @@ def main():
 
     idx = list(csv.DictReader(open(os.path.join(a.views, "index.csv"))))
     if a.nshard > 1:
-        idx = [r for i, r in enumerate(idx) if i % a.nshard == a.shard]
+        import hashlib
+        idx = [r for r in idx
+               if int(hashlib.sha1(str(r.get("track_id", r["stem"])).encode())
+                      .hexdigest(), 16) % a.nshard == a.shard]
         a.out = "%s.%d" % (a.out, a.shard)
         print("分片 %d/%d：%d 个框 -> %s" % (a.shard, a.nshard, len(idx), a.out))
     done = set()
@@ -257,8 +260,11 @@ def main():
                 {"type": "image", "image": crop},
                 {"type": "text", "text": QUESTION}]}]
             s = q.score(conv)
-            fh.write(json.dumps({k: r[k] for k in
-                                 ("stem", "rec", "cam", "frame", "conf", "w_px")}
+            # track_id 必须写出来：这一轮采集的意义就是轨迹级负例，
+            # 少了它，聚合到轨迹这一步就没得做了。
+            fh.write(json.dumps({k: r.get(k) for k in
+                                 ("stem", "rec", "cam", "frame", "track_id",
+                                  "conf", "w_px", "h_px")}
                                 | s) + "\n")
             fh.flush()
             if i % 200 == 0:
