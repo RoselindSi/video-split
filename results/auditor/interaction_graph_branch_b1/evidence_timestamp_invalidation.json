@@ -1,0 +1,201 @@
+{
+ "applies_to": "results/auditor/interaction_graph_branch_b1/reviewer_2_branch_b1_final.json",
+ "flag": "invalid_for_prefix_evidence_analysis",
+ "decided_on": "2026-09-28",
+ "why": "发包时页面上的按钮写作「用当前播放位置」，直接记录播放头，没有任何校验。标注者在编辑事件时人在哪一帧，就把哪一帧记成了证据时间，于是 26/36 个事件的证据时间落在该节点第一段结束之后，而 retrospective_confirmation 一次都没勾。这是工具 affordance 的问题，不是标注者的行为现象，所以这些时间戳不能用于 E4 的 prefix-only 证据分析。",
+ "do_not": "不要人工回填。这 15 段的作用是 topology diagnosis，那个作用已经完成。",
+ "fixed_in": "interaction_graph_timeline_v21_offline_page.html 的 checkTs()：证据时间落在该节点第一段结束之后时，当场提示并自动勾上 retrospective_confirmation。",
+ "still_valid": [
+  "segments",
+  "events 的三个可观察字段",
+  "clusters",
+  "seg_type/special_kind",
+  "repeats_within_segment"
+ ],
+ "n_events": 36,
+ "n_invalid": 26,
+ "invalid": [
+  {
+   "video_id": "recording_000096",
+   "event_id": "A",
+   "evidence_timestamp": 3.5,
+   "first_segment_end_s": 3.1,
+   "retrospective_confirmation": false
+  },
+  {
+   "video_id": "recording_000142",
+   "event_id": "A",
+   "evidence_timestamp": 129.9,
+   "first_segment_end_s": 10.6,
+   "retrospective_confirmation": false
+  },
+  {
+   "video_id": "recording_000323",
+   "event_id": "A",
+   "evidence_timestamp": 105.7,
+   "first_segment_end_s": 28.0,
+   "retrospective_confirmation": false
+  },
+  {
+   "video_id": "recording_000323",
+   "event_id": "B",
+   "evidence_timestamp": 31.6,
+   "first_segment_end_s": 30.9,
+   "retrospective_confirmation": false
+  },
+  {
+   "video_id": "recording_000116",
+   "event_id": "A",
+   "evidence_timestamp": 147.2,
+   "first_segment_end_s": 22.4,
+   "retrospective_confirmation": false
+  },
+  {
+   "video_id": "recording_000116",
+   "event_id": "B",
+   "evidence_timestamp": 163.5,
+   "first_segment_end_s": 51.3,
+   "retrospective_confirmation": false
+  },
+  {
+   "video_id": "recording_000247",
+   "event_id": "A",
+   "evidence_timestamp": 152.8,
+   "first_segment_end_s": 15.2,
+   "retrospective_confirmation": false
+  },
+  {
+   "video_id": "recording_000247",
+   "event_id": "B",
+   "evidence_timestamp": 175.2,
+   "first_segment_end_s": 47.1,
+   "retrospective_confirmation": false
+  },
+  {
+   "video_id": "recording_000435",
+   "event_id": "A",
+   "evidence_timestamp": 149.2,
+   "first_segment_end_s": 14.2,
+   "retrospective_confirmation": false
+  },
+  {
+   "video_id": "recording_000435",
+   "event_id": "B",
+   "evidence_timestamp": 172.9,
+   "first_segment_end_s": 38.6,
+   "retrospective_confirmation": false
+  },
+  {
+   "video_id": "recording_000435",
+   "event_id": "C",
+   "evidence_timestamp": 117,
+   "first_segment_end_s": 50.8,
+   "retrospective_confirmation": false
+  },
+  {
+   "video_id": "recording_000435",
+   "event_id": "D",
+   "evidence_timestamp": 135,
+   "first_segment_end_s": 67.8,
+   "retrospective_confirmation": false
+  },
+  {
+   "video_id": "recording_000416",
+   "event_id": "A",
+   "evidence_timestamp": 160.9,
+   "first_segment_end_s": 9.8,
+   "retrospective_confirmation": false
+  },
+  {
+   "video_id": "recording_000416",
+   "event_id": "B",
+   "evidence_timestamp": 102.7,
+   "first_segment_end_s": 27.0,
+   "retrospective_confirmation": false
+  },
+  {
+   "video_id": "recording_000416",
+   "event_id": "C",
+   "evidence_timestamp": 114.3,
+   "first_segment_end_s": 38.8,
+   "retrospective_confirmation": false
+  },
+  {
+   "video_id": "recording_000416",
+   "event_id": "D",
+   "evidence_timestamp": 155.7,
+   "first_segment_end_s": 75.0,
+   "retrospective_confirmation": false
+  },
+  {
+   "video_id": "recording_000438",
+   "event_id": "A",
+   "evidence_timestamp": 159.5,
+   "first_segment_end_s": 24.2,
+   "retrospective_confirmation": false
+  },
+  {
+   "video_id": "recording_000438",
+   "event_id": "B",
+   "evidence_timestamp": 124.2,
+   "first_segment_end_s": 30.0,
+   "retrospective_confirmation": false
+  },
+  {
+   "video_id": "recording_000438",
+   "event_id": "C",
+   "evidence_timestamp": 140.5,
+   "first_segment_end_s": 47.1,
+   "retrospective_confirmation": false
+  },
+  {
+   "video_id": "recording_000438",
+   "event_id": "D",
+   "evidence_timestamp": 158.6,
+   "first_segment_end_s": 62.3,
+   "retrospective_confirmation": false
+  },
+  {
+   "video_id": "recording_000031",
+   "event_id": "A",
+   "evidence_timestamp": 149.1,
+   "first_segment_end_s": 45.0,
+   "retrospective_confirmation": false
+  },
+  {
+   "video_id": "recording_000231",
+   "event_id": "A",
+   "evidence_timestamp": 127.6,
+   "first_segment_end_s": 42.7,
+   "retrospective_confirmation": false
+  },
+  {
+   "video_id": "recording_000231",
+   "event_id": "B",
+   "evidence_timestamp": 166.2,
+   "first_segment_end_s": 92.0,
+   "retrospective_confirmation": false
+  },
+  {
+   "video_id": "recording_000131",
+   "event_id": "A",
+   "evidence_timestamp": 113.9,
+   "first_segment_end_s": 23.7,
+   "retrospective_confirmation": false
+  },
+  {
+   "video_id": "recording_000131",
+   "event_id": "B",
+   "evidence_timestamp": 124.6,
+   "first_segment_end_s": 32.5,
+   "retrospective_confirmation": false
+  },
+  {
+   "video_id": "recording_000131",
+   "event_id": "C",
+   "evidence_timestamp": 134.6,
+   "first_segment_end_s": 48.4,
+   "retrospective_confirmation": false
+  }
+ ]
+}

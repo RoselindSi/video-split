@@ -23,10 +23,12 @@ field nobody uses is a hole in the contract rather than a fact about the
 video: `uncertain` and `waiting` went unused across eleven trial videos and
 that is what forced the v2.1 rewrite. Two things are worth reading here. The
 confidence and special-state fields either got used or they did not. And
-`evidence_timestamp` earlier than the first segment carrying that node is
-consistent, while a timestamp later than it means the node was assigned before
-its evidence existed -- which is the definition of retrospective, and should
-have `retrospective_confirmation` set.
+`evidence_timestamp` inside the first segment carrying that node is
+consistent; a timestamp past the *end* of that segment means the node was
+assigned before its evidence existed, which is what the contract calls
+retrospective and should have `retrospective_confirmation` set. The boundary
+is the segment's end, not its start -- evidence arriving part-way through the
+segment it justifies is ordinary.
 """
 from __future__ import annotations
 
@@ -150,7 +152,8 @@ def main():
             if s["seg_type"] == "special_state":
                 sk[s.get("special_kind", "")] += 1
             if s.get("event_id"):
-                first.setdefault(s["event_id"], float(s["start_s"]))
+                # 第一段的**结束**时间才是分界；段内的证据是正常的
+                first.setdefault(s["event_id"], float(s["end_s"]))
         for e in v["events"]:
             ts = e.get("evidence_timestamp")
             if ts is None:
@@ -165,7 +168,7 @@ def main():
     print("  special_kind  %s" % dict(sk))
     print("  段内重复      %s" % dict(rep))
     ev = sum(len(v["events"]) for v in doc["videos"])
-    print("  事件 %d 个；evidence_timestamp 晚于该节点首次出现的 %d 个，"
+    print("  事件 %d 个；evidence_timestamp 落在该节点第一段结束之后的 %d 个，"
           "其中没有勾 retrospective 的 %d 个"
           % (ev, late, tot["late_not_flagged"]))
     print("  retrospective_confirmation 勾过的：%d"

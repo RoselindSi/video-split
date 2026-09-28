@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>__TITLE__</title>
+<style>
+:root{color-scheme:dark;--bg:#111513;--panel:#191e1b;--line:#46504a;--text:#f3f5f3;--muted:#b5bdb8;--accent:#72cdaa;--accent2:#2f7558;--warn:#efbd69;--danger:#ef9187}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:17px/1.5 system-ui,sans-serif;letter-spacing:0}button,select,input,textarea{font:inherit;color:var(--text);background:#252c28;border:1px solid #68736d;border-radius:4px}button{min-height:46px;padding:8px 12px;cursor:pointer}button:hover{background:#343d38}button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}button:disabled{opacity:.45;cursor:default}header{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;min-height:58px;padding:9px 18px;background:var(--panel);border-bottom:1px solid var(--line)}header h1{font-size:18px;margin:0}.progress{margin-left:auto;color:var(--muted)}main{max-width:1500px;margin:auto;padding:18px}.rule{border-left:4px solid var(--accent);background:#1d2722;padding:12px 15px;margin-bottom:16px}.rule b{display:block;margin-bottom:4px}.rule span{display:block;color:var(--muted)}.workspace{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(360px,.75fr);gap:22px;align-items:start}.viewer{position:sticky;top:76px;min-width:0}video{display:block;width:100%;max-height:60vh;aspect-ratio:4/3;object-fit:contain;background:#000}.timelineShell{position:relative;margin-top:10px}.rail{height:56px;border:1px solid var(--line);background:#222824;position:relative;overflow:hidden;touch-action:none}.rail button{position:absolute;top:0;height:100%;border:0;border-right:2px solid #111;border-radius:0;padding:0;min-height:0;color:#111;font-weight:800;overflow:hidden}.rail button.selected{outline:3px solid #fff;outline-offset:-4px}.rail .boundary{z-index:6;width:24px;transform:translateX(-50%);border:0;background:transparent!important;cursor:ew-resize;overflow:visible}.rail .boundary:before{content:"";position:absolute;left:10px;top:5px;bottom:5px;width:4px;border:1px solid #111;background:#fff}.playhead{position:absolute;z-index:8;top:-6px;bottom:-5px;width:2px;background:#fff;pointer-events:none;transform:translateX(-1px)}.ticks{display:flex;justify-content:space-between;color:var(--muted);font:12px ui-monospace,monospace;padding-top:4px}.toolbar,.nav,.export{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-top:10px}.primary{background:var(--accent2);border-color:var(--accent)}.clock{font:15px ui-monospace,monospace;color:var(--muted)}.videoError{border-left:4px solid var(--danger);background:#342724;padding:10px;margin-top:10px}.side{border-left:1px solid var(--line);padding-left:22px;min-width:0}.selectedTitle{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:12px}.segmentNavigator{display:grid;grid-template-columns:48px minmax(92px,auto) 48px;gap:8px;align-items:center}.segmentNavigator button{width:48px;height:48px;padding:0;font-size:26px}.segmentNavigator strong{text-align:center;white-space:nowrap}.selectedTitle>span{font:14px ui-monospace,monospace;color:var(--muted)}.boundaryEditor{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}.field{display:grid;gap:6px;margin-bottom:14px}.field label{font-weight:750}.field select,.field textarea{width:100%;padding:10px}.field textarea{min-height:76px;resize:vertical}.relation{padding:10px 12px;border-left:4px solid var(--warn);background:#29271f;margin-bottom:14px}.relation.good{border-color:var(--accent);background:#1e2b25}.check{display:flex;gap:10px;align-items:flex-start;margin:14px 0}.check input{width:22px;height:22px;flex:none}.muted{color:var(--muted)}.danger{color:#ffc1bb}.section{border-top:1px solid var(--line);margin-top:20px;padding-top:18px}.eventRow{display:grid;grid-template-columns:36px 1fr auto;gap:8px;align-items:center;margin-bottom:9px}.swatch,.eventBadge,.node{display:inline-grid;place-items:center;border-radius:50%;color:#111;font-weight:900}.swatch{width:28px;height:28px}.eventBadge{width:34px;height:34px}.notice{min-height:30px;color:#ffc1bb;margin-top:10px}.segments,.graph,.finish{grid-column:1/-1}.segments h2,.graph h2{font-size:18px;margin:0 0 10px}.segment{display:grid;grid-template-columns:58px 145px 70px minmax(170px,1fr) auto;gap:10px;align-items:center;padding:10px;border-bottom:1px solid #303833}.segment.selected{background:#24342c}.sequence{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.node{min-width:38px;height:38px}.finish{display:flex;gap:12px;align-items:center;border-top:1px solid var(--line);padding-top:16px}.finish .check{margin:0 auto 0 0}.caseList{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;margin-top:10px}.caseList button{min-width:0;padding:7px;font-size:14px}.caseList button.final{background:#28533f}.caseList button.draft{background:#5a4929}.caseList button.current{outline:3px solid var(--accent)}.export{margin-top:18px;padding:14px;background:var(--panel);border:1px solid var(--line)}
+@media(max-width:980px){main{padding:12px}.workspace{grid-template-columns:1fr}.viewer{position:static}.side{border-left:0;border-top:1px solid var(--line);padding:18px 0 0}.caseList{grid-template-columns:repeat(6,1fr)}}@media(max-width:600px){header{padding:9px 12px;align-items:flex-start;flex-wrap:wrap}header h1{max-width:65%}.progress{white-space:nowrap}.rule{font-size:15px}.segment{grid-template-columns:48px 1fr 60px}.segment .summary{grid-column:1/4}.caseList{grid-template-columns:repeat(5,1fr)}.boundaryEditor{grid-template-columns:1fr}.finish{position:sticky;bottom:0;background:var(--bg);padding:10px 0;display:grid;grid-template-columns:1fr 1fr}.finish .check{grid-column:1/-1;margin:0}.finish button{width:100%}}
+</style>
+<header><h1>__TITLE__</h1><span id="caseTitle"></span><span class="progress" id="progress"></span></header>
+<main>
+<section class="rule" id="seedNote" hidden style="border-left-color:#efbd69;background:#29271f"><b>已载入你上一轮的答案</b><span>切段、类型、事件、任务都在，按新规则逐段复查即可。</span><span class="muted"><strong>「看到的结果」和「证据第几秒」两栏是空的，需要你重新看一遍再填。</strong>上一轮这两件事没有分开，正是这版要改的地方，所以没有替你填。</span></section>
+<section class="rule"><b>先判这一段是什么 —— 按顺序问，不要跳步</b><span><strong>① 能不能确定一个被作用、或被搬动的具体物体？</strong>　不能 → <strong>特殊状态</strong>（等待 / 跟随 / 巡视 / 一般位移 / 遮挡）</span><span><strong>② 有物体，那看不看得到结果？</strong>（放下、送达、移交，或进入后续操作）　看得到 → <strong>交互节点</strong>　　看不到 → <strong>不确定</strong></span><span class="muted">「一般位移」是指<strong>没有任何物体被作用</strong>的移动。手里拿着一个能看清的东西在走，不算一般位移——它有物体，必须走第②步。拿着某物走、但看不到送到哪或拿去干什么，答案是<strong>不确定</strong>，不是特殊状态。</span><span class="muted"><strong>持续的等待必须单独切出来</strong>，不能并进前后的交互节点。判断落在你在视频里看到的东西上；推测写在「推测的目的」栏，它不能让一段成立为交互节点。</span></section>
+<div class="workspace">
+<section class="viewer">
+  <video id="video" controls preload="metadata"></video>
+  <div id="videoError" class="videoError" hidden><span id="videoErrorText"></span> <button id="pickFolder">选择 videos 文件夹</button><input id="videoFolder" type="file" webkitdirectory directory multiple accept="video/mp4" hidden></div>
+  <div class="timelineShell"><div class="rail" id="rail"></div><div class="playhead" id="playhead"></div></div><div class="ticks" id="ticks"></div>
+  <div class="toolbar"><button id="cut" class="primary">在当前时间切开</button><span class="clock" id="clock"></span><button data-speed="0.5">0.5x</button><button data-speed="1">1x</button><button data-speed="2">2x</button></div>
+</section>
+<aside class="side">
+  <div class="selectedTitle"><div class="segmentNavigator"><button id="prevSegment" title="上一段">←</button><strong id="segmentTitle"></strong><button id="nextSegment" title="下一段">→</button></div><span id="segmentTime"></span></div>
+  <div class="boundaryEditor"><button id="setStart">把开头改到当前时间</button><button id="setEnd">把结尾改到当前时间</button></div>
+  <div id="relation" class="relation"></div>
+  <div class="field"><label for="segType">这一段是什么？</label><select id="segType"><option value="">请选择</option><option value="interaction_node">交互节点</option><option value="special_state">特殊状态</option><option value="uncertain">不确定</option></select></div>
+
+  <div id="specialBox" hidden><div class="field"><label for="specialKind">哪一种</label><select id="specialKind"><option value="">请选择</option><option value="waiting">等待</option><option value="following">跟随</option><option value="patrolling">巡视</option><option value="locomotion">一般位移</option><option value="occluded">遮挡</option><option value="idle">空闲</option><option value="not_started">未开始</option></select></div></div>
+
+  <div id="nodeBox" hidden>
+  <div class="field"><label for="eventSelect">这一段在做什么？</label><select id="eventSelect"></select></div><button id="newEvent">新建一种事件</button>
+  <div class="field section"><label for="eventDescription">用一句话描述这个事件</label><textarea id="eventDescription" placeholder="只写看得见的：动词 + 物体"></textarea></div>
+  <div class="field"><label for="evObject">被作用的物体</label><input id="evObject" type="text" placeholder="例如：下水道塞子"></div>
+  <div class="field"><label for="evAction">看到的动作</label><input id="evAction" type="text" placeholder="只写画面里发生了什么，例如：手拿出塞子并在水下冲洗"></div>
+  <div class="field"><label for="evResult">看到的结果</label><input id="evResult" type="text" placeholder="看不到就写「无可观察结果」，不要留空也不要编"></div>
+  <div class="field"><label for="evGoal">你推测的目的（可不填）</label><input id="evGoal" type="text" placeholder="辅助信息。它不能作为这一段成立为交互节点的依据"></div>
+  <div class="field"><label for="evTs">证据出现在第几秒</label><input id="evTs" type="number" step="0.1" min="0" placeholder="能看出这是哪个节点的第一帧"><button id="evTsNow" type="button">播放头停在证据那一帧，再点这里</button></div>
+  <label class="check"><input id="evRetro" type="checkbox"><span><b>这个判断用到了本段结束之后才出现的证据</b><br><span class="muted">例如「他后来用这个杯子称重了，所以刚才那段是在运送杯子」。在线预测时看不到这种证据，所以要记下来。</span></span></label>
+  <label class="check"><input id="repeats" type="checkbox"><span><b>这一段里面有反复</b><br><span class="muted">同一次动作的内部往返（来回擦、反复拧）→ 勾这里，不要切段。<br>中间有<b>放下 / 完成 / 重新开始</b>的可观察证据 → 不勾，切成两段，右边选同一个事件。</span></span></label>
+  <div class="field section"><label for="clusterSelect">属于哪个任务</label><select id="clusterSelect"></select></div><button id="newCluster">新建一个任务</button>
+  <div class="field"><label for="clusterGoal">凭什么判它属于这个任务</label><textarea id="clusterGoal" placeholder="同一个工件 / 同一台设备 / 同一个工位 / 同一批物料"></textarea></div>
+  <div class="field"><label for="segConfidence">把握</label><select id="segConfidence"><option value="high">高</option><option value="medium">中</option><option value="low">低</option></select></div>
+  </div>
+  <!-- OUTSIDE nodeBox ON PURPOSE. Validation refuses a memberless cluster, and
+       that refusal can land while the current segment is `special_state` or
+       `uncertain` -- exactly when nodeBox is hidden. Leaving the delete button
+       in there told one annotator to click something they could not see. -->
+  <div id="clusterBox" class="section" hidden><b>已经创建的任务</b><div id="clusterLibrary"></div></div>
+  <div class="field"><label for="segmentNote">补充说明（可不填）</label><textarea id="segmentNote"></textarea></div>
+  <button id="merge" class="danger">和上一段合并</button>
+  <div class="section"><b>已经创建的事件</b><div id="eventLibrary"></div></div><div class="notice" id="notice" role="alert"></div>
+</aside>
+<section class="segments section"><h2>全部时间段</h2><div id="segmentList"></div></section>
+<section class="graph section"><h2>当前路径</h2><div class="sequence" id="sequence"></div><p class="muted" id="edgeSummary"></p></section>
+<footer class="finish"><label class="check"><input id="confirmed" type="checkbox"><span>我已从头到尾看完并检查每一段</span></label><button id="draft">保存草稿</button><button id="submit" class="primary">提交本条</button></footer>
+</div>
+<div class="nav"><button id="previous">上一条视频</button><button id="next">下一条视频</button></div>
+<section class="section"><b>进度</b><div class="caseList" id="caseList"></div></section>
+<section class="export"><b>结果文件</b><button id="exportJson">导出最终 JSON</button><button id="exportCsv">导出分段 CSV</button><button id="exportBackup">导出草稿备份</button><button id="importButton">恢复草稿备份</button><input id="importBackup" type="file" accept="application/json,.json" hidden><span class="muted" id="exportNote"></span></section>
+</main>
+<script>
+const CASES=__CASES__, MANIFEST_HASH='__MANIFEST_HASH__', ANNOTATOR='__ANNOTATOR_ID__', BATCH='__BATCH_ID__';
+const STORAGE_KEY='interaction-graph-timeline-'+BATCH+'-'+ANNOTATOR+'-'+MANIFEST_HASH;
+const $=s=>document.querySelector(s), video=$('#video'), colors=['#83c5be','#f3c677','#e69a8d','#9db4e0','#c0a6da','#90c989','#e6b566','#80b7c9','#d6a3b2','#b4c37b'];
+const DRAFT=__DRAFT__;
+// LAST ROUND'S ANSWERS, SEEDED ONLY INTO AN EMPTY SLATE. The same annotator
+// is re-labelling the same eleven videos, so retyping the segmentation buys
+// nothing -- but a draft already in this browser is newer than the seed and
+// must never be clobbered by it.
+//
+// WHAT IS DELIBERATELY NOT SEEDED: `observed_result`, `evidence_timestamp`
+// and the retrospective flag. Splitting what was seen from what was inferred
+// is the whole point of this revision, and last round's `visible_result`
+// holds the defect being fixed ("selected a suitable motorcycle" as an
+// observation). Carrying it across would hand the annotator the wrong answer
+// pre-filled, which almost nobody edits.
+let current=0,selected=0,states=loadAll(),chosenVideos=new Map(),videoUrl=null,dragBoundary=null,dirty=false;
+if(!Object.keys(states).length&&DRAFT&&Object.keys(DRAFT).length){states=JSON.parse(JSON.stringify(DRAFT))}
+function loadAll(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||{}}catch{return{}}}
+function newSeg(a,b){return{start_s:a,end_s:b,seg_type:'',event_id:'',special_kind:'',repeats_within_segment:false,confidence:'high',note:''}}
+function blank(c){return{schema_version:'interaction_graph_timeline_v2_1',video_id:c.video_id,events:[],clusters:[],segments:[newSeg(0,c.duration_s)],confirmed_full_video:false,status:'not_started',revision:0}}
+function state(){return states[CASES[current].video_id]||(states[CASES[current].video_id]=blank(CASES[current]))}
+function persist(){localStorage.setItem(STORAGE_KEY,JSON.stringify(states));dirty=false;renderProgress()}
+function touch(){const s=state();s.status=s.status==='final'?'draft':'draft';s.revision=(s.revision||0)+1;s.saved_at=new Date().toISOString();dirty=true;persist()}
+function n(x){return Math.round(x*10)/10}function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function letterId(value){let x='';while(value){value--;x=String.fromCharCode(65+value%26)+x;value=Math.floor(value/26)}return x}
+function nextId(){const used=new Set(state().events.map(e=>e.event_id));for(let i=1;;i++){const id=letterId(i);if(!used.has(id))return id}}
+function eventById(id){return state().events.find(e=>e.event_id===id)}function color(id){const i=state().events.findIndex(e=>e.event_id===id);return colors[(i<0?0:i)%colors.length]}
+function createEvent(){const id=nextId();state().events.push({event_id:id,description:'',object:'',observed_action:'',observed_result:'',inferred_goal:'',evidence_timestamp:null,retrospective_confirmation:false,cluster_id:''});state().segments[selected].event_id=id;touch();render();setTimeout(()=>$('#eventDescription').focus(),0)}
+function nextClusterId(){const used=new Set((state().clusters||[]).map(c=>c.cluster_id));for(let i=1;;i++){const id='T'+i;if(!used.has(id))return id}}
+function clusterById(id){return (state().clusters||[]).find(c=>c.cluster_id===id)}
+// A cluster is created from the event that needs one, so an event can never
+// point at a cluster that does not exist. Deleting is by emptying the last
+// event out of it, never by a button that could orphan members.
+function createCluster(){const s=state(),ev=eventById(s.segments[selected].event_id);if(!ev)return notice('先选择这一段在做什么，再建任务。');const id=nextClusterId();(s.clusters=s.clusters||[]).push({cluster_id:id,goal_evidence:''});ev.cluster_id=id;touch();render();setTimeout(()=>$('#clusterGoal').focus(),0)}
+function cut(){const s=state(),at=n(video.currentTime),i=s.segments.findIndex(x=>at>x.start_s+.1&&at<x.end_s-.1);if(i<0)return notice('把播放位置放在某一段中间再切。');const old=s.segments[i],left={...old,end_s:at},right=newSeg(at,old.end_s);s.segments.splice(i,1,left,right);selected=i+1;touch();render();notice('已切开。先判右边这一段是交互节点、特殊状态还是不确定。')}
+function merge(){const s=state();if(selected===0)return;const a=s.segments[selected-1],b=s.segments[selected];if(a.event_id&&b.event_id&&a.event_id!==b.event_id&&!confirm('两段事件不同。合并后保留上一段，继续吗？'))return;a.end_s=b.end_s;a.repeats_within_segment=a.repeats_within_segment||b.repeats_within_segment;a.note=[a.note,b.note].filter(Boolean).join('；');s.segments.splice(selected,1);selected--;touch();render()}
+function choose(i,seek=true){selected=Math.max(0,Math.min(i,state().segments.length-1));if(seek)video.currentTime=state().segments[selected].start_s;render()}
+function moveBoundary(index,time,preview=false){const ss=state().segments;if(index<=0||index>=ss.length)return false;const left=ss[index-1],right=ss[index],low=n(left.start_s+.1),high=n(right.end_s-.1);if(low>high)return false;const at=Math.max(low,Math.min(high,n(time)));left.end_s=at;right.start_s=at;if(preview){video.pause();video.currentTime=at}render();return true}
+function boundaryTime(x){const b=$('#rail').getBoundingClientRect();return n(Math.max(0,Math.min(1,(x-b.left)/b.width))*CASES[current].duration_s)}
+function setBoundary(side){const index=side==='start'?selected:selected+1;if(moveBoundary(index,video.currentTime,true))touch()}
+// THE RULE IS SHOWN WHERE THE DECISION IS MADE. A direct edge needs both ends
+// to be interaction nodes with no special state between them; a task revisit
+// is defined over time-ordered task occurrences and survives one. Stating
+// that only in the manual leaves the annotator to rediscover it per segment.
+function relationText(){const ss=state().segments,cur=ss[selected];if(!cur.seg_type)return '先判这一段是交互节点、特殊状态，还是不确定。';
+if(cur.seg_type==='special_state')return '特殊状态。它照常占据时间轴，但两侧不会连成一条直接边。';
+if(cur.seg_type==='uncertain')return '不确定。这是一个正式取值，请在补充说明里写清你看到了什么、缺了什么。';
+if(!cur.event_id)return '还没选择这一段在做什么。';
+if(selected===0)return '视频开头的交互节点。';
+const prev=ss[selected-1];
+if(prev.seg_type!=='interaction_node')return '上一段不是交互节点，所以这里没有直接边。若同一个任务之前出现过，它仍然算任务回访。';
+if(!prev.event_id)return '上一段还没选择事件。';
+const a=eventById(prev.event_id),b=eventById(cur.event_id);
+if(cur.event_id===prev.event_id)return '同一个状态再次出现：'+prev.event_id+' → '+cur.event_id+'。这只表示状态回来了，不表示开始了新一次。';
+const sameT=a?.cluster_id&&b?.cluster_id&&a.cluster_id===b.cluster_id;
+return (sameT?'同一任务内的转移：':'换了任务：')+prev.event_id+' → '+cur.event_id}
+function renderSelect(){const s=state(),seg=s.segments[selected],sel=$('#eventSelect');sel.innerHTML='<option value="">请选择</option>'+s.events.map(e=>'<option value="'+e.event_id+'">事件 '+e.event_id+(e.description?'：'+esc(e.description):'')+'</option>').join('');sel.value=seg.event_id;const ev=eventById(seg.event_id);
+$('#segType').value=seg.seg_type||'';$('#nodeBox').hidden=seg.seg_type!=='interaction_node';$('#specialBox').hidden=seg.seg_type!=='special_state';$('#specialKind').value=seg.special_kind||'';$('#segConfidence').value=seg.confidence||'high';
+$('#evObject').value=ev?.object||'';$('#evAction').value=ev?.observed_action||'';$('#evResult').value=ev?.observed_result||'';$('#evGoal').value=ev?.inferred_goal||'';$('#evTs').value=(ev&&ev.evidence_timestamp!=null)?ev.evidence_timestamp:'';$('#evRetro').checked=!!ev?.retrospective_confirmation;['evObject','evAction','evResult','evGoal','evTs','evRetro','evTsNow'].forEach(k=>$('#'+k).disabled=!ev);
+const cs=$('#clusterSelect');cs.innerHTML='<option value="">请选择</option>'+(s.clusters||[]).map(c=>{const m=s.events.filter(e=>e.cluster_id===c.cluster_id).map(e=>e.event_id).join(' ');return '<option value="'+c.cluster_id+'">任务 '+c.cluster_id+(m?'（'+m+'）':'')+'</option>'}).join('');cs.value=ev?.cluster_id||'';cs.disabled=!ev;$('#clusterGoal').value=clusterById(ev?.cluster_id)?.goal_evidence||'';$('#clusterGoal').disabled=!ev?.cluster_id;
+$('#eventDescription').value=ev?.description||'';$('#eventDescription').disabled=!ev;$('#repeats').checked=seg.repeats_within_segment;$('#segmentNote').value=seg.note||'';$('#confirmed').checked=!!s.confirmed_full_video;$('#merge').disabled=selected===0;$('#setStart').disabled=selected===0;$('#setEnd').disabled=selected===s.segments.length-1;$('#prevSegment').disabled=selected===0;$('#nextSegment').disabled=selected===s.segments.length-1;$('#segmentTitle').textContent='第 '+(selected+1)+' / '+s.segments.length+' 段';$('#segmentTime').textContent=seg.start_s.toFixed(1)+' – '+seg.end_s.toFixed(1)+' 秒';const r=$('#relation');r.textContent=relationText();r.classList.toggle('good',!!seg.event_id)}
+function renderRail(){const s=state(),duration=CASES[current].duration_s,rail=$('#rail');rail.innerHTML='';s.segments.forEach((x,i)=>{const b=document.createElement('button'),w=100*(x.end_s-x.start_s)/duration;b.style.left=100*x.start_s/duration+'%';b.style.width=w+'%';b.style.background=x.seg_type==='special_state'?'#4a4f4c':x.seg_type==='uncertain'?'#8a6d3b':x.event_id?color(x.event_id):'#737975';b.textContent=w>=4?(x.seg_type==='special_state'?'[ ]':x.seg_type==='uncertain'?'?':(x.event_id||'?')):'';b.classList.toggle('selected',i===selected);b.title='第 '+(i+1)+' 段';b.onclick=e=>{const box=rail.getBoundingClientRect();video.currentTime=Math.max(x.start_s,Math.min(x.end_s,(e.clientX-box.left)/box.width*duration));choose(i,false);updateTime()};rail.appendChild(b)});for(let i=1;i<s.segments.length;i++){const h=document.createElement('button');h.className='boundary';h.style.left=100*s.segments[i].start_s/duration+'%';h.title='拖动调整；聚焦后按左右方向键微调';h.onpointerdown=e=>{e.preventDefault();e.stopPropagation();dragBoundary=i;moveBoundary(i,boundaryTime(e.clientX),true)};h.onclick=e=>e.stopPropagation();h.onkeydown=e=>{if(['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();const at=s.segments[i].start_s+(e.key==='ArrowLeft'?-.1:.1);if(moveBoundary(i,at,true))touch()}};rail.appendChild(h)}}
+function renderSegments(){const root=$('#segmentList');root.innerHTML='';state().segments.forEach((x,i)=>{const row=document.createElement('div');row.className='segment'+(i===selected?' selected':'');row.innerHTML='<b>#'+(i+1)+'</b><span>'+x.start_s.toFixed(1)+' – '+x.end_s.toFixed(1)+' 秒</span>'+(x.seg_type==='special_state'?'<span class="eventBadge" style="background:#4a4f4c">['+(x.special_kind||'特殊')+']</span>':x.seg_type==='uncertain'?'<span class="eventBadge" style="background:#8a6d3b">不确定</span>':x.event_id?'<span class="eventBadge" style="background:'+color(x.event_id)+'">'+x.event_id+'</span>':'<span style="color:#ffc1bb">未判</span>')+'<span class="summary">'+esc(x.note||eventById(x.event_id)?.description||'')+(x.repeats_within_segment?' · 段内反复':'')+'</span><button>查看</button>';row.querySelector('button').onclick=()=>choose(i);root.appendChild(row)})}
+function renderClusters(){const s=state(),root=$('#clusterLibrary');if(!root)return;$('#clusterBox').hidden=!(s.clusters||[]).length;root.innerHTML='';const used=new Set(s.segments.filter(x=>x.event_id).map(x=>x.event_id));
+(s.clusters||[]).forEach(c=>{const members=s.events.filter(e=>e.cluster_id===c.cluster_id&&used.has(e.event_id)).map(e=>e.event_id);
+const row=document.createElement('div');row.className='eventRow';
+row.innerHTML='<span class="swatch" style="background:#8fb9a8">'+c.cluster_id+'</span><span>'+(members.length?members.join(' '):'<span style="color:#ffc1bb">还没有成员</span>')+(c.goal_evidence?' · '+esc(c.goal_evidence):'')+'</span><button '+(members.length?'disabled':'')+'>删除</button>';
+row.querySelector('button').onclick=()=>deleteCluster(c.cluster_id);root.appendChild(row)});
+if(!(s.clusters||[]).length)root.innerHTML='<p class="muted">还没有任务</p>'}
+function deleteCluster(id){const s=state();const used=new Set(s.segments.filter(x=>x.event_id).map(x=>x.event_id));
+if(s.events.some(e=>e.cluster_id===id&&used.has(e.event_id)))return notice('这个任务还有成员，不能删。');
+s.events.forEach(e=>{if(e.cluster_id===id)e.cluster_id=''});
+s.clusters=(s.clusters||[]).filter(c=>c.cluster_id!==id);touch();render()}
+function renderLibrary(){const s=state(),root=$('#eventLibrary');root.innerHTML='';s.events.forEach((e,i)=>{const used=s.segments.filter(x=>x.event_id===e.event_id).length,row=document.createElement('div');row.className='eventRow';row.innerHTML='<span class="swatch" style="background:'+color(e.event_id)+'">'+e.event_id+'</span><span>'+(e.description?esc(e.description):'<span style="color:#ffc1bb">请写描述</span>')+' · '+used+' 段</span><button '+(used?'disabled':'')+'>删除</button>';row.querySelector('button').onclick=()=>{s.events.splice(i,1);touch();render()};root.appendChild(row)});if(!s.events.length)root.innerHTML='<p class="muted">还没有事件</p>'}
+// THE PATH KEEPS SPECIAL STATES IN PLACE. Dropping them and joining what is
+// left would draw an edge the contract forbids, and it is precisely the edge
+// an annotator would otherwise believe they had recorded.
+function renderGraph(){const ss=state().segments,root=$('#sequence');root.innerHTML='';
+ss.forEach((s,i)=>{if(i)root.insertAdjacentHTML('beforeend','<span class="muted">'+(s.seg_type==='interaction_node'&&ss[i-1].seg_type==='interaction_node'?'→':'·')+'</span>');const x=document.createElement('span');x.className='node';
+if(s.seg_type==='special_state'){x.style.background='#737975';x.textContent='['+(s.special_kind||'特殊')+']'}
+else if(s.seg_type==='uncertain'){x.style.background='#8a6d3b';x.textContent='?'}
+else if(s.event_id){x.style.background=color(s.event_id);x.textContent=s.event_id+(s.repeats_within_segment?'*':'')}
+else{x.style.background='#555';x.textContent='?'}
+root.appendChild(x)});
+if(!ss.length)root.innerHTML='<span class="muted">选择后显示路径</span>';
+const edges={},rep=[];ss.forEach(x=>{if(x.seg_type==='interaction_node'&&x.event_id&&x.repeats_within_segment)rep.push(x.event_id)});
+let cut=0;for(let i=1;i<ss.length;i++){const a=ss[i-1],b=ss[i];if(a.seg_type!=='interaction_node'||b.seg_type!=='interaction_node'){if(a.seg_type==='interaction_node'||b.seg_type==='interaction_node')cut++;continue}if(!a.event_id||!b.event_id)continue;const k=a.event_id+'→'+b.event_id;edges[k]=(edges[k]||0)+1}
+const parts=[];if(Object.keys(edges).length)parts.push('直接边 '+Object.entries(edges).map(([k,v])=>k+' ×'+v).join('，'));if(rep.length)parts.push('段内反复 '+rep.join('、')+'（属性，不是边）');if(cut)parts.push('被特殊状态隔断 '+cut+' 处');
+$('#edgeSummary').textContent=parts.join(' ｜ ')||'还没有直接边'}
+function render(){selected=Math.min(selected,state().segments.length-1);renderSelect();renderRail();renderSegments();renderLibrary();renderClusters();renderGraph()}
+function firstSegEndOf(id){const xs=state().segments.filter(x=>x.event_id===id);if(!xs.length)return null;const f=xs.reduce((a,b)=>Number(a.start_s)<=Number(b.start_s)?a:b);return Number(f.end_s)}
+// EVIDENCE THAT ARRIVES AFTER THE NODE WAS ASSIGNED IS RETROSPECTIVE BY
+// DEFINITION, and branch_b1 shipped 34 of 36 events that way with the box
+// unticked -- an event assigned at 0.0s carrying a timestamp of 149.2s. The
+// button used to write `video.currentTime` wherever the playhead happened to
+// be, so the number recorded where the annotator was rather than where the
+// evidence was. Catching it at entry is the fix; catching it in analysis
+// weeks later is not.
+function checkTs(ev){const f=firstSegEndOf(ev.event_id);if(f==null||ev.evidence_timestamp==null)return;
+ // 段内的证据是正常的；只有落在这个节点第一段**结束之后**才算事后证据。
+ if(Number(ev.evidence_timestamp)>f+0.05){if(!ev.retrospective_confirmation){ev.retrospective_confirmation=true;$('#evRetro').checked=true;}
+  notice('证据时间 '+ev.evidence_timestamp+'s 落在这个节点第一段结束（'+n(f)+'s）之后 —— 已替你勾上「用到了本段结束之后才出现的证据」。如果证据其实在段内，请把播放头移到那一帧重填。')}
+ else notice('')}
+function notice(x){$('#notice').textContent=x}
+// UNCERTAIN PASSES VALIDATION, and has to. It is a first-class value in the
+// contract, not a segment left unfinished; refusing to submit until every
+// doubt is resolved would manufacture agreement instead of measuring it. What
+// it does require is a note saying what was seen and what was missing.
+function validate(){const s=state();
+let i=s.segments.findIndex(x=>!x.seg_type);if(i>=0){choose(i);notice('第 '+(i+1)+' 段还没判是交互节点、特殊状态还是不确定。');return false}
+i=s.segments.findIndex(x=>x.seg_type==='special_state'&&!x.special_kind);if(i>=0){choose(i);notice('第 '+(i+1)+' 段是特殊状态，请选具体哪一种。');return false}
+i=s.segments.findIndex(x=>x.seg_type==='uncertain'&&!(x.note||'').trim());if(i>=0){choose(i);notice('第 '+(i+1)+' 段标了不确定，请在补充说明里写你看到了什么、缺了什么。');return false}
+const nodes=s.segments.filter(x=>x.seg_type==='interaction_node');
+i=s.segments.findIndex(x=>x.seg_type==='interaction_node'&&!x.event_id);if(i>=0){choose(i);notice('第 '+(i+1)+' 段还没选择在做什么。');return false}
+const used=new Set(nodes.map(x=>x.event_id));
+for(const ev of s.events.filter(e=>used.has(e.event_id))){
+ for(const [k,label] of [['description','一句描述'],['object','被作用的物体'],['observed_action','看到的动作'],['observed_result','看到的结果']]){
+  if(!String(ev[k]||'').trim()){const j=s.segments.findIndex(x=>x.event_id===ev.event_id);choose(j);notice('事件 '+ev.event_id+' 还缺「'+label+'」。三样都要有，否则它不成立为交互节点。');return false}}
+ if(!ev.cluster_id){const j=s.segments.findIndex(x=>x.event_id===ev.event_id);choose(j);notice('事件 '+ev.event_id+' 还没归到任务。');return false}
+ const c=clusterById(ev.cluster_id);if(!String(c?.goal_evidence||'').trim()){const j=s.segments.findIndex(x=>x.event_id===ev.event_id);choose(j);notice('任务 '+ev.cluster_id+' 还没写归属依据。');return false}}
+// EVERY EVENT NEEDS A TIME FOR ITS EVIDENCE, because an offline annotator
+// may lean on something that happens after the segment ends and an online
+// model cannot. Without the time the two cases are indistinguishable.
+for(const ev of s.events.filter(e=>used.has(e.event_id))){
+ if(ev.evidence_timestamp==null||ev.evidence_timestamp===''){const j=s.segments.findIndex(x=>x.event_id===ev.event_id);choose(j);notice('事件 '+ev.event_id+' 还没填证据出现在第几秒。');return false}}
+// ORPHANS DO NOT REACH FINAL. v2 checked only the events a segment pointed
+// at, so two blank events and two memberless clusters went out in the E0
+// return and passed validation.
+const orphanEv=s.events.find(e=>!used.has(e.event_id));
+if(orphanEv){notice('事件 '+orphanEv.event_id+' 没有被任何一段使用。请在「已经创建的事件」里删掉它。');return false}
+const liveCl=new Set(s.events.filter(e=>used.has(e.event_id)).map(e=>e.cluster_id));
+const orphanCl=(s.clusters||[]).find(c=>!liveCl.has(c.cluster_id));
+if(orphanCl){notice('任务 '+orphanCl.cluster_id+' 没有任何成员。请在任务下拉框下面删掉它。');return false}
+if(!s.confirmed_full_video){notice('请先勾选“从头到尾看完”。');return false}
+// Clear the last complaint on the way out, so a fixed field does not leave a
+// stale error sitting on screen next to a successful submit.
+notice('');return true}
+function save(status){const s=state();s.status=status;s.annotator=ANNOTATOR;s.manifest_sha256=MANIFEST_HASH;s.saved_at=new Date().toISOString();s.revision=(s.revision||0)+1;persist();notice(status==='final'?'本条已提交。':'草稿已保存在这台电脑的浏览器里。')}
+function show(index){if(dirty)save('draft');current=index;selected=0;loadVideo();renderTicks();render();renderProgress();$('#caseTitle').textContent='第 '+(current+1)+' / '+CASES.length+' 条';$('#previous').disabled=current===0;$('#next').disabled=current===CASES.length-1;notice(state().status==='final'?'本条已提交。':state().status==='draft'?'已恢复草稿。':'');scrollTo({top:0,behavior:'smooth'})}
+function renderProgress(){const finals=CASES.filter(c=>states[c.video_id]?.status==='final').length;$('#progress').textContent='已提交 '+finals+' / '+CASES.length;$('#exportJson').disabled=finals!==CASES.length;$('#exportCsv').disabled=finals!==CASES.length;$('#exportNote').textContent=finals===CASES.length?'已完成，可以导出并发回。':'还差 '+(CASES.length-finals)+' 条。';const root=$('#caseList');root.innerHTML='';CASES.forEach((c,i)=>{const b=document.createElement('button');b.textContent=String(i+1).padStart(2,'0');b.className=(states[c.video_id]?.status||'')+(i===current?' current':'');b.onclick=()=>show(i);root.appendChild(b)})}
+function loadVideo(){video.pause();if(videoUrl){URL.revokeObjectURL(videoUrl);videoUrl=null}const c=CASES[current],name=c.video_id+'.mp4',file=chosenVideos.get(name);$('#videoError').hidden=true;if(file){videoUrl=URL.createObjectURL(file);video.src=videoUrl}else video.src='videos/'+name;video.load();setTimeout(()=>{if(video.readyState<1){$('#videoErrorText').textContent='没读到 '+name+'。请完整解压 ZIP 后再打开，或手动选择 videos 文件夹。';$('#videoError').hidden=false}},3500)}
+function renderTicks(){const root=$('#ticks'),d=CASES[current].duration_s;root.innerHTML='';[0,.25,.5,.75,1].forEach(r=>{const x=document.createElement('span');x.textContent=Math.floor(d*r/60)+':'+String(Math.round(d*r)%60).padStart(2,'0');root.appendChild(x)})}
+function updateTime(){const d=CASES[current].duration_s,t=Math.max(0,Math.min(d,video.currentTime||0));$('#clock').textContent=t.toFixed(1)+' / '+d.toFixed(1)+' 秒';$('#playhead').style.left=100*t/d+'%'}
+function download(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function exportValue(finalOnly=true){const videos=CASES.map(c=>states[c.video_id]).filter(x=>x&&(!finalOnly||x.status==='final'));return{schema_version:'interaction_graph_timeline_offline_export_v2_1',batch_id:BATCH,manifest_sha256:MANIFEST_HASH,annotator:ANNOTATOR,n_videos:videos.length,videos}}
+function csvCell(x){const s=String(x??'');return /[",\r\n]/.test(s)?'"'+s.replaceAll('"','""')+'"':s}
+$('#segType').onchange=e=>{const seg=state().segments[selected];seg.seg_type=e.target.value;if(seg.seg_type!=='interaction_node'){seg.event_id='';seg.repeats_within_segment=false}if(seg.seg_type!=='special_state')seg.special_kind='';touch();render()};
+$('#specialKind').onchange=e=>{state().segments[selected].special_kind=e.target.value;touch();render()};
+$('#segConfidence').onchange=e=>{state().segments[selected].confidence=e.target.value;touch()};
+[['evObject','object'],['evAction','observed_action'],['evResult','observed_result'],['evGoal','inferred_goal']].forEach(([id,k])=>{$('#'+id).oninput=e=>{const ev=eventById(state().segments[selected].event_id);if(ev){ev[k]=e.target.value;touch();renderLibrary()}}});
+$('#evTs').oninput=e=>{const ev=eventById(state().segments[selected].event_id);if(ev){ev.evidence_timestamp=e.target.value===''?null:Number(e.target.value);checkTs(ev);touch()}};
+$('#evTsNow').onclick=()=>{const ev=eventById(state().segments[selected].event_id);if(ev){ev.evidence_timestamp=n(video.currentTime);$('#evTs').value=ev.evidence_timestamp;checkTs(ev);touch()}};
+$('#evRetro').onchange=e=>{const ev=eventById(state().segments[selected].event_id);if(ev){ev.retrospective_confirmation=e.target.checked;touch()}};
+$('#clusterSelect').onchange=e=>{const ev=eventById(state().segments[selected].event_id);if(ev){ev.cluster_id=e.target.value;touch();render()}};
+$('#newCluster').onclick=createCluster;
+$('#clusterGoal').oninput=e=>{const ev=eventById(state().segments[selected].event_id),c=clusterById(ev?.cluster_id);if(c){c.goal_evidence=e.target.value;touch()}};
+$('#cut').onclick=cut;$('#newEvent').onclick=createEvent;$('#merge').onclick=merge;$('#setStart').onclick=()=>setBoundary('start');$('#setEnd').onclick=()=>setBoundary('end');$('#prevSegment').onclick=()=>choose(selected-1);$('#nextSegment').onclick=()=>choose(selected+1);$('#previous').onclick=()=>show(current-1);$('#next').onclick=()=>show(current+1);
+$('#eventSelect').onchange=e=>{state().segments[selected].event_id=e.target.value;touch();render()};$('#eventDescription').oninput=e=>{const ev=eventById(state().segments[selected].event_id);if(ev){ev.description=e.target.value;touch();renderLibrary();renderSegments();renderSelect()}};$('#repeats').onchange=e=>{state().segments[selected].repeats_within_segment=e.target.checked;touch();renderGraph();renderSegments()};$('#segmentNote').oninput=e=>{state().segments[selected].note=e.target.value;touch();renderSegments()};$('#confirmed').onchange=e=>{state().confirmed_full_video=e.target.checked;touch()};$('#draft').onclick=()=>save('draft');$('#submit').onclick=()=>{if(validate()){save('final');if(current<CASES.length-1)setTimeout(()=>show(current+1),250)}};
+document.querySelectorAll('[data-speed]').forEach(b=>b.onclick=()=>video.playbackRate=+b.dataset.speed);document.addEventListener('pointermove',e=>{if(dragBoundary!==null)moveBoundary(dragBoundary,boundaryTime(e.clientX),true)});document.addEventListener('pointerup',e=>{if(dragBoundary!==null){moveBoundary(dragBoundary,boundaryTime(e.clientX),true);dragBoundary=null;touch()}});video.ontimeupdate=updateTime;video.onloadedmetadata=updateTime;video.onerror=()=>{$('#videoErrorText').textContent='视频无法打开。请确认 ZIP 已完整解压，并用 Chrome 或 Edge 打开。';$('#videoError').hidden=false};
+$('#pickFolder').onclick=()=>$('#videoFolder').click();$('#videoFolder').onchange=e=>{chosenVideos=new Map([...e.target.files].filter(f=>f.name.endsWith('.mp4')).map(f=>[f.name,f]));loadVideo();e.target.value=''};
+$('#exportJson').onclick=()=>download(ANNOTATOR+'_'+BATCH+'_final.json',JSON.stringify(exportValue(),null,2),'application/json');$('#exportCsv').onclick=()=>{const cols=['video_id','segment_index','start_s','end_s','seg_type','special_kind','event_id','event_description','object','observed_action','observed_result','inferred_goal','evidence_timestamp','retrospective_confirmation','cluster_id','goal_evidence','repeats_within_segment','confidence','note','annotator','saved_at'],rows=[cols];for(const a of exportValue().videos){const ev=Object.fromEntries((a.events||[]).map(e=>[e.event_id,e]));const cl=Object.fromEntries((a.clusters||[]).map(c=>[c.cluster_id,c]));a.segments.forEach((s,i)=>{const e=ev[s.event_id]||{};rows.push([a.video_id,i+1,s.start_s,s.end_s,s.seg_type||'',s.special_kind||'',s.event_id||'',e.description||'',e.object||'',e.observed_action||'',e.observed_result||'',e.inferred_goal||'',e.evidence_timestamp??'',e.retrospective_confirmation??'',e.cluster_id||'',cl[e.cluster_id]?.goal_evidence||'',s.repeats_within_segment,s.confidence||'',s.note||'',ANNOTATOR,a.saved_at])})}download(ANNOTATOR+'_'+BATCH+'_segments.csv',rows.map(r=>r.map(csvCell).join(',')).join('\r\n'),'text/csv;charset=utf-8')};$('#exportBackup').onclick=()=>download(ANNOTATOR+'_'+BATCH+'_backup.json',JSON.stringify({...exportValue(false),states},null,2),'application/json');$('#importButton').onclick=()=>$('#importBackup').click();$('#importBackup').onchange=async e=>{try{const x=JSON.parse(await e.target.files[0].text());if(x.manifest_sha256!==MANIFEST_HASH)throw Error('这个备份不属于本批视频。');states=x.states||Object.fromEntries((x.videos||[]).map(v=>[v.video_id,v]));persist();show(current)}catch(error){notice(error.message)}e.target.value=''};
+window.onbeforeunload=()=>{if(dirty)save('draft')};show(0);
+if(DRAFT&&Object.keys(DRAFT).length)$('#seedNote').hidden=false;
+</script>
+</html>
