@@ -457,7 +457,22 @@ def score(args):
         if item["id"] in done:
             done[item["id"]] = {**item, **done[item["id"]]}
     todo = [item for item in items if item["id"] not in done]
+    if args.nshard > 1:
+        # 分片按 id 的稳定哈希，不按顺序：顺序分片会让一条轨迹的五个视图落在
+        # 同一个 worker 上，一个 worker 挂掉就整条轨迹没有分数，而聚合需要
+        # min_views 个视图才出裁决。
+        import hashlib
+        todo = [i for i in todo
+                if int(hashlib.sha1(i["id"].encode()).hexdigest(), 16)
+                % args.nshard == args.shard]
+        print(f"分片 {args.shard}/{args.nshard}")
     print(f"待判 {len(items)} 个视图；已有 {len(done)}，本次 {len(todo)}")
+    if args.nshard > 1 and not todo and len(done) < len(items):
+        # 空的分片几乎总是参数没传进来，而不是真的没活干。让它响，
+        # 否则下游会拿到一个「跑过但没产出」的文件，和「跑完确实没发现」
+        # 长得一模一样。
+        raise SystemExit(f"分片 {args.shard}/{args.nshard} 没有分到任何视图，"
+                         f"但 {len(items) - len(done)} 个还没判——检查参数")
 
     track_maps = {}
     if args.track_maps:
@@ -568,6 +583,8 @@ def main():
                         help="送全部轨迹（建语料用），不只是有争议的 owner 候选")
     parser.add_argument("--min-track-frames", dest="min_track_frames",
                         type=int, default=3)
+    parser.add_argument("--shard", type=int, default=0)
+    parser.add_argument("--nshard", type=int, default=1)
     args = parser.parse_args()
     if not 0 <= args.reject <= args.admit <= 1:
         parser.error("require 0 <= reject <= admit <= 1")
