@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<!--
+  B2 粗标页：只要状态序列，不要语义标注。
+
+  这一版**刻意**没有 object / observed_action / observed_result / task cluster /
+  confidence。B2 只回答一个问题——换成有选择点的任务之后，同一个前驱会不会反复
+  遇到不同的后继——而那个问题只需要 `A B A C A B` 这样一条序列就能算。完整 v2.1
+  标注要等拓扑本身合格之后才值得做。
+
+  页面会在录入时算出度，并且在**出现第二个不同后继的那一刻**追问原因。这是
+  spec 里的第三条约束：最后不能拿到 A→B 和 A→C 却不知道为什么分叉，因为真正
+  要问的是「图给出 {B,C} 之后，视觉证据能不能决定走哪条」。追问放在当场，
+  是因为事后补写等于让人回忆，而回忆出来的理由不能用。
+
+  右上角实时显示 prefix-valid 的 G-branch 计数。Go/No-Go 判据在 spec 里冻结着，
+  标注者看得见这个数不影响判断（他们标的是看到的东西，不是这个数），
+  但能让「这批到底够不够」在标注过程中就有答案，而不是等全部标完才知道。
+-->
+<style>
+:root{--bg:#fbfbfa;--fg:#1a1a18;--mut:#6b6b66;--line:#e3e3df;--card:#fff;
+      --ok:#2f7d4f;--warn:#a5623b;--acc:#3b6ea5}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#17171a;--fg:#e8e8e4;--mut:#9a9a94;--line:#2e2e33;--card:#1e1e22;
+  --ok:#6fc08f;--warn:#d89a7a;--acc:#7aa8d8}}
+:root[data-theme="dark"]{--bg:#17171a;--fg:#e8e8e4;--mut:#9a9a94;--line:#2e2e33;
+  --card:#1e1e22;--ok:#6fc08f;--warn:#d89a7a;--acc:#7aa8d8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);padding:0 16px 96px;
+  font:15px/1.6 -apple-system,"PingFang SC","Helvetica Neue",sans-serif}
+.wrap{max-width:1040px;margin:0 auto}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;
+  padding:16px 0 10px;border-bottom:1px solid var(--line)}
+header h1{font-size:17px;margin:0;flex:1 1 auto}
+.stat{font-size:13px;color:var(--mut)}
+.stat b{color:var(--fg)}
+.stat .br{color:var(--ok)}
+video{width:100%;max-height:46vh;background:#000;border-radius:8px;
+  border:1px solid var(--line);margin-top:12px}
+.rail{position:relative;height:38px;margin:10px 0 4px;background:var(--card);
+  border:1px solid var(--line);border-radius:6px;overflow:hidden;cursor:pointer}
+.seg{position:absolute;top:0;bottom:0;border-right:1px solid var(--line);
+  font-size:11px;display:flex;align-items:center;justify-content:center;
+  color:var(--fg);overflow:hidden}
+.seg.sel{outline:2px solid var(--acc);outline-offset:-2px}
+.ph{position:absolute;top:0;bottom:0;width:2px;background:var(--warn)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+button{padding:6px 13px;font-size:14px;border-radius:6px;cursor:pointer;
+  border:1px solid var(--line);background:var(--card);color:var(--fg)}
+button.primary{background:var(--ok);border-color:var(--ok);color:#fff}
+button:disabled{opacity:.4;cursor:not-allowed}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;
+  padding:14px;margin:12px 0}
+label{display:block;font-size:13px;font-weight:600;margin:10px 0 3px}
+.hint{font-size:11px;color:var(--mut);margin-bottom:4px}
+select,input{width:100%;padding:6px;font-size:14px;background:var(--card);
+  color:var(--fg);border:1px solid var(--line);border-radius:5px}
+#ask{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 8%,var(--card))}
+#ask.hidden{display:none}
+table{border-collapse:collapse;width:100%;font-size:13px;margin-top:6px}
+td,th{border:1px solid var(--line);padding:4px 7px;text-align:left}
+th{color:var(--mut);font-weight:600}
+.seq{font-family:ui-monospace,Menlo,monospace;font-size:14px;letter-spacing:2px;
+  word-break:break-all}
+.foot{position:fixed;left:0;right:0;bottom:0;background:var(--card);
+  border-top:1px solid var(--line);padding:9px 16px;display:flex;gap:10px;
+  justify-content:center;flex-wrap:wrap;align-items:center}
+#msg{font-size:13px;color:var(--warn);min-height:1.4em}
+</style></head><body><div class="wrap">
+<header>
+  <h1>__TITLE__</h1>
+  <div class="stat">第 <b id="pos"></b> 条 · 已提交 <b id="done"></b></div>
+  <div class="stat">本条出度≥2 的状态 <b id="od2">0</b> ·
+    prefix-valid 分叉 <b class="br" id="gb">0</b></div>
+</header>
+<video id="v" controls preload="metadata"></video>
+<div class="rail" id="rail"></div>
+<div class="bar">
+  <button id="cut">在当前时间切开</button>
+  <button id="del">删掉这个切点</button>
+  <span class="stat" id="clock"></span>
+  <button id="prev">上一段</button><button id="next">下一段</button>
+</div>
+
+<div class="card">
+  <label for="state">这一段是哪个状态</label>
+  <div class="hint">回到之前做过的事，**一定要选回原来那个代号**。不确定就选「看不清」。</div>
+  <select id="state"></select>
+  <button id="newstate" style="margin-top:8px">新建一个状态</button>
+</div>
+
+<div class="card hidden" id="ask">
+  <label id="askq"></label>
+  <div class="hint">一句话就够：凭什么这次走了这条而不是上次那条。
+    写看得见的条件（物品是什么、部件什么状态），不要写「随便选的」。</div>
+  <input id="cond" placeholder="例如：这次拿到的是玻璃瓶">
+</div>
+
+<div class="card">
+  <div class="stat">状态序列（相邻相同已合并）</div>
+  <div class="seq" id="seq">—</div>
+  <table id="odt"><thead><tr><th>前驱</th><th>去过哪些后继</th><th>出度</th>
+    <th>分叉原因</th></tr></thead><tbody></tbody></table>
+</div>
+</div>
+<div class="foot">
+  <span id="msg"></span>
+  <button id="save">保存草稿</button>
+  <button class="primary" id="submit">提交本条</button>
+  <button id="pv">上一条视频</button><button id="nx">下一条视频</button>
+  <button id="exp">导出最终 JSON</button>
+</div>
+<script>
+const CASES=__CASES__, ANNOTATOR="__ANNOTATOR_ID__", BATCH="__BATCH_ID__",
+      MHASH="__MANIFEST_HASH__", SEED=__DRAFT__;
+const KEY="b2-coarse-"+BATCH+"-"+ANNOTATOR+"-"+MHASH;
+let states={}; try{states=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){states={}}
+for(const c of CASES) if(!states[c.video_id])
+  states[c.video_id]={schema_version:"b2_coarse_sequence_v1",video_id:c.video_id,
+    duration_s:c.duration_s,codes:[],segments:[{start_s:0,end_s:c.duration_s,code:""}],
+    branch_conditions:[],status:"draft",revision:0};
+if(SEED&&Object.keys(SEED).length) for(const k in SEED) states[k]={...states[k],...SEED[k]};
+let cur=0, sel=0;
+const $=s=>document.querySelector(s);
+const v=$("#v"), st=()=>states[CASES[cur].video_id];
+const n1=x=>Math.round(x*10)/10;
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(states))}catch(e){}}
+function touch(){const s=st();s.revision=(s.revision||0)+1;s.status="draft";
+  s.saved_at=new Date().toISOString();persist()}
+
+// 相邻同码合并后的序列 —— 出度和分叉都按这个算，和分析端口径一致
+function chain(){const out=[];for(const g of st().segments){
+  if(!g.code||g.code==="?")continue; if(!out.length||out[out.length-1]!==g.code)out.push(g.code)}
+  return out}
+function edges(){const e={};const c=chain();
+  for(let i=0;i+1<c.length;i++){(e[c[i]]=e[c[i]]||[]).push(c[i+1])}return e}
+// prefix-valid：出度>=2、且可达集没有穷尽此刻已见过的状态
+function gbranch(){const c=chain();const seen=[];const e={};let n=0;
+  for(let i=0;i<c.length;i++){
+    if(i>0){const p=c[i-1];const sup=new Set(e[p]||[]);
+      if(sup.size>=2&&seen.length>=3&&sup.size<seen.length)n++;}
+    if(i>0){(e[c[i-1]]=e[c[i-1]]||[]).push(c[i]);}
+    if(!seen.includes(c[i]))seen.push(c[i]);}
+  return n}
+function codeName(id){const c=st().codes.find(x=>x.id===id);return c?c.name:id}
+function render(){
+  $("#pos").textContent=(cur+1)+"/"+CASES.length;
+  $("#done").textContent=Object.values(states).filter(s=>s.status==="final").length
+    +"/"+CASES.length;
+  const s=st();
+  const rail=$("#rail");rail.innerHTML="";
+  s.segments.forEach((g,i)=>{const d=document.createElement("div");
+    d.className="seg"+(i===sel?" sel":"");
+    d.style.left=(100*g.start_s/s.duration_s)+"%";
+    d.style.width=(100*(g.end_s-g.start_s)/s.duration_s)+"%";
+    d.textContent=g.code||"·"; d.onclick=ev=>{ev.stopPropagation();sel=i;render()};
+    rail.appendChild(d)});
+  const ph=document.createElement("div");ph.className="ph";
+  ph.style.left=(100*(v.currentTime||0)/s.duration_s)+"%";rail.appendChild(ph);
+  const sc=$("#state");sc.innerHTML='<option value="">—</option>'
+    +s.codes.map(c=>`<option value="${c.id}">${c.id} · ${c.name}</option>`).join("")
+    +'<option value="?">看不清</option>';
+  sc.value=s.segments[sel]?.code||"";
+  $("#clock").textContent=n1(v.currentTime||0)+" / "+n1(s.duration_s)+" s";
+  const c=chain();$("#seq").textContent=c.length?c.join(" "):"—";
+  const e=edges();const tb=$("#odt").querySelector("tbody");tb.innerHTML="";
+  let od2=0;
+  for(const p of Object.keys(e).sort()){
+    const uniq=[...new Set(e[p])];if(uniq.length>=2)od2++;
+    const why=(s.branch_conditions||[]).filter(b=>b.from===p)
+      .map(b=>`${b.to}: ${b.condition}`).join("；");
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${p} · ${codeName(p)}</td><td>${uniq.join(", ")}</td>`
+      +`<td>${uniq.length}</td><td>${why||(uniq.length>=2?"<i>缺</i>":"")}</td>`;
+    tb.appendChild(tr)}
+  $("#od2").textContent=od2; $("#gb").textContent=gbranch();
+}
+function askIfBranch(){
+  const s=st();const c=chain();if(c.length<2){$("#ask").className="card hidden";return}
+  // 只在「这一段的前驱已经去过别的地方」时追问，且这一对还没写过原因
+  const e={};for(let i=0;i+1<c.length;i++)(e[c[i]]=e[c[i]]||new Set()).add(c[i+1]);
+  // 先问刚刚造出来的那一对。否则标注者刚标完 C，页面却回头问 A→B，
+  // 他要么答错要么得先在脑子里倒带一遍——而倒带出来的理由不能用。
+  const cand=[];
+  for(const p of Object.keys(e)){const to=[...e[p]];if(to.length<2)continue;
+    for(const t of to)if(!(s.branch_conditions||[]).some(b=>b.from===p&&b.to===t))
+      cand.push({from:p,to:t})}
+  const last={from:c[c.length-2],to:c[c.length-1]};
+  let pend=cand.find(x=>x.from===last.from&&x.to===last.to)||cand[0]||null;
+  if(!pend){$("#ask").className="card hidden";return}
+  $("#ask").className="card";
+  $("#askq").textContent=`为什么这次从 ${pend.from}（${codeName(pend.from)}）`
+    +`去了 ${pend.to}（${codeName(pend.to)}）？`;
+  $("#cond").value="";$("#cond").dataset.from=pend.from;$("#cond").dataset.to=pend.to;
+}
+$("#cond").oninput=ev=>{const s=st();const f=ev.target.dataset.from,t=ev.target.dataset.to;
+  const val=ev.target.value.trim();
+  s.branch_conditions=(s.branch_conditions||[]).filter(b=>!(b.from===f&&b.to===t));
+  if(val)s.branch_conditions.push({from:f,to:t,condition:val});
+  touch();render()};
+$("#state").onchange=ev=>{st().segments[sel].code=ev.target.value;touch();
+  render();askIfBranch()};
+$("#newstate").onclick=()=>{const s=st();
+  const name=prompt("这个状态怎么称呼？（看得见的动作，例如「检查物品」）");
+  if(!name)return;
+  const id=String.fromCharCode(65+s.codes.length);
+  s.codes.push({id,name:name.trim()});s.segments[sel].code=id;touch();render();askIfBranch()};
+$("#cut").onclick=()=>{const s=st(),t=n1(v.currentTime);
+  const i=s.segments.findIndex(g=>g.start_s<t&&t<g.end_s);
+  if(i<0){$("#msg").textContent="切点必须落在某一段内部";return}
+  const g=s.segments[i];
+  s.segments.splice(i,1,{start_s:g.start_s,end_s:t,code:g.code},
+                        {start_s:t,end_s:g.end_s,code:""});
+  sel=i+1;$("#msg").textContent="";touch();render()};
+$("#del").onclick=()=>{const s=st();if(s.segments.length<2||sel===0)return;
+  const a=s.segments[sel-1],b=s.segments[sel];
+  s.segments.splice(sel-1,2,{start_s:a.start_s,end_s:b.end_s,code:a.code});
+  sel=Math.max(0,sel-1);touch();render()};
+$("#prev").onclick=()=>{sel=Math.max(0,sel-1);v.currentTime=st().segments[sel].start_s;render()};
+$("#next").onclick=()=>{sel=Math.min(st().segments.length-1,sel+1);
+  v.currentTime=st().segments[sel].start_s;render()};
+$("#rail").onclick=ev=>{const r=ev.currentTarget.getBoundingClientRect();
+  v.currentTime=st().duration_s*(ev.clientX-r.left)/r.width};
+$("#save").onclick=()=>{touch();$("#msg").textContent="草稿已存"};
+$("#submit").onclick=()=>{const s=st();
+  if(s.segments.some(g=>!g.code)){$("#msg").textContent="还有段没选状态";return}
+  const e=edges();
+  for(const p of Object.keys(e)){const to=[...new Set(e[p])];if(to.length<2)continue;
+    for(const t of to)if(!(s.branch_conditions||[]).some(b=>b.from===p&&b.to===t)){
+      $("#msg").textContent=`${p}→${t} 还没写分叉原因`;askIfBranch();return}}
+  // touch() 会把 status 打回 draft，所以先 touch 再定稿，否则「已提交」只是
+  // 界面上的一句话，导出的 JSON 里全是 draft。
+  touch();
+  s.status="final";s.annotator=ANNOTATOR;s.manifest_sha256=MHASH;persist();
+  $("#msg").textContent="已提交";render()};
+function show(i){cur=i;sel=0;const c=CASES[i];
+  v.src="videos/"+c.video_id+".mp4";$("#msg").textContent="";render()}
+$("#pv").onclick=()=>show(Math.max(0,cur-1));
+$("#nx").onclick=()=>show(Math.min(CASES.length-1,cur+1));
+$("#exp").onclick=()=>{
+  const payload={schema_version:"b2_coarse_export_v1",batch_id:BATCH,
+    manifest_sha256:MHASH,annotator:ANNOTATOR,n_videos:CASES.length,
+    videos:CASES.map(c=>states[c.video_id])};
+  const b=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(b);
+  a.download=ANNOTATOR+"_"+BATCH+"_coarse.json";a.click()};
+v.addEventListener("timeupdate",()=>{const s=st();
+  $("#clock").textContent=n1(v.currentTime)+" / "+n1(s.duration_s)+" s";
+  const ph=$("#rail").querySelector(".ph");
+  if(ph)ph.style.left=(100*v.currentTime/s.duration_s)+"%"});
+show(0);
+</script></body></html>
