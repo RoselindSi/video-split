@@ -88,7 +88,7 @@ def load_samples(manifest, split, exclude_recs=None):
     return samples
 
 
-def build_model(view="dual", box_channel=True):
+def build_model(view="dual", box_channel=True, shared_stem=False):
     import torch
     import torch.nn as nn
     from torchvision.models import resnet18
@@ -109,8 +109,15 @@ def build_model(view="dual", box_channel=True):
             self.box_channel = box_channel and view == "dual"
             # 全图这一路不再和裁剪共用 stem：它多一个框通道，而且看的是完全不同的
             # 分布（整个场景 vs 一只手），共享权重只会让两边互相拖累。
-            self.full_stem = trunk(4 if self.box_channel else 3) \
-                if view == "dual" else None
+            # 共享 stem 是旧口径。它在中位数上仍然是目前最好的一版
+            # （0.573 对独立 stem 的 0.544），所以留着作对照，而不是
+            # 假设新写法一定更好。
+            if view != "dual":
+                self.full_stem = None
+            elif shared_stem and not self.box_channel:
+                self.full_stem = self.stem
+            else:
+                self.full_stem = trunk(4 if self.box_channel else 3)
             self.classifier = nn.Linear(1024 if view == "dual" else 512, 1)
             self.spatial_head = nn.Conv2d(512, 1, kernel_size=1)
 
@@ -264,7 +271,8 @@ def train(args):
         persistent_workers=args.workers > 0)
     device = torch.device(args.device or
                           ("cuda" if torch.cuda.is_available() else "cpu"))
-    model = build_model(args.view, box_channel=not args.no_box).to(device)
+    model = build_model(args.view, box_channel=not args.no_box,
+                        shared_stem=args.shared_stem).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr,
                                   weight_decay=args.weight_decay)
     best = math.inf
@@ -339,7 +347,8 @@ def score(args):
         if checkpoint_view is not None and view != checkpoint_view:
             raise ValueError("checkpoint view mismatch")
         checkpoint_view = view
-        model = build_model(view, box_channel=not getattr(args, "no_box", False)).to(device)
+        model = build_model(view, box_channel=not getattr(args, "no_box", False),
+                            shared_stem=getattr(args, "shared_stem", False)).to(device)
         model.load_state_dict(checkpoint["state"])
         model.eval()
         models.append(model)
@@ -396,6 +405,8 @@ def main():
     # 关掉框通道 = 复现旧版本的对照臂，不是默认路径
     fit.add_argument("--no-box", action="store_true",
                      help="全图不带框掩码（旧口径，用作对照）")
+    fit.add_argument("--shared-stem", dest="shared_stem", action="store_true",
+                     help="裁剪与全图共用一个 stem（旧口径；中位数上目前最好）")
     fit.add_argument("--exclude-val-rec", action="append", default=[])
     fit.add_argument("--seed", type=int, default=0)
     fit.add_argument("--device")
@@ -409,6 +420,7 @@ def main():
     run.add_argument("--device")
     run.add_argument("--predictions")
     run.add_argument("--no-box", action="store_true")
+    run.add_argument("--shared-stem", dest="shared_stem", action="store_true")
     args = parser.parse_args()
     train(args) if args.command == "train" else score(args)
 
