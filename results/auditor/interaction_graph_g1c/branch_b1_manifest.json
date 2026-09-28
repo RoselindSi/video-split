@@ -2,44 +2,79 @@
  "batch": "branch_b1",
  "videos": [
   {
-   "video_id": "recording_000214",
-   "video": "/workspace/branchpkg_src/recording_000214.mp4",
-   "duration_s": 658.2
-  },
-  {
    "video_id": "recording_000169",
-   "video": "/workspace/branchpkg_src/recording_000169.mp4",
-   "duration_s": 684.1
+   "video": "/workspace/branchclips/recording_000169.mp4",
+   "duration_s": 170.8
   },
   {
-   "video_id": "recording_000081",
-   "video": "/workspace/branchpkg_src/recording_000081.mp4",
-   "duration_s": 638.8
+   "video_id": "recording_000096",
+   "video": "/workspace/branchclips/recording_000096.mp4",
+   "duration_s": 145.5
   },
   {
-   "video_id": "recording_000048",
-   "video": "/workspace/branchpkg_src/recording_000048.mp4",
-   "duration_s": 655.1
+   "video_id": "recording_000459",
+   "video": "/workspace/branchclips/recording_000459.mp4",
+   "duration_s": 176.6
   },
   {
-   "video_id": "recording_000077",
-   "video": "/workspace/branchpkg_src/recording_000077.mp4",
-   "duration_s": 619.0
+   "video_id": "recording_000330",
+   "video": "/workspace/branchclips/recording_000330.mp4",
+   "duration_s": 174.0
   },
   {
-   "video_id": "recording_000009",
-   "video": "/workspace/branchpkg_src/recording_000009.mp4",
-   "duration_s": 721.2
+   "video_id": "recording_000142",
+   "video": "/workspace/branchclips/recording_000142.mp4",
+   "duration_s": 143.5
   },
   {
-   "video_id": "recording_000056",
-   "video": "/workspace/branchpkg_src/recording_000056.mp4",
-   "duration_s": 692.9
+   "video_id": "recording_000323",
+   "video": "/workspace/branchclips/recording_000323.mp4",
+   "duration_s": 175.1
   },
   {
-   "video_id": "recording_000061",
-   "video": "/workspace/branchpkg_src/recording_000061.mp4",
-   "duration_s": 704.3
+   "video_id": "recording_000127",
+   "video": "/workspace/branchclips/recording_000127.mp4",
+   "duration_s": 179.2
+  },
+  {
+   "video_id": "recording_000116",
+   "video": "/workspace/branchclips/recording_000116.mp4",
+   "duration_s": 175.7
+  },
+  {
+   "video_id": "recording_000247",
+   "video": "/workspace/branchclips/recording_000247.mp4",
+   "duration_s": 177.0
+  },
+  {
+   "video_id": "recording_000435",
+   "video": "/workspace/branchclips/recording_000435.mp4",
+   "duration_s": 176.4
+  },
+  {
+   "video_id": "recording_000416",
+   "video": "/workspace/branchclips/recording_000416.mp4",
+   "duration_s": 162.0
+  },
+  {
+   "video_id": "recording_000438",
+   "video": "/workspace/branchclips/recording_000438.mp4",
+   "duration_s": 164.0
+  },
+  {
+   "video_id": "recording_000031",
+   "video": "/workspace/branchclips/recording_000031.mp4",
+   "duration_s": 153.9
+  },
+  {
+   "video_id": "recording_000231",
+   "video": "/workspace/branchclips/recording_000231.mp4",
+   "duration_s": 174.6
+  },
+  {
+   "video_id": "recording_000131",
+   "video": "/workspace/branchclips/recording_000131.mp4",
+   "duration_s": 167.5
   }
  ]
 }

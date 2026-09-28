@@ -1,0 +1,290 @@
+[
+ {
+  "rid": "recording_000247",
+  "n": 100,
+  "rate": 1.0,
+  "med_w": 154.8,
+  "boxes_per_frame": 1.92,
+  "rate_60": 1.0,
+  "rate_100": 1.0
+ },
+ {
+  "rid": "recording_000435",
+  "n": 100,
+  "rate": 1.0,
+  "med_w": 176.8,
+  "boxes_per_frame": 1.97,
+  "rate_60": 1.0,
+  "rate_100": 1.0
+ },
+ {
+  "rid": "recording_000330",
+  "n": 100,
+  "rate": 0.99,
+  "med_w": 166.9,
+  "boxes_per_frame": 1.78,
+  "rate_60": 0.99,
+  "rate_100": 0.99
+ },
+ {
+  "rid": "recording_000416",
+  "n": 100,
+  "rate": 0.99,
+  "med_w": 162.4,
+  "boxes_per_frame": 1.9,
+  "rate_60": 0.99,
+  "rate_100": 0.99
+ },
+ {
+  "rid": "recording_000096",
+  "n": 100,
+  "rate": 0.98,
+  "med_w": 213.2,
+  "boxes_per_frame": 1.92,
+  "rate_60": 0.98,
+  "rate_100": 0.97
+ },
+ {
+  "rid": "recording_000127",
+  "n": 100,
+  "rate": 0.98,
+  "med_w": 122.1,
+  "boxes_per_frame": 1.94,
+  "rate_60": 0.98,
+  "rate_100": 0.97
+ },
+ {
+  "rid": "recording_000438",
+  "n": 100,
+  "rate": 0.98,
+  "med_w": 148.4,
+  "boxes_per_frame": 1.89,
+  "rate_60": 0.97,
+  "rate_100": 0.97
+ },
+ {
+  "rid": "recording_000031",
+  "n": 100,
+  "rate": 0.96,
+  "med_w": 172.9,
+  "boxes_per_frame": 1.51,
+  "rate_60": 0.96,
+  "rate_100": 0.95
+ },
+ {
+  "rid": "recording_000142",
+  "n": 100,
+  "rate": 0.96,
+  "med_w": 124.7,
+  "boxes_per_frame": 1.84,
+  "rate_60": 0.96,
+  "rate_100": 0.92
+ },
+ {
+  "rid": "recording_000323",
+  "n": 100,
+  "rate": 0.94,
+  "med_w": 162.0,
+  "boxes_per_frame": 1.6,
+  "rate_60": 0.93,
+  "rate_100": 0.9
+ },
+ {
+  "rid": "recording_000231",
+  "n": 100,
+  "rate": 0.97,
+  "med_w": 126.4,
+  "boxes_per_frame": 1.89,
+  "rate_60": 0.97,
+  "rate_100": 0.87
+ },
+ {
+  "rid": "recording_000116",
+  "n": 100,
+  "rate": 1.0,
+  "med_w": 117.8,
+  "boxes_per_frame": 2.01,
+  "rate_60": 1.0,
+  "rate_100": 0.86
+ },
+ {
+  "rid": "recording_000169",
+  "n": 100,
+  "rate": 0.82,
+  "med_w": 128.2,
+  "boxes_per_frame": 1.53,
+  "rate_60": 0.82,
+  "rate_100": 0.82
+ },
+ {
+  "rid": "recording_000131",
+  "n": 100,
+  "rate": 0.77,
+  "med_w": 147.4,
+  "boxes_per_frame": 1.37,
+  "rate_60": 0.77,
+  "rate_100": 0.77
+ },
+ {
+  "rid": "recording_000459",
+  "n": 100,
+  "rate": 0.79,
+  "med_w": 135.1,
+  "boxes_per_frame": 1.46,
+  "rate_60": 0.71,
+  "rate_100": 0.67
+ },
+ {
+  "rid": "recording_000322",
+  "n": 100,
+  "rate": 0.61,
+  "med_w": 123.6,
+  "boxes_per_frame": 1.16,
+  "rate_60": 0.59,
+  "rate_100": 0.58
+ },
+ {
+  "rid": "recording_000091",
+  "n": 100,
+  "rate": 0.46,
+  "med_w": 144.5,
+  "boxes_per_frame": 0.79,
+  "rate_60": 0.46,
+  "rate_100": 0.46
+ },
+ {
+  "rid": "recording_000081",
+  "n": 100,
+  "rate": 0.28,
+  "med_w": 143.3,
+  "boxes_per_frame": 0.38,
+  "rate_60": 0.28,
+  "rate_100": 0.28
+ },
+ {
+  "rid": "recording_000071",
+  "n": 100,
+  "rate": 0.23,
+  "med_w": 152.1,
+  "boxes_per_frame": 0.37,
+  "rate_60": 0.23,
+  "rate_100": 0.23
+ },
+ {
+  "rid": "recording_000136",
+  "n": 100,
+  "rate": 0.35,
+  "med_w": 62.9,
+  "boxes_per_frame": 0.53,
+  "rate_60": 0.21,
+  "rate_100": 0.15
+ },
+ {
+  "rid": "recording_000450",
+  "n": 100,
+  "rate": 0.15,
+  "med_w": 363.1,
+  "boxes_per_frame": 0.15,
+  "rate_60": 0.15,
+  "rate_100": 0.15
+ },
+ {
+  "rid": "recording_000009",
+  "n": 100,
+  "rate": 0.25,
+  "med_w": 103.9,
+  "boxes_per_frame": 0.25,
+  "rate_60": 0.24,
+  "rate_100": 0.14
+ },
+ {
+  "rid": "recording_000077",
+  "n": 100,
+  "rate": 0.13,
+  "med_w": 146.9,
+  "boxes_per_frame": 0.16,
+  "rate_60": 0.13,
+  "rate_100": 0.13
+ },
+ {
+  "rid": "recording_000122",
+  "n": 100,
+  "rate": 0.23,
+  "med_w": 92.3,
+  "boxes_per_frame": 0.23,
+  "rate_60": 0.19,
+  "rate_100": 0.09
+ },
+ {
+  "rid": "recording_000086",
+  "n": 100,
+  "rate": 0.08,
+  "med_w": 168.2,
+  "boxes_per_frame": 0.11,
+  "rate_60": 0.08,
+  "rate_100": 0.08
+ },
+ {
+  "rid": "recording_000048",
+  "n": 100,
+  "rate": 0.68,
+  "med_w": 27.7,
+  "boxes_per_frame": 0.99,
+  "rate_60": 0.07,
+  "rate_100": 0.07
+ },
+ {
+  "rid": "recording_000063",
+  "n": 100,
+  "rate": 0.71,
+  "med_w": 25.6,
+  "boxes_per_frame": 1.11,
+  "rate_60": 0.06,
+  "rate_100": 0.06
+ },
+ {
+  "rid": "recording_000061",
+  "n": 100,
+  "rate": 0.65,
+  "med_w": 28.2,
+  "boxes_per_frame": 1.31,
+  "rate_60": 0.02,
+  "rate_100": 0.02
+ },
+ {
+  "rid": "recording_000214",
+  "n": 100,
+  "rate": 0.84,
+  "med_w": 70.0,
+  "boxes_per_frame": 1.47,
+  "rate_60": 0.83,
+  "rate_100": 0.02
+ },
+ {
+  "rid": "recording_000056",
+  "n": 100,
+  "rate": 0.53,
+  "med_w": 31.1,
+  "boxes_per_frame": 0.76,
+  "rate_60": 0.02,
+  "rate_100": 0.01
+ },
+ {
+  "rid": "recording_000053",
+  "n": 100,
+  "rate": 0.31,
+  "med_w": 27.6,
+  "boxes_per_frame": 0.49,
+  "rate_60": 0.01,
+  "rate_100": 0.0
+ },
+ {
+  "rid": "recording_000059",
+  "n": 100,
+  "rate": 0.36,
+  "med_w": 29.3,
+  "boxes_per_frame": 0.6,
+  "rate_60": 0.0,
+  "rate_100": 0.0
+ }
+]

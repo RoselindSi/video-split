@@ -1,0 +1,692 @@
+[
+ {
+  "rid": "recording_000214",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000214/mid.mp4",
+  "start_s": 11.2,
+  "end_s": 176.2,
+  "dur_s": 165.0,
+  "switches": 24,
+  "n_labels": 5,
+  "n_seg_in_window": 40
+ },
+ {
+  "rid": "recording_000169",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000169/mid.mp4",
+  "start_s": 26.7,
+  "end_s": 197.5,
+  "dur_s": 170.8,
+  "switches": 16,
+  "n_labels": 6,
+  "n_seg_in_window": 49
+ },
+ {
+  "rid": "recording_000081",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000081/mid.mp4",
+  "start_s": 301.3,
+  "end_s": 452.0,
+  "dur_s": 150.7,
+  "switches": 11,
+  "n_labels": 14,
+  "n_seg_in_window": 14
+ },
+ {
+  "rid": "recording_000048",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000048/mid.mp4",
+  "start_s": 221.0,
+  "end_s": 387.5,
+  "dur_s": 166.5,
+  "switches": 9,
+  "n_labels": 9,
+  "n_seg_in_window": 11
+ },
+ {
+  "rid": "recording_000096",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000096/mid.mp4",
+  "start_s": 0.5,
+  "end_s": 146.0,
+  "dur_s": 145.5,
+  "switches": 7,
+  "n_labels": 9,
+  "n_seg_in_window": 13
+ },
+ {
+  "rid": "recording_000122",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000122/mid.mp4",
+  "start_s": 11.5,
+  "end_s": 175.5,
+  "dur_s": 164.0,
+  "switches": 6,
+  "n_labels": 8,
+  "n_seg_in_window": 13
+ },
+ {
+  "rid": "recording_000450",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000450/mid.mp4",
+  "start_s": 14.5,
+  "end_s": 134.2,
+  "dur_s": 119.7,
+  "switches": 6,
+  "n_labels": 8,
+  "n_seg_in_window": 8
+ },
+ {
+  "rid": "recording_000056",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000056/mid.mp4",
+  "start_s": 200.5,
+  "end_s": 375.0,
+  "dur_s": 174.5,
+  "switches": 6,
+  "n_labels": 6,
+  "n_seg_in_window": 29
+ },
+ {
+  "rid": "recording_000459",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000459/mid.mp4",
+  "start_s": 8.5,
+  "end_s": 185.1,
+  "dur_s": 176.6,
+  "switches": 5,
+  "n_labels": 9,
+  "n_seg_in_window": 9
+ },
+ {
+  "rid": "recording_000077",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000077/mid.mp4",
+  "start_s": 251.5,
+  "end_s": 428.0,
+  "dur_s": 176.5,
+  "switches": 5,
+  "n_labels": 7,
+  "n_seg_in_window": 7
+ },
+ {
+  "rid": "recording_000063",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000063/mid.mp4",
+  "start_s": 341.0,
+  "end_s": 502.0,
+  "dur_s": 161.0,
+  "switches": 5,
+  "n_labels": 6,
+  "n_seg_in_window": 10
+ },
+ {
+  "rid": "recording_000136",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000136/mid.mp4",
+  "start_s": 3.8,
+  "end_s": 80.0,
+  "dur_s": 76.2,
+  "switches": 5,
+  "n_labels": 6,
+  "n_seg_in_window": 6
+ },
+ {
+  "rid": "recording_000323",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000323/mid.mp4",
+  "start_s": 336.6,
+  "end_s": 511.7,
+  "dur_s": 175.1,
+  "switches": 4,
+  "n_labels": 8,
+  "n_seg_in_window": 11
+ },
+ {
+  "rid": "recording_000330",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000330/mid.mp4",
+  "start_s": 12.5,
+  "end_s": 186.5,
+  "dur_s": 174.0,
+  "switches": 4,
+  "n_labels": 8,
+  "n_seg_in_window": 13
+ },
+ {
+  "rid": "recording_000071",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000071/mid.mp4",
+  "start_s": 106.0,
+  "end_s": 279.0,
+  "dur_s": 173.0,
+  "switches": 4,
+  "n_labels": 5,
+  "n_seg_in_window": 7
+ },
+ {
+  "rid": "recording_000142",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000142/mid.mp4",
+  "start_s": 474.7,
+  "end_s": 618.2,
+  "dur_s": 143.5,
+  "switches": 4,
+  "n_labels": 5,
+  "n_seg_in_window": 13
+ },
+ {
+  "rid": "recording_000116",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000116/mid.mp4",
+  "start_s": 382.7,
+  "end_s": 558.4,
+  "dur_s": 175.7,
+  "switches": 3,
+  "n_labels": 8,
+  "n_seg_in_window": 9
+ },
+ {
+  "rid": "recording_000053",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000053/mid.mp4",
+  "start_s": 522.0,
+  "end_s": 661.0,
+  "dur_s": 139.0,
+  "switches": 3,
+  "n_labels": 6,
+  "n_seg_in_window": 6
+ },
+ {
+  "rid": "recording_000091",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000091/mid.mp4",
+  "start_s": 388.5,
+  "end_s": 567.0,
+  "dur_s": 178.5,
+  "switches": 3,
+  "n_labels": 6,
+  "n_seg_in_window": 13
+ },
+ {
+  "rid": "recording_000127",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000127/mid.mp4",
+  "start_s": 2.8,
+  "end_s": 182.0,
+  "dur_s": 179.2,
+  "switches": 3,
+  "n_labels": 6,
+  "n_seg_in_window": 37
+ },
+ {
+  "rid": "recording_000059",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000059/mid.mp4",
+  "start_s": 98.5,
+  "end_s": 270.4,
+  "dur_s": 171.9,
+  "switches": 3,
+  "n_labels": 5,
+  "n_seg_in_window": 18
+ },
+ {
+  "rid": "recording_000061",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000061/mid.mp4",
+  "start_s": 478.2,
+  "end_s": 624.0,
+  "dur_s": 145.8,
+  "switches": 3,
+  "n_labels": 5,
+  "n_seg_in_window": 8
+ },
+ {
+  "rid": "recording_000086",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000086/mid.mp4",
+  "start_s": 233.5,
+  "end_s": 388.7,
+  "dur_s": 155.2,
+  "switches": 3,
+  "n_labels": 5,
+  "n_seg_in_window": 7
+ },
+ {
+  "rid": "recording_000009",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000009/mid.mp4",
+  "start_s": 530.0,
+  "end_s": 707.5,
+  "dur_s": 177.5,
+  "switches": 3,
+  "n_labels": 4,
+  "n_seg_in_window": 4
+ },
+ {
+  "rid": "recording_000231",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000231/mid.mp4",
+  "start_s": 492.4,
+  "end_s": 667.0,
+  "dur_s": 174.6,
+  "switches": 2,
+  "n_labels": 22,
+  "n_seg_in_window": 24
+ },
+ {
+  "rid": "recording_000247",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000247/mid.mp4",
+  "start_s": 133.5,
+  "end_s": 310.5,
+  "dur_s": 177.0,
+  "switches": 2,
+  "n_labels": 18,
+  "n_seg_in_window": 18
+ },
+ {
+  "rid": "recording_000131",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000131/mid.mp4",
+  "start_s": 510.5,
+  "end_s": 678.0,
+  "dur_s": 167.5,
+  "switches": 2,
+  "n_labels": 13,
+  "n_seg_in_window": 13
+ },
+ {
+  "rid": "recording_000438",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000438/mid.mp4",
+  "start_s": 21.5,
+  "end_s": 185.5,
+  "dur_s": 164.0,
+  "switches": 2,
+  "n_labels": 13,
+  "n_seg_in_window": 13
+ },
+ {
+  "rid": "recording_000322",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000322/mid.mp4",
+  "start_s": 583.5,
+  "end_s": 754.5,
+  "dur_s": 171.0,
+  "switches": 2,
+  "n_labels": 12,
+  "n_seg_in_window": 14
+ },
+ {
+  "rid": "recording_000416",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000416/mid.mp4",
+  "start_s": 363.6,
+  "end_s": 525.6,
+  "dur_s": 162.0,
+  "switches": 2,
+  "n_labels": 12,
+  "n_seg_in_window": 12
+ },
+ {
+  "rid": "recording_000435",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000435/mid.mp4",
+  "start_s": 290.7,
+  "end_s": 467.1,
+  "dur_s": 176.4,
+  "switches": 2,
+  "n_labels": 11,
+  "n_seg_in_window": 11
+ },
+ {
+  "rid": "recording_000031",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000031/mid.mp4",
+  "start_s": 206.0,
+  "end_s": 359.9,
+  "dur_s": 153.9,
+  "switches": 2,
+  "n_labels": 10,
+  "n_seg_in_window": 10
+ },
+ {
+  "rid": "recording_000062",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000062/mid.mp4",
+  "start_s": 15.5,
+  "end_s": 129.0,
+  "dur_s": 113.5,
+  "switches": 2,
+  "n_labels": 10,
+  "n_seg_in_window": 10
+ },
+ {
+  "rid": "recording_000432",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000432/mid.mp4",
+  "start_s": 10.1,
+  "end_s": 178.1,
+  "dur_s": 168.0,
+  "switches": 2,
+  "n_labels": 10,
+  "n_seg_in_window": 10
+ },
+ {
+  "rid": "recording_000134",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000134/mid.mp4",
+  "start_s": 451.5,
+  "end_s": 623.2,
+  "dur_s": 171.7,
+  "switches": 2,
+  "n_labels": 9,
+  "n_seg_in_window": 11
+ },
+ {
+  "rid": "recording_000200",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000200/mid.mp4",
+  "start_s": 106.0,
+  "end_s": 269.0,
+  "dur_s": 163.0,
+  "switches": 2,
+  "n_labels": 9,
+  "n_seg_in_window": 35
+ },
+ {
+  "rid": "recording_000386",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000386/mid.mp4",
+  "start_s": 289.0,
+  "end_s": 440.7,
+  "dur_s": 151.7,
+  "switches": 2,
+  "n_labels": 8,
+  "n_seg_in_window": 8
+ },
+ {
+  "rid": "recording_000423",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000423/mid.mp4",
+  "start_s": 77.0,
+  "end_s": 248.6,
+  "dur_s": 171.6,
+  "switches": 2,
+  "n_labels": 8,
+  "n_seg_in_window": 8
+ },
+ {
+  "rid": "recording_000448",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000448/mid.mp4",
+  "start_s": 525.0,
+  "end_s": 663.5,
+  "dur_s": 138.5,
+  "switches": 2,
+  "n_labels": 8,
+  "n_seg_in_window": 8
+ },
+ {
+  "rid": "recording_000004",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000004/mid.mp4",
+  "start_s": 289.0,
+  "end_s": 463.2,
+  "dur_s": 174.2,
+  "switches": 2,
+  "n_labels": 7,
+  "n_seg_in_window": 22
+ },
+ {
+  "rid": "recording_000007",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000007/mid.mp4",
+  "start_s": 298.7,
+  "end_s": 476.0,
+  "dur_s": 177.3,
+  "switches": 2,
+  "n_labels": 7,
+  "n_seg_in_window": 62
+ },
+ {
+  "rid": "recording_000016",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000016/mid.mp4",
+  "start_s": 501.5,
+  "end_s": 665.0,
+  "dur_s": 163.5,
+  "switches": 2,
+  "n_labels": 7,
+  "n_seg_in_window": 7
+ },
+ {
+  "rid": "recording_000017",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000017/mid.mp4",
+  "start_s": 480.5,
+  "end_s": 659.9,
+  "dur_s": 179.4,
+  "switches": 2,
+  "n_labels": 7,
+  "n_seg_in_window": 7
+ },
+ {
+  "rid": "recording_000052",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000052/mid.mp4",
+  "start_s": 416.0,
+  "end_s": 546.0,
+  "dur_s": 130.0,
+  "switches": 2,
+  "n_labels": 7,
+  "n_seg_in_window": 17
+ },
+ {
+  "rid": "recording_000060",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000060/mid.mp4",
+  "start_s": 533.0,
+  "end_s": 693.0,
+  "dur_s": 160.0,
+  "switches": 2,
+  "n_labels": 7,
+  "n_seg_in_window": 21
+ },
+ {
+  "rid": "recording_000075",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000075/mid.mp4",
+  "start_s": 104.0,
+  "end_s": 274.0,
+  "dur_s": 170.0,
+  "switches": 2,
+  "n_labels": 7,
+  "n_seg_in_window": 50
+ },
+ {
+  "rid": "recording_000090",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000090/mid.mp4",
+  "start_s": 348.0,
+  "end_s": 518.0,
+  "dur_s": 170.0,
+  "switches": 2,
+  "n_labels": 7,
+  "n_seg_in_window": 8
+ },
+ {
+  "rid": "recording_000098",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000098/mid.mp4",
+  "start_s": 11.5,
+  "end_s": 190.0,
+  "dur_s": 178.5,
+  "switches": 2,
+  "n_labels": 7,
+  "n_seg_in_window": 13
+ },
+ {
+  "rid": "recording_000445",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000445/mid.mp4",
+  "start_s": 20.5,
+  "end_s": 200.5,
+  "dur_s": 180.0,
+  "switches": 2,
+  "n_labels": 7,
+  "n_seg_in_window": 7
+ },
+ {
+  "rid": "recording_000055",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000055/mid.mp4",
+  "start_s": 461.0,
+  "end_s": 621.5,
+  "dur_s": 160.5,
+  "switches": 2,
+  "n_labels": 6,
+  "n_seg_in_window": 11
+ },
+ {
+  "rid": "recording_000067",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000067/mid.mp4",
+  "start_s": 207.0,
+  "end_s": 369.0,
+  "dur_s": 162.0,
+  "switches": 2,
+  "n_labels": 6,
+  "n_seg_in_window": 17
+ },
+ {
+  "rid": "recording_000087",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000087/mid.mp4",
+  "start_s": 242.5,
+  "end_s": 399.5,
+  "dur_s": 157.0,
+  "switches": 2,
+  "n_labels": 6,
+  "n_seg_in_window": 6
+ },
+ {
+  "rid": "recording_000093",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000093/mid.mp4",
+  "start_s": 542.0,
+  "end_s": 687.5,
+  "dur_s": 145.5,
+  "switches": 2,
+  "n_labels": 6,
+  "n_seg_in_window": 12
+ },
+ {
+  "rid": "recording_000175",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000175/mid.mp4",
+  "start_s": 357.3,
+  "end_s": 494.7,
+  "dur_s": 137.4,
+  "switches": 2,
+  "n_labels": 6,
+  "n_seg_in_window": 10
+ },
+ {
+  "rid": "recording_000358",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000358/mid.mp4",
+  "start_s": 11.2,
+  "end_s": 189.0,
+  "dur_s": 177.8,
+  "switches": 2,
+  "n_labels": 6,
+  "n_seg_in_window": 12
+ },
+ {
+  "rid": "recording_000413",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000413/mid.mp4",
+  "start_s": 8.0,
+  "end_s": 130.5,
+  "dur_s": 122.5,
+  "switches": 2,
+  "n_labels": 6,
+  "n_seg_in_window": 6
+ },
+ {
+  "rid": "recording_000068",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000068/mid.mp4",
+  "start_s": 325.5,
+  "end_s": 472.5,
+  "dur_s": 147.0,
+  "switches": 2,
+  "n_labels": 5,
+  "n_seg_in_window": 11
+ },
+ {
+  "rid": "recording_000073",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000073/mid.mp4",
+  "start_s": 212.0,
+  "end_s": 374.0,
+  "dur_s": 162.0,
+  "switches": 2,
+  "n_labels": 5,
+  "n_seg_in_window": 13
+ },
+ {
+  "rid": "recording_000074",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000074/mid.mp4",
+  "start_s": 477.0,
+  "end_s": 633.0,
+  "dur_s": 156.0,
+  "switches": 2,
+  "n_labels": 5,
+  "n_seg_in_window": 17
+ },
+ {
+  "rid": "recording_000164",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000164/mid.mp4",
+  "start_s": 527.3,
+  "end_s": 678.4,
+  "dur_s": 151.1,
+  "switches": 2,
+  "n_labels": 5,
+  "n_seg_in_window": 7
+ },
+ {
+  "rid": "recording_000372",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000372/mid.mp4",
+  "start_s": 12.5,
+  "end_s": 177.0,
+  "dur_s": 164.5,
+  "switches": 2,
+  "n_labels": 5,
+  "n_seg_in_window": 28
+ },
+ {
+  "rid": "recording_000409",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000409/mid.mp4",
+  "start_s": 432.5,
+  "end_s": 599.0,
+  "dur_s": 166.5,
+  "switches": 2,
+  "n_labels": 5,
+  "n_seg_in_window": 5
+ },
+ {
+  "rid": "recording_000069",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000069/mid.mp4",
+  "start_s": 236.0,
+  "end_s": 379.0,
+  "dur_s": 143.0,
+  "switches": 2,
+  "n_labels": 4,
+  "n_seg_in_window": 12
+ },
+ {
+  "rid": "recording_000088",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000088/mid.mp4",
+  "start_s": 537.5,
+  "end_s": 663.1,
+  "dur_s": 125.6,
+  "switches": 2,
+  "n_labels": 4,
+  "n_seg_in_window": 32
+ },
+ {
+  "rid": "recording_000153",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000153/mid.mp4",
+  "start_s": 605.4,
+  "end_s": 633.1,
+  "dur_s": 27.7,
+  "switches": 2,
+  "n_labels": 4,
+  "n_seg_in_window": 4
+ },
+ {
+  "rid": "recording_000392",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000392/mid.mp4",
+  "start_s": 13.3,
+  "end_s": 141.5,
+  "dur_s": 128.2,
+  "switches": 2,
+  "n_labels": 4,
+  "n_seg_in_window": 4
+ },
+ {
+  "rid": "recording_000078",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000078/mid.mp4",
+  "start_s": 257.5,
+  "end_s": 415.0,
+  "dur_s": 157.5,
+  "switches": 2,
+  "n_labels": 3,
+  "n_seg_in_window": 3
+ },
+ {
+  "rid": "recording_000105",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000105/mid.mp4",
+  "start_s": 72.0,
+  "end_s": 248.0,
+  "dur_s": 176.0,
+  "switches": 2,
+  "n_labels": 3,
+  "n_seg_in_window": 18
+ },
+ {
+  "rid": "recording_000339",
+  "src": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000339/mid.mp4",
+  "start_s": 501.2,
+  "end_s": 656.4,
+  "dur_s": 155.2,
+  "switches": 2,
+  "n_labels": 3,
+  "n_seg_in_window": 3
+ }
+]
