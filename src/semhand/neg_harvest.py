@@ -79,6 +79,8 @@ def main():
     ap.add_argument("--min_px", type=int, default=150,
                     help="box width floor: the regime the probe was measured in")
     ap.add_argument("--conf", type=float, default=0.25)
+    ap.add_argument("--link_iou", type=float, default=0.3,
+                    help="相邻采样帧之间连成同一条轨迹的 IoU 下限")
     ap.add_argument("--seed", type=int, default=29)
     ap.add_argument("--views", required=True)
     ap.add_argument("--out", required=True)
@@ -139,9 +141,32 @@ def main():
         os.makedirs(a.views, exist_ok=True)
         model = YOLO(a.weights)
         idx, nframe, nbox = [], 0, 0
+        next_track = [0]
+
+        def iou(p, q):
+            ax0, ay0, ax1, ay1 = p
+            bx0, by0, bx1, by1 = q
+            ix0, iy0 = max(ax0, bx0), max(ay0, by0)
+            ix1, iy1 = min(ax1, bx1), min(ay1, by1)
+            if ix1 <= ix0 or iy1 <= iy0:
+                return 0.0
+            inter = (ix1 - ix0) * (iy1 - iy0)
+            return inter / float((ax1 - ax0) * (ay1 - ay0)
+                                 + (bx1 - bx0) * (by1 - by0) - inter)
+
         for v, f0, d in anchors:
             cap = cv2.VideoCapture(v)
             cap.set(cv2.CAP_PROP_POS_FRAMES, f0)
+            # THE NEGATIVES HAVE TO COME IN TRACKS, NOT FRAMES. The 267
+            # negatives in the training split sit on 258 distinct tracks --
+            # about one view each -- so nothing in the set can say whether a
+            # whole track is safe to delete, and the test split had no
+            # multi-view negative track at all. Detections in consecutive
+            # sampled frames are linked greedily by IoU, which is enough:
+            # most false positives here are furniture and table edges, which
+            # do not move, and a head that does move still overlaps itself
+            # across a few frames at this stride.
+            prev = []
             for j in range(a.per_rec * a.stride):
                 ok, fr = cap.read()
                 if not ok:
@@ -154,10 +179,20 @@ def main():
                 rgb = cv2.cvtColor(half, cv2.COLOR_BGR2RGB)
                 dets = detect(model, rgb, min_conf=a.conf)
                 nframe += 1
+                current = []
                 for k, det in enumerate(dets):
                     b = [int(x) for x in det["box"]]
                     if b[2] - b[0] < a.min_px:
                         continue
+                    best, best_iou = None, a.link_iou
+                    for pb, ptid in prev:
+                        v_iou = iou(b, pb)
+                        if v_iou >= best_iou:
+                            best, best_iou = ptid, v_iou
+                    if best is None:
+                        best = next_track[0]
+                        next_track[0] += 1
+                    current.append((b, best))
                     stem = "%s_%s_f%06d_h%d" % (d["recording"].replace("databag-", "R"),
                                                 d["camera"], f, k)
                     vis = half.copy()
@@ -176,17 +211,25 @@ def main():
                                 [int(cv2.IMWRITE_JPEG_QUALITY), 92])
                     idx.append({"stem": stem, "rec": d["recording"],
                                 "cam": d["camera"], "frame": f,
+                                "track_id": best,
                                 "conf": round(float(det.get("conf", 0)), 3),
                                 "w_px": b[2] - b[0], "h_px": b[3] - b[1],
                                 "x0": b[0], "y0": b[1], "x1": b[2], "y1": b[3]})
                     nbox += 1
+                prev = current
             cap.release()
             print("  %-30s %d 帧 / %d 个框" % (d["recording"], nframe, nbox), flush=True)
         with open(os.path.join(a.views, "index.csv"), "w", newline="") as fh:
             w = csv.DictWriter(fh, fieldnames=list(idx[0]))
             w.writeheader()
             w.writerows(idx)
-        print("-> %s：%d 帧、%d 个 >=%dpx 的框" % (a.views, nframe, nbox, a.min_px))
+        import collections as _c
+        per = _c.Counter(r["track_id"] for r in idx)
+        print("-> %s：%d 帧、%d 个 >=%dpx 的框、%d 条轨迹"
+              % (a.views, nframe, nbox, a.min_px, len(per)))
+        print("   其中 >=3 个视图的轨迹 %d 条，>=5 个的 %d 条 —— 这才是缺的东西"
+              % (sum(1 for n in per.values() if n >= 3),
+                 sum(1 for n in per.values() if n >= 5)))
         return
 
     from PIL import Image
