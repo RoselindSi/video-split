@@ -1,0 +1,58 @@
+{
+  "allowed_validation_false_negatives": 4,
+  "heldout_recordings": [
+    "R0828_105127"
+  ],
+  "minimum_validation_recall": 0.995,
+  "splits": {
+    "heldout": {
+      "fn": 0,
+      "fp": 12,
+      "human_auc": NaN,
+      "n": 13,
+      "negative": 13,
+      "positive": 0,
+      "recall": null,
+      "specificity": 0.07692307692307693,
+      "tn": 1,
+      "tp": 0
+    },
+    "test": {
+      "fn": 3,
+      "fp": 39,
+      "human_auc": 0.9551834130781499,
+      "n": 241,
+      "negative": 76,
+      "positive": 165,
+      "recall": 0.9818181818181818,
+      "specificity": 0.4868421052631579,
+      "tn": 37,
+      "tp": 162
+    },
+    "val": {
+      "fn": 4,
+      "fp": 65,
+      "human_auc": 0.9728754188242461,
+      "n": 1047,
+      "negative": 67,
+      "positive": 980,
+      "recall": 0.9959183673469387,
+      "specificity": 0.029850746268656716,
+      "tn": 2,
+      "tp": 976
+    },
+    "val_all": {
+      "fn": 4,
+      "fp": 77,
+      "human_auc": 0.9737372448979592,
+      "n": 1060,
+      "negative": 80,
+      "positive": 980,
+      "recall": 0.9959183673469387,
+      "specificity": 0.0375,
+      "tn": 3,
+      "tp": 976
+    }
+  },
+  "threshold": 0.576572597026825
+}

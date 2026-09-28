@@ -1,0 +1,58 @@
+{
+  "allowed_validation_false_negatives": 4,
+  "heldout_recordings": [
+    "R0828_105127"
+  ],
+  "minimum_validation_recall": 0.995,
+  "splits": {
+    "heldout": {
+      "fn": 0,
+      "fp": 13,
+      "human_auc": NaN,
+      "n": 13,
+      "negative": 13,
+      "positive": 0,
+      "recall": null,
+      "specificity": 0.0,
+      "tn": 0,
+      "tp": 0
+    },
+    "test": {
+      "fn": 1,
+      "fp": 68,
+      "human_auc": 0.8619617224880383,
+      "n": 241,
+      "negative": 76,
+      "positive": 165,
+      "recall": 0.9939393939393939,
+      "specificity": 0.10526315789473684,
+      "tn": 8,
+      "tp": 164
+    },
+    "val": {
+      "fn": 4,
+      "fp": 66,
+      "human_auc": 0.5695019798964361,
+      "n": 1047,
+      "negative": 67,
+      "positive": 980,
+      "recall": 0.9959183673469387,
+      "specificity": 0.014925373134328358,
+      "tn": 1,
+      "tp": 976
+    },
+    "val_all": {
+      "fn": 4,
+      "fp": 79,
+      "human_auc": 0.5647130102040816,
+      "n": 1060,
+      "negative": 80,
+      "positive": 980,
+      "recall": 0.9959183673469387,
+      "specificity": 0.0125,
+      "tn": 1,
+      "tp": 976
+    }
+  },
+  "threshold": 0.3390830457210541
+}

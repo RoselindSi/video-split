@@ -1,0 +1,15 @@
+{
+  "confusion": {
+    "hand_as_hand": 18,
+    "hand_as_unsure": 1,
+    "nothand_as_hand": 2
+  },
+  "fail_open_tracks": 1,
+  "false_deletions": 0,
+  "mixed_tracks": 0,
+  "nothand_rejection_rate": 0.0,
+  "resolved_tracks": 20,
+  "reviewed_tracks": 21,
+  "safety_recall": 1.0,
+  "tracks": 21
+}

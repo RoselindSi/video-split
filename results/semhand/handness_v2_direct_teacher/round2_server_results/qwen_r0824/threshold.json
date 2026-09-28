@@ -1,0 +1,58 @@
+{
+  "allowed_validation_false_negatives": 4,
+  "heldout_recordings": [
+    "R0824_120917"
+  ],
+  "minimum_validation_recall": 0.995,
+  "splits": {
+    "heldout": {
+      "fn": 14,
+      "fp": 20,
+      "human_auc": 0.7418627135030615,
+      "n": 136,
+      "negative": 29,
+      "positive": 107,
+      "recall": 0.8691588785046729,
+      "specificity": 0.3103448275862069,
+      "tn": 9,
+      "tp": 93
+    },
+    "test": {
+      "fn": 6,
+      "fp": 36,
+      "human_auc": 0.9417065390749602,
+      "n": 241,
+      "negative": 76,
+      "positive": 165,
+      "recall": 0.9636363636363636,
+      "specificity": 0.5263157894736842,
+      "tn": 40,
+      "tp": 159
+    },
+    "val": {
+      "fn": 4,
+      "fp": 67,
+      "human_auc": 0.9732866280840694,
+      "n": 1047,
+      "negative": 67,
+      "positive": 980,
+      "recall": 0.9959183673469387,
+      "specificity": 0.0,
+      "tn": 0,
+      "tp": 976
+    },
+    "val_all": {
+      "fn": 18,
+      "fp": 87,
+      "human_auc": 0.9420039865072064,
+      "n": 1183,
+      "negative": 96,
+      "positive": 1087,
+      "recall": 0.983440662373505,
+      "specificity": 0.09375,
+      "tn": 9,
+      "tp": 1069
+    }
+  },
+  "threshold": 0.37993764877319336
+}

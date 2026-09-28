@@ -1,0 +1,9 @@
+{
+  "agreement_hand": 1814,
+  "agreement_nothand": 13,
+  "conflict_human_hand": 21,
+  "rows": 2417,
+  "scores": 2417,
+  "teacher_only_hand": 558,
+  "teacher_only_nothand": 11
+}

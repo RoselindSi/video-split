@@ -1,0 +1,10 @@
+{
+  "n": 2220,
+  "auc_target_hard": 0.4976929289646735,
+  "teacher_mae": 0.22545165853189175,
+  "brier": 0.09673100816904139,
+  "hard_agreement": 0.8770270270270271,
+  "human_n": 1060,
+  "human_recall": 0.9683673469387755,
+  "human_specificity": 0.0625
+}

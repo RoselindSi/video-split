@@ -1,0 +1,16 @@
+{
+  "base_rows": 12175,
+  "conflict_excluded": 30,
+  "recordings": 244,
+  "rows": 14592,
+  "spatial_hand": 2372,
+  "spatial_nothand": 15,
+  "spatial_rows": 2417,
+  "split_reconciled": 202,
+  "splits": {
+    "test": 1988,
+    "train": 10386,
+    "val": 2218
+  },
+  "tracks": 404
+}

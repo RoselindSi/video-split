@@ -1,0 +1,31 @@
+{
+  "allowed_validation_false_negatives": 4,
+  "minimum_validation_recall": 0.995,
+  "splits": {
+    "test": {
+      "fn": 30,
+      "fp": 76,
+      "human_auc": 0.7245283456172067,
+      "n": 1012,
+      "negative": 94,
+      "positive": 918,
+      "recall": 0.9673202614379085,
+      "specificity": 0.19148936170212766,
+      "tn": 18,
+      "tp": 888
+    },
+    "val": {
+      "fn": 4,
+      "fp": 64,
+      "human_auc": 0.9556739337739634,
+      "n": 1074,
+      "negative": 93,
+      "positive": 981,
+      "recall": 0.9959225280326198,
+      "specificity": 0.3118279569892473,
+      "tn": 29,
+      "tp": 977
+    }
+  },
+  "threshold": 0.4105417728424072
+}

@@ -1,0 +1,17 @@
+{
+  "base_rows": 12175,
+  "conflict_excluded": 21,
+  "recordings": 244,
+  "rows": 14592,
+  "spatial_hand": 1814,
+  "spatial_nothand": 13,
+  "spatial_rows": 2417,
+  "split_reconciled": 202,
+  "splits": {
+    "test": 1988,
+    "train": 10386,
+    "val": 2218
+  },
+  "teacher_only_excluded": 569,
+  "tracks": 404
+}

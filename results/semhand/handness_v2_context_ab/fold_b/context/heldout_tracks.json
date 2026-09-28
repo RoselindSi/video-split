@@ -1,0 +1,36 @@
+{
+  "recording": "R26_0912_102004",
+  "threshold": 0.4765225350856781,
+  "tracks": [
+    {
+      "canonical_tid": "0",
+      "n_views": 5,
+      "p_max": 0.999735951423645,
+      "p_median": 0.9982699751853943,
+      "p_min": 0.996157169342041,
+      "reason": "any_view_rescue",
+      "truth": "hand",
+      "verdict": "hand"
+    },
+    {
+      "canonical_tid": "1",
+      "n_views": 5,
+      "p_max": 0.9993740916252136,
+      "p_median": 0.997322678565979,
+      "p_min": 0.9942725896835327,
+      "reason": "any_view_rescue",
+      "truth": "hand",
+      "verdict": "hand"
+    },
+    {
+      "canonical_tid": "2",
+      "n_views": 5,
+      "p_max": 0.9422244429588318,
+      "p_median": 0.9210340976715088,
+      "p_min": 0.753252387046814,
+      "reason": "any_view_rescue",
+      "truth": "nothand",
+      "verdict": "hand"
+    }
+  ]
+}

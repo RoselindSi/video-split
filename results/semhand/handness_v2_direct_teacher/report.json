@@ -1,0 +1,9 @@
+{
+  "fail_open_tracks": 1,
+  "false_deletions": 0,
+  "hand_retention": 1.0,
+  "nothand_rejection": 1.0,
+  "reviewed_tracks": 21,
+  "threshold": 0.6,
+  "tracks": 21
+}

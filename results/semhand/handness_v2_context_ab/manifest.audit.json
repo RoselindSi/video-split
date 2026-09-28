@@ -1,0 +1,31 @@
+{
+  "added_labels": {
+    "hand": 91,
+    "nothand": 10
+  },
+  "added_rows": 101,
+  "base_rows": 12175,
+  "human_labels_by_split": {
+    "test": {
+      "hand": 918,
+      "missing": 1530,
+      "nothand": 94,
+      "unsure": 1
+    },
+    "train": {
+      "hand": 4197,
+      "missing": 2673,
+      "nothand": 226,
+      "unsure": 0
+    },
+    "val": {
+      "hand": 966,
+      "missing": 1583,
+      "nothand": 88,
+      "unsure": 0
+    }
+  },
+  "recordings": 236,
+  "rows": 12276,
+  "split_salt": "handness-v2-context-hardneg-v1"
+}

@@ -1,0 +1,50 @@
+{
+  "report": {
+    "eligible_negative_tracks": 3,
+    "eligible_positive_tracks": 0,
+    "eligible_tracks": 3,
+    "fail_open_tracks": 0,
+    "heldout_rec": "R0828_105127",
+    "negative_track_rejection_rate": 0.0,
+    "positive_track_recall": null,
+    "rejected_eligible_negative_tracks": 0,
+    "retained_eligible_positive_tracks": 0,
+    "threshold": 0.576572597026825,
+    "tracks": 3
+  },
+  "tracks": [
+    {
+      "canonical_tid": "12",
+      "n_views": 4,
+      "p_max": 0.8538324236869812,
+      "p_median": 0.8124261498451233,
+      "p_min": 0.7753216028213501,
+      "reason": "any_view_rescue",
+      "rec": "R0828_105127",
+      "truth": "nothand",
+      "verdict": "hand"
+    },
+    {
+      "canonical_tid": "14",
+      "n_views": 4,
+      "p_max": 0.9604897499084473,
+      "p_median": 0.9218238592147827,
+      "p_min": 0.8618935942649841,
+      "reason": "any_view_rescue",
+      "rec": "R0828_105127",
+      "truth": "nothand",
+      "verdict": "hand"
+    },
+    {
+      "canonical_tid": "16",
+      "n_views": 5,
+      "p_max": 0.8090049028396606,
+      "p_median": 0.7473394274711609,
+      "p_min": 0.550780177116394,
+      "reason": "any_view_rescue",
+      "rec": "R0828_105127",
+      "truth": "nothand",
+      "verdict": "hand"
+    }
+  ]
+}

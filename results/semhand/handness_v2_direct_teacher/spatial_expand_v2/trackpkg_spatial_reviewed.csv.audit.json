@@ -1,0 +1,13 @@
+{
+  "agreement_hand": 558,
+  "agreement_nothand": 2,
+  "conflict_human_hand": 9,
+  "review_labels": {
+    "hand": 36,
+    "nothand": 2
+  },
+  "review_tracks": 38,
+  "review_view_hand": 567,
+  "review_view_nothand": 2,
+  "rows": 2417
+}

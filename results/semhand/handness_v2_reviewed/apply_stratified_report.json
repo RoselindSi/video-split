@@ -1,0 +1,31 @@
+{
+  "applied_rows": 457,
+  "human_labels_by_split": {
+    "test": {
+      "hand": 899,
+      "missing": 1530,
+      "nothand": 92,
+      "unsure": 0
+    },
+    "train": {
+      "hand": 4193,
+      "missing": 2673,
+      "nothand": 220,
+      "unsure": 1
+    },
+    "val": {
+      "hand": 898,
+      "missing": 1583,
+      "nothand": 86,
+      "unsure": 0
+    }
+  },
+  "manifest_rows": 12175,
+  "resplit_salt": "handness-v2-reviewed-v1",
+  "review_labels": {
+    "hand": 58,
+    "nothand": 398,
+    "unsure": 1
+  },
+  "review_rows": 457
+}

@@ -1,0 +1,7 @@
+R26_0914_101959|/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/2e7b9a5a93364e288eff5c3968c189e3/databag-26_0914_101959|900|400
+R26_0913_112458|/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/57b4d61d9e7343ac95aca6bdf6120f43/databag-26_0913_112458|900|400
+R26_0910_141250|/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/7a27751c5de24e4da2c72cbdabb6f323/databag-26_0910_141250|900|400
+R26_0912_102004|/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/803df3dca09146d294208effe6c99fc8/databag-26_0912_102004|900|400
+R26_0910_132912|/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ae31b53fe034445dbe0b12f748999c46/databag-26_0910_132912|900|400
+R26_0912_172543|/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/c38ce5c3457442e6a86206a3d205d570/databag-26_0912_172543|900|400
+R26_0914_110725|/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/c38ce5c3457442e6a86206a3d205d570/databag-26_0914_110725|900|400
