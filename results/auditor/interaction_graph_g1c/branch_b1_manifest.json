@@ -1,0 +1,45 @@
+{
+ "batch": "branch_b1",
+ "videos": [
+  {
+   "video_id": "recording_000214",
+   "video": "/workspace/branchpkg_src/recording_000214.mp4",
+   "duration_s": 658.2
+  },
+  {
+   "video_id": "recording_000169",
+   "video": "/workspace/branchpkg_src/recording_000169.mp4",
+   "duration_s": 684.1
+  },
+  {
+   "video_id": "recording_000081",
+   "video": "/workspace/branchpkg_src/recording_000081.mp4",
+   "duration_s": 638.8
+  },
+  {
+   "video_id": "recording_000048",
+   "video": "/workspace/branchpkg_src/recording_000048.mp4",
+   "duration_s": 655.1
+  },
+  {
+   "video_id": "recording_000077",
+   "video": "/workspace/branchpkg_src/recording_000077.mp4",
+   "duration_s": 619.0
+  },
+  {
+   "video_id": "recording_000009",
+   "video": "/workspace/branchpkg_src/recording_000009.mp4",
+   "duration_s": 721.2
+  },
+  {
+   "video_id": "recording_000056",
+   "video": "/workspace/branchpkg_src/recording_000056.mp4",
+   "duration_s": 692.9
+  },
+  {
+   "video_id": "recording_000061",
+   "video": "/workspace/branchpkg_src/recording_000061.mp4",
+   "duration_s": 704.3
+  }
+ ]
+}
