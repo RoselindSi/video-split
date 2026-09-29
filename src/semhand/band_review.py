@@ -37,100 +37,127 @@ import os
 import shutil
 
 
-PAGE = r"""<!DOCTYPE html>
-<html lang="zh"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>小框判读 · 60-100px</title>
-<style>
-:root{--bg:#fbfbfa;--fg:#1a1a18;--mut:#6b6b66;--line:#e3e3df;--card:#fff;--ok:#2f7d4f}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#17171a;--fg:#e8e8e4;--mut:#9a9a94;--line:#2e2e33;--card:#1e1e22;--ok:#6fc08f}}
-:root[data-theme="dark"]{--bg:#17171a;--fg:#e8e8e4;--mut:#9a9a94;--line:#2e2e33;
-  --card:#1e1e22;--ok:#6fc08f}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);padding:0 16px 80px;
-  font:15px/1.6 -apple-system,"PingFang SC","Helvetica Neue",sans-serif}
-.wrap{max-width:1100px;margin:0 auto}
-h1{font-size:19px;margin:24px 0 6px}
-.lede{color:var(--mut);font-size:14px;max-width:70ch}
-/* 网格而不是 flex：图片宽度是固定的，不会收缩，用 flex 时会溢出容器
-   压到答案栏底下（第一版就是这样）。网格按列分配，溢出不了。 */
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;
-  padding:12px;margin:14px 0;display:grid;gap:14px;align-items:start;
-  grid-template-columns:2.2em minmax(0,1fr) 160px 190px}
-@media(max-width:860px){.card{grid-template-columns:2.2em minmax(0,1fr) 120px;}
-  .card .ans{grid-column:2/-1}}
-.card .n{font-weight:600}
-.card figure{margin:0;min-width:0}
-.card img{border:1px solid var(--line);border-radius:6px;cursor:zoom-in;
-  display:block;background:#000;width:100%;height:auto}
-figcaption{font-size:11px;color:var(--mut);margin-top:3px}
-.ans{flex:0 0 190px}
-select{width:100%;padding:6px;font-size:14px;background:var(--card);color:var(--fg);
-  border:1px solid var(--line);border-radius:6px}
-select.done{border-color:var(--ok)}
-input.note{width:100%;margin-top:6px;padding:5px;font-size:12px;background:var(--card);
-  color:var(--fg);border:1px solid var(--line);border-radius:5px}
-.meta{font-size:11px;color:var(--mut);margin-top:6px}
-.bar{position:fixed;left:0;right:0;bottom:0;background:var(--card);
-  border-top:1px solid var(--line);padding:10px 16px;display:flex;gap:12px;
-  align-items:center;justify-content:center;flex-wrap:wrap}
-button{padding:7px 16px;font-size:14px;border-radius:6px;cursor:pointer;
-  border:1px solid var(--line);background:var(--card);color:var(--fg)}
-button.primary{background:var(--ok);border-color:var(--ok);color:#fff}
-#lb{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;
-  align-items:center;justify-content:center;z-index:9;cursor:zoom-out}
+PAGE = r"""<meta charset=utf-8><title>小框判读 60-100px</title><style>
+body{font:13px/1.5 system-ui;margin:0;background:#111;color:#ddd}
+#bar{position:sticky;top:0;background:#181818;padding:9px 14px;z-index:9;
+  border-bottom:1px solid #333;display:flex;gap:14px;align-items:center;
+  flex-wrap:wrap}
+button{font:13px system-ui;padding:5px 10px;cursor:pointer}
+b{color:#ffd33d}
+.t{padding:9px 14px;border-bottom:1px solid #262626;display:flex;gap:12px;
+  align-items:flex-start}
+.t.cur{background:#1d2430;outline:2px solid #4a8}
+.t.hand{border-left:5px solid #2a6}
+.t.nothand{border-left:5px solid #d33}
+.t.unsure{border-left:5px solid #777}
+.meta{min-width:120px;color:#9ab;font-size:12px}
+.num{color:#8ab4c8;font-family:ui-monospace,monospace;font-size:11px}
+.shots{display:flex;gap:8px;flex:1;align-items:flex-start;min-width:0}
+.shots figure{margin:0}
+.shots img{display:block;border-radius:3px;cursor:zoom-in}
+.wide img{width:min(58vw,640px)}
+.crop img{width:170px}
+.shots figcaption{font-size:10px;color:#888;text-align:center}
+.note{background:#151515;color:#ccc;border:1px solid #333;border-radius:3px;
+  padding:4px;font:12px system-ui;width:150px;margin-top:5px}
+.key{font-size:11px;color:#999}
+#lb{position:fixed;inset:0;background:rgba(0,0,0,.93);display:none;
+  align-items:center;justify-content:center;z-index:20;cursor:zoom-out}
 #lb img{max-width:96vw;max-height:94vh}
-</style></head><body><div class="wrap">
-<h1>小框判读 · 60–100px · __N__ 个</h1>
-<p class="lede">绿框里的东西<b>是不是一只手</b>。是谁的手不重要，看不清就选「看不清」，
-不要猜。整帧给的是位置，裁剪图给的是细节——这一带的框本来就小，两张要一起看。</p>
-<p class="lede">这些框都在 60–100px 之间，而别人的手中位就是 87px。模型在这一带的判定
-从来没有被人工核对过，这张表就是来核对它的。</p>
-<div id="app"></div></div>
-<div class="bar"><span id="prog"></span>
-<button class="primary" onclick="dl()">导出 CSV</button>
-<button onclick="if(confirm('清空所有答案？'))clr()">清空</button></div>
-<div id="lb" onclick="this.style.display='none'"><img id="lbi" alt=""></div>
+</style>
+<div id=bar><span id=prog></span>
+<span><b>1</b> 是手 &nbsp; <b>2</b> 不是手 &nbsp; <b>3</b> 看不清
+ &nbsp; <b>&uarr;&darr;</b> 换 &nbsp; <b>u</b> undo</span>
+<button onclick="dl()">导出 CSV</button>
+<span class=key>只问一件事：绿框里是不是一只手。不问是谁的。看不清就按 3，不要猜。
+这些框都在 60-100px，而别人的手中位就是 87px。</span></div>
+<div id=list></div>
+<div id=lb onclick="this.style.display='none'"><img id=lbi alt=""></div>
 <script>
-const D=__ITEMS__, KEY="bandreview_"+__HASH__;
-let S={}; try{S=JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){S={}}
-const $=s=>document.querySelector(s);
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-function clr(){S={};save();location.reload()}
-const OPT=[["",""],["hand","手"],["nothand","不是手"],["unsure","看不清"]];
-function prog(){
-  const n=D.filter(d=>S["v:"+d.stem]).length;
-  $("#prog").textContent=n+" / "+D.length;
-  document.querySelectorAll("select").forEach(s=>s.classList.toggle("done",!!s.value));
+const D = __ITEMS__;
+const KEY = "bandreview:" + __HASH__;
+const V = ["hand", "nothand", "unsure"];
+const CN = {hand:"是手", nothand:"不是手", unsure:"看不清"};
+const CL = {hand:"#5c5", nothand:"#d55", unsure:"#999"};
+let lab = {}, note = {}, cur = 0, hist = [];
+try { const o = JSON.parse(localStorage.getItem(KEY) || "{}");
+      lab = o.lab || {}; note = o.note || {}; } catch(e) { lab={}; note={}; }
+const list = document.getElementById("list");
+D.forEach((d, i) => {
+  const e = document.createElement("div");
+  e.className = "t"; e.id = "t" + i;
+  e.innerHTML = '<div class=meta>' + (i+1) + ' / ' + D.length +
+    ' <span id=v' + i + '></span><br><span class=num>框宽 ' +
+    Math.round(d.w_px) + 'px</span>' +
+    '<br><input class=note id=n' + i + ' placeholder="备注（可空）">' +
+    '</div><div class=shots>' +
+    '<figure class=wide><img src="img/' + d.stem + '_full.jpg" loading=lazy>' +
+    '<figcaption>整帧（绿框=要判的目标）</figcaption></figure>' +
+    '<figure class=crop><img src="img/' + d.stem + '_crop.jpg" loading=lazy>' +
+    '<figcaption>裁剪</figcaption></figure></div>';
+  e.onclick = ev => { if(ev.target.tagName!=="INPUT"){ cur = i; draw(); } };
+  list.appendChild(e);
+});
+// 图片点一下放大；放大不改变当前条，所以放在冒泡之前拦掉
+list.querySelectorAll("img").forEach(im => im.onclick = ev => {
+  ev.stopPropagation();
+  document.getElementById("lbi").src = im.src;
+  document.getElementById("lb").style.display = "flex";
+});
+D.forEach((d,i) => {
+  const n = document.getElementById("n"+i);
+  n.value = note[d.stem] || "";
+  n.oninput = () => { note[d.stem] = n.value; persist(); };
+});
+function persist(){
+  try{ localStorage.setItem(KEY, JSON.stringify({lab:lab, note:note})); }catch(e){}
 }
-function set(k,v){S[k]=v;save();prog()}
-$("#app").innerHTML=D.map((d,i)=>`<div class="card">
-  <div class="n">${i+1}</div>
-  <figure class="full"><img src="img/${d.stem}_full.jpg" loading="lazy"
-      onclick="lb(this.src)"><figcaption>整帧（绿框=要判的目标）</figcaption></figure>
-  <figure class="crop"><img src="img/${d.stem}_crop.jpg" loading="lazy"
-      onclick="lb(this.src)"><figcaption>裁剪</figcaption></figure>
-  <div class="ans">
-    <select data-k="v:${d.stem}" onchange="set(this.dataset.k,this.value)">
-      ${OPT.map(([v,t])=>`<option value="${v}"${S["v:"+d.stem]===v?" selected":""}>${t||"—"}</option>`).join("")}
-    </select>
-    <input class="note" placeholder="备注（可空）" value="${(S["n:"+d.stem]||"").replace(/"/g,"&quot;")}"
-      oninput="set('n:${d.stem}',this.value)">
-    <div class="meta">框宽 ${Math.round(d.w_px)}px</div>
-  </div></div>`).join("");
-function lb(s){$("#lbi").src=s;$("#lb").style.display="flex"}
+function draw(){
+  D.forEach((d,i) => {
+    const v = lab[d.stem];
+    document.getElementById("t"+i).className = "t " + (v||"") + (i===cur?" cur":"");
+    document.getElementById("v"+i).innerHTML = v ?
+      '<b style="color:'+CL[v]+'">'+CN[v]+'</b>' : '';
+  });
+  const n = D.filter(d => lab[d.stem]).length;
+  document.getElementById("prog").innerHTML = "<b>" + n + "/" + D.length + "</b> 已判";
+  persist();
+  const el = document.getElementById("t"+cur);
+  if(el) el.scrollIntoView({block:"nearest"});
+}
+document.onkeydown = ev => {
+  // 在备注框里打字时不能吃掉按键，否则写个 "1" 就跳条了
+  const t = ev.target.tagName;
+  if(t === "INPUT" || t === "TEXTAREA") return;
+  if(document.getElementById("lb").style.display === "flex" && ev.key === "Escape"){
+    document.getElementById("lb").style.display = "none"; ev.preventDefault(); return;
+  }
+  if(ev.key >= "1" && ev.key <= "3"){
+    const d = D[cur]; if(!d) return;
+    hist.push([d.stem, lab[d.stem]]);
+    lab[d.stem] = V[+ev.key - 1];
+    cur = Math.min(cur + 1, D.length - 1); draw();
+  }
+  else if(ev.key === "ArrowDown"){ cur = Math.min(cur+1, D.length-1); draw(); }
+  else if(ev.key === "ArrowUp"){ cur = Math.max(cur-1, 0); draw(); }
+  else if(ev.key === "u"){ const h = hist.pop(); if(h){
+    if(h[1] === undefined) delete lab[h[0]]; else lab[h[0]] = h[1]; draw(); } }
+  else return;
+  ev.preventDefault();
+};
+draw();
 function dl(){
-  const rows=[["stem","label","note","w_px"]];
-  D.forEach(d=>rows.push([d.stem,S["v:"+d.stem]||"",S["n:"+d.stem]||"",d.w_px]));
-  const csv=rows.map(r=>r.map(x=>{x=String(x??"");
-    return /[",\n]/.test(x)?'"'+x.replace(/"/g,'""')+'"':x}).join(",")).join("\n");
-  const b=new Blob(["﻿"+csv],{type:"text/csv;charset=utf-8"});
-  const a=document.createElement("a");a.href=URL.createObjectURL(b);
-  a.download="band_review_filled.csv";a.click();
+  let s = "stem,label,note,w_px\n";
+  for(const d of D){
+    const nt = (note[d.stem]||"").replace(/"/g,'""');
+    s += d.stem + "," + (lab[d.stem]||"") + "," +
+         (/[",]/.test(nt) ? '"'+nt+'"' : nt) + "," + d.w_px + "\n";
+  }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob(["\ufeff"+s],{type:"text/csv;charset=utf-8"}));
+  a.download = "band_review_filled.csv"; a.click();
 }
-prog();
-</script></body></html>
+</script>
 """
 
 
@@ -167,9 +194,11 @@ def main():
     open(os.path.join(a.out, "README.txt"), "w", encoding="utf-8").write(
         "小框判读 · 60-100px · %d 个\n\n"
         "1. 整个文件夹解压出来，用 Chrome 或 Edge 打开「打开判读页面.html」。\n"
-        "2. 只判一件事：绿框里是不是一只手。是谁的手不重要。\n"
-        "3. 看不清就选「看不清」，不要猜——猜出来的答案没法用。\n"
-        "4. 填完点「导出 CSV」，把导出的文件发回。\n\n"
+        "2. 键盘操作：1=是手  2=不是手  3=看不清  上下箭头=换一条  u=撤销。\n"
+        "   按 1/2/3 会自动跳到下一条，不用点鼠标。\n"
+        "3. 只判一件事：绿框里是不是一只手。是谁的手不重要。\n"
+        "4. 看不清就按 3，不要猜——猜出来的答案没法用。\n"
+        "5. 填完点「导出 CSV」，把导出的文件发回。\n\n"
         "答案不在这个包里。这一带（60-100px）模型的判定从没被人工核对过，\n"
         "而别人的手中位就是 87px，正落在这里。\n" % len(public))
     print("-> %s（%d 条，%d 张图）" % (a.out, len(public), 2 * len(public)))
