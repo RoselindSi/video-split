@@ -88,7 +88,7 @@ def load_samples(manifest, split, exclude_recs=None):
     return samples
 
 
-def build_model(view="dual", box_channel=True, shared_stem=False):
+def build_model(view="dual", box_channel=True, shared_stem=False, prior=False):
     import torch
     import torch.nn as nn
     from torchvision.models import resnet18
@@ -118,10 +118,15 @@ def build_model(view="dual", box_channel=True, shared_stem=False):
                 self.full_stem = self.stem
             else:
                 self.full_stem = trunk(4 if self.box_channel else 3)
-            self.classifier = nn.Linear(1024 if view == "dual" else 512, 1)
+            # 先验作为两维输入：值本身 + 「这条有没有先验」的标志位。
+            # 少了标志位，缺失就只能填一个中间值，模型分不清「不知道」和
+            # 「两边一样可能」——而 62 条新录像原本整批都是缺失的。
+            self.prior = prior
+            base = 1024 if view == "dual" else 512
+            self.classifier = nn.Linear(base + (2 if prior else 0), 1)
             self.spatial_head = nn.Conv2d(512, 1, kernel_size=1)
 
-        def forward(self, crop, full=None):
+        def forward(self, crop, full=None, prior_vec=None):
             crop_features = self.stem(crop)
             pooled = torch.nn.functional.adaptive_avg_pool2d(
                 crop_features, 1).flatten(1)
@@ -132,11 +137,29 @@ def build_model(view="dual", box_channel=True, shared_stem=False):
                 full_pooled = torch.nn.functional.adaptive_avg_pool2d(
                     full_features, 1).flatten(1)
                 pooled = torch.cat((pooled, full_pooled), dim=1)
+            if self.prior:
+                if prior_vec is None:
+                    raise ValueError("模型带先验输入，但这一批没有传进来")
+                pooled = torch.cat((pooled, prior_vec), dim=1)
             logits = self.classifier(pooled).squeeze(1)
             heatmap_logits = self.spatial_head(crop_features).squeeze(1)
             return logits, heatmap_logits
 
     return SpatialStudent()
+
+
+def prior_vec(row, col):
+    """-> (值, 是否已知)。检测器先验是免费的，学生只需要学「教师在哪纠正它」。"""
+    import torch
+    v = (row.get(col) or "").strip()
+    if v in ("owner", "1", "hand"):
+        return torch.tensor([1.0, 1.0])
+    if v in ("other", "0", "nothand"):
+        return torch.tensor([0.0, 1.0])
+    try:
+        return torch.tensor([float(v), 1.0])
+    except (TypeError, ValueError):
+        return torch.tensor([0.0, 0.0])
 
 
 def box_mask(row, size=224):
@@ -157,7 +180,8 @@ def box_mask(row, size=224):
     return m
 
 
-def make_dataset(samples, train=False, weights=None, box_channel=True):
+def make_dataset(samples, train=False, weights=None, box_channel=True,
+                 prior_col=None):
     import random as _random
 
     from PIL import Image
@@ -192,9 +216,11 @@ def make_dataset(samples, train=False, weights=None, box_channel=True):
                 rgb = T.Normalize((.5, .5, .5), (.25, .25, .25))(T.ToTensor()(im))
                 full = torch.cat([rgb, mask], dim=0)
             weight = weights[index] if weights is not None else 1.0
+            pv = (prior_vec(row, prior_col) if prior_col
+                  else torch.zeros(2))
             return (crop, full, float(row["target"]), float(weight),
                     torch.tensor(row["heatmap"], dtype=torch.float32).view(7, 7),
-                    float(row["spatial_mask"]), index)
+                    float(row["spatial_mask"]), index, pv)
 
     return SpatialDataset()
 
@@ -228,10 +254,10 @@ def records_for(model, loader, samples, device, view):
     records = []
     spatial_losses = []
     with torch.no_grad():
-        for crop, full, targets, _weights, heatmaps, masks, indices in loader:
+        for crop, full, targets, _weights, heatmaps, masks, indices, pv in loader:
             crop = crop.to(device)
             full = full.to(device) if view == "dual" else None
-            logits, heatmap_logits = model(crop, full)
+            logits, heatmap_logits = model(crop, full, pv.to(device))
             probabilities = torch.sigmoid(logits).cpu().tolist()
             loss = spatial_loss(heatmap_logits, heatmaps.float().to(device),
                                 masks.float().to(device))
@@ -260,19 +286,22 @@ def train(args):
     weights = sample_weights(train_rows, args.human_weight,
                              args.hard_example_weight)
     train_loader = DataLoader(
-        make_dataset(train_rows, True, weights, box_channel=not args.no_box),
+        make_dataset(train_rows, True, weights, box_channel=not args.no_box,
+                     prior_col=args.prior_col),
         batch_size=args.batch,
         shuffle=True, num_workers=args.workers, pin_memory=True,
         persistent_workers=args.workers > 0)
     val_loader = DataLoader(
-        make_dataset(val_rows, box_channel=not args.no_box),
+        make_dataset(val_rows, box_channel=not args.no_box,
+                     prior_col=args.prior_col),
         batch_size=args.batch, shuffle=False,
         num_workers=args.workers, pin_memory=True,
         persistent_workers=args.workers > 0)
     device = torch.device(args.device or
                           ("cuda" if torch.cuda.is_available() else "cpu"))
     model = build_model(args.view, box_channel=not args.no_box,
-                        shared_stem=args.shared_stem).to(device)
+                        shared_stem=args.shared_stem,
+                        prior=bool(args.prior_col)).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr,
                                   weight_decay=args.weight_decay)
     best = math.inf
@@ -282,7 +311,7 @@ def train(args):
     for epoch in range(1, args.epochs + 1):
         model.train()
         total = count = 0
-        for crop, full, targets, batch_weights, heatmaps, masks, _ in train_loader:
+        for crop, full, targets, batch_weights, heatmaps, masks, _, pv in train_loader:
             crop = crop.to(device)
             full = full.to(device) if args.view == "dual" else None
             targets = targets.float().to(device)
@@ -290,7 +319,7 @@ def train(args):
             heatmaps = heatmaps.float().to(device)
             masks = masks.float().to(device)
             optimizer.zero_grad(set_to_none=True)
-            logits, heatmap_logits = model(crop, full)
+            logits, heatmap_logits = model(crop, full, pv.to(device))
             classification = functional.binary_cross_entropy_with_logits(
                 logits, targets, reduction="none")
             classification = (classification * batch_weights).mean()
@@ -348,18 +377,20 @@ def score(args):
             raise ValueError("checkpoint view mismatch")
         checkpoint_view = view
         model = build_model(view, box_channel=not getattr(args, "no_box", False),
-                            shared_stem=getattr(args, "shared_stem", False)).to(device)
+                            shared_stem=getattr(args, "shared_stem", False),
+                            prior=bool(getattr(args, "prior_col", None))).to(device)
         model.load_state_dict(checkpoint["state"])
         model.eval()
         models.append(model)
-    loader = DataLoader(make_dataset(rows, box_channel=not getattr(args, "no_box", False)),
+    loader = DataLoader(make_dataset(rows, box_channel=not getattr(args, "no_box", False),
+                                     prior_col=getattr(args, "prior_col", None)),
                         batch_size=args.batch,
                         shuffle=False, num_workers=args.workers,
                         pin_memory=True,
                         persistent_workers=args.workers > 0)
     records = []
     with torch.no_grad():
-        for crop, full, targets, _weights, _heatmaps, _masks, indices in loader:
+        for crop, full, targets, _weights, _heatmaps, _masks, indices, pv in loader:
             crop = crop.to(device)
             full = full.to(device) if checkpoint_view == "dual" else None
             probabilities = torch.stack([
@@ -379,7 +410,10 @@ def score(args):
             for row in records:
                 writer.writerow({
                     "item_id": row["item_id"], "rec": row["rec"],
-                    "frame": row["frame"], "raw_tid": row["raw_tid"],
+                    # 不同来源的 manifest 列不完全一样（owner 的没有 raw_tid），
+                # 缺一列不该让整次打分崩掉。
+                "frame": row.get("frame", ""),
+                "raw_tid": row.get("raw_tid", ""),
                     "canonical_tid": row["canonical_tid"],
                     "p_hand": row["p"], "target": row["target"],
                     "supervision": row["supervision"],
@@ -407,6 +441,8 @@ def main():
                      help="全图不带框掩码（旧口径，用作对照）")
     fit.add_argument("--shared-stem", dest="shared_stem", action="store_true",
                      help="裁剪与全图共用一个 stem（旧口径；中位数上目前最好）")
+    fit.add_argument("--prior-col", dest="prior_col",
+                     help="把 manifest 里的这一列当先验喂进分类器（如 det_own）")
     fit.add_argument("--exclude-val-rec", action="append", default=[])
     fit.add_argument("--seed", type=int, default=0)
     fit.add_argument("--device")
@@ -421,6 +457,7 @@ def main():
     run.add_argument("--predictions")
     run.add_argument("--no-box", action="store_true")
     run.add_argument("--shared-stem", dest="shared_stem", action="store_true")
+    run.add_argument("--prior-col", dest="prior_col")
     args = parser.parse_args()
     train(args) if args.command == "train" else score(args)
 

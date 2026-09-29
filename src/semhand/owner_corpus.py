@@ -39,8 +39,8 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--scores", nargs="+", required=True,
                     help="owner_gate 打分输出的 jsonl（可给多个分片）")
-    ap.add_argument("--arm", default="/workspace/crowd10_base",
-                    help="检测器逐帧 csv 的目录，用来取 det_own 先验")
+    ap.add_argument("--arm", nargs="+", default=["/workspace/crowd10_base"],
+                    help="检测器逐帧 csv 的目录（可给多个），用来取 det_own 先验")
     ap.add_argument("--out", required=True)
     ap.add_argument("--val_frac", type=float, default=0.2)
     ap.add_argument("--test_frac", type=float, default=0.2)
@@ -59,8 +59,10 @@ def main():
         raise SystemExit("没有读到任何打分记录")
 
     # 检测器先验：轨迹级多数票，和送进教师时用的是同一个口径
+    # 多个 arm：新一批录像的 csv 在别的目录，只给 crowd10 会让 62 条录像
+    # 全都没有 det_own，那等于放弃「教师纠正了检测器什么」这个诊断。
     det = {}
-    for path in glob.glob(os.path.join(a.arm, "*.csv")):
+    for path in [p for d in a.arm for p in glob.glob(os.path.join(d, "*.csv"))]:
         base = os.path.basename(path)
         if base.endswith(".faces.csv") or base.endswith(".decisions.csv"):
             continue
