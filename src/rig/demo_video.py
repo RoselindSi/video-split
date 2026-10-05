@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import os
 import sys
+from itertools import islice
 
 import numpy as np
 
@@ -55,6 +56,96 @@ SELF_RECONFIRM_FRAMES = 1
 # would be 144 against 1,130, which is why it is not simply "new tracks are
 # not covered".
 NEW_HAND_GRACE = 2
+
+
+def _enforce_owner_cap(flags, max_owner, excluded=()):
+    """Apply the frame-level owner limit to final ownership decisions.
+
+    ``OwnHold`` applies this constraint before track-level decisions are
+    replayed.  A replay can promote a previously demoted track, so the final
+    frame needs the same invariant once more.  This pass deliberately does
+    not write into track history: it constrains the rendered frame only.
+
+    Returns the capped flags and ``(index, score)`` pairs for demotions.
+    """
+    out = [(bool(owner), float(score)) for owner, score in flags]
+    if max_owner is None:
+        return out, []
+    excluded = set(excluded)
+    owner_indices = [
+        i for i, (owner, _score) in enumerate(out)
+        if owner and i not in excluded
+    ]
+    keep = set(sorted(owner_indices, key=lambda i: -out[i][1])[:max_owner])
+    demoted = []
+    for i in owner_indices:
+        if i not in keep:
+            demoted.append((i, out[i][1]))
+            out[i] = (False, out[i][1])
+    return out, demoted
+
+
+def _apply_semantic_owner_gate(flags, tids, gate, excluded=(),
+                               require_complete=True):
+    """Require an independent semantic verdict for every extra owner.
+
+    The highest-scoring owner remains the primary candidate.  A second owner
+    is admitted only when its track-level semantic verdict is ``owner``.
+    ``other`` and ``unsure`` both fail closed because exposing another
+    person's hand is the privacy-direction error this gate exists to prevent.
+    """
+    out = [(bool(owner), float(score)) for owner, score in flags]
+    if gate is None:
+        return out, []
+    excluded = set(excluded)
+    owners = sorted(
+        (i for i, (owner, _score) in enumerate(out)
+         if owner and i not in excluded),
+        key=lambda i: -out[i][1])
+    primary = owners[0] if owners else None
+    demoted = []
+    # A track-level foreign verdict applies for the whole track.  Restricting
+    # it to frames where the track ranks second lets the same foreign hand
+    # through whenever the stronger wearer hand leaves the frame.
+    for i in owners:
+        tid = str(tids[i])
+        verdict = gate.get(tid)
+        if verdict in ("other", "unsure"):
+            demoted.append((tids[i], out[i][1], verdict))
+            out[i] = (False, out[i][1])
+        elif not require_complete and verdict is None and i != primary:
+            # Before the cap, extra candidates can include tracks that never
+            # entered the semantic review set.  They may not take the second
+            # owner slot merely because a reviewed foreign track was removed.
+            demoted.append((tids[i], out[i][1], "missing"))
+            out[i] = (False, out[i][1])
+
+    remaining = sorted(
+        (i for i, (owner, _score) in enumerate(out)
+         if owner and i not in excluded),
+        key=lambda i: -out[i][1])
+    if require_complete:
+        for i in remaining[1:]:
+            tid = str(tids[i])
+            if gate.get(tid) is None:
+                raise RuntimeError(
+                    "semantic owner gate has no verdict for second-owner "
+                    f"track {tid}")
+    return out, demoted
+
+
+def _apply_owner_constraints(flags, tids, gate, max_owner, excluded=()):
+    """Apply semantic eligibility before selecting the final owner slots.
+
+    Capping first can discard a valid lower-scoring hand, then leave its slot
+    empty when semantics rejects the higher-scoring foreign hand.  Eligibility
+    must therefore precede the anatomical maximum.
+    """
+    semantic_flags, semantic_demoted = _apply_semantic_owner_gate(
+        flags, tids, gate, excluded=excluded, require_complete=False)
+    final_flags, cap_demoted = _enforce_owner_cap(
+        semantic_flags, max_owner, excluded=excluded)
+    return final_flags, semantic_demoted, cap_demoted
 
 
 def load_face_verdicts(path):
@@ -108,7 +199,8 @@ def annotate(rgb, dets, own_flags, m_oth=None, kept=()):
         col = GREEN if is_own else RED
         cv2.rectangle(vis, (x0, y0), (x1, y1), col, 3)
         det_conf = d.get("conf")
-        lab = f"{'self' if is_own else 'other'} own {p:.2f}"
+        side = d.get("side") if d.get("side") in ("left", "right") else "side?"
+        lab = f"{'self' if is_own else 'other'} {side} own {p:.2f}"
         if det_conf is not None:
             lab += f" det {float(det_conf):.2f}"
         if any(d is k for k in kept):
@@ -132,7 +224,7 @@ def annotate(rgb, dets, own_flags, m_oth=None, kept=()):
 
 
 def compose(rgb, vis, out, n_own, n_oth, frame, disagreed, frac=None,
-            cfg=None):
+            cfg=None, raw_output=False):
     """`frac` is the share of pixels actually suppressed.
 
     A frame where nothing was blurred is the failure that hides best: it looks
@@ -149,13 +241,22 @@ def compose(rgb, vis, out, n_own, n_oth, frame, disagreed, frac=None,
                   else ""))
     # The status leads. Appended to a label it is the first thing a narrow
     # frame truncates, and it is the only part that changes.
-    if frac is None:
+    if raw_output:
+        note = "RAW REVIEW OUTPUT - no face or hand mosaic applied"
+    elif frac is None:
         note = "output to the downstream model"
     elif frac <= 0:
         note = "NOTHING SUPPRESSED - no hand here was called foreign"
     else:
         note = f"{frac:.2%} of pixels suppressed - output to the model"
     return np.vstack([top, vis, _bar(W, note), out])
+
+
+def _display_frames(clean, face_covered, suppressed, no_mosaic=False):
+    """Choose the pixels shown in the annotated and delivered panels."""
+    if no_mosaic:
+        return clean, clean
+    return face_covered, suppressed
 
 
 def _report_trace(rows, path):
@@ -250,23 +351,32 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         new_hand_grace=NEW_HAND_GRACE, max_face_frac=None, grace_log=None,
         assoc_log=None, veto_held=False, reacquire_edge=None,
         reacquire_log=None, camera=None, owner_detector=None,
-        gate_frac=None, face_pad=None, decisions=None,
-        face_verdicts=None):
+        gate_frac=None, face_pad=None, decisions=None, handness=None, handness_boxes=None,
+        face_verdicts=None, owner_gate=None, no_mosaic=False,
+        track_cache_in=None, track_cache_out=None, track_cache_meta=None,
+        metadata_only=False, detector_batch_size=1,
+        handness_models=None, handness_sink=None, handness_rec=""):
+    import json
     import time
     import cv2
     from src.rig.geometry import VirtualWideCamera
     from src.rig.render_wide import render
     from src.rig.seam_fix import ClipReader, Prefetch, RawCameraReader
-    from src.rig.hand_detect import (detect, owner_detect, masks_from,
-                                     OwnHold)
+    from src.rig.hand_detect import (detect_batch, owner_detect_batch,
+                                     masks_from, OwnHold)
     from src.rig.hand_track import (Tracker, FlipCount, MAX_LOST,
                                     duplicate_pairs, LowConfRuns,
                                     Fragmentation,
                                     MAX_ASSOC_COST, UNMATCHED_COST)
     from src.rig.suppress_other import suppress
     from src.rig import own_cnn
+    from src.rig import face_mask, track_cache
 
-    from src.rig import face_mask
+    if track_cache_in and track_cache_out:
+        raise ValueError("give only one of track_cache_in and track_cache_out")
+    detector_batch_size = max(1, int(detector_batch_size))
+    if metadata_only and out_path is not None:
+        raise ValueError("metadata_only collection must not write a video")
 
     if bridge is not None:
         # Compatibility with commands written before the policy acquired its
@@ -282,6 +392,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
            + f"+pred{int(max_prediction_age)}"
            + f"+T{float(new_track_conf):.2f}/{float(continue_conf):.2f}"
            + (f"+cap{max_owner}" if max_owner else "")
+           + ("+raw" if no_mosaic else "")
            + "]")
     max_prediction_age = max(0, int(max_prediction_age))
     new_track_conf, continue_conf = (float(new_track_conf),
@@ -289,14 +400,48 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     if not 0.0 <= continue_conf <= new_track_conf <= 1.0:
         raise ValueError("need 0 <= continue_conf <= new_track_conf <= 1")
 
-    fdet = face_mask.load_detector(face_model, face_conf) if face_model \
-        else None
+    cache_contract = {
+        "start": int(start), "n_requested": int(n), "stride": int(stride),
+        "camera": camera, "inputs": dict(track_cache_meta or {}),
+        "config": {
+            "new_track_conf": new_track_conf,
+            "continue_conf": continue_conf,
+            "predict_motion": bool(predict_motion),
+            "safe_association": bool(safe_association),
+            "safe_reacquire": bool(safe_reacquire),
+            "self_reconfirm": int(self_reconfirm),
+            "max_prediction_age": max_prediction_age,
+            "max_owner": max_owner,
+            "geom_w": float(geom_w),
+            "gate_frac": gate_frac,
+            "reacquire_edge": reacquire_edge,
+            "panorama_mode": panorama_mode,
+            "panorama_fit_frames": int(panorama_fit_frames),
+            "panorama_depth": bool(panorama_depth),
+            "panorama_flow": bool(panorama_flow),
+            "face_model": face_model,
+            "face_conf": face_conf,
+        },
+    }
+    cache_reader = (track_cache.Reader(track_cache_in, cache_contract)
+                    if track_cache_in else None)
+    replaying = cache_reader is not None
+    fdet = (None if replaying else
+            face_mask.load_detector(face_model, face_conf) if face_model
+            else None)
+    faces_enabled = (bool(cache_reader.manifest.get("face_enabled"))
+                     if replaying else fdet is not None)
+    cache_writer = None
+    if track_cache_out:
+        cache_writer = track_cache.Writer(
+            track_cache_out, {**cache_contract,
+                              "face_enabled": bool(faces_enabled)})
     hold = face_mask.Hold(max_frac=max_face_frac
                           if max_face_frac is not None else face_mask.MAX_FACE_FRAC,
                           verdicts=face_verdicts)
     # Without a fitted prior this falls back to the single exit-height rule,
     # which is what every render before this one used.
-    tracker = Tracker(
+    tracker = None if replaying else Tracker(
         max_lost=max(MAX_LOST, max_prediction_age),
         predict_motion=predict_motion,
         rich_association=safe_association,
@@ -308,17 +453,21 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     # comes off it. The shipped 2 means the frame a dropped hand returns is
     # covered whatever the classifier says; 1 keeps the history reset and
     # judges that frame on its own evidence.
-    ownhold = OwnHold(geom=geom, geom_w=geom_w, max_owner=max_owner,
-                      state_ttl=tracker.max_lost,
-                      self_reconfirm_frames=self_reconfirm)
+    ownhold = None if replaying else OwnHold(
+        geom=geom, geom_w=geom_w, max_owner=max_owner,
+        state_ttl=tracker.max_lost,
+        self_reconfirm_frames=self_reconfirm)
     flips = FlipCount()
     # Three quantities the architecture argument turns on and
     # nothing has ever recorded. They decide nothing.
     runs = LowConfRuns()
     frag = Fragmentation()
-    n_dup = n_dropped = n_demoted = n_kept_new = 0
+    n_dup = n_dropped = n_demoted = n_final_cap_demoted = n_kept_new = 0
+    n_prefilter_dropped = 0
+    n_handness_scored = 0
+    n_semantic_demoted = 0
     owner_model = None
-    if owner_detector:
+    if owner_detector and not replaying:
         # A detector that names ownership itself replaces four stages: the
         # hand detector, the distilled student, OwnHold's smoothing and the
         # owner cap all exist to turn a box into a verdict, and this arrives
@@ -367,6 +516,10 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
                   skip=max(0, stride - 1))
     if camera and verbose:
         print(f"  输入：{camera} 原始帧，不做拼接渲染")
+    if replaying and verbose:
+        print(f"  轨迹缓存重放：{track_cache_in}（不加载检测器、tracker 或逐帧归属模型）")
+    elif cache_writer is not None and verbose:
+        print(f"  采集轨迹缓存：{track_cache_out}")
     mc, writer = {}, None
     n_predicted = 0
     trace = [] if trace_path else None
@@ -374,24 +527,46 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
     assoc_rows = [] if assoc_log else None
     reacq_rows = [] if reacquire_log else None
     n_dis = n_written = n_face = n_blank = n_overridden = 0
-    t0 = time.time()
-    for k in range(n):
-        # The stride is the prefetcher's now: it applies skip=0 to the first
-        # frame and the stride thereafter, on its own thread.
-        src = rd.next()
-        if src is None:      # end of file. A frame is not falsy; an array has
-            break            # no truth value at all, and a dict could be empty
+    def input_frames():
+        for frame_index in range(n):
+            # The stride is the prefetcher's now: it applies skip=0 to the
+            # first frame and the stride thereafter, on its own thread.
+            src = rd.next()
+            if src is None:
+                return
+            stats = {}
+            if camera:
+                image = src
+            elif panorama is not None:
+                image, _, stats, _ = panorama.render(src)
+            else:
+                try:
+                    image, _, _, _ = render(
+                        rig, vcam, src, 0.6, map_cache=mc)
+                except TypeError:
+                    image, _, _, _ = render(rig, vcam, src, 0.6)
+            yield frame_index, image, stats
 
-        pano_stats = {}
-        if camera:
-            rgb = src                       # the camera's own frame, untouched
-        elif panorama is not None:
-            rgb, _, pano_stats, _ = panorama.render(src)
-        else:
-            try:
-                rgb, _, _, _ = render(rig, vcam, src, 0.6, map_cache=mc)
-            except TypeError:
-                rgb, _, _, _ = render(rig, vcam, src, 0.6)
+    def detected_frames():
+        source = iter(input_frames())
+        while True:
+            chunk = list(islice(source, detector_batch_size))
+            if not chunk:
+                return
+            if replaying:
+                batch_dets = [None] * len(chunk)
+            else:
+                images = [item[1] for item in chunk]
+                batch_dets = (
+                    owner_detect_batch(owner_model, images,
+                                       min_conf=continue_conf)
+                    if owner_model is not None else
+                    detect_batch(model, images, min_conf=continue_conf))
+            for item, raw in zip(chunk, batch_dets):
+                yield (*item, raw)
+
+    t0 = time.time()
+    for k, rgb, pano_stats, prefetched_raw_dets in detected_frames():
         # A FRAME THAT DID NOT DECODE IS NOT A FRAME WITH NOTHING IN IT.
         # Under load ffmpeg's scaler fails to allocate -- "Failed
         # initializing scaling graph (Resource temporarily unavailable)" --
@@ -411,51 +586,135 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         # where the two would collide.
         clean = rgb
         face_mask_px = None
-        raw_dets = (owner_detect(owner_model, clean, min_conf=continue_conf)
-                    if owner_model is not None
-                    else detect(model, clean, min_conf=continue_conf))
-        raw_ids = tracker.update(raw_dets, rgb.shape,
-                                 new_track_conf=new_track_conf,
-                                 continue_conf=continue_conf)
-        if reacq_rows is not None:
-            for e in tracker.reacquire_events:
-                reacq_rows.append({
-                    "frame": start + k * stride, "tid": e["tid"],
-                    "lost": e["lost"], "cost": e["cost"],
-                    "fx0": e["from"][0], "fy0": e["from"][1],
-                    "fx1": e["from"][2], "fy1": e["from"][3],
-                    "tx0": e["to"][0], "ty0": e["to"][1],
-                    "tx1": e["to"][2], "ty1": e["to"][3],
-                    "terms": ";".join(f"{a}={round(b, 3)}"
-                                      for a, b in sorted(e["terms"].items()))})
-        if assoc_rows is not None:
-            for u in tracker.unmatched:
-                assoc_rows.append({
-                    "frame": start + k * stride, "tid": u["tid"],
-                    "lost": u["lost"], "why": u["why"],
-                    "conf": u.get("conf", ""), "iou": u.get("iou", ""),
-                    "cost": ("" if not np.isfinite(u.get("cost", np.inf))
-                             else round(float(u["cost"]), 4)),
-                    "stage": u.get("stage", ""),
-                    "taken_by": "" if u.get("taken_by") is None else u["taken_by"],
-                    "terms": ";".join(f"{k}={v}" for k, v in
-                                      sorted(u.get("terms", {}).items()))})
-        keep_i = [i for i, tid in enumerate(raw_ids) if tid is not None]
-        # A detection with no id is not passed on: no box, no classification,
-        # no cover. Measure the wait that creates before changing it.
-        dup = duplicate_pairs(raw_dets)
-        dropped_boxes = [raw_dets[i]["box"] for i, tid in enumerate(raw_ids)
-                         if tid is None]
-        runs.update(k, raw_dets, raw_ids, tracker.new_ids)
-        frag.update(k, raw_dets, raw_ids)
+        faces_covered = []
+        key = start + k * stride
+        if replaying:
+            cached = cache_reader.read_frame(key)
+            raw_dets = list(cached["raw_dets"])
+            dets = list(cached["dets"])
+            tids = list(cached["tids"])
+            provenance = list(cached["provenance"])
+            track_ages = list(cached["track_ages"])
+            flags = [(bool(owner), float(score))
+                     for owner, score in cached["base_flags"]]
+            base_demoted = [tuple(item)
+                            for item in cached.get("base_cap_demoted", [])]
+            coasting_other = [
+                (item["tid"], item["det"])
+                for item in cached.get("coasting_other", [])]
+            faces = [tuple(face) for face in cached.get("faces", [])]
+            faces_vetoed = [tuple(face) for face in
+                            cached.get("faces_vetoed", [])]
+            dup = [None] * int(cached.get("duplicate_pairs", 0))
+            dropped_boxes = [None] * int(cached.get("dropped_no_id", 0))
+        else:
+            raw_dets = prefetched_raw_dets
+            if handness_models is not None and handness_sink is not None:
+                # SCORE HAND-NESS HERE SO THE VIDEO IS DECODED ONCE. Run as its
+                # own stage this cost 744 of 2326 seconds on ten recordings and
+                # almost all of it was decode -- of the same frames this loop
+                # has already decoded. The forward pass is the only new work.
+                #
+                # On `raw_dets`, before the filter below and before the tracker,
+                # because that is the population the filter has to judge: the
+                # ownership pass further down sees only what survived.
+                #
+                # `student.predict` verbatim rather than a second copy of it.
+                # The hand-ness model is the same architecture on the same two
+                # views, so the only difference is reading the output as
+                # P(hand) instead of P(wearer); a parallel implementation here
+                # would be one more place for the views to drift apart, which
+                # is the failure that invalidated the three-class attempt.
+                from src.semhand import student as student_mod
+                frame_no = start + k * stride
+                for det, (_flag, p) in zip(
+                        raw_dets, student_mod.predict(
+                            handness_models[0], handness_models[1],
+                            clean, raw_dets)):
+                    box = tuple(int(v) for v in det["box"])
+                    handness_sink.write(json.dumps({
+                        "stem": "%s_f%06d_x%d_y%d" % (handness_rec, frame_no,
+                                                      box[0], box[1]),
+                        "p": p, "frame": frame_no,
+                        "box": "%d,%d,%d,%d" % box}) + "\n")
+                n_handness_scored += len(raw_dets)
+            if handness_boxes is not None:
+                # HAND-NESS BEFORE THE TRACKER, not after it. Until now the
+                # earliest this loop could hear about a non-hand was the
+                # two-owner cap, by which point the tracker had already given
+                # it an id and spent associations on it. Measured on one
+                # recording, half the detections that get ids are not hands,
+                # 37% of frames hold both kinds at once, and 18 tracks contain
+                # both a hand and something that is not one -- an identity
+                # that is not stable is worth nothing to a track-level
+                # ownership verdict, however good that verdict is.
+                #
+                # Keyed on the box rather than the track id because the id is
+                # what this filter runs before. A box with no score is kept:
+                # the failure this guards against is losing a hand, and an
+                # unscored box is not evidence of anything.
+                row = handness_boxes.get(start + k * stride)
+                if row:
+                    kept_dets = [d for d in raw_dets
+                                 if row.get("%d,%d,%d,%d"
+                                            % tuple(int(v) for v in d["box"]),
+                                            1) == 1]
+                    n_prefilter_dropped += len(raw_dets) - len(kept_dets)
+                    raw_dets = kept_dets
+            raw_ids = tracker.update(raw_dets, rgb.shape,
+                                     new_track_conf=new_track_conf,
+                                     continue_conf=continue_conf)
+            if reacq_rows is not None:
+                for e in tracker.reacquire_events:
+                    reacq_rows.append({
+                        "frame": key, "tid": e["tid"],
+                        "lost": e["lost"], "cost": e["cost"],
+                        "fx0": e["from"][0], "fy0": e["from"][1],
+                        "fx1": e["from"][2], "fy1": e["from"][3],
+                        "tx0": e["to"][0], "ty0": e["to"][1],
+                        "tx1": e["to"][2], "ty1": e["to"][3],
+                        "terms": ";".join(
+                            f"{a}={round(b, 3)}"
+                            for a, b in sorted(e["terms"].items()))})
+            if assoc_rows is not None:
+                for u in tracker.unmatched:
+                    assoc_rows.append({
+                        "frame": key, "tid": u["tid"],
+                        "lost": u["lost"], "why": u["why"],
+                        "conf": u.get("conf", ""),
+                        "iou": u.get("iou", ""),
+                        "cost": ("" if not np.isfinite(
+                            u.get("cost", np.inf))
+                            else round(float(u["cost"]), 4)),
+                        "stage": u.get("stage", ""),
+                        "taken_by": ("" if u.get("taken_by") is None
+                                     else u["taken_by"]),
+                        "terms": ";".join(
+                            f"{name}={value}" for name, value in
+                            sorted(u.get("terms", {}).items()))})
+            keep_i = [i for i, tid in enumerate(raw_ids) if tid is not None]
+            # A detection with no id is not passed on: no box, no
+            # classification, no cover.
+            dup = duplicate_pairs(raw_dets)
+            dropped_boxes = [raw_dets[i]["box"]
+                             for i, tid in enumerate(raw_ids) if tid is None]
+            runs.update(k, raw_dets, raw_ids, tracker.new_ids)
+            frag.update(k, raw_dets, raw_ids)
+            dets = [raw_dets[i] for i in keep_i]
+            tids = [raw_ids[i] for i in keep_i]
+            provenance = [tracker.provenance[i] for i in keep_i]
+            track_ages = [tracker.tracks[tid].get("age", 99)
+                          for tid in tids]
+            faces = []
+            faces_vetoed = []
+            if fdet is not None:
+                faces = face_mask.detect_faces(fdet, clean)
+                faces, faces_vetoed = face_mask.split_on_hands(
+                    faces, raw_dets)
         n_dup += len(dup)
         n_dropped += len(dropped_boxes)
-        dets = [raw_dets[i] for i in keep_i]
-        tids = [raw_ids[i] for i in keep_i]
-        provenance = [tracker.provenance[i] for i in keep_i]
         not_hand = set()
-        if fdet is not None:
-            faces = face_mask.detect_faces(fdet, clean)
+        if faces_enabled and not metadata_only:
             # The hand detector runs first for a reason: it is the better
             # instrument for deciding whether a patch of skin is a hand, and
             # the face detector fires on skin. Watched back, this is what was
@@ -463,7 +722,6 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
             # Low-score unmatched candidates still veto a face false positive:
             # failure to start a hand track does not turn that patch into a
             # plausible face.
-            faces, faces_vetoed = face_mask.split_on_hands(faces, raw_dets)
             n_face += len(faces)
             # WHAT IS COVERED IS THE HELD LIST, NOT THIS FRAME'S DETECTIONS. A
             # face keeps its mosaic for HOLD_FRAMES after the detector stops
@@ -500,7 +758,12 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
             rgb, face_mask_px = face_mask.cover(
                 clean, faces_covered,
                 pad=face_mask.PAD if face_pad is None else float(face_pad))
-        if student is not None:
+        elif faces_enabled:
+            n_face += len(faces)
+            faces_covered = []
+        if replaying:
+            pass
+        elif student is not None:
             # THE DISTILLED STUDENT. It reads the whole frame with the box and
             # a zoom on it, so it gets the same `clean` frame the render
             # produced and nothing is cut for it here. Its prior weight is 0
@@ -526,9 +789,34 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         # Identity first, ownership second. Anything accumulated per hand is
         # keyed on the track id, so a hand the tracker calls new starts from
         # its own score instead of inheriting a departed hand's verdict.
-        flags = ownhold.update(
-            dets, flags, shape=rgb.shape, ids=tids,
-            reacquired=tracker.reacquired if safe_reacquire else ())
+        if not replaying:
+            flags = ownhold.update(
+                dets, flags, shape=rgb.shape, ids=tids,
+                reacquired=tracker.reacquired if safe_reacquire else ())
+            base_demoted = list(ownhold.last_demoted)
+            coasting_other = []
+            for tid, coasted in tracker.coasting(max_prediction_age):
+                state = ownhold.state.get(tid)
+                if state is not None and not state[1]:
+                    coasting_other.append((tid, coasted))
+            if cache_writer is not None:
+                cache_writer.write_frame({
+                    "frame": key,
+                    "raw_dets": raw_dets,
+                    "dets": dets,
+                    "tids": tids,
+                    "provenance": provenance,
+                    "track_ages": track_ages,
+                    "base_flags": flags,
+                    "base_cap_demoted": base_demoted,
+                    "coasting_other": [
+                        {"tid": tid, "det": coasted}
+                        for tid, coasted in coasting_other],
+                    "faces": faces,
+                    "faces_vetoed": faces_vetoed,
+                    "duplicate_pairs": len(dup),
+                    "dropped_no_id": len(dropped_boxes),
+                })
         if decisions is not None:
             # THE TRACK-LEVEL DECISIONS, APPLIED WHERE THE FRAME-LEVEL ONES
             # END. Whether a box is a hand, whose it is and which hand it is
@@ -574,8 +862,31 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
                 # parts bin on one recording, which is what a reader watching
                 # the output noticed and no counter did.
                 not_hand = {i for i, t in enumerate(ids) if row[t][2] == 0}
+        elif handness is not None:
+            # HAND-NESS BEFORE THE CAP, WHICH IS THE ORDER THE REST OF THE
+            # SYSTEM ALREADY ASSUMES. `post_pass` documents that hand-ness has
+            # to vote first -- a box on a machine part carries no information
+            # about whose hand it is -- but until now the only way to tell this
+            # loop about it was a full decisions replay, and that replays the
+            # ownership too. So a first pass had no hand-ness at all: the
+            # two-owner cap ranked real hands against bench clutter and the
+            # clutter could win a slot.
+            #
+            # This path supplies only the hand-ness. The cached ownership
+            # scores are left alone, so the cap re-runs on the same numbers
+            # with the non-hands taken out of the running, which is the one
+            # difference being tested.
+            row = handness.get(start + k * stride)
+            if row is not None:
+                not_hand = {i for i, t in enumerate(tids)
+                            if row.get(str(t)) == 0}
+        demoted = list(base_demoted)
+        flags, semantic_demoted, final_cap_demoted = _apply_owner_constraints(
+            flags, tids, owner_gate, max_owner, excluded=not_hand)
+        demoted.extend((tids[i], score) for i, score in final_cap_demoted)
+        n_final_cap_demoted += len(final_cap_demoted)
+        n_semantic_demoted += len(semantic_demoted)
         flips.update(tids, [o for o, _ in flags])
-        demoted = list(ownhold.last_demoted)
         n_demoted += len(demoted)
         own = [d for i, (d, (o, _)) in enumerate(zip(dets, flags))
                if o and i not in not_hand]
@@ -605,10 +916,10 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         if new_hand_grace and own:
             anchors = [(d, tid, p) for d, tid, (o, p) in zip(dets, tids, flags) if o]
             spare = []
-            for d, tid, (o_, p_) in zip(dets, tids, flags):
+            for d, tid, age, (o_, p_) in zip(
+                    dets, tids, track_ages, flags):
                 if tid is None or o_:
                     continue
-                age = tracker.tracks.get(tid, {}).get("age", 99)
                 if age > new_hand_grace:
                     continue
                 b = [float(v) for v in d["box"]]
@@ -642,12 +953,10 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         # every drop on the clip that prompted this was the detector losing
         # ONE hand for ONE frame while the wearer's two stayed put.
         n_predicted_frame = 0
-        for tid, d in tracker.coasting(max_prediction_age):
-            st = ownhold.state.get(tid)
-            if st is not None and not st[1]:
-                oth.append(d)
-                n_predicted += 1
-                n_predicted_frame += 1
+        for _tid, d in coasting_other:
+            oth.append(d)
+            n_predicted += 1
+            n_predicted_frame += 1
         dis = any(bool(d.get("rule_owner")) != bool(o)
                   for d, (o, _) in zip(dets, flags))
         n_dis += bool(dis)
@@ -655,11 +964,17 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         # The owner mask exists only to veto overlap with the other mask, so
         # with nothing to suppress it is a segmentation computed and thrown
         # away. On a clip where a colleague is rare that is most frames.
-        m_oth = masks_from(clean, oth) if oth \
-            else np.zeros(clean.shape[:2], bool)
-        m_own = masks_from(clean, own) if (own and m_oth.any()) \
-            else np.zeros(clean.shape[:2], bool)
-        sup, alpha = suppress(rgb, m_oth, dilate, 4, sigma, protect=m_own)
+        if metadata_only:
+            m_oth = np.zeros(clean.shape[:2], bool)
+            m_own = np.zeros(clean.shape[:2], bool)
+            sup = rgb
+            alpha = np.zeros(clean.shape[:2], np.float32)
+        else:
+            m_oth = masks_from(clean, oth) if oth \
+                else np.zeros(clean.shape[:2], bool)
+            m_own = masks_from(clean, own) if (own and m_oth.any()) \
+                else np.zeros(clean.shape[:2], bool)
+            sup, alpha = suppress(rgb, m_oth, dilate, 4, sigma, protect=m_own)
         if frame_hook is not None:
             # THE SOURCE FRAME AND WHAT THE PIPELINE MADE OF IT, and nothing
             # else. `clean` is untouched; `sup` is the delivered picture with
@@ -697,18 +1012,21 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
                     # reader of the CSV can tell a box that was dropped from
                     # one that was mosaicked.
                     "not_hand": [i in not_hand for i in range(len(dets))],
-                    "p_owner": [round(float(p), 3) for _, p in flags],
+                    # Keep full precision: the final two-owner cap ranks by
+                    # this value. Rounding created artificial ties that a
+                    # table-only replay could not resolve like the cache did.
+                    "p_owner": [float(p) for _, p in flags],
                     "faces": [[int(v) for v in f[:4]] for f in faces]
-                              if fdet is not None else [],
+                              if faces_enabled else [],
                     # The score each surviving proposal carried. Without it a
                     # covered box cannot be told from the detection that put
                     # it there, and the question "is this big box a face"
                     # cannot be asked of the score at all.
                     "faces_conf": [float(f[4]) if len(f) > 4 else -1.0
-                                   for f in faces] if fdet is not None else [],
+                                   for f in faces] if faces_enabled else [],
                     # The boxes the mosaic actually went on, held ones included.
                     "faces_covered": [[int(v) for v in f[:4]] for f in faces_covered]
-                                     if fdet is not None else [],
+                                     if faces_enabled else [],
                     # THE PIXELS, NOT THE BOXES. `cover` grows every box by
                     # PAD of its own size before mosaicking, so a measurement
                     # taken against the boxes misses the third of the mask
@@ -722,7 +1040,7 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
                     # detector never found, and the two need opposite fixes.
                     "faces_vetoed": [[int(v) for v in f[:4]]
                                      for f in faces_vetoed]
-                                    if fdet is not None else [],
+                                    if faces_enabled else [],
                     "oth_px": int(m_oth.sum()),
                     "own_px": int(m_own.sum()),
                     "veto_px": int((m_oth & m_own).sum())})
@@ -772,9 +1090,15 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
                 print(f"    [{k+1}/{n}] {el:.0f}s, "
                       f"{el/(k+1)*(n-k-1):.0f}s left", flush=True)
             continue
-        panel = compose(rgb, annotate(rgb, dets, flags, m_oth, kept=kept_new), sup,
+        display_base, display_out = _display_frames(
+            clean, rgb, sup, no_mosaic=no_mosaic)
+        panel = compose(display_base,
+                        annotate(display_base, dets, flags, m_oth,
+                                 kept=kept_new),
+                        display_out,
                         len(own), len(oth), start + k * stride, dis,
-                        float((alpha > 0.5).mean()), cfg=cfg)
+                        float((alpha > 0.5).mean()), cfg=cfg,
+                        raw_output=no_mosaic)
         if writer is None:
             h, w = panel.shape[:2]
             writer = cv2.VideoWriter(out_path,
@@ -789,6 +1113,8 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
             print(f"    [{k+1}/{n}] {el:.0f}s, "
                   f"{el/(k+1)*(n-k-1):.0f}s left", flush=True)
     rd.close()
+    if cache_reader is not None:
+        cache_reader.finish()
     if verbose:
         if new_hand_grace:
             print(f"\n  NEW BOXES SPARED beside a hand already called the wearer's: "
@@ -803,10 +1129,24 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
             print(f"    worst tracks: {fr['worst']}")
         if panorama is not None:
             print(f"    panorama: depth-aware six-view; fit {panorama_fit}")
-        print(f"    tracker: {tracker.n_new} tracks started, "
-              f"{tracker.n_lost} ended")
+        if replaying:
+            print(f"    tracker: replayed {cache_reader.count} cached frames; "
+                  "detector/tracker/classifier were not run")
+        else:
+            print(f"    tracker: {tracker.n_new} tracks started, "
+                  f"{tracker.n_lost} ended")
         print(f"    predicted covers: {n_predicted} hand-frames, horizon "
               f"{max_prediction_age}")
+        if handness_boxes is not None:
+            print(f"\n  HAND-NESS PREFILTER: {n_prefilter_dropped} boxes were "
+                  f"dropped before the tracker saw them, over {n} frames. "
+                  f"They cost no id, no association and no ownership call.")
+        if n_handness_scored:
+            print(f"\n  HAND-NESS SCORED IN THIS PASS: {n_handness_scored} "
+                  f"boxes over {n} frames, on the frames this loop had already "
+                  f"decoded.\n    Run as its own stage the same work took 744 "
+                  f"of 2326 seconds on ten\n    recordings, nearly all of it "
+                  f"re-decoding these frames.")
         print(f"\n  SAME-FRAME DUPLICATE PAIRS: {n_dup} over {n} frames "
               f"(IoU >= 0.70).\n    An upper bound on how much of the flicker "
               f"one hand found twice could\n    explain. Two hands really do "
@@ -816,6 +1156,12 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
               f"classifier or the prior. Against "
               f"{fr['hand_frames']} hand-frames\n    seen. If this is most "
               f"of the `other` verdicts then the cap is the decision maker.")
+        if decisions is not None:
+            print(f"    Of these, {n_final_cap_demoted} were re-applied after "
+                  "track-level decisions.")
+        if owner_gate is not None:
+            print(f"  SEMANTIC OWNER GATE: {n_semantic_demoted} second-owner "
+                  "hand-frames were rejected.")
         print(f"\n  DETECTIONS DROPPED FOR HAVING NO ID: {n_dropped} over "
               f"{n} frames.")
         for block in (runs.report(fps=fps), frag.report()):
@@ -883,6 +1229,10 @@ def run(rig, videos, out_path, start, n, stride, model, cnn, device,
         print("\n  " + msg, flush=True)
         if n_blank > 0.02 * max(1, n_written):
             raise RuntimeError(msg)
+    if cache_writer is not None:
+        cache_writer.close()
+        if verbose:
+            print(f"  轨迹缓存：{cache_writer.count} 帧 -> {track_cache_out}")
     # The flip report is computed either way; returning it lets a
     # caller that runs quietly still measure flicker, which is the
     # other end of every trade this pipeline makes against over-blur.
@@ -1106,6 +1456,9 @@ def main():
     # that failure the quiet one.
     ap.add_argument("--no_faces", action="store_true",
                     help="do NOT cover faces (they are covered by default)")
+    ap.add_argument("--no_mosaic", action="store_true",
+                    help="review render only: show raw pixels in both panels; "
+                         "detections and hypothetical suppression are still computed")
     ap.add_argument("--face_model", default=face_mask.MODEL)
     ap.add_argument("--face_conf", type=float, default=face_mask.MIN_CONF)
     ap.add_argument("--trace", help="write a per-frame CSV of every quantity "
@@ -1234,6 +1587,7 @@ def main():
                      panorama_fit_frames=a.pano_fit_frames,
                      panorama_depth=not a.no_pano_depth,
                      panorama_flow=a.pano_flow and not a.no_pano_flow,
+                     no_mosaic=a.no_mosaic,
                      ctx=None if ctx_model is None
                      else (ctx_model, ctx_device))
     if not n:

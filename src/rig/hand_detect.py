@@ -151,20 +151,8 @@ def classify_owner(clf, det, shape):
     return p >= 0.5, p
 
 
-def detect(model, rgb, imgsz=IMGSZ, min_conf=MIN_CONF, clf=None):
-    """-> [{'box','kp','side','conf','edge','owner','owner_p'}] for one frame.
-
-    `clf` decides ownership when it is supplied. The geometric verdict stays
-    in `rule_owner` regardless: on the 268 hands labelled so far the two agree
-    everywhere, so the day they disagree is the day something new is in shot,
-    and that is worth seeing rather than silently overriding."""
-    predict_args = {"imgsz": imgsz, "verbose": False}
-    if min_conf is not None:
-        # Ultralytics filters candidates inside inference. Applying only the
-        # second Python-side cut below means a requested floor lower than the
-        # model default can never recover the discarded boxes.
-        predict_args["conf"] = float(min_conf)
-    res = model(rgb, **predict_args)[0]
+def _result_dets(model, res, rgb, min_conf=MIN_CONF, clf=None):
+    """Convert one Ultralytics result without invoking the model again."""
     out = []
     if res.boxes is None or len(res.boxes) == 0:
         return out
@@ -188,9 +176,39 @@ def detect(model, rgb, imgsz=IMGSZ, min_conf=MIN_CONF, clf=None):
             try:
                 d["owner"], d["owner_p"] = classify_owner(clf, d, rgb.shape)
             except Exception:
-                pass                      # a broken model must not lose a frame
+                pass
         out.append(d)
     return out
+
+
+def detect_batch(model, rgbs, imgsz=IMGSZ, min_conf=MIN_CONF, clf=None):
+    """Run one detector call for several frames while preserving order."""
+    if not rgbs:
+        return []
+    predict_args = {"imgsz": imgsz, "verbose": False}
+    if min_conf is not None:
+        # Ultralytics filters candidates inside inference. Applying only the
+        # second Python-side cut below means a requested floor lower than the
+        # model default can never recover the discarded boxes.
+        predict_args["conf"] = float(min_conf)
+    # Preserve the historically validated single-frame code path exactly.
+    results = ([model(rgbs[0], **predict_args)[0]] if len(rgbs) == 1
+               else model(list(rgbs), **predict_args))
+    if len(results) != len(rgbs):
+        raise RuntimeError(
+            f"detector returned {len(results)} results for {len(rgbs)} frames")
+    return [_result_dets(model, result, rgb, min_conf, clf)
+            for result, rgb in zip(results, rgbs)]
+
+
+def detect(model, rgb, imgsz=IMGSZ, min_conf=MIN_CONF, clf=None):
+    """-> [{'box','kp','side','conf','edge','owner','owner_p'}] for one frame.
+
+    `clf` decides ownership when it is supplied. The geometric verdict stays
+    in `rule_owner` regardless: on the 268 hands labelled so far the two agree
+    everywhere, so the day they disagree is the day something new is in shot,
+    and that is worth seeing rather than silently overriding."""
+    return detect_batch(model, [rgb], imgsz, min_conf, clf)[0]
 
 
 def split_owner(dets, shape, max_owner=2, verbose=False):
@@ -263,7 +281,24 @@ def owner_detect(model, rgb, imgsz=IMGSZ, min_conf=MIN_CONF):
     `rule_owner` is set from the class as well, so a demo that draws "the rule
     disagrees" does not report a disagreement with a rule that was never
     consulted."""
-    res = model(rgb, imgsz=imgsz, conf=float(min_conf), verbose=False)[0]
+    return owner_detect_batch(model, [rgb], imgsz, min_conf)[0]
+
+
+def owner_detect_batch(model, rgbs, imgsz=IMGSZ, min_conf=MIN_CONF):
+    """Batch form of :func:`owner_detect`, preserving input order."""
+    if not rgbs:
+        return []
+    kwargs = {"imgsz": imgsz, "conf": float(min_conf), "verbose": False}
+    results = ([model(rgbs[0], **kwargs)[0]] if len(rgbs) == 1
+               else model(list(rgbs), **kwargs))
+    if len(results) != len(rgbs):
+        raise RuntimeError(
+            f"owner detector returned {len(results)} results for "
+            f"{len(rgbs)} frames")
+    return [_owner_result_dets(model, result) for result in results]
+
+
+def _owner_result_dets(model, res):
     out = []
     if res.boxes is None or len(res.boxes) == 0:
         return out

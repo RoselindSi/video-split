@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import collections
 import csv
+import json
 import os
 
 
@@ -125,6 +126,34 @@ def compare(paths, thr=0.15, dump=None, gold_paths=(), rec=None):
         print(f"  其中 <=3 帧的遮挡闪现 {len(short)} 段  <- 看起来最像闪烁的东西")
 
 
+def _load_handness_boxes(path, thr=0.10):
+    """-> {frame: {"x0,y0,x1,y1": is_hand}} or None。阈值沿用 post_pass 的 0.10。"""
+    if not path:
+        return None
+    out = collections.defaultdict(dict)
+    for line in open(path, encoding="utf-8"):
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        out[int(row["frame"])][str(row["box"])] = int(float(row["p"]) >= thr)
+    print("  hand-ness（按框）：%d 帧" % len(out))
+    return dict(out)
+
+
+def _load_handness(path):
+    """-> {frame: {tid: is_hand}} or None。只取 is_hand，不碰归属。"""
+    if not path:
+        return None
+    out = collections.defaultdict(dict)
+    for row in csv.DictReader(open(path, encoding="utf-8-sig")):
+        try:
+            out[int(row["frame"])][str(row["tid"])] = int(float(row["is_hand"]))
+        except (KeyError, TypeError, ValueError):
+            continue
+    print("  hand-ness 输入：%d 帧" % len(out))
+    return dict(out)
+
+
 def _load_decisions(path):
     """-> {frame: {tid: (own, side, is_hand)}} or None.
 
@@ -139,6 +168,22 @@ def _load_decisions(path):
             int(r["own"]), r.get("side") or "", int(r.get("is_hand") or 1))
     print(f"  轨迹级决策：{sum(len(v) for v in out.values())} 条，"
           f"覆盖 {len(out)} 帧")
+    return out
+
+
+def _load_owner_gate(path):
+    """-> {tid: owner|other|unsure} or None."""
+    if not path:
+        return None
+    out = {}
+    for r in csv.DictReader(open(path, encoding="utf-8")):
+        verdict = (r.get("verdict") or "").strip().lower()
+        if verdict not in ("owner", "other", "unsure"):
+            raise ValueError(
+                f"{path}: invalid semantic verdict {verdict!r} for tid "
+                f"{r.get('tid')!r}")
+        out[str(r["tid"])] = verdict
+    print(f"  第二只 owner 语义闸门：{len(out)} 条轨迹")
     return out
 
 
@@ -183,9 +228,31 @@ def main():
                          "(default 0.35 -> 2.89x the area)")
     ap.add_argument("--face_csv", help="one row per MOSAICKED face box: the "
                     "population the size cap would be applied to")
+    ap.add_argument("--handness_models",
+                    help="hand-ness 权重的 glob。给了就在这一遍里顺手给每个"
+                         "检测框打分，省掉单独一个 stage 重解一次视频")
+    ap.add_argument("--handness_out",
+                    help="打分写到这个 jsonl，格式和 handness_student_score "
+                         "一致，可直接喂下一遍的 --handness_boxes")
+    ap.add_argument("--handness_boxes", help="a jsonl with frame,box,p: "
+                    "hand-ness keyed on the box, applied before the tracker "
+                    "so a non-hand never gets an id at all")
+    ap.add_argument("--handness", help="a csv with frame,tid,is_hand: only the "
+                    "hand-ness is taken, the ownership is left to this run. "
+                    "Use it to give a first pass what --decisions can only "
+                    "give a replay -- non-hands out of the two-owner cap "
+                    "without replaying the ownership that cap produced")
     ap.add_argument("--decisions", help="a <rec>.decisions.csv from "
                     "`rig.post_pass`: the track-level verdicts replayed into "
                     "this render, so the delivered pixels carry them")
+    ap.add_argument("--owner_gate", help="track-level Qwen verdicts from "
+                    "`semhand.owner_gate`; every second owner must pass")
+    ap.add_argument("--no_mosaic", action="store_true",
+                    help="review render only: keep both panels completely raw")
+    ap.add_argument("--metadata_only", action="store_true",
+                    help="collector mode: write cache/CSV only; skip masks and video")
+    ap.add_argument("--detector_batch_size", type=int, default=1,
+                    help="number of future frames passed to the detector together")
     ap.add_argument("--max_face_frac", type=float, default=None,
                     help="drop a face box wider than this fraction of the frame")
     ap.add_argument("--gate_frac", type=float, default=None,
@@ -204,34 +271,104 @@ def main():
                          "colleague's hands never reach it")
     ap.add_argument("--continue_conf", type=float, default=None)
     ap.add_argument("--weights", default="/shared/models/HaWoR/weights/external/detector.pt")
+    cache = ap.add_mutually_exclusive_group()
+    cache.add_argument("--track_cache_out",
+                       help="collect detection/tracking results into this "
+                            "versioned JSONL cache")
+    cache.add_argument("--track_cache_in",
+                       help="replay this cache without loading or rerunning "
+                            "the detector, tracker, or frame owner model")
     a = ap.parse_args()
     if a.compare:
         return compare(a.compare, dump=a.dump, gold_paths=a.gold, rec=a.rec)
-    if not (a.databag and a.out and a.csv):
-        ap.error("--databag, --out 和 --csv 一起给，或者只给 --compare")
+    if not (a.databag and a.csv and (a.out or a.metadata_only)):
+        ap.error("需要 --databag、--csv 和 --out；--metadata_only 可省略 --out")
+    if a.metadata_only and not a.track_cache_out:
+        ap.error("--metadata_only 只用于 --track_cache_out 采集")
+    if a.detector_batch_size < 1:
+        ap.error("--detector_batch_size 必须 >= 1")
     import numpy as np
-    from ultralytics import YOLO
-    from src.rig import demo_video, face_mask, geom_prior, own_cnn
+    from src.rig import demo_video, face_mask, track_cache
     from src.rig.calibration import RigCalibration
 
     vids = {k: os.path.join(a.databag, f"{k}.mp4") for k in ("cam12", "cam34", "cam56")}
-    rig = RigCalibration(os.path.join(a.databag, "calibration.yaml"))
+    calibration = os.path.join(a.databag, "calibration.yaml")
+    rig = RigCalibration(calibration)
+    replaying = bool(a.track_cache_in)
     student = ctx = None
     geom_w = 0.5 if a.geom_w is None else a.geom_w
     if a.clf_student:
-        from src.semhand import student as student_mod
-        models, sdev = student_mod.load(a.clf_student)
-        if not models:
-            raise SystemExit("no checkpoint")
-        student = (models, sdev)
         geom_w = 0.0 if a.geom_w is None else a.geom_w
-        a.no_cap = True if a.geom_w is None else a.no_cap
-    if a.clf_ctx:
+        if not replaying:
+            from src.semhand import student as student_mod
+            models, sdev = student_mod.load(a.clf_student)
+            if not models:
+                raise SystemExit("no checkpoint")
+            student = (models, sdev)
+        # THE CAP IS NO LONGER TIED TO THE PRIOR. This line used to also set
+        # `no_cap`, so choosing the student silently switched off `max_owner`
+        # as well, and every delivered render since then has run with no limit
+        # on how many hands in one frame could be called the wearer's. On the
+        # ten new recordings that is 636 of 3850 frames -- 16.5% -- and on one
+        # of them, where a colleague works beside the wearer for the whole
+        # clip, 399 of 400. A person has two hands, so at least one box is
+        # wrong on every one of those frames.
+        #
+        # The two were never one decision. `geom_w=0` says the student does
+        # not need the fitted geometric prior, which the ablation established.
+        # It says nothing about anatomy. Rendered both ways on the recording
+        # where the cap buys most and the one where it buys nothing, it moved
+        # 587 boxes and 44 boxes out of `owner` respectively, and cost one box
+        # of the wearer's own hand. `--no_cap` still turns it off, explicitly.
+    if a.clf_ctx and not replaying:
         from src.rig import own_ctx
         m, dev, arm = own_ctx.load_model(a.clf_ctx)
         if m is None:
             raise SystemExit(f"--clf_ctx {a.clf_ctx} not found")
         ctx = (m, dev)
+    if replaying:
+        detector = None
+        cnn, device = None, None
+        geom = None
+    else:
+        from ultralytics import YOLO
+        from src.rig import geom_prior, own_cnn
+        detector = YOLO(a.weights)
+        cnn, device = own_cnn.load_model(None)
+        geom = geom_prior.load_model(a.geom)
+
+    import glob
+
+    model_files = {}
+    for label, pattern in (("detector", a.weights),
+                           ("student", a.clf_student),
+                           ("context", a.clf_ctx),
+                           ("geometry", a.geom),
+                           ("owner_detector", a.owner_detector),
+                           ("face", a.face_model or face_mask.MODEL),
+                           ("face_fallback", face_mask.MODEL_FALLBACK)):
+        if not pattern:
+            continue
+        matches = sorted(glob.glob(pattern)) or [pattern]
+        for index, path in enumerate(matches):
+            model_files[f"{label}:{index}"] = path
+    cache_meta = {
+        "sources": track_cache.source_manifest(
+            {**vids, "calibration": calibration}),
+        "model_arguments": {
+            "weights": a.weights,
+            "clf_student": a.clf_student,
+            "clf_ctx": a.clf_ctx,
+            "geom": a.geom,
+            "owner_detector": a.owner_detector,
+        },
+    }
+    # Record the concrete model files in the collector for provenance, but do
+    # not require them to remain installed during replay. The cache contract
+    # still checks the requested model arguments; replay never imports or
+    # opens the detector/classifier checkpoints.
+    if not replaying:
+        cache_meta["models"] = track_cache.source_manifest(model_files)
     rows = []
     face_rows = []
 
@@ -320,24 +457,61 @@ def main():
                          "n_det": len(info["dets"]), "oth_px": info["oth_px"],
                          "veto_px": info["veto_px"]})
 
-    n, dis, nf, _ = demo_video.run(
-        rig, vids, a.out, a.start, a.n, a.stride, YOLO(a.weights),
-        *own_cnn.load_model(None), 10, 14.0, a.fps,
-        face_model=a.face_model or face_mask.MODEL,
-        face_conf=face_mask.MIN_CONF if a.face_conf is None else a.face_conf,
-        geom=geom_prior.load_model(a.geom), geom_w=geom_w, student=student, ctx=ctx,
-        max_owner=None if a.no_cap else 2, panorama_mode="baseline", frame_hook=hook,
-        safe_reacquire=not a.inherit_self_on_reacquire, self_reconfirm=a.self_reconfirm,
-        new_hand_grace=a.new_hand_grace, max_face_frac=a.max_face_frac,
-        face_pad=a.face_pad,
-        face_verdicts=demo_video.load_face_verdicts(a.face_verdicts),
-        grace_log=a.grace_log, assoc_log=a.assoc_log, veto_held=a.veto_held,
-        reacquire_edge=a.reacquire_edge, reacquire_log=a.reacquire_log,
-        camera=a.camera, owner_detector=a.owner_detector,
-        decisions=_load_decisions(a.decisions),
-        gate_frac=a.gate_frac,
-        **({} if a.new_track_conf is None else {"new_track_conf": a.new_track_conf}),
-        **({} if a.continue_conf is None else {"continue_conf": a.continue_conf}))
+    # FUSED HAND-NESS. Loaded here rather than in its own stage because the
+    # expensive part of that stage was decoding frames this pass decodes
+    # anyway -- 744 of 2326 seconds on ten recordings. Skipped when replaying
+    # a track cache: there are no fresh detections to score, and the cache was
+    # built from a pass that already scored them.
+    handness_models = handness_sink = None
+    handness_rec = os.path.splitext(os.path.basename(a.csv or "rec"))[0]
+    if a.handness_models and a.handness_out and not replaying:
+        from src.semhand import student as student_mod
+        hmodels, hdev = student_mod.load(a.handness_models)
+        if not hmodels:
+            raise SystemExit("no hand-ness checkpoint: %s" % a.handness_models)
+        handness_models = (hmodels, hdev)
+        handness_sink = open(a.handness_out, "w", encoding="utf-8")
+
+    try:
+        n, dis, nf, _ = demo_video.run(
+            rig, vids, None if a.metadata_only else a.out,
+            a.start, a.n, a.stride, detector,
+            cnn, device, 10, 14.0, a.fps,
+            face_model=a.face_model or face_mask.MODEL,
+            face_conf=face_mask.MIN_CONF if a.face_conf is None else a.face_conf,
+            geom=geom, geom_w=geom_w, student=student, ctx=ctx,
+            max_owner=None if a.no_cap else 2, panorama_mode="baseline",
+            frame_hook=hook,
+            safe_reacquire=not a.inherit_self_on_reacquire,
+            self_reconfirm=a.self_reconfirm,
+            new_hand_grace=a.new_hand_grace, max_face_frac=a.max_face_frac,
+            face_pad=a.face_pad,
+            face_verdicts=demo_video.load_face_verdicts(a.face_verdicts),
+            grace_log=a.grace_log, assoc_log=a.assoc_log,
+            veto_held=a.veto_held,
+            reacquire_edge=a.reacquire_edge, reacquire_log=a.reacquire_log,
+            camera=a.camera, owner_detector=a.owner_detector,
+            decisions=_load_decisions(a.decisions),
+            handness=_load_handness(a.handness),
+            handness_boxes=_load_handness_boxes(a.handness_boxes),
+            owner_gate=_load_owner_gate(a.owner_gate),
+            no_mosaic=a.no_mosaic,
+            track_cache_in=a.track_cache_in,
+            track_cache_out=a.track_cache_out,
+            track_cache_meta=cache_meta,
+            metadata_only=a.metadata_only,
+            detector_batch_size=a.detector_batch_size,
+            gate_frac=a.gate_frac,
+            handness_models=handness_models,
+            handness_sink=handness_sink,
+            handness_rec=handness_rec,
+            **({} if a.new_track_conf is None
+               else {"new_track_conf": a.new_track_conf}),
+            **({} if a.continue_conf is None
+               else {"continue_conf": a.continue_conf}))
+    finally:
+        if handness_sink is not None:
+            handness_sink.close()
     with open(a.csv, "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(rows[0]))
         w.writeheader()

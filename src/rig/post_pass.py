@@ -20,7 +20,8 @@ THE ORDER IS FORCED, NOT CHOSEN.
 Run the other way round, each stage would be deciding on a population the
 next stage is about to change.
 
-EVERY STAGE VOTES PER TRACK, INCLUDING HAND-NESS. A track is one physical
+EVERY STAGE VOTES PER CANONICAL TRACK, INCLUDING HAND-NESS. Raw tracker ids
+are joined only by the separately audited offline mapping. A track is one physical
 thing, so it is one hand or it is not; a per-frame verdict that flickers is
 the same noise that made the handedness vote necessary. The floor makes this
 matter in practice -- boxes under 150 px are never asked, so a track can have
@@ -82,16 +83,22 @@ def hand_scores(rows, rec, scores, disjoint_iou=0.10):
     return out
 
 
-def decide(rows, rec, scores, thr=0.10, min_px=MIN_PX, min_frac=0.5):
+def decide(rows, rec, scores, thr=0.10, min_px=MIN_PX, min_frac=0.5,
+           track_map=None):
     """-> (decisions, stats). decisions: {(frame, tid): (own, side, is_hand)}"""
     p_by_row = hand_scores(rows, rec, scores)
+    track_map = track_map or {}
+
+    def canonical(tid):
+        return str(track_map.get(tid, tid))
 
     # ---- 1. hand-ness, per track, over the boxes that were asked
     tally_h = collections.defaultdict(lambda: [0, 0])
     for i, r in enumerate(rows):
-        t = str(r.get("tid") or "")
-        if not t or str(r.get("own")) != "1":
+        raw_t = str(r.get("tid") or "")
+        if not raw_t or str(r.get("own")) != "1":
             continue
+        t = canonical(raw_t)
         w = float(r["x1"]) - float(r["x0"])
         p = p_by_row.get(i)
         if p is None or w < min_px:
@@ -102,8 +109,11 @@ def decide(rows, rec, scores, thr=0.10, min_px=MIN_PX, min_frac=0.5):
     # ---- 2. ownership, per track, over boxes that are not vetoed
     tally_o = collections.defaultdict(lambda: [0, 0])
     for r in rows:
-        t = str(r.get("tid") or "")
-        if not t or t in not_hand:
+        raw_t = str(r.get("tid") or "")
+        if not raw_t:
+            continue
+        t = canonical(raw_t)
+        if t in not_hand:
             continue
         tally_o[t][0 if str(r.get("own")) == "1" else 1] += 1
     own_track = {t: 1 if o > (o + n) * min_frac else 0
@@ -112,8 +122,11 @@ def decide(rows, rec, scores, thr=0.10, min_px=MIN_PX, min_frac=0.5):
     # ---- 3. handedness, per track, over own tracks only
     tally_s = collections.defaultdict(collections.Counter)
     for r in rows:
-        t = str(r.get("tid") or "")
-        if not t or own_track.get(t) != 1:
+        raw_t = str(r.get("tid") or "")
+        if not raw_t:
+            continue
+        t = canonical(raw_t)
+        if own_track.get(t) != 1:
             continue
         s = (r.get("side") or "").strip()
         if s in SIDES:
@@ -125,7 +138,8 @@ def decide(rows, rec, scores, thr=0.10, min_px=MIN_PX, min_frac=0.5):
 
     dec, st = {}, collections.Counter()
     for r in rows:
-        t = str(r.get("tid") or "")
+        raw_t = str(r.get("tid") or "")
+        t = canonical(raw_t) if raw_t else ""
         f = int(r["frame"])
         was_own = str(r.get("own")) == "1"
         if t in not_hand:
@@ -135,7 +149,7 @@ def decide(rows, rec, scores, thr=0.10, min_px=MIN_PX, min_frac=0.5):
             own = own_track.get(t, 1 if was_own else 0)
             is_hand = 1
         side = side_track.get(t, "") if own == 1 else ""
-        dec[(f, t)] = (own, side, is_hand)
+        dec[(f, raw_t)] = (own, side, is_hand)
         if was_own and own == 0 and is_hand:
             st["demoted_to_other"] += 1
         if not was_own and own == 1:
@@ -146,10 +160,50 @@ def decide(rows, rec, scores, thr=0.10, min_px=MIN_PX, min_frac=0.5):
         # THE INVARIANT, checked on every row rather than argued for once.
         if not was_own and own == 1 and t in not_hand:
             raise RuntimeError("a vetoed track was promoted at frame %d" % f)
-    st["tracks"] = len(set(str(r.get("tid") or "") for r in rows) - {""})
+    raw_tracks = set(str(r.get("tid") or "") for r in rows) - {""}
+    st["tracks"] = len(raw_tracks)
+    st["canonical_tracks"] = len({canonical(t) for t in raw_tracks})
     st["not_hand_tracks"] = len(not_hand)
     st["own_tracks"] = sum(1 for v in own_track.values() if v == 1)
     return dec, st
+
+
+def materialize_rows(rows, decisions, max_owner=2):
+    """Apply track decisions and the final owner cap without replaying video.
+
+    The owner-context gate consumes only box metadata. Re-decoding, masking and
+    encoding a complete ``clean`` video to obtain that table changes no value
+    it reads. This function reproduces the decision and cap portion of the
+    cached replay, leaving pixel-derived audit columns explicitly zero.
+    """
+    out = []
+    by_frame = collections.defaultdict(list)
+    for row in rows:
+        item = dict(row)
+        frame = int(item["frame"])
+        tid = str(item.get("tid") or "")
+        own, side, is_hand = decisions[(frame, tid)]
+        item["own"] = str(int(own))
+        # Replay only overwrites detector handedness when the track vote has
+        # a non-empty result; foreign/tied tracks keep their detector label.
+        item["side"] = side or item.get("side", "")
+        item["not_hand"] = str(int(not is_hand))
+        for field in ("covered", "face_on_hand", "biggest_face",
+                      "face_px_frac", "oth_px", "veto_px"):
+            if field in item:
+                item[field] = "0"
+        by_frame[frame].append(len(out))
+        out.append(item)
+
+    if max_owner is not None:
+        for indexes in by_frame.values():
+            owners = [i for i in indexes
+                      if out[i]["own"] == "1"
+                      and out[i].get("not_hand", "0") != "1"]
+            owners.sort(key=lambda i: -float(out[i].get("p") or 0.0))
+            for index in owners[int(max_owner):]:
+                out[index]["own"] = "0"
+    return out
 
 
 def main():
@@ -162,8 +216,14 @@ def main():
     ap.add_argument("--thr", type=float, default=0.10)
     ap.add_argument("--min_px", type=int, default=MIN_PX)
     ap.add_argument("--min_frac", type=float, default=0.5)
+    ap.add_argument("--track_maps", default="",
+                    help="directory of <rec>.track_map.csv canonical-id maps")
     ap.add_argument("--out", default="",
                     help="where to write <rec>.decisions.csv; default beside the run")
+    ap.add_argument("--materialized_arm", default="",
+                    help="also write decision-applied <rec>.csv tables here")
+    ap.add_argument("--max_owner", type=int, default=2,
+                    help="per-frame owner cap used by materialized tables")
     a = ap.parse_args()
 
     recs = []
@@ -183,6 +243,8 @@ def main():
 
     out_dir = a.out or a.arm
     os.makedirs(out_dir, exist_ok=True)
+    if a.materialized_arm:
+        os.makedirs(a.materialized_arm, exist_ok=True)
     total = collections.Counter()
     for rec in recs:
         p = os.path.join(a.arm, rec + ".csv")
@@ -192,21 +254,36 @@ def main():
         if not rows or "tid" not in rows[0]:
             print("  !! %s 没有 tid 列，跳过" % rec)
             continue
-        dec, st = decide(rows, rec, scores, a.thr, a.min_px, a.min_frac)
+        track_map = {}
+        if a.track_maps:
+            from src.rig.track_fusion import load_track_map
+            track_map = load_track_map(
+                os.path.join(a.track_maps, rec + ".track_map.csv"))
+        dec, st = decide(rows, rec, scores, a.thr, a.min_px, a.min_frac,
+                         track_map)
         with open(os.path.join(out_dir, rec + ".decisions.csv"), "w",
                   newline="") as fh:
             w = csv.writer(fh)
             w.writerow(["frame", "tid", "own", "side", "is_hand"])
             for (f, t), (own, side, is_hand) in sorted(dec.items()):
                 w.writerow([f, t, own, side, is_hand])
+        if a.materialized_arm:
+            clean = materialize_rows(rows, dec, a.max_owner)
+            clean_path = os.path.join(a.materialized_arm, rec + ".csv")
+            with open(clean_path, "w", newline="", encoding="utf-8") as fh:
+                writer = csv.DictWriter(fh, fieldnames=list(rows[0]))
+                writer.writeheader()
+                writer.writerows(clean)
         for k, v in st.items():
             total[k] += v
-        print("  %-16s 轨迹 %3d（非手 %2d，自己的 %2d）  降为别人 %3d  升为自己 %3d  改左右 %3d"
-              % (rec, st["tracks"], st["not_hand_tracks"], st["own_tracks"],
+        print("  %-16s 轨迹 %3d -> canonical %3d（非手 %2d，自己的 %2d）  降为别人 %3d  升为自己 %3d  改左右 %3d"
+              % (rec, st["tracks"], st["canonical_tracks"],
+                 st["not_hand_tracks"], st["own_tracks"],
                  st["demoted_to_other"], st["promoted_to_own"],
                  st["side_changed"]))
-    print("\n合计：轨迹 %d，其中判为非手 %d、判为自己的手 %d"
-          % (total["tracks"], total["not_hand_tracks"], total["own_tracks"]))
+    print("\n合计：轨迹 %d -> canonical %d，其中判为非手 %d、判为自己的手 %d"
+          % (total["tracks"], total["canonical_tracks"],
+             total["not_hand_tracks"], total["own_tracks"]))
     print("      框级改动：非手 %d，降为别人 %d，升为自己 %d，改左右 %d"
           % (total["vetoed_boxes"], total["demoted_to_other"],
              total["promoted_to_own"], total["side_changed"]))
