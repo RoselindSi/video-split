@@ -64,6 +64,7 @@ import json
 import statistics
 
 K_GRID = [1, 2, 3]
+LAM_GRID = [0.0, 0.02, 0.05, 0.1, 0.2, 0.4, 0.8]
 TAU_GRID = [x / 100 for x in range(-20, 95, 5)]
 
 
@@ -87,6 +88,11 @@ def main():
                     default="results/auditor/interaction_graph_schema_v2/"
                             "v1_to_v2_node_map.json")
     ap.add_argument("--folds", type=int, default=5)
+    ap.add_argument("--fusion", choices=("twostage", "soft"), default="twostage",
+                    help="twostage 是 D 原本的 top-k 门控；soft 是 cos + lam*prior，"
+                         "和 g1_ladder 同一族 —— 想把两个实验的数字串成一条阶梯"
+                         "就必须用同一族，否则 k=1 的门控是 prior 最强的形态，"
+                         "和阶梯里 lam=0.10 不是同一件事")
     ap.add_argument("--out")
     a = ap.parse_args()
 
@@ -135,13 +141,15 @@ def main():
         return {t for (s, t), c in edges.items() if s == prev and c > 0}
 
     def decide(sims, S, k, tau):
-        """两阶段：prior 先留 top-k（有支持的优先），视觉在其中挑。"""
+        """k 在 twostage 下是 top-k，在 soft 下当 lambda 用。"""
         if not sims:
             return "NEW", None
-        ranked = sorted(sims, key=lambda n: (n not in S, -sims[n]))
-        short = ranked[:max(1, k)]
-        best = max(short, key=lambda n: sims[n])
         vis_best = max(sims, key=lambda n: sims[n])
+        if a.fusion == "soft":
+            best = max(sims, key=lambda n: sims[n] + k * (1.0 if n in S else 0.0))
+        else:
+            ranked = sorted(sims, key=lambda n: (n not in S, -sims[n]))
+            best = max(ranked[:max(1, int(k))], key=lambda n: sims[n])
         return (best if sims[best] > tau else "NEW"), vis_best
 
     def run(mode, k, tau, only=None):
@@ -256,8 +264,9 @@ def main():
     folds = collections.defaultdict(list)
     for i, v in enumerate(vids):
         folds[i % a.folds].append(v)
-    best, bk, bt = -1, K_GRID[0], TAU_GRID[0]
-    for k in K_GRID:
+    grid = LAM_GRID if a.fusion == "soft" else K_GRID
+    best, bk, bt = -1, grid[0], TAU_GRID[0]
+    for k in grid:
         for tau in TAU_GRID:
             acc = []
             for f in range(a.folds):
@@ -268,8 +277,8 @@ def main():
             m = statistics.mean(acc) if acc else 0
             if m > best:
                 best, bk, bt = m, k, tau
-    print("oracle 下 CV 选出 k=%d tau=%.2f（identity top-1 %.3f）"
-          % (bk, bt, best))
+    print("融合 %s；oracle 下 CV 选出 %s=%.2f tau=%.2f（identity top-1 %.3f）"
+          % (a.fusion, "lam" if a.fusion == "soft" else "k", bk, bt, best))
 
     print("\n=== Experiment D：oracle → 自维护状态 ===")
     print("  %-8s %10s %10s %10s %10s %8s %8s"

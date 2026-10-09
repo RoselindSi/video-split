@@ -109,6 +109,92 @@ Pred-Prev → Online-Full − 11.5 pp
 
 ---
 
+## 4b. 基线阶梯：可达集比不比一条缓存强
+
+`src/auditor/boundary/g1_ladder.py`，产物 `ladder.json`。
+
+G1 证明了信号是真的（真 support 对度匹配 shuffle）。它**没有**证明信号需要一个
+**集合**。本域「上次从这里去了哪这次还去哪」是 62/62，所以每个状态只留一条缓存
+后继的方法可能就拿走全部收益——而更便宜的方法应当默认获胜。Experiment D 的 CV
+选出 k=1 让这个疑问变得具体：prior 独自定下短名单，视觉只是确认。
+
+统一成同一融合族（`score = cos(x, μ_n) + λ·prior`，每臂自选 λ/τ，录像分组 CV）：
+
+| 臂 | λ | deterministic | overall |
+|---|---|---|---|
+| visual only | 0.00 | 0.784 | 0.730 |
+| self（n == n_prev） | **0.00** | 0.784 | 0.730 |
+| recency | **0.00** | 0.784 | 0.730 |
+| frequency | **0.00** | 0.784 | 0.730 |
+| **cached successor** | 0.05 | 0.881 | **0.786** |
+| **full support set** | 0.10 | 0.886 | **0.789** |
+| shuffled（度匹配 null） | 0.02 | 0.789 | 0.730 |
+
+录像聚类配对 bootstrap，4000 次：
+
+```
+support − visual      +0.059  CI [+0.013, +0.125]  不跨零
+support − cache       +0.003  CI [+0.000, +0.011]  跨零
+```
+
+> **No evidence that a full successor set is worth more than a single cached
+> successor.** The entire measurable gain over vision is already taken by
+> "last time I left this state I went to X".
+
+**`self` / `recency` / `frequency` 的 λ 全被 CV 选成 0.00**，即 CV 把它们整个
+关掉、逐位等于 visual。所以那三行与 `support − visual` 是同一个数，不是三次
+独立比较。有用的只有 transition-specific memory，不是一般的时间先验。
+
+**度匹配 null 落在 0.730 = visual**，所以 +0.059 不是「有个先验就行」，而是
+特定于**哪些状态历史上真的跟在当前状态之后出现过**。
+
+### 为什么集合赢不了缓存：假设空间本来就只有两个元素
+
+**候选集中位 2 个，最大 5，99.7% ≤ 4。** `|S| = 2` 配 `|candidates| = 2` 等于
+什么都没排除，这正是 G-branch 判据第二条失败、branching regime 只剩 11 条
+决策的原因。
+
+这比「这个域没有分叉」更能说明问题：**不是图没找到分叉，是假设空间一开始就
+只有两个候选，没有留给图发挥的空间。** 图要有用，需要的是
+
+```
+S(A) = {B, C, D}      候选 = {B, C, D, E}      → E 被排除，视觉在 B/C/D 中选
+```
+
+而本域大量实际是
+
+```
+A → B,  A → B,  A → B      候选 = {B, C}       → 猜 B 就够
+```
+
+`branching` 列 n=11、`novel` 列 n=9，统计上是空的（visual 自己就 1.000），
+标题数字只能读 `deterministic` 与 `overall`。
+
+### 统一融合后的完整链
+
+Experiment D 原本用两阶段 top-k 而阶梯用软融合，两者不可直接串联：候选集中位
+只有 2，所以 D 的 k=1 是 prior 最强的形态，和阶梯的 λ=0.10 不是同一件事。
+`g1_online --fusion soft` 重跑后同族可比：
+
+| | 准确率 | Δ vs visual | CI |
+|---|---|---|---|
+| visual only | 0.730 | — | — |
+| + cached successor | 0.786 | +0.056 | — |
+| + full support（= Oracle） | 0.789 | +0.059 | [+0.013, +0.125] 不跨零 |
+| + support，预测前驱 | 0.746 | +0.016 | [−0.046, +0.092] 跨零 |
+| + support，全自维护 | 0.615 | −0.115 | [−0.226, −0.025] 不跨零 |
+
+**交叉验证**：`g1_online` 的 oracle 臂与 `g1_ladder` 的 support 臂是两份独立
+实现，同融合下均为 **0.789**，三位小数一致。
+
+**两种融合给出一致结论但塌陷程度不同**，两者都要报：预测前驱时
+两阶段 −0.003（跨零）、软融合 +0.016（跨零）——增益都消失，软融合没那么狠。
+对应的 prior 排除正确答案次数：两阶段 1 / 18 / 0，软融合 0 / 12 / 0，即
+**软融合比硬门控更抗错误前驱**，因为足够强的视觉分能压过错误的 prior。这是
+soft-prior-vs-hard-constraint 那个问题的方向性证据。
+
+---
+
 ## 5. Mechanism
 
 ### 5.1 Prior exclusion errors
@@ -230,6 +316,18 @@ CI 曾算出 [+0.029, +0.190]，两者不可能同时成立。原因是为了填
 对每一行单独调了 `score([r], mode)`；而 Online-Full 模式下用**单行**去建
 「预测簇 → gold」的多数映射，映射对那一行必然正确，于是命中率被虚抬。已
 改为整批 `score(res, mode)` 一次填完再按录像分桶。
+
+**C5 度匹配 null 曾是空操作。** 阶梯第一版的 shuffled 臂与 support 臂**逐格
+完全相同**（0.786，各 regime 也一致）。原因是置换的是 `edges` 的**计数**，而
+support set 按**键是否存在**定义，所以置换对集合成员身份毫无影响。G1 那边有效
+是因为它的 prior 用计数而非集合。改为保住出度、重新随机抽取**目标**后 null 才
+生效（落到 0.730 = visual）。两列完全相同本该当场判为不可能。
+
+**C6 两阶段门控在小候选集上是空的。** 候选集中位 2、99.7% ≤ 4，而 CV 给
+recency/frequency 选了 k=4，于是 `top-k` 等于全部候选、偏好被整个旁路，
+visual/self/recency/frequency 给出**逐位相同**的 0.730。改为软融合
+`cos + λ·prior` 后才测得到，而那三臂的 λ 仍被选成 0.00 —— 结论不变，但第一版
+是「测不到」而不是「测到了零」。
 
 **C4 一处超出证据的归因（口头，未入文档）。** 曾表述为「大头在原型和
 edges，不在前驱」。`edges` 与 `prototypes` 在本实验中一起替换，只能得出
