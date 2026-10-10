@@ -220,6 +220,13 @@ def main():
     ap.add_argument("--face_model", default=None,
                     help="a different face/head detector; default is the shipped one")
     ap.add_argument("--face_conf", type=float, default=None)
+    ap.add_argument("--no_faces", action="store_true",
+                    help="完全不加载人脸检测器。此前没有任何开关能关掉它："
+                         "--face_model 默认 None，但下面那行会 `or` 回 "
+                         "face_mask.MODEL，于是每一帧都在跑人脸检测 —— 即使"
+                         "整条流水线已经不打码。CSV 的 face_* 列会变成 0，"
+                         "下游没有任何一处读它们（post_pass / handness_* / "
+                         "track_join 都不读），所以这只省时间不改判定。")
     ap.add_argument("--face_verdicts",
                     help="a <rec>.faceverdict.csv: the size cap becomes a "
                          "question instead of a refusal")
@@ -267,7 +274,7 @@ def main():
     ap.add_argument("--veto_held", action="store_true",
                     help="apply the hand veto to held face boxes too")
     ap.add_argument("--new_track_conf", type=float, default=None,
-                    help="score a detection needs to START a track; 0.60 ships, and 56.6% of a "
+                    help="score a detection needs to START a track; 0.60 ships, and 56.6%% of a "
                          "colleague's hands never reach it")
     ap.add_argument("--continue_conf", type=float, default=None)
     ap.add_argument("--weights", default="/shared/models/HaWoR/weights/external/detector.pt")
@@ -477,8 +484,10 @@ def main():
             rig, vids, None if a.metadata_only else a.out,
             a.start, a.n, a.stride, detector,
             cnn, device, 10, 14.0, a.fps,
-            face_model=a.face_model or face_mask.MODEL,
-            face_conf=face_mask.MIN_CONF if a.face_conf is None else a.face_conf,
+            face_model=(None if a.no_faces
+                        else (a.face_model or face_mask.MODEL)),
+            face_conf=(face_mask.MIN_CONF if a.face_conf is None
+                       else a.face_conf),
             geom=geom, geom_w=geom_w, student=student, ctx=ctx,
             max_owner=None if a.no_cap else 2, panorama_mode="baseline",
             frame_hook=hook,
