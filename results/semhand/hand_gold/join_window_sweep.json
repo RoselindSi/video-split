@@ -1899,6 +1899,878 @@
           ]
         }
       ]
+    },
+    {
+      "recording": "R26_0825_015550",
+      "n_tracks": 20,
+      "check30": {
+        "ok": true,
+        "observed": [
+          [
+            "0",
+            "2"
+          ],
+          [
+            "11",
+            "16",
+            "17",
+            "19"
+          ],
+          [
+            "12",
+            "13"
+          ],
+          [
+            "6",
+            "8"
+          ]
+        ],
+        "simulated": [
+          [
+            "0",
+            "2"
+          ],
+          [
+            "11",
+            "16",
+            "17",
+            "19"
+          ],
+          [
+            "12",
+            "13"
+          ],
+          [
+            "6",
+            "8"
+          ]
+        ]
+      },
+      "assign_blind": [
+        "5",
+        "7",
+        "12",
+        "15"
+      ],
+      "assign_contaminating": [
+        "1",
+        "6",
+        "8",
+        "13",
+        "14"
+      ],
+      "targets": [
+        {
+          "hand": "A",
+          "a": "3",
+          "b": "9"
+        },
+        {
+          "hand": "A",
+          "a": "9",
+          "b": "11"
+        },
+        {
+          "hand": "A",
+          "a": "11",
+          "b": "16"
+        },
+        {
+          "hand": "A",
+          "a": "16",
+          "b": "17"
+        },
+        {
+          "hand": "A",
+          "a": "17",
+          "b": "19"
+        },
+        {
+          "hand": "B",
+          "a": "0",
+          "b": "2"
+        },
+        {
+          "hand": "B",
+          "a": "2",
+          "b": "4"
+        },
+        {
+          "hand": "B",
+          "a": "4",
+          "b": "10"
+        },
+        {
+          "hand": "B",
+          "a": "10",
+          "b": "18"
+        }
+      ],
+      "sweep": [
+        {
+          "window": 30,
+          "rounds": 2,
+          "should": 9,
+          "ok": 4,
+          "wrong": 0,
+          "wrong_detail": [],
+          "pairs": [
+            {
+              "hand": "A",
+              "a": "3",
+              "b": "9",
+              "joined": false,
+              "gap": 46,
+              "dist": 14.2,
+              "budget": 234.0,
+              "n_cands": 0,
+              "why": "间隔 46 > 窗口 30，差 16 帧"
+            },
+            {
+              "hand": "A",
+              "a": "9",
+              "b": "11",
+              "joined": false,
+              "gap": 53,
+              "dist": 133.4,
+              "budget": 291.0,
+              "n_cands": 0,
+              "why": "间隔 53 > 窗口 30，差 23 帧"
+            },
+            {
+              "hand": "A",
+              "a": "11",
+              "b": "16",
+              "joined": true,
+              "gap": 20,
+              "dist": 29.0,
+              "budget": 249.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            },
+            {
+              "hand": "A",
+              "a": "16",
+              "b": "17",
+              "joined": true,
+              "gap": 5,
+              "dist": 20.7,
+              "budget": 351.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            },
+            {
+              "hand": "A",
+              "a": "17",
+              "b": "19",
+              "joined": true,
+              "gap": 21,
+              "dist": 115.1,
+              "budget": 417.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            },
+            {
+              "hand": "B",
+              "a": "0",
+              "b": "2",
+              "joined": true,
+              "gap": 23,
+              "dist": 92.4,
+              "budget": 390.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            },
+            {
+              "hand": "B",
+              "a": "2",
+              "b": "4",
+              "joined": false,
+              "gap": 49,
+              "dist": 230.0,
+              "budget": 471.0,
+              "n_cands": 0,
+              "why": "间隔 49 > 窗口 30，差 19 帧"
+            },
+            {
+              "hand": "B",
+              "a": "4",
+              "b": "10",
+              "joined": false,
+              "gap": 22,
+              "dist": 300.7,
+              "budget": 846.0,
+              "n_cands": 2,
+              "why": "多候选歧义（2 个：10,9），规则主动放弃"
+            },
+            {
+              "hand": "B",
+              "a": "10",
+              "b": "18",
+              "joined": false,
+              "gap": 85,
+              "dist": 399.5,
+              "budget": 411.0,
+              "n_cands": 0,
+              "why": "间隔 85 > 窗口 30，差 55 帧"
+            }
+          ]
+        },
+        {
+          "window": 40,
+          "rounds": 2,
+          "should": 9,
+          "ok": 4,
+          "wrong": 0,
+          "wrong_detail": [],
+          "pairs": [
+            {
+              "hand": "A",
+              "a": "3",
+              "b": "9",
+              "joined": false,
+              "gap": 46,
+              "dist": 14.2,
+              "budget": 234.0,
+              "n_cands": 0,
+              "why": "间隔 46 > 窗口 40，差 6 帧"
+            },
+            {
+              "hand": "A",
+              "a": "9",
+              "b": "11",
+              "joined": false,
+              "gap": 53,
+              "dist": 133.4,
+              "budget": 291.0,
+              "n_cands": 0,
+              "why": "间隔 53 > 窗口 40，差 13 帧"
+            },
+            {
+              "hand": "A",
+              "a": "11",
+              "b": "16",
+              "joined": true,
+              "gap": 20,
+              "dist": 29.0,
+              "budget": 249.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            },
+            {
+              "hand": "A",
+              "a": "16",
+              "b": "17",
+              "joined": true,
+              "gap": 5,
+              "dist": 20.7,
+              "budget": 351.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            },
+            {
+              "hand": "A",
+              "a": "17",
+              "b": "19",
+              "joined": true,
+              "gap": 21,
+              "dist": 115.1,
+              "budget": 417.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            },
+            {
+              "hand": "B",
+              "a": "0",
+              "b": "2",
+              "joined": true,
+              "gap": 23,
+              "dist": 92.4,
+              "budget": 390.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            },
+            {
+              "hand": "B",
+              "a": "2",
+              "b": "4",
+              "joined": false,
+              "gap": 49,
+              "dist": 230.0,
+              "budget": 471.0,
+              "n_cands": 0,
+              "why": "间隔 49 > 窗口 40，差 9 帧"
+            },
+            {
+              "hand": "B",
+              "a": "4",
+              "b": "10",
+              "joined": false,
+              "gap": 22,
+              "dist": 300.7,
+              "budget": 846.0,
+              "n_cands": 2,
+              "why": "多候选歧义（2 个：10,9），规则主动放弃"
+            },
+            {
+              "hand": "B",
+              "a": "10",
+              "b": "18",
+              "joined": false,
+              "gap": 85,
+              "dist": 399.5,
+              "budget": 411.0,
+              "n_cands": 0,
+              "why": "间隔 85 > 窗口 40，差 45 帧"
+            }
+          ]
+        },
+        {
+          "window": 50,
+          "rounds": 3,
+          "should": 9,
+          "ok": 5,
+          "wrong": 0,
+          "wrong_detail": [],
+          "pairs": [
+            {
+              "hand": "A",
+              "a": "3",
+              "b": "9",
+              "joined": true,
+              "gap": 46,
+              "dist": 14.2,
+              "budget": 234.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            },
+            {
+              "hand": "A",
+              "a": "9",
+              "b": "11",
+              "joined": false,
+              "gap": 53,
+              "dist": 133.4,
+              "budget": 291.0,
+              "n_cands": 0,
+              "why": "间隔 53 > 窗口 50，差 3 帧"
+            },
+            {
+              "hand": "A",
+              "a": "11",
+              "b": "16",
+              "joined": false,
+              "gap": 20,
+              "dist": 29.0,
+              "budget": 249.0,
+              "n_cands": 2,
+              "why": "多候选歧义（2 个：16,18），规则主动放弃"
+            },
+            {
+              "hand": "A",
+              "a": "16",
+              "b": "17",
+              "joined": true,
+              "gap": 5,
+              "dist": 20.7,
+              "budget": 351.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            },
+            {
+              "hand": "A",
+              "a": "17",
+              "b": "19",
+              "joined": true,
+              "gap": 21,
+              "dist": 115.1,
+              "budget": 417.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            },
+            {
+              "hand": "B",
+              "a": "0",
+              "b": "2",
+              "joined": true,
+              "gap": 23,
+              "dist": 92.4,
+              "budget": 390.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            },
+            {
+              "hand": "B",
+              "a": "2",
+              "b": "4",
+              "joined": false,
+              "gap": 49,
+              "dist": 230.0,
+              "budget": 471.0,
+              "n_cands": 2,
+              "why": "多候选歧义（2 个：3,4），规则主动放弃"
+            },
+            {
+              "hand": "B",
+              "a": "4",
+              "b": "10",
+              "joined": true,
+              "gap": 22,
+              "dist": 300.7,
+              "budget": 846.0,
+              "n_cands": 2,
+              "why": "多候选歧义（2 个：10,9），规则主动放弃"
+            },
+            {
+              "hand": "B",
+              "a": "10",
+              "b": "18",
+              "joined": false,
+              "gap": 85,
+              "dist": 399.5,
+              "budget": 411.0,
+              "n_cands": 0,
+              "why": "间隔 85 > 窗口 50，差 35 帧"
+            }
+          ]
+        },
+        {
+          "window": 60,
+          "rounds": 3,
+          "should": 9,
+          "ok": 6,
+          "wrong": 0,
+          "wrong_detail": [],
+          "pairs": [
+            {
+              "hand": "A",
+              "a": "3",
+              "b": "9",
+              "joined": true,
+              "gap": 46,
+              "dist": 14.2,
+              "budget": 234.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            },
+            {
+              "hand": "A",
+              "a": "9",
+              "b": "11",
+              "joined": true,
+              "gap": 53,
+              "dist": 133.4,
+              "budget": 291.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            },
+            {
+              "hand": "A",
+              "a": "11",
+              "b": "16",
+              "joined": false,
+              "gap": 20,
+              "dist": 29.0,
+              "budget": 249.0,
+              "n_cands": 2,
+              "why": "多候选歧义（2 个：16,18），规则主动放弃"
+            },
+            {
+              "hand": "A",
+              "a": "16",
+              "b": "17",
+              "joined": true,
+              "gap": 5,
+              "dist": 20.7,
+              "budget": 351.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            },
+            {
+              "hand": "A",
+              "a": "17",
+              "b": "19",
+              "joined": true,
+              "gap": 21,
+              "dist": 115.1,
+              "budget": 417.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            },
+            {
+              "hand": "B",
+              "a": "0",
+              "b": "2",
+              "joined": true,
+              "gap": 23,
+              "dist": 92.4,
+              "budget": 390.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            },
+            {
+              "hand": "B",
+              "a": "2",
+              "b": "4",
+              "joined": false,
+              "gap": 49,
+              "dist": 230.0,
+              "budget": 471.0,
+              "n_cands": 2,
+              "why": "多候选歧义（2 个：3,4），规则主动放弃"
+            },
+            {
+              "hand": "B",
+              "a": "4",
+              "b": "10",
+              "joined": true,
+              "gap": 22,
+              "dist": 300.7,
+              "budget": 846.0,
+              "n_cands": 3,
+              "why": "多候选歧义（3 个：10,11,9），规则主动放弃"
+            },
+            {
+              "hand": "B",
+              "a": "10",
+              "b": "18",
+              "joined": false,
+              "gap": 85,
+              "dist": 399.5,
+              "budget": 411.0,
+              "n_cands": 0,
+              "why": "间隔 85 > 窗口 60，差 25 帧"
+            }
+          ]
+        },
+        {
+          "window": 80,
+          "rounds": 3,
+          "should": 9,
+          "ok": 6,
+          "wrong": 0,
+          "wrong_detail": [],
+          "pairs": [
+            {
+              "hand": "A",
+              "a": "3",
+              "b": "9",
+              "joined": true,
+              "gap": 46,
+              "dist": 14.2,
+              "budget": 234.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            },
+            {
+              "hand": "A",
+              "a": "9",
+              "b": "11",
+              "joined": true,
+              "gap": 53,
+              "dist": 133.4,
+              "budget": 291.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            },
+            {
+              "hand": "A",
+              "a": "11",
+              "b": "16",
+              "joined": false,
+              "gap": 20,
+              "dist": 29.0,
+              "budget": 249.0,
+              "n_cands": 2,
+              "why": "多候选歧义（2 个：16,18），规则主动放弃"
+            },
+            {
+              "hand": "A",
+              "a": "16",
+              "b": "17",
+              "joined": true,
+              "gap": 5,
+              "dist": 20.7,
+              "budget": 351.0,
+              "n_cands": 2,
+              "why": "多候选歧义（2 个：17,19），规则主动放弃"
+            },
+            {
+              "hand": "A",
+              "a": "17",
+              "b": "19",
+              "joined": true,
+              "gap": 21,
+              "dist": 115.1,
+              "budget": 417.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            },
+            {
+              "hand": "B",
+              "a": "0",
+              "b": "2",
+              "joined": true,
+              "gap": 23,
+              "dist": 92.4,
+              "budget": 390.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            },
+            {
+              "hand": "B",
+              "a": "2",
+              "b": "4",
+              "joined": false,
+              "gap": 49,
+              "dist": 230.0,
+              "budget": 471.0,
+              "n_cands": 2,
+              "why": "多候选歧义（2 个：3,4），规则主动放弃"
+            },
+            {
+              "hand": "B",
+              "a": "4",
+              "b": "10",
+              "joined": true,
+              "gap": 22,
+              "dist": 300.7,
+              "budget": 846.0,
+              "n_cands": 3,
+              "why": "多候选歧义（3 个：10,11,9），规则主动放弃"
+            },
+            {
+              "hand": "B",
+              "a": "10",
+              "b": "18",
+              "joined": false,
+              "gap": 85,
+              "dist": 399.5,
+              "budget": 411.0,
+              "n_cands": 0,
+              "why": "间隔 85 > 窗口 80，差 5 帧"
+            }
+          ]
+        },
+        {
+          "window": 100,
+          "rounds": 3,
+          "should": 9,
+          "ok": 7,
+          "wrong": 0,
+          "wrong_detail": [],
+          "pairs": [
+            {
+              "hand": "A",
+              "a": "3",
+              "b": "9",
+              "joined": true,
+              "gap": 46,
+              "dist": 14.2,
+              "budget": 234.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            },
+            {
+              "hand": "A",
+              "a": "9",
+              "b": "11",
+              "joined": true,
+              "gap": 53,
+              "dist": 133.4,
+              "budget": 291.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            },
+            {
+              "hand": "A",
+              "a": "11",
+              "b": "16",
+              "joined": true,
+              "gap": 20,
+              "dist": 29.0,
+              "budget": 249.0,
+              "n_cands": 2,
+              "why": "多候选歧义（2 个：16,18），规则主动放弃"
+            },
+            {
+              "hand": "A",
+              "a": "16",
+              "b": "17",
+              "joined": true,
+              "gap": 5,
+              "dist": 20.7,
+              "budget": 351.0,
+              "n_cands": 2,
+              "why": "多候选歧义（2 个：17,19），规则主动放弃"
+            },
+            {
+              "hand": "A",
+              "a": "17",
+              "b": "19",
+              "joined": true,
+              "gap": 21,
+              "dist": 115.1,
+              "budget": 417.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            },
+            {
+              "hand": "B",
+              "a": "0",
+              "b": "2",
+              "joined": false,
+              "gap": 23,
+              "dist": 92.4,
+              "budget": 390.0,
+              "n_cands": 2,
+              "why": "多候选歧义（2 个：2,4），规则主动放弃"
+            },
+            {
+              "hand": "B",
+              "a": "2",
+              "b": "4",
+              "joined": false,
+              "gap": 49,
+              "dist": 230.0,
+              "budget": 471.0,
+              "n_cands": 2,
+              "why": "多候选歧义（2 个：3,4），规则主动放弃"
+            },
+            {
+              "hand": "B",
+              "a": "4",
+              "b": "10",
+              "joined": true,
+              "gap": 22,
+              "dist": 300.7,
+              "budget": 846.0,
+              "n_cands": 3,
+              "why": "多候选歧义（3 个：10,11,9），规则主动放弃"
+            },
+            {
+              "hand": "B",
+              "a": "10",
+              "b": "18",
+              "joined": true,
+              "gap": 85,
+              "dist": 399.5,
+              "budget": 411.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            }
+          ]
+        },
+        {
+          "window": 150,
+          "rounds": 6,
+          "should": 9,
+          "ok": 7,
+          "wrong": 0,
+          "wrong_detail": [],
+          "pairs": [
+            {
+              "hand": "A",
+              "a": "3",
+              "b": "9",
+              "joined": true,
+              "gap": 46,
+              "dist": 14.2,
+              "budget": 234.0,
+              "n_cands": 2,
+              "why": "多候选歧义（2 个：11,9），规则主动放弃"
+            },
+            {
+              "hand": "A",
+              "a": "9",
+              "b": "11",
+              "joined": true,
+              "gap": 53,
+              "dist": 133.4,
+              "budget": 291.0,
+              "n_cands": 2,
+              "why": "多候选歧义（2 个：11,17），规则主动放弃"
+            },
+            {
+              "hand": "A",
+              "a": "11",
+              "b": "16",
+              "joined": true,
+              "gap": 20,
+              "dist": 29.0,
+              "budget": 249.0,
+              "n_cands": 2,
+              "why": "多候选歧义（2 个：16,18），规则主动放弃"
+            },
+            {
+              "hand": "A",
+              "a": "16",
+              "b": "17",
+              "joined": true,
+              "gap": 5,
+              "dist": 20.7,
+              "budget": 351.0,
+              "n_cands": 2,
+              "why": "多候选歧义（2 个：17,19），规则主动放弃"
+            },
+            {
+              "hand": "A",
+              "a": "17",
+              "b": "19",
+              "joined": true,
+              "gap": 21,
+              "dist": 115.1,
+              "budget": 417.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            },
+            {
+              "hand": "B",
+              "a": "0",
+              "b": "2",
+              "joined": false,
+              "gap": 23,
+              "dist": 92.4,
+              "budget": 390.0,
+              "n_cands": 2,
+              "why": "多候选歧义（2 个：2,4），规则主动放弃"
+            },
+            {
+              "hand": "B",
+              "a": "2",
+              "b": "4",
+              "joined": false,
+              "gap": 49,
+              "dist": 230.0,
+              "budget": 471.0,
+              "n_cands": 3,
+              "why": "多候选歧义（3 个：10,3,4），规则主动放弃"
+            },
+            {
+              "hand": "B",
+              "a": "4",
+              "b": "10",
+              "joined": true,
+              "gap": 22,
+              "dist": 300.7,
+              "budget": 846.0,
+              "n_cands": 6,
+              "why": "多候选歧义（6 个：10,11,16,17,18,9），规则主动放弃"
+            },
+            {
+              "hand": "B",
+              "a": "10",
+              "b": "18",
+              "joined": true,
+              "gap": 85,
+              "dist": 399.5,
+              "budget": 411.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

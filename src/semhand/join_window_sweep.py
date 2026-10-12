@@ -198,6 +198,34 @@ def run_one(gold_path, joined_path, detect2_path, windows, min_iou=0.3):
             "sweep": rows}
 
 
+def bootstrap(results, windows, base=30, n=4000, seed=0):
+    """按**录像**重采样 —— 事件在录像内高度相关，按事件重采样会低估区间。
+
+    23 个事件里 015550 一条贡献 9 个、134748 贡献 6 个。把事件当独立单位，
+    置信区间会窄得离谱；真正的独立单位是录像，而录像只有 7 条。
+    """
+    import random
+    rng = random.Random(seed)
+    idx = {w: i for i, w in enumerate(windows)}
+    per = [{w: (r["sweep"][idx[w]]["ok"], r["sweep"][idx[w]]["wrong"])
+            for w in windows} for r in results]
+    out = {}
+    for w in windows:
+        if w == base:
+            continue
+        d_ok, d_wrong = [], []
+        for _ in range(n):
+            pick = [per[rng.randrange(len(per))] for _ in per]
+            d_ok.append(sum(p[w][0] - p[base][0] for p in pick))
+            d_wrong.append(sum(p[w][1] - p[base][1] for p in pick))
+        d_ok.sort()
+        d_wrong.sort()
+        lo, hi = int(0.025 * n), int(0.975 * n) - 1
+        out[w] = {"d_ok": (d_ok[lo], d_ok[hi]), "d_wrong": (d_wrong[lo],
+                                                            d_wrong[hi])}
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -255,9 +283,30 @@ def main():
               % (w, should, ok, wrong, "  <- 现状" if w == 30 else ""))
 
     n_ev = sum(len(r["targets"]) for r in results)
-    print("\n  事件总数 %d。少于 20 处时任何阈值结论都不成立 ——" % n_ev)
-    print("  这条曲线不单调（「恰好一个候选」与窗口宽度交互），取最大值")
-    print("  等于对这 %d 个事件过拟合。" % n_ev)
+    bs = None
+    if n_ev >= 20 and len(results) >= 5 and 30 in windows:
+        bs = bootstrap(results, windows)
+        print("\n=== 事前判据：按录像聚类 bootstrap，对照窗口 30（%d 条录像 / %d 事件）==="
+              % (len(results), n_ev))
+        print("    窗口 | Δ接对 95%%CI | Δ接错 95%%CI | 判据")
+        for w in windows:
+            if w == bs and w == 30:
+                continue
+            if w not in bs:
+                continue
+            a, b = bs[w]["d_ok"]
+            c, d = bs[w]["d_wrong"]
+            ok = a > 0 and d <= 0
+            verdict = ("采纳" if ok else
+                       "接错上升 -> 取舍曲线" if d > 0 else "接对不显著")
+            print("    %4d | [%+3d, %+3d]  | [%+3d, %+3d]  | %s"
+                  % (w, a, b, c, d, verdict))
+        print("    判据：Δ接对 CI 下界 > 0 且 Δ接错 CI 上界 <= 0")
+    else:
+        print("\n  事件 %d / 录像 %d —— 还没到 >=20 事件且 >=5 条录像，不跑判据。"
+              % (n_ev, len(results)))
+    print("\n  曲线不单调（「恰好一个候选」与窗口宽度交互），所以挑值要看台地"
+          "不是看最大值。")
 
     if args.out:
         os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
