@@ -5,6 +5,113 @@
   ],
   "recordings": [
     {
+      "recording": "R26_0824_143303",
+      "n_tracks": 4,
+      "check30": {
+        "ok": true,
+        "observed": [
+          [
+            "0",
+            "3"
+          ],
+          [
+            "1",
+            "2"
+          ]
+        ],
+        "simulated": [
+          [
+            "0",
+            "3"
+          ],
+          [
+            "1",
+            "2"
+          ]
+        ]
+      },
+      "assign_blind": [],
+      "assign_contaminating": [],
+      "targets": [
+        {
+          "hand": "A",
+          "a": "0",
+          "b": "3"
+        },
+        {
+          "hand": "B",
+          "a": "1",
+          "b": "2"
+        }
+      ],
+      "sweep": [
+        {
+          "window": 30,
+          "rounds": 2,
+          "should": 2,
+          "ok": 2,
+          "wrong": 0,
+          "wrong_detail": [],
+          "pairs": [
+            {
+              "hand": "A",
+              "a": "0",
+              "b": "3",
+              "joined": true,
+              "gap": 18,
+              "dist": 69.4,
+              "budget": 462.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            },
+            {
+              "hand": "B",
+              "a": "1",
+              "b": "2",
+              "joined": true,
+              "gap": 2,
+              "dist": 294.7,
+              "budget": 429.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            }
+          ]
+        },
+        {
+          "window": 150,
+          "rounds": 3,
+          "should": 2,
+          "ok": 2,
+          "wrong": 0,
+          "wrong_detail": [],
+          "pairs": [
+            {
+              "hand": "A",
+              "a": "0",
+              "b": "3",
+              "joined": true,
+              "gap": 18,
+              "dist": 69.4,
+              "budget": 462.0,
+              "n_cands": 1,
+              "why": "应当接上"
+            },
+            {
+              "hand": "B",
+              "a": "1",
+              "b": "2",
+              "joined": true,
+              "gap": 2,
+              "dist": 294.7,
+              "budget": 429.0,
+              "n_cands": 2,
+              "why": "多候选歧义（2 个：2,3），规则主动放弃"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "recording": "R26_0825_100512",
       "n_tracks": 18,
       "check30": {
