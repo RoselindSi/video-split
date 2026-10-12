@@ -1,0 +1,186 @@
+{
+ "assign": "anchors",
+ "min_iou": 0.3,
+ "headline": {
+  "n_hands": 7,
+  "n_never_visible": 1,
+  "0.5": 0.2857142857142857,
+  "0.8": 0.2857142857142857,
+  "0.9": 0.2857142857142857,
+  "0.95": 0.2857142857142857
+ },
+ "recordings": [
+  {
+   "recording": "R26_0824_121025",
+   "hands": [
+    {
+     "hand_key": "A",
+     "visible_frames": 18,
+     "n_tids": 3,
+     "tids": [
+      "1",
+      "4",
+      "6"
+     ],
+     "coverage": 0.9444444444444444,
+     "switches": 2,
+     "multi_cover_frames": 0
+    },
+    {
+     "hand_key": "B",
+     "visible_frames": 21,
+     "n_tids": 2,
+     "tids": [
+      "0",
+      "5"
+     ],
+     "coverage": 1.0,
+     "switches": 1,
+     "multi_cover_frames": 0
+    }
+   ],
+   "at_sampled_only": true,
+   "n_sampled": 21,
+   "n_tracks": 6,
+   "n_unassigned": 1,
+   "unassigned": [
+    "3"
+   ],
+   "n_blind_no_anchor": 0,
+   "blind_no_anchor": [],
+   "n_contaminating": 1,
+   "ties": [],
+   "purity_median": 0.71875,
+   "warning": null
+  },
+  {
+   "recording": "R26_0824_122009",
+   "hands": [
+    {
+     "hand_key": "A",
+     "visible_frames": 31,
+     "n_tids": 1,
+     "tids": [
+      "0"
+     ],
+     "coverage": 1.0,
+     "switches": 0,
+     "multi_cover_frames": 0
+    },
+    {
+     "hand_key": "B",
+     "visible_frames": 32,
+     "n_tids": 1,
+     "tids": [
+      "1"
+     ],
+     "coverage": 1.0,
+     "switches": 0,
+     "multi_cover_frames": 0
+    }
+   ],
+   "at_sampled_only": true,
+   "n_sampled": 32,
+   "n_tracks": 3,
+   "n_unassigned": 1,
+   "unassigned": [
+    "6"
+   ],
+   "n_blind_no_anchor": 0,
+   "blind_no_anchor": [],
+   "n_contaminating": 1,
+   "ties": [],
+   "purity_median": 0.5655526992287918,
+   "warning": null
+  },
+  {
+   "recording": "R26_0824_133848",
+   "hands": [
+    {
+     "hand_key": "A",
+     "visible_frames": 37,
+     "n_tids": 2,
+     "tids": [
+      "0",
+      "9"
+     ],
+     "coverage": 0.7297297297297297,
+     "switches": 1,
+     "multi_cover_frames": 0
+    },
+    {
+     "hand_key": "B",
+     "visible_frames": 37,
+     "n_tids": 1,
+     "tids": [
+      "1"
+     ],
+     "coverage": 0.43243243243243246,
+     "switches": 0,
+     "multi_cover_frames": 0
+    }
+   ],
+   "at_sampled_only": true,
+   "n_sampled": 37,
+   "n_tracks": 5,
+   "n_unassigned": 2,
+   "unassigned": [
+    "4",
+    "10"
+   ],
+   "n_blind_no_anchor": 0,
+   "blind_no_anchor": [],
+   "n_contaminating": 2,
+   "ties": [],
+   "purity_median": 0.6491228070175439,
+   "warning": null
+  },
+  {
+   "recording": "R26_0824_153159",
+   "hands": [
+    {
+     "hand_key": "A",
+     "visible_frames": 0,
+     "n_tids": 0,
+     "tids": [],
+     "coverage": NaN,
+     "switches": 0,
+     "multi_cover_frames": 0
+    },
+    {
+     "hand_key": "B",
+     "visible_frames": 24,
+     "n_tids": 3,
+     "tids": [
+      "0",
+      "4",
+      "6"
+     ],
+     "coverage": 0.875,
+     "switches": 5,
+     "multi_cover_frames": 3
+    }
+   ],
+   "at_sampled_only": true,
+   "n_sampled": 37,
+   "n_tracks": 7,
+   "n_unassigned": 4,
+   "unassigned": [
+    "2",
+    "5",
+    "7",
+    "9"
+   ],
+   "n_blind_no_anchor": 3,
+   "blind_no_anchor": [
+    "2",
+    "5",
+    "7"
+   ],
+   "n_contaminating": 1,
+   "ties": [],
+   "purity_median": 0.0,
+   "warning": null
+  }
+ ]
+}

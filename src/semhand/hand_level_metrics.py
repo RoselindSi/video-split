@@ -239,11 +239,17 @@ def headline(rows, thresholds=(0.5, 0.8, 0.9, 0.95)):
 
     A curve, not a point: this project has twice drawn a conclusion from one
     operating point that a curve then contradicted.
+
+    从未出现过的手不进分母。153159 整条录像只有一只手露过面，另一只的
+    visible_frames 是 0、coverage 是 nan，而 `nan >= x` 是 False —— 不排掉
+    的话它会被记成一次跟踪失败，于是一条「唯一那只手跟得完美」的录像报成
+    1/2。没出现的手不是跟丢的手，它在这条录像里根本不是一只手。
     """
-    out = {}
+    live = [r for r in rows if r["visible_frames"] > 0]
+    out = {"n_hands": len(live), "n_never_visible": len(rows) - len(live)}
     for x in thresholds:
-        ok = sum(1 for r in rows if r["n_tids"] == 1 and r["coverage"] >= x)
-        out[x] = (ok / len(rows)) if rows else float("nan")
+        ok = sum(1 for r in live if r["n_tids"] == 1 and r["coverage"] >= x)
+        out[x] = (ok / len(live)) if live else float("nan")
     return out
 
 
@@ -313,9 +319,9 @@ def selftest():
         print("  [%s] %-12s 期望 %s  得到 %s"
               % ("通过" if good else "失败", name, want, got))
 
-    hd = headline([{"n_tids": 1, "coverage": 1.0},
-                   {"n_tids": 2, "coverage": 1.0},
-                   {"n_tids": 1, "coverage": 0.6}])
+    hd = headline([{"n_tids": 1, "coverage": 1.0, "visible_frames": 10},
+                   {"n_tids": 2, "coverage": 1.0, "visible_frames": 10},
+                   {"n_tids": 1, "coverage": 0.6, "visible_frames": 10}])
     want_hd = {0.5: 2 / 3, 0.8: 1 / 3, 0.9: 1 / 3, 0.95: 1 / 3}
     good = all(abs(hd[k] - want_hd[k]) < 1e-9 for k in want_hd)
     ok &= good
@@ -323,6 +329,18 @@ def selftest():
           % ("通过" if good else "失败", "主指标曲线",
              {k: round(v, 3) for k, v in want_hd.items()},
              {k: round(v, 3) for k, v in hd.items()}))
+
+    # 从未出现的手不进分母 —— 153159 只有一只手露面，另一只 coverage 是 nan。
+    # 不排掉的话 `nan >= x` 为假，会把「唯一那只手跟得完美」报成 1/2。
+    hd2 = headline([{"n_tids": 1, "coverage": 1.0, "visible_frames": 24},
+                    {"n_tids": 0, "coverage": float("nan"),
+                     "visible_frames": 0}])
+    good = (all(abs(hd2[k] - 1.0) < 1e-9 for k in (0.5, 0.8, 0.9, 0.95))
+            and hd2["n_hands"] == 1 and hd2["n_never_visible"] == 1)
+    ok &= good
+    print("  [%s] %-12s 期望 1/1 且排掉 1 只  得到 %.3f@0.95 n=%d 排掉 %d"
+          % ("通过" if good else "失败", "没露面的手",
+             hd2[0.95], hd2["n_hands"], hd2["n_never_visible"]))
 
     # 污染：盖住了 anchor 帧但位置不对 -> unassigned 且算污染，不算盲区
     tr = {"t9": T([(0, 9)], (500, 500, 510, 510))}
@@ -405,13 +423,18 @@ def main():
                      h["n_tids"], 100 * h["coverage"], h["switches"]))
 
     hd = headline(flat)
-    print("\n=== 主指标：被单一轨迹覆盖了可见帧 >=X 的手，占全部手的比例 ===")
-    for x, v in sorted(hd.items()):
+    live = [h for h in flat if h["visible_frames"] > 0]
+    print("\n=== 主指标：被单一轨迹覆盖了可见帧 >=X 的手，占露过面的手的比例 ===")
+    for x in sorted(k for k in hd if isinstance(k, float)):
         print("  >=%3.0f%%   %5.1f%%   (%d / %d 只手)"
-              % (100 * x, 100 * v, round(v * len(flat)), len(flat)))
+              % (100 * x, 100 * hd[x], round(hd[x] * hd["n_hands"]),
+                 hd["n_hands"]))
+    if hd["n_never_visible"]:
+        print("  （另有 %d 只手整条录像没露过面，不进分母 —— 没出现的手不是跟丢的手）"
+              % hd["n_never_visible"])
     print("\n  轨迹数中位 %.1f（理想 1）；切换中位 %.1f（理想 0）"
-          % (statistics.median(h["n_tids"] for h in flat),
-             statistics.median(h["switches"] for h in flat)))
+          % (statistics.median(h["n_tids"] for h in live),
+             statistics.median(h["switches"] for h in live)))
     blind = sum(r["n_blind_no_anchor"] for r in rows)
     cont = sum(r["n_contaminating"] for r in rows)
     print("  分配不到任何一只手的 own 轨迹：%d = 污染 %d + anchor 盲区 %d"

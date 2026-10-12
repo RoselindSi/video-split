@@ -611,6 +611,256 @@
           ]
         }
       ]
+    },
+    {
+      "recording": "R26_0824_153159",
+      "n_tracks": 7,
+      "assign_blind": [
+        "2",
+        "5",
+        "7"
+      ],
+      "assign_contaminating": [
+        "9"
+      ],
+      "targets": [
+        {
+          "hand": "B",
+          "a": "0",
+          "b": "4"
+        },
+        {
+          "hand": "B",
+          "a": "4",
+          "b": "6"
+        }
+      ],
+      "sweep": [
+        {
+          "window": 30,
+          "rounds": 1,
+          "should": 2,
+          "ok": 0,
+          "wrong": 0,
+          "wrong_detail": [],
+          "pairs": [
+            {
+              "hand": "B",
+              "a": "0",
+              "b": "4",
+              "joined": false,
+              "gap": 150,
+              "dist": 976.3,
+              "budget": 1389.0,
+              "n_cands": 0,
+              "why": "间隔 150 > 窗口 30，差 120 帧"
+            },
+            {
+              "hand": "B",
+              "a": "4",
+              "b": "6",
+              "joined": false,
+              "gap": -12,
+              "dist": 231.6,
+              "budget": 969.0,
+              "n_cands": 0,
+              "why": "时间重叠（硬否）"
+            }
+          ]
+        },
+        {
+          "window": 40,
+          "rounds": 2,
+          "should": 2,
+          "ok": 0,
+          "wrong": 0,
+          "wrong_detail": [],
+          "pairs": [
+            {
+              "hand": "B",
+              "a": "0",
+              "b": "4",
+              "joined": false,
+              "gap": 150,
+              "dist": 976.3,
+              "budget": 1389.0,
+              "n_cands": 0,
+              "why": "间隔 150 > 窗口 40，差 110 帧"
+            },
+            {
+              "hand": "B",
+              "a": "4",
+              "b": "6",
+              "joined": false,
+              "gap": -12,
+              "dist": 231.6,
+              "budget": 969.0,
+              "n_cands": 0,
+              "why": "时间重叠（硬否）"
+            }
+          ]
+        },
+        {
+          "window": 50,
+          "rounds": 2,
+          "should": 2,
+          "ok": 0,
+          "wrong": 0,
+          "wrong_detail": [],
+          "pairs": [
+            {
+              "hand": "B",
+              "a": "0",
+              "b": "4",
+              "joined": false,
+              "gap": 150,
+              "dist": 976.3,
+              "budget": 1389.0,
+              "n_cands": 0,
+              "why": "间隔 150 > 窗口 50，差 100 帧"
+            },
+            {
+              "hand": "B",
+              "a": "4",
+              "b": "6",
+              "joined": false,
+              "gap": -12,
+              "dist": 231.6,
+              "budget": 969.0,
+              "n_cands": 0,
+              "why": "时间重叠（硬否）"
+            }
+          ]
+        },
+        {
+          "window": 60,
+          "rounds": 2,
+          "should": 2,
+          "ok": 0,
+          "wrong": 0,
+          "wrong_detail": [],
+          "pairs": [
+            {
+              "hand": "B",
+              "a": "0",
+              "b": "4",
+              "joined": false,
+              "gap": 150,
+              "dist": 976.3,
+              "budget": 1389.0,
+              "n_cands": 0,
+              "why": "间隔 150 > 窗口 60，差 90 帧"
+            },
+            {
+              "hand": "B",
+              "a": "4",
+              "b": "6",
+              "joined": false,
+              "gap": -12,
+              "dist": 231.6,
+              "budget": 969.0,
+              "n_cands": 0,
+              "why": "时间重叠（硬否）"
+            }
+          ]
+        },
+        {
+          "window": 80,
+          "rounds": 2,
+          "should": 2,
+          "ok": 0,
+          "wrong": 0,
+          "wrong_detail": [],
+          "pairs": [
+            {
+              "hand": "B",
+              "a": "0",
+              "b": "4",
+              "joined": false,
+              "gap": 150,
+              "dist": 976.3,
+              "budget": 1389.0,
+              "n_cands": 0,
+              "why": "间隔 150 > 窗口 80，差 70 帧"
+            },
+            {
+              "hand": "B",
+              "a": "4",
+              "b": "6",
+              "joined": false,
+              "gap": -12,
+              "dist": 231.6,
+              "budget": 969.0,
+              "n_cands": 1,
+              "why": "时间重叠（硬否）"
+            }
+          ]
+        },
+        {
+          "window": 100,
+          "rounds": 2,
+          "should": 2,
+          "ok": 0,
+          "wrong": 0,
+          "wrong_detail": [],
+          "pairs": [
+            {
+              "hand": "B",
+              "a": "0",
+              "b": "4",
+              "joined": false,
+              "gap": 150,
+              "dist": 976.3,
+              "budget": 1389.0,
+              "n_cands": 0,
+              "why": "间隔 150 > 窗口 100，差 50 帧"
+            },
+            {
+              "hand": "B",
+              "a": "4",
+              "b": "6",
+              "joined": false,
+              "gap": -12,
+              "dist": 231.6,
+              "budget": 969.0,
+              "n_cands": 1,
+              "why": "时间重叠（硬否）"
+            }
+          ]
+        },
+        {
+          "window": 150,
+          "rounds": 3,
+          "should": 2,
+          "ok": 0,
+          "wrong": 0,
+          "wrong_detail": [],
+          "pairs": [
+            {
+              "hand": "B",
+              "a": "0",
+              "b": "4",
+              "joined": false,
+              "gap": 150,
+              "dist": 976.3,
+              "budget": 1389.0,
+              "n_cands": 2,
+              "why": "多候选歧义（2 个：2,4），规则主动放弃"
+            },
+            {
+              "hand": "B",
+              "a": "4",
+              "b": "6",
+              "joined": false,
+              "gap": -12,
+              "dist": 231.6,
+              "budget": 969.0,
+              "n_cands": 1,
+              "why": "时间重叠（硬否）"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

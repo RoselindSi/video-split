@@ -36,7 +36,8 @@ import csv
 import json
 import os
 
-PAGE = """<title>%(title)s</title>
+PAGE = """<meta charset="utf-8">
+<title>%(title)s</title>
 <style>
 :root{--bg:#fbfbfa;--fg:#16181d;--dim:#5b6270;--line:#d9dce3;--a:#2f5d8c;--b:#a4453f;
       --ok:#4a7a52;--warn:#8a4b2a}
@@ -244,12 +245,23 @@ render();
 """
 
 
-def sampled(frames, stride):
-    fs = sorted(frames)
-    if not fs:
-        return []
-    lo, hi = fs[0], fs[-1]
-    return [f for f in range(lo, hi + 1, stride) if f in set(fs)]
+def sampled(lo, hi, stride):
+    """抽样网格 —— 固定起点与步长，**不看有没有检测**。
+
+    两件事以前是错的，都会让结果偏好看，所以写在这里而不是注释在调用处。
+
+    网格起点必须是跑的那个窗口的起点，不是 detect2 的首帧。按首帧对齐时，
+    153159（首帧 415）和 015550（412）排出 415/425/… 的网格，和 400 对齐的
+    帧号一个都对不上，页面抽样帧数变成 0。另外八条首帧恰好是 400，于是**靠
+    巧合**对齐了 —— 包括已标完的三条。靠巧合成立的网格不是网格，而且它让
+    不同录像的 gold 不可合并。
+
+    网格也不能过滤「这一帧有没有框」。原来写的是 `if f in set(fs)`，于是
+    检测器一个框都没出的帧根本不会出现在页面上 —— 而那正是「手在画面里但
+    没被检到」的帧，是这份 gold 要测的缺陷本身。153159 上这一条静默扔掉了
+    37 帧里的 16 帧。有图就进网格，候选为空时标注者自己画。
+    """
+    return list(range(lo, hi, stride))
 
 
 def main():
@@ -258,6 +270,9 @@ def main():
     ap.add_argument("--detect2", required=True, help="该录像的 detect2 csv")
     ap.add_argument("--recording", required=True)
     ap.add_argument("--stride", type=int, default=10)
+    ap.add_argument("--grid-start", type=int, default=400,
+                    help="抽样网格起点 —— 跑的那个窗口的起点，不是 detect2 首帧")
+    ap.add_argument("--grid-end", type=int, default=800, help="不含")
     ap.add_argument("--width", type=int, default=1920)
     ap.add_argument("--height", type=int, default=1520)
     ap.add_argument("--embed", help="frame->base64 jpeg 的 json，内嵌进页面，"
@@ -276,14 +291,18 @@ def main():
         # tid / own / side 在这里被丢掉，页面永远拿不到它们
         boxes[f].append(b)
 
-    samp = sampled(boxes, a.stride)
+    grid = sampled(a.grid_start, a.grid_end, a.stride)
     embed = {}
     if a.embed:
         embed = {int(k): v for k, v in
                  json.load(open(a.embed, encoding="utf-8")).items()}
-        # 只留真有图的抽样帧：缺图的帧标不了，留着只会让进度条骗人
-        samp = [f for f in samp if f in embed]
-    cand = {f: boxes[f] for f in samp}
+        # 只留真有图的抽样帧：缺图的帧标不了，留着只会让进度条骗人。
+        # 但缺了多少必须报出来 —— 帧库是按模型相关判据抽的子集，缺的帧几乎
+        # 都是检测器没出框的帧，所以在剩下的帧上算出的覆盖率是上界不是估计。
+        samp = [f for f in grid if f in embed]
+    else:
+        samp = list(grid)
+    cand = {f: boxes.get(f, []) for f in samp}
     html = PAGE % {"title": "%s 手级标注" % a.recording,
                    "rec": a.recording, "recj": json.dumps(a.recording),
                    "stride": a.stride, "nsamp": len(samp),
@@ -295,10 +314,16 @@ def main():
                             if embed else "null")}
     open(a.out, "w", encoding="utf-8").write(html)
     n_box = sum(len(v) for v in cand.values())
+    n_empty = sum(1 for v in cand.values() if not v)
     print("-> %s" % a.out)
-    print("  抽样帧 %d 个（步长 %d，覆盖 %d-%d）"
-          % (len(samp), a.stride, samp[0] if samp else 0, samp[-1] if samp else 0))
-    print("  候选框 %d 个，已剥掉 tid / own / side" % n_box)
+    print("  网格 %d 帧（%d-%d 步长 %d）；有图 %d，缺图 %d -> present_rate %.2f"
+          % (len(grid), a.grid_start, a.grid_end - a.stride, a.stride,
+             len(samp), len(grid) - len(samp), len(samp) / max(1, len(grid))))
+    if len(samp) < len(grid):
+        print("    缺图的帧：%s" % [f for f in grid if f not in embed])
+        print("    这些帧绝大多数是检测器没出框的帧 —— 所以覆盖率是上界")
+    print("  候选框 %d 个，已剥掉 tid / own / side；零候选的帧 %d 个（要自己画）"
+          % (n_box, n_empty))
     print("  每帧候选数：%s"
           % dict(sorted(collections.Counter(len(v) for v in cand.values()).items())))
     print("  页面要配 frames 目录：%06d.jpg 命名、%dx%d" % (0, a.width, a.height))
