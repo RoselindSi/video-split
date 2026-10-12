@@ -31,8 +31,32 @@ from rig.track_join import (DIST_FACTOR, centre, join_to_fixed_point,  # noqa: E
                             width)
 
 
+def read_pre_join(detect2_path):
+    """-> {tid: {"boxes": {frame: box}}}，**只读 join 前的 detect2，不碰 decisions**。
+
+    这里必须自成一体，不能复用 `read_tracks`。`read_tracks` 的帧来自
+    decisions、框来自 detect2，而 decisions 里的 tid 是 **join 之后**的：
+    track_join 把 6 并进了 4，于是 decisions 里 tid 4 有 216 帧，而 join 前的
+    detect2 里 tid 4 只有自己的 8 帧 —— 另外 208 帧的框全是 None，匹配不上
+    anchor，于是那只手被判成别的轨迹、覆盖率从 94.6% 掉到 43.2%。
+
+    评 track_join 的窗口要用它真正看到的输入，也就是 join 前的 detect2，
+    帧和框都来自同一个文件。
+    """
+    tracks = collections.defaultdict(dict)
+    for r in csv.DictReader(open(detect2_path, encoding="utf-8-sig")):
+        try:
+            tid, f = str(r["tid"]), int(r["frame"])
+            box = (float(r["x0"]), float(r["y0"]),
+                   float(r["x1"]), float(r["y1"]))
+        except (KeyError, ValueError):
+            continue
+        tracks[tid][f] = box
+    return {t: {"boxes": b, "side": ""} for t, b in tracks.items()}
+
+
 def frags_from_tracks(tracks):
-    """track_join 的碎片结构，但框来自 detect2 而不是重读 csv。"""
+    """track_join 的碎片结构。"""
     out = {}
     for tid, t in tracks.items():
         items = sorted((f, b) for f, b in t["boxes"].items() if b is not None)
@@ -41,6 +65,27 @@ def frags_from_tracks(tracks):
         out[tid] = {"first": items[0][0], "last": items[-1][0],
                     "start_box": list(items[0][1]),
                     "end_box": list(items[-1][1]), "n": len(items)}
+    return out
+
+
+def observed_groups(joined_path, pre):
+    """-> {pre_tid: post_tid}，流水线实际并成什么样，用框的位置对回去。
+
+    用来核对模拟：在窗口 30 下模拟出的分组必须和它一致，否则模拟是错的，
+    后面所有窗口的结论都不作数。
+    """
+    key = {}
+    for tid, fb in pre.items():
+        for f, b in fb["boxes"].items():
+            key[(f, round(b[0]), round(b[1]))] = tid
+    out = {}
+    for r in csv.DictReader(open(joined_path, encoding="utf-8-sig")):
+        try:
+            k = (int(r["frame"]), round(float(r["x0"])), round(float(r["y0"])))
+        except (KeyError, ValueError):
+            continue
+        if k in key:
+            out[key[k]] = str(r["tid"])
     return out
 
 
@@ -105,13 +150,30 @@ def diagnose(frag, a, b, window, dist_factor=DIST_FACTOR):
             "n_cands": len(cands), "why": why}
 
 
-def run_one(gold_path, decisions_path, detect2_path, windows, min_iou=0.3):
+def run_one(gold_path, joined_path, detect2_path, windows, min_iou=0.3):
     gold = json.load(open(gold_path, encoding="utf-8"))
     rec = gold["recording"]
-    tracks = read_tracks(decisions_path, detect2_path, own_only=True)
+    tracks = read_pre_join(detect2_path)
     assign, diag = assign_by_anchors(gold["hands"], tracks, min_iou=min_iou)
     frag = frags_from_tracks(tracks)
     targets = should_join(assign, frag)
+
+    # 核对：窗口 30 的模拟必须复现流水线实际的分组
+    check = None
+    if joined_path and os.path.exists(joined_path):
+        obs = observed_groups(joined_path, tracks)
+        sim, _ = join_to_fixed_point(frag, window=30, dist_factor=DIST_FACTOR)
+        same_obs = collections.defaultdict(set)
+        for a, g in obs.items():
+            same_obs[g].add(a)
+        same_sim = collections.defaultdict(set)
+        for a in frag:
+            same_sim[sim.get(a, a)].add(a)
+        po = {frozenset(v) for v in same_obs.values() if len(v) > 1}
+        ps = {frozenset(v) for v in same_sim.values() if len(v) > 1}
+        check = {"ok": po == ps,
+                 "observed": sorted(sorted(x) for x in po),
+                 "simulated": sorted(sorted(x) for x in ps)}
 
     rows = []
     for w in windows:
@@ -129,7 +191,7 @@ def run_one(gold_path, decisions_path, detect2_path, windows, min_iou=0.3):
                      "ok": sum(1 for p in per_pair if p["joined"]),
                      "wrong": len(bad),
                      "wrong_detail": bad, "pairs": per_pair})
-    return {"recording": rec, "n_tracks": len(frag),
+    return {"recording": rec, "n_tracks": len(frag), "check30": check,
             "assign_blind": diag["blind_no_anchor"],
             "assign_contaminating": diag["contaminating"],
             "targets": [{"hand": h, "a": a, "b": b} for h, a, b in targets],
@@ -140,8 +202,10 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--gold", nargs="+", required=True)
-    ap.add_argument("--decisions-dir", required=True)
-    ap.add_argument("--detect2-dir", required=True)
+    ap.add_argument("--detect2-dir", required=True,
+                    help="**join 前**的 detect2 —— track_join 真正看到的输入")
+    ap.add_argument("--joined-dir",
+                    help="detect2_joined，用来核对窗口 30 的模拟是否复现流水线")
     ap.add_argument("--windows", default="30,40,50,60,80,100,150")
     ap.add_argument("--min-iou", type=float, default=0.3)
     ap.add_argument("--out")
@@ -151,9 +215,24 @@ def main():
     results = []
     for g in args.gold:
         rec = json.load(open(g, encoding="utf-8"))["recording"]
-        dec = os.path.join(args.decisions_dir, "%s.decisions.csv" % rec)
         det = os.path.join(args.detect2_dir, "%s.detect2.csv" % rec)
-        results.append(run_one(g, dec, det, windows, args.min_iou))
+        jnd = (os.path.join(args.joined_dir, "%s.detect2.csv" % rec)
+               if args.joined_dir else None)
+        results.append(run_one(g, jnd, det, windows, args.min_iou))
+
+    bad = [r for r in results if r["check30"] and not r["check30"]["ok"]]
+    if any(r["check30"] for r in results):
+        print("核对：窗口 30 的模拟 vs 流水线实际分组 —— %d/%d 条一致"
+              % (sum(1 for r in results
+                     if r["check30"] and r["check30"]["ok"]),
+                 sum(1 for r in results if r["check30"])))
+        for r in bad:
+            print("  ！%s 不一致  实际 %s  模拟 %s"
+                  % (r["recording"], r["check30"]["observed"],
+                     r["check30"]["simulated"]))
+        if bad:
+            print("  模拟与流水线不符时，下面每个窗口的数字都不作数。")
+        print()
 
     print("逐录像逐对（为什么没接上）")
     for r in results:
