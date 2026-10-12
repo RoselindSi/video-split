@@ -1,0 +1,267 @@
+{
+ "hands": 2,
+ "n_recordings": 10,
+ "median_own_tracks": 6.5,
+ "recordings": [
+  {
+   "recording": "R26_0824_121025",
+   "n_tracks": 7,
+   "n_own": 6,
+   "n_not_hand": 0,
+   "own_frames": 200,
+   "span_frames": 232,
+   "frames_gt2": 16,
+   "frames_gt1": 180,
+   "frac_gt2": 0.08,
+   "frac_gt1": 0.9,
+   "own_track_frames": [
+    2,
+    7,
+    38,
+    61,
+    96,
+    192
+   ],
+   "own_holes": 1,
+   "sides": {
+    "right": 1,
+    "left": 5
+   },
+   "inconsistent_tids": []
+  },
+  {
+   "recording": "R26_0824_122009",
+   "n_tracks": 18,
+   "n_own": 3,
+   "n_not_hand": 0,
+   "own_frames": 400,
+   "span_frames": 400,
+   "frames_gt2": 5,
+   "frames_gt1": 395,
+   "frac_gt2": 0.0125,
+   "frac_gt1": 0.9875,
+   "own_track_frames": [
+    11,
+    389,
+    400
+   ],
+   "own_holes": 15,
+   "sides": {
+    "left": 2,
+    "right": 1
+   },
+   "inconsistent_tids": []
+  },
+  {
+   "recording": "R26_0824_133848",
+   "n_tracks": 8,
+   "n_own": 5,
+   "n_not_hand": 0,
+   "own_frames": 395,
+   "span_frames": 400,
+   "frames_gt2": 5,
+   "frames_gt1": 280,
+   "frac_gt2": 0.012658227848101266,
+   "frac_gt1": 0.7088607594936709,
+   "own_track_frames": [
+    11,
+    57,
+    159,
+    216,
+    237
+   ],
+   "own_holes": 102,
+   "sides": {
+    "right": 5
+   },
+   "inconsistent_tids": []
+  },
+  {
+   "recording": "R26_0824_134748",
+   "n_tracks": 8,
+   "n_own": 8,
+   "n_not_hand": 0,
+   "own_frames": 382,
+   "span_frames": 400,
+   "frames_gt2": 0,
+   "frames_gt1": 194,
+   "frac_gt2": 0.0,
+   "frac_gt1": 0.5078534031413613,
+   "own_track_frames": [
+    10,
+    19,
+    25,
+    32,
+    37,
+    79,
+    80,
+    294
+   ],
+   "own_holes": 53,
+   "sides": {
+    "left": 2,
+    "right": 6
+   },
+   "inconsistent_tids": []
+  },
+  {
+   "recording": "R26_0824_143303",
+   "n_tracks": 2,
+   "n_own": 2,
+   "n_not_hand": 0,
+   "own_frames": 400,
+   "span_frames": 400,
+   "frames_gt2": 0,
+   "frames_gt1": 374,
+   "frac_gt2": 0.0,
+   "frac_gt1": 0.935,
+   "own_track_frames": [
+    383,
+    391
+   ],
+   "own_holes": 19,
+   "sides": {
+    "left": 1,
+    "right": 1
+   },
+   "inconsistent_tids": []
+  },
+  {
+   "recording": "R26_0824_145525",
+   "n_tracks": 9,
+   "n_own": 2,
+   "n_not_hand": 0,
+   "own_frames": 400,
+   "span_frames": 400,
+   "frames_gt2": 0,
+   "frames_gt1": 400,
+   "frac_gt2": 0.0,
+   "frac_gt1": 1.0,
+   "own_track_frames": [
+    400,
+    400
+   ],
+   "own_holes": 0,
+   "sides": {
+    "left": 1,
+    "right": 1
+   },
+   "inconsistent_tids": []
+  },
+  {
+   "recording": "R26_0824_153159",
+   "n_tracks": 7,
+   "n_own": 7,
+   "n_not_hand": 0,
+   "own_frames": 233,
+   "span_frames": 385,
+   "frames_gt2": 3,
+   "frames_gt1": 89,
+   "frac_gt2": 0.012875536480686695,
+   "frac_gt1": 0.38197424892703863,
+   "own_track_frames": [
+    3,
+    5,
+    6,
+    55,
+    60,
+    62,
+    134
+   ],
+   "own_holes": 67,
+   "sides": {
+    "left": 2,
+    "right": 5
+   },
+   "inconsistent_tids": []
+  },
+  {
+   "recording": "R26_0825_015550",
+   "n_tracks": 14,
+   "n_own": 7,
+   "n_not_hand": 0,
+   "own_frames": 251,
+   "span_frames": 370,
+   "frames_gt2": 0,
+   "frames_gt1": 58,
+   "frac_gt2": 0.0,
+   "frac_gt1": 0.23107569721115537,
+   "own_track_frames": [
+    5,
+    14,
+    25,
+    30,
+    53,
+    87,
+    95
+   ],
+   "own_holes": 68,
+   "sides": {
+    "right": 4,
+    "left": 3
+   },
+   "inconsistent_tids": []
+  },
+  {
+   "recording": "R26_0825_100512",
+   "n_tracks": 12,
+   "n_own": 8,
+   "n_not_hand": 0,
+   "own_frames": 226,
+   "span_frames": 400,
+   "frames_gt2": 6,
+   "frames_gt1": 31,
+   "frac_gt2": 0.02654867256637168,
+   "frac_gt1": 0.13716814159292035,
+   "own_track_frames": [
+    2,
+    4,
+    10,
+    30,
+    32,
+    40,
+    59,
+    86
+   ],
+   "own_holes": 145,
+   "sides": {
+    "left": 4,
+    "right": 4
+   },
+   "inconsistent_tids": []
+  },
+  {
+   "recording": "R26_0826_063732",
+   "n_tracks": 13,
+   "n_own": 13,
+   "n_not_hand": 0,
+   "own_frames": 358,
+   "span_frames": 400,
+   "frames_gt2": 17,
+   "frames_gt1": 278,
+   "frac_gt2": 0.04748603351955307,
+   "frac_gt1": 0.776536312849162,
+   "own_track_frames": [
+    1,
+    4,
+    11,
+    13,
+    14,
+    16,
+    33,
+    72,
+    74,
+    82,
+    95,
+    106,
+    132
+   ],
+   "own_holes": 85,
+   "sides": {
+    "left": 5,
+    "right": 8
+   },
+   "inconsistent_tids": []
+  }
+ ]
+}
