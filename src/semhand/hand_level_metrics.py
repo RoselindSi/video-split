@@ -149,7 +149,7 @@ def assign_by_side(gold_hands, tracks):
                         "只能用来试跑，不能当结果"})
 
 
-def per_hand(gold_hands, tracks, assign):
+def per_hand(gold_hands, tracks, assign, sampled=None):
     """switches counts tid changes walking the hand's visible frames in order.
 
     A hole does not count as a switch by itself, but a different tid on the far
@@ -158,6 +158,10 @@ def per_hand(gold_hands, tracks, assign):
     rows = []
     for h in gold_hands:
         H = frames_of(h["intervals"])
+        if sampled is not None:
+            # 只在真的被标过的帧上算。区间是由抽样帧连成的，区间内的其它帧
+            # 标注者没看过 —— 在那些帧上算覆盖率等于拿没核对过的东西当 gold。
+            H &= set(sampled)
         mine = {tid: t for tid, t in tracks.items()
                 if assign.get(tid) == h["hand_key"]}
         covered = set()
@@ -210,7 +214,14 @@ def read_tracks(decisions_path, detect2_path=None, own_only=True):
             continue
         tracks[tid]["boxes"].setdefault(f, None)
         tracks[tid]["side"] = (r.get("side") or "").strip()
-    if detect2_path and os.path.exists(detect2_path):
+    if detect2_path:
+        # 缺这个文件时不能静默继续：没有框就没有 IoU，于是每条轨迹都匹配不上，
+        # 输出会是「全部污染」—— 一个看起来像系统失败的、自信的错误答案。
+        # 第一次跑就栽在这里：文件叫 <rec>.detect2.csv 而代码找 <rec>.csv。
+        if not os.path.exists(detect2_path):
+            raise SystemExit("detect2 文件不存在：%s\n"
+                             "  没有框就算不了 anchor 匹配，结果会全部变成「污染」，"
+                             "所以这里直接停，不往下算。" % detect2_path)
         for r in csv.DictReader(open(detect2_path, encoding="utf-8-sig")):
             try:
                 tid, f = str(r["tid"]), int(r["frame"])
@@ -243,9 +254,12 @@ def evaluate(gold, decisions_path, detect2_path, mode, min_iou):
         assign, diag = assign_by_side(hands, tracks)
     else:
         assign, diag = assign_by_anchors(hands, tracks, min_iou)
-    rows = per_hand(hands, tracks, assign)
+    samp = gold.get("sampled_frames")
+    rows = per_hand(hands, tracks, assign, samp)
     pur = per_track_purity(hands, tracks, assign)
     return {"recording": gold["recording"], "hands": rows,
+            "at_sampled_only": samp is not None,
+            "n_sampled": len(samp) if samp else None,
             "n_tracks": len(tracks),
             "n_unassigned": len(diag.get("unassigned", [])),
             "unassigned": diag.get("unassigned", []),
@@ -363,7 +377,14 @@ def main():
         if not os.path.exists(dp):
             print("  跳过 %s：没有 %s" % (rec, dp))
             continue
-        d2 = (os.path.join(a.detect2, "%s.csv" % rec) if a.detect2 else None)
+        d2 = None
+        if a.detect2:
+            for nm in ("%s.csv" % rec, "%s.detect2.csv" % rec):
+                cand = os.path.join(a.detect2, nm)
+                if os.path.exists(cand):
+                    d2 = cand
+                    break
+            d2 = d2 or os.path.join(a.detect2, "%s.csv" % rec)   # 让它去报错
         rows.append(evaluate(gold, dp, d2, a.assign, a.min_iou))
     if not rows:
         raise SystemExit("没有可评的录像")
