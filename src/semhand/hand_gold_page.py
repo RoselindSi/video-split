@@ -74,7 +74,7 @@ textarea{width:100%%;height:150px;font:12px ui-monospace,Menlo,monospace;
 只要在这条录像里一直跟住同一只手。候选框不带任何标签，这是故意的。</p>
 
 <div class="row">
-  <button id="pick">选择 frames 文件夹</button>
+  <button id="pick" hidden>选择 frames 文件夹</button>
   <span class="pill" id="imgstat">未加载图片</span>
   <span class="pill" id="prog">0 / %(nsamp)d</span>
 </div>
@@ -105,6 +105,7 @@ textarea{width:100%%;height:150px;font:12px ui-monospace,Menlo,monospace;
 const REC=%(recj)s, STRIDE=%(stride)d, W=%(W)d, H=%(H)d;
 const SAMP=%(samp)s;      // 抽样帧号
 const CAND=%(cand)s;      // {frame: [[x0,y0,x1,y1],...]}  无标签
+const IMGS=%(imgs)s;      // {frame: base64 jpeg} 或 null
 const KEY="handgold-"+REC;
 let st={}, cur=0, who="A", drawing=false, files=new Map(), dragging=null;
 try{const s=localStorage.getItem(KEY); if(s) st=JSON.parse(s);}catch(e){}
@@ -118,9 +119,11 @@ function render(){
   const done=SAMP.filter(x=>st[x]&&st[x].A&&st[x].B).length;
   $("#prog").textContent=done+" / "+SAMP.length;
   const nm=String(f).padStart(6,"0")+".jpg";
-  const fo=files.get(nm);
-  if(fo){ $("#img").src=URL.createObjectURL(fo); $("#imgstat").textContent=nm; }
-  else { $("#img").removeAttribute("src"); $("#imgstat").textContent="缺 "+nm; }
+  if(IMGS&&IMGS[f]){ $("#img").src="data:image/jpeg;base64,"+IMGS[f];
+                     $("#imgstat").textContent="图已内嵌"; }
+  else { const fo=files.get(nm);
+    if(fo){ $("#img").src=URL.createObjectURL(fo); $("#imgstat").textContent=nm; }
+    else { $("#img").removeAttribute("src"); $("#imgstat").textContent="缺 "+nm; } }
   const ov=$("#ov"); ov.innerHTML="";
   const r=rec();
   (CAND[f]||[]).forEach((b,i)=>{
@@ -235,6 +238,7 @@ $("#copy").onclick=async()=>{ if(!$("#out").value)$("#exp").click();
   try{await navigator.clipboard.writeText($("#out").value);
     $("#msg").textContent="已复制";}
   catch(e){$("#out").select();$("#msg").textContent="按 Cmd/Ctrl+C";}};
+if(!IMGS) $("#pick").hidden=false;
 render();
 </script>
 """
@@ -256,6 +260,8 @@ def main():
     ap.add_argument("--stride", type=int, default=10)
     ap.add_argument("--width", type=int, default=1920)
     ap.add_argument("--height", type=int, default=1520)
+    ap.add_argument("--embed", help="frame->base64 jpeg 的 json，内嵌进页面，"
+                                    "这样 artifact 自带图、不用选文件夹")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
 
@@ -271,13 +277,22 @@ def main():
         boxes[f].append(b)
 
     samp = sampled(boxes, a.stride)
+    embed = {}
+    if a.embed:
+        embed = {int(k): v for k, v in
+                 json.load(open(a.embed, encoding="utf-8")).items()}
+        # 只留真有图的抽样帧：缺图的帧标不了，留着只会让进度条骗人
+        samp = [f for f in samp if f in embed]
     cand = {f: boxes[f] for f in samp}
     html = PAGE % {"title": "%s 手级标注" % a.recording,
                    "rec": a.recording, "recj": json.dumps(a.recording),
                    "stride": a.stride, "nsamp": len(samp),
                    "W": a.width, "H": a.height,
                    "samp": json.dumps(samp),
-                   "cand": json.dumps(cand, separators=(",", ":"))}
+                   "cand": json.dumps(cand, separators=(",", ":")),
+                   "imgs": (json.dumps({str(f): embed[f] for f in samp},
+                                       separators=(",", ":"))
+                            if embed else "null")}
     open(a.out, "w", encoding="utf-8").write(html)
     n_box = sum(len(v) for v in cand.values())
     print("-> %s" % a.out)
