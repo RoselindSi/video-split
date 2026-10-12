@@ -1,0 +1,646 @@
+{
+ "window": 150,
+ "frame_total": {
+  "held": 467,
+  "miss_box_elsewhere": 44,
+  "held_duplicate": 5,
+  "miss_no_detection": 3
+ },
+ "identity_total": {
+  "would_join": 3,
+  "blocked_ambiguity": 24,
+  "joined_now": 12,
+  "blocked_overlap": 2,
+  "blocked_window": 1
+ },
+ "recordings": [
+  {
+   "recording": "R26_0824_121025",
+   "frame": {
+    "A": {
+     "n_visible": 18,
+     "counts": {
+      "held": 17,
+      "miss_box_elsewhere": 1
+     },
+     "detail": {
+      "miss_box_elsewhere": [
+       590
+      ]
+     }
+    },
+    "B": {
+     "n_visible": 21,
+     "counts": {
+      "held": 21
+     },
+     "detail": {}
+    }
+   },
+   "identity": [
+    {
+     "hand": "A",
+     "a": "1",
+     "b": "4",
+     "kind": "would_join",
+     "gap": 34,
+     "n_cands": 1
+    },
+    {
+     "hand": "A",
+     "a": "4",
+     "b": "6",
+     "kind": "blocked_ambiguity",
+     "gap": 41,
+     "n_cands": 2
+    },
+    {
+     "hand": "B",
+     "a": "0",
+     "b": "5",
+     "kind": "blocked_ambiguity",
+     "gap": 33,
+     "n_cands": 2
+    }
+   ]
+  },
+  {
+   "recording": "R26_0824_122009",
+   "frame": {
+    "A": {
+     "n_visible": 31,
+     "counts": {
+      "held": 31
+     },
+     "detail": {}
+    },
+    "B": {
+     "n_visible": 32,
+     "counts": {
+      "held": 32
+     },
+     "detail": {}
+    }
+   },
+   "identity": [
+    {
+     "hand": "A",
+     "a": "0",
+     "b": "7",
+     "kind": "joined_now"
+    }
+   ]
+  },
+  {
+   "recording": "R26_0824_133848",
+   "frame": {
+    "A": {
+     "n_visible": 37,
+     "counts": {
+      "held": 27,
+      "miss_box_elsewhere": 10
+     },
+     "detail": {
+      "miss_box_elsewhere": [
+       650,
+       660,
+       670,
+       680,
+       690,
+       700,
+       710,
+       740,
+       760,
+       790
+      ]
+     }
+    },
+    "B": {
+     "n_visible": 37,
+     "counts": {
+      "miss_box_elsewhere": 2,
+      "held": 34,
+      "held_duplicate": 1
+     },
+     "detail": {
+      "miss_box_elsewhere": [
+       400,
+       580
+      ],
+      "held_duplicate": [
+       570
+      ]
+     }
+    }
+   },
+   "identity": [
+    {
+     "hand": "A",
+     "a": "0",
+     "b": "9",
+     "kind": "blocked_ambiguity",
+     "gap": 46,
+     "n_cands": 5
+    },
+    {
+     "hand": "B",
+     "a": "1",
+     "b": "6",
+     "kind": "blocked_ambiguity",
+     "gap": 23,
+     "n_cands": 4
+    }
+   ]
+  },
+  {
+   "recording": "R26_0824_134748",
+   "frame": {
+    "A": {
+     "n_visible": 34,
+     "counts": {
+      "held": 34
+     },
+     "detail": {}
+    },
+    "B": {
+     "n_visible": 34,
+     "counts": {
+      "miss_box_elsewhere": 15,
+      "held": 19
+     },
+     "detail": {
+      "miss_box_elsewhere": [
+       400,
+       410,
+       430,
+       470,
+       530,
+       540,
+       550,
+       600,
+       610,
+       620,
+       660,
+       670,
+       690,
+       750,
+       760
+      ]
+     }
+    }
+   },
+   "identity": [
+    {
+     "hand": "A",
+     "a": "0",
+     "b": "4",
+     "kind": "blocked_ambiguity",
+     "gap": 27,
+     "n_cands": 5
+    },
+    {
+     "hand": "B",
+     "a": "1",
+     "b": "2",
+     "kind": "blocked_ambiguity",
+     "gap": 24,
+     "n_cands": 3
+    },
+    {
+     "hand": "B",
+     "a": "2",
+     "b": "5",
+     "kind": "blocked_ambiguity",
+     "gap": 41,
+     "n_cands": 2
+    },
+    {
+     "hand": "B",
+     "a": "5",
+     "b": "6",
+     "kind": "blocked_ambiguity",
+     "gap": 37,
+     "n_cands": 2
+    },
+    {
+     "hand": "B",
+     "a": "6",
+     "b": "7",
+     "kind": "blocked_ambiguity",
+     "gap": 34,
+     "n_cands": 2
+    },
+    {
+     "hand": "B",
+     "a": "7",
+     "b": "8",
+     "kind": "joined_now"
+    }
+   ]
+  },
+  {
+   "recording": "R26_0824_143303",
+   "frame": {
+    "A": {
+     "n_visible": 32,
+     "counts": {
+      "held": 30,
+      "miss_box_elsewhere": 2
+     },
+     "detail": {
+      "miss_box_elsewhere": [
+       570,
+       580
+      ]
+     }
+    },
+    "B": {
+     "n_visible": 32,
+     "counts": {
+      "held": 32
+     },
+     "detail": {}
+    }
+   },
+   "identity": [
+    {
+     "hand": "A",
+     "a": "0",
+     "b": "3",
+     "kind": "joined_now"
+    },
+    {
+     "hand": "B",
+     "a": "1",
+     "b": "2",
+     "kind": "joined_now"
+    }
+   ]
+  },
+  {
+   "recording": "R26_0824_145525",
+   "frame": {
+    "A": {
+     "n_visible": 31,
+     "counts": {
+      "held": 31
+     },
+     "detail": {}
+    },
+    "B": {
+     "n_visible": 31,
+     "counts": {
+      "held": 31
+     },
+     "detail": {}
+    }
+   },
+   "identity": []
+  },
+  {
+   "recording": "R26_0824_153159",
+   "frame": {
+    "A": {
+     "n_visible": 0,
+     "counts": {},
+     "detail": {}
+    },
+    "B": {
+     "n_visible": 24,
+     "counts": {
+      "miss_no_detection": 3,
+      "held": 18,
+      "held_duplicate": 3
+     },
+     "detail": {
+      "miss_no_detection": [
+       410,
+       470,
+       480
+      ],
+      "held_duplicate": [
+       660,
+       670,
+       690
+      ]
+     }
+    }
+   },
+   "identity": [
+    {
+     "hand": "B",
+     "a": "0",
+     "b": "4",
+     "kind": "blocked_ambiguity",
+     "gap": 150,
+     "n_cands": 3
+    },
+    {
+     "hand": "B",
+     "a": "4",
+     "b": "6",
+     "kind": "blocked_overlap",
+     "gap": -12,
+     "n_cands": 2
+    }
+   ]
+  },
+  {
+   "recording": "R26_0825_015550",
+   "frame": {
+    "A": {
+     "n_visible": 13,
+     "counts": {
+      "held": 11,
+      "miss_box_elsewhere": 2
+     },
+     "detail": {
+      "miss_box_elsewhere": [
+       530,
+       750
+      ]
+     }
+    },
+    "B": {
+     "n_visible": 22,
+     "counts": {
+      "held": 20,
+      "miss_box_elsewhere": 2
+     },
+     "detail": {
+      "miss_box_elsewhere": [
+       510,
+       580
+      ]
+     }
+    }
+   },
+   "identity": [
+    {
+     "hand": "A",
+     "a": "3",
+     "b": "9",
+     "kind": "blocked_ambiguity",
+     "gap": 46,
+     "n_cands": 2
+    },
+    {
+     "hand": "A",
+     "a": "9",
+     "b": "11",
+     "kind": "blocked_ambiguity",
+     "gap": 53,
+     "n_cands": 2
+    },
+    {
+     "hand": "A",
+     "a": "11",
+     "b": "16",
+     "kind": "joined_now"
+    },
+    {
+     "hand": "A",
+     "a": "16",
+     "b": "17",
+     "kind": "joined_now"
+    },
+    {
+     "hand": "A",
+     "a": "17",
+     "b": "19",
+     "kind": "joined_now"
+    },
+    {
+     "hand": "B",
+     "a": "0",
+     "b": "2",
+     "kind": "joined_now"
+    },
+    {
+     "hand": "B",
+     "a": "2",
+     "b": "4",
+     "kind": "blocked_ambiguity",
+     "gap": 49,
+     "n_cands": 3
+    },
+    {
+     "hand": "B",
+     "a": "4",
+     "b": "10",
+     "kind": "blocked_ambiguity",
+     "gap": 22,
+     "n_cands": 6
+    },
+    {
+     "hand": "B",
+     "a": "10",
+     "b": "18",
+     "kind": "would_join",
+     "gap": 85,
+     "n_cands": 1
+    }
+   ]
+  },
+  {
+   "recording": "R26_0825_100512",
+   "frame": {
+    "A": {
+     "n_visible": 17,
+     "counts": {
+      "held": 16,
+      "miss_box_elsewhere": 1
+     },
+     "detail": {
+      "miss_box_elsewhere": [
+       440
+      ]
+     }
+    },
+    "B": {
+     "n_visible": 10,
+     "counts": {
+      "held": 7,
+      "miss_box_elsewhere": 2,
+      "held_duplicate": 1
+     },
+     "detail": {
+      "miss_box_elsewhere": [
+       430,
+       730
+      ],
+      "held_duplicate": [
+       460
+      ]
+     }
+    }
+   },
+   "identity": [
+    {
+     "hand": "A",
+     "a": "0",
+     "b": "5",
+     "kind": "blocked_ambiguity",
+     "gap": 14,
+     "n_cands": 6
+    },
+    {
+     "hand": "A",
+     "a": "5",
+     "b": "7",
+     "kind": "joined_now"
+    },
+    {
+     "hand": "A",
+     "a": "7",
+     "b": "16",
+     "kind": "blocked_window",
+     "gap": 201,
+     "n_cands": 0
+    },
+    {
+     "hand": "B",
+     "a": "2",
+     "b": "4",
+     "kind": "blocked_ambiguity",
+     "gap": 9,
+     "n_cands": 5
+    },
+    {
+     "hand": "B",
+     "a": "4",
+     "b": "6",
+     "kind": "blocked_overlap",
+     "gap": -12,
+     "n_cands": 4
+    },
+    {
+     "hand": "B",
+     "a": "6",
+     "b": "8",
+     "kind": "blocked_ambiguity",
+     "gap": 83,
+     "n_cands": 4
+    },
+    {
+     "hand": "B",
+     "a": "8",
+     "b": "9",
+     "kind": "joined_now"
+    },
+    {
+     "hand": "B",
+     "a": "9",
+     "b": "15",
+     "kind": "joined_now"
+    }
+   ]
+  },
+  {
+   "recording": "R26_0826_063732",
+   "frame": {
+    "A": {
+     "n_visible": 31,
+     "counts": {
+      "held": 27,
+      "miss_box_elsewhere": 4
+     },
+     "detail": {
+      "miss_box_elsewhere": [
+       430,
+       520,
+       590,
+       610
+      ]
+     }
+    },
+    "B": {
+     "n_visible": 32,
+     "counts": {
+      "held": 29,
+      "miss_box_elsewhere": 3
+     },
+     "detail": {
+      "miss_box_elsewhere": [
+       450,
+       490,
+       760
+      ]
+     }
+    }
+   },
+   "identity": [
+    {
+     "hand": "A",
+     "a": "0",
+     "b": "4",
+     "kind": "blocked_ambiguity",
+     "gap": 18,
+     "n_cands": 9
+    },
+    {
+     "hand": "A",
+     "a": "4",
+     "b": "15",
+     "kind": "blocked_ambiguity",
+     "gap": 87,
+     "n_cands": 9
+    },
+    {
+     "hand": "A",
+     "a": "15",
+     "b": "18",
+     "kind": "would_join",
+     "gap": 48,
+     "n_cands": 1
+    },
+    {
+     "hand": "B",
+     "a": "1",
+     "b": "3",
+     "kind": "blocked_ambiguity",
+     "gap": 13,
+     "n_cands": 10
+    },
+    {
+     "hand": "B",
+     "a": "3",
+     "b": "6",
+     "kind": "blocked_ambiguity",
+     "gap": 1,
+     "n_cands": 10
+    },
+    {
+     "hand": "B",
+     "a": "6",
+     "b": "9",
+     "kind": "blocked_ambiguity",
+     "gap": 15,
+     "n_cands": 9
+    },
+    {
+     "hand": "B",
+     "a": "9",
+     "b": "12",
+     "kind": "blocked_ambiguity",
+     "gap": 8,
+     "n_cands": 5
+    },
+    {
+     "hand": "B",
+     "a": "12",
+     "b": "16",
+     "kind": "joined_now"
+    },
+    {
+     "hand": "B",
+     "a": "16",
+     "b": "17",
+     "kind": "blocked_ambiguity",
+     "gap": 19,
+     "n_cands": 2
+    }
+   ]
+  }
+ ]
+}
