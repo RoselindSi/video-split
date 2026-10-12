@@ -393,8 +393,9 @@ def score(args):
         for crop, full, targets, _weights, _heatmaps, _masks, indices, pv in loader:
             crop = crop.to(device)
             full = full.to(device) if checkpoint_view == "dual" else None
+            pvd = pv.to(device)
             probabilities = torch.stack([
-                torch.sigmoid(model(crop, full)[0]) for model in models
+                torch.sigmoid(model(crop, full, pvd)[0]) for model in models
             ]).mean(0).cpu().tolist()
             for probability, target, index in zip(
                     probabilities, targets.tolist(), indices.tolist()):

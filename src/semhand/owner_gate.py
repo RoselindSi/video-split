@@ -501,16 +501,27 @@ def score(args):
             pairs = [(Image.open(item.get("context") or item["full"]).convert("RGB"),
                       Image.open(item["crop"]).convert("RGB"))
                      for item in chunk]
-            describe_convs = [[{"role": "user", "content": [
-                {"type": "image", "image": full},
-                {"type": "image", "image": crop},
-                {"type": "text", "text": CONTEXT_DESCRIBE},
-            ]}] for full, crop in pairs]
-            descriptions = qwen.describe(describe_convs)
+            # THE DESCRIBE PASS IS THE EXPENSIVE HALF and has never been
+            # measured on its own. Each view goes through the model twice:
+            # once to generate roughly sixty tokens of neutral description,
+            # once to read a single token's logits. Dropping it is worth
+            # three to five times the throughput, and whether it costs any
+            # accuracy is exactly what --no-describe exists to find out.
+            if args.no_describe:
+                descriptions = [None] * len(chunk)
+            else:
+                describe_convs = [[{"role": "user", "content": [
+                    {"type": "image", "image": full},
+                    {"type": "image", "image": crop},
+                    {"type": "text", "text": CONTEXT_DESCRIBE},
+                ]}] for full, crop in pairs]
+                descriptions = qwen.describe(describe_convs)
 
             for item, (full, crop), raw in zip(chunk, pairs, descriptions):
-                parsed = parse_desc(raw)
-                if parsed is None:
+                parsed = None if raw is None else parse_desc(raw)
+                if raw is None:
+                    description = None
+                elif parsed is None:
                     description = sem_text({"raw": raw, "parsed": parsed})
                 else:
                     description = (
@@ -521,20 +532,21 @@ def score(args):
                         f"occlusion: {parsed.get('occlusion', '')}; "
                         "ambiguous: "
                         f"{parsed.get('ambiguous_regions', '')}")
-                conv = [{"role": "user", "content": [
-                    {"type": "text", "text": CONTEXT_INTRO},
-                    {"type": "image", "image": full},
-                    {"type": "image", "image": crop},
-                    {"type": "text", "text": f"Description: {description}"},
-                    {"type": "text", "text": CONTEXT_QUESTION},
-                ]}]
+                content = [{"type": "text", "text": CONTEXT_INTRO},
+                           {"type": "image", "image": full},
+                           {"type": "image", "image": crop}]
+                if description is not None:
+                    content.append({"type": "text",
+                                    "text": f"Description: {description}"})
+                content.append({"type": "text", "text": CONTEXT_QUESTION})
+                conv = [{"role": "user", "content": content}]
                 result = qwen.score(conv)
                 record = {
                     **item,
                     "frame": int(item["frame"]),
                     "base_p": float(item["base_p"]),
                     "owner_rank": int(item["owner_rank"]),
-                    "description": description,
+                    "description": description or "",
                     "description_ok": parsed is not None,
                     **result,
                 }
@@ -583,6 +595,9 @@ def main():
                         help="送全部轨迹（建语料用），不只是有争议的 owner 候选")
     parser.add_argument("--min-track-frames", dest="min_track_frames",
                         type=int, default=3)
+    parser.add_argument("--no-describe", dest="no_describe",
+                        action="store_true",
+                        help="跳过描述那一步，直接取 logits（消融/提速）")
     parser.add_argument("--shard", type=int, default=0)
     parser.add_argument("--nshard", type=int, default=1)
     args = parser.parse_args()

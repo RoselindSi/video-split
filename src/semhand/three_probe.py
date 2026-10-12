@@ -30,6 +30,8 @@ import csv
 import json
 import os
 
+from src.rig.post_pass import MIN_PX
+
 FRAME_W = 1280
 CROP = 256
 
@@ -51,18 +53,41 @@ def disjoint(boxes, thr):
     return keep
 
 
-def items_for(arm, jobs, thr, min_hands):
+def representative_rows(rows, n):
+    """Even temporal samples, including both ends of a canonical track."""
+    rows = sorted(rows, key=lambda row: int(row["frame"]))
+    if n <= 0 or len(rows) <= n:
+        return rows
+    if n == 1:
+        return [rows[len(rows) // 2]]
+    indexes = [round(i * (len(rows) - 1) / (n - 1)) for i in range(n)]
+    return [rows[index] for index in dict.fromkeys(indexes)]
+
+
+def items_for(arm, jobs, thr, min_hands, track_maps=None,
+              frames_per_track=5, min_px=MIN_PX):
+    """Return representative owner boxes grouped by canonical track.
+
+    The old probe asked Qwen about every eligible frame even though the
+    verdict is aggregated per track. Sampling after disjoint ranking preserves
+    the exact score keys consumed by :mod:`src.rig.post_pass` while bounding
+    semantic work by tracks instead of video length.
+    """
     out = []
+    track_maps = track_maps or {}
     for rec, (bag, s, n) in sorted(jobs.items()):
         p = os.path.join(arm, rec + ".csv")
         if not os.path.exists(p):
             continue
         own = collections.defaultdict(list)
-        for r in csv.DictReader(open(p, encoding="utf-8")):
-            if r["own"] == "1":
-                own[int(r["frame"])].append(
-                    ([float(r[c]) for c in ("x0", "y0", "x1", "y1")],
-                     float(r.get("conf") or 0), r.get("tid") or ""))
+        with open(p, encoding="utf-8") as fh:
+            for r in csv.DictReader(fh):
+                if r["own"] == "1":
+                    own[int(r["frame"])].append(
+                        ([float(r[c]) for c in ("x0", "y0", "x1", "y1")],
+                         float(r.get("conf") or 0), r.get("tid") or ""))
+        eligible = []
+        mapping = track_maps.get(rec, {})
         for f in range(s, s + n):
             b = own.get(f)
             if not b:
@@ -71,9 +96,18 @@ def items_for(arm, jobs, thr, min_hands):
             if len(keep) < min_hands:
                 continue
             for k, (box, cf, tid) in enumerate(keep):
-                out.append({"stem": "%s_f%06d_b%d" % (rec, f, k), "rec": rec,
-                            "frame": f, "box": box, "conf": cf, "tid": tid,
-                            "n_claimed": len(keep)})
+                if box[2] - box[0] < min_px or not tid:
+                    continue
+                eligible.append({
+                    "stem": "%s_f%06d_b%d" % (rec, f, k), "rec": rec,
+                    "frame": f, "box": box, "conf": cf, "tid": tid,
+                    "canonical_tid": str(mapping.get(str(tid), tid)),
+                    "n_claimed": len(keep)})
+        by_track = collections.defaultdict(list)
+        for item in eligible:
+            by_track[item["canonical_tid"]].append(item)
+        for rows in by_track.values():
+            out.extend(representative_rows(rows, frames_per_track))
     return out
 
 
@@ -84,11 +118,17 @@ def main():
     ap.add_argument("--jobs", default="/workspace/cam3_jobs.txt")
     ap.add_argument("--iou", type=float, default=0.10)
     ap.add_argument("--min_hands", type=int, default=3)
+    ap.add_argument("--min_px", type=int, default=MIN_PX)
+    ap.add_argument("--frames_per_track", type=int, default=11)
+    ap.add_argument("--track_maps", default="",
+                    help="directory of <rec>.track_map.csv files")
     ap.add_argument("--model", default="/shared/datasets/public_model/Qwen3.8-27B")
     ap.add_argument("--views", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--prep", action="store_true")
     ap.add_argument("--tiny", action="store_true")
+    ap.add_argument("--shard", type=int, default=0)
+    ap.add_argument("--nshard", type=int, default=1)
     a = ap.parse_args()
 
     jobs = {}
@@ -97,7 +137,16 @@ def main():
         if len(f) >= 4 and not line.startswith("#"):
             jobs[f[0]] = (f[1], int(f[2]), int(f[3]))
 
-    items = items_for(a.arm, jobs, a.iou, a.min_hands)
+    track_maps = {}
+    if a.track_maps:
+        from src.rig.track_fusion import load_track_map
+        for rec in jobs:
+            path = os.path.join(a.track_maps, rec + ".track_map.csv")
+            if os.path.exists(path):
+                track_maps[rec] = load_track_map(path)
+    items = items_for(
+        a.arm, jobs, a.iou, a.min_hands, track_maps,
+        a.frames_per_track, a.min_px)
     nfr = len({(x["rec"], x["frame"]) for x in items})
     print("%d 个框 / %d 帧（每帧 >=%d 只互不重叠的自己的手）" % (len(items), nfr, a.min_hands))
 
@@ -147,12 +196,15 @@ def main():
                             [int(cv2.IMWRITE_JPEG_QUALITY), 88])
                 cv2.imwrite(os.path.join(a.views, it["stem"] + "_crop.jpg"), crop,
                             [int(cv2.IMWRITE_JPEG_QUALITY), 92])
-                idx.append({k: it[k] for k in ("stem", "rec", "frame", "conf",
-                                               "tid", "n_claimed")})
+                idx.append({k: it[k] for k in (
+                    "stem", "rec", "frame", "conf", "tid",
+                    "canonical_tid", "n_claimed")})
                 got += 1
             print("  %-16s %d/%d" % (rec, got, len(by_rec[rec])), flush=True)
         with open(os.path.join(a.views, "index.csv"), "w", newline="") as fh:
-            w = csv.DictWriter(fh, fieldnames=list(idx[0]))
+            fields = ["stem", "rec", "frame", "conf", "tid",
+                      "canonical_tid", "n_claimed"]
+            w = csv.DictWriter(fh, fieldnames=fields)
             w.writeheader()
             w.writerows(idx)
         print("-> %s (%d)" % (a.views, len(idx)))
@@ -163,12 +215,20 @@ def main():
     from src.semhand.handness import QUESTION, PREFIX
 
     idx = list(csv.DictReader(open(os.path.join(a.views, "index.csv"))))
+    if a.nshard < 1 or not 0 <= a.shard < a.nshard:
+        ap.error("need 0 <= shard < nshard")
+    if a.nshard > 1:
+        idx = [row for index, row in enumerate(idx)
+               if index % a.nshard == a.shard]
+        print("  shard %d/%d -> %d" % (a.shard, a.nshard, len(idx)),
+              flush=True)
+    out_path = a.out if a.nshard == 1 else "%s.%d" % (a.out, a.shard)
     done = set()
-    if os.path.exists(a.out):
-        done = {json.loads(l)["stem"] for l in open(a.out)}
+    if os.path.exists(out_path):
+        done = {json.loads(l)["stem"] for l in open(out_path)}
         print("  已有 %d 个，跳过" % len(done))
     q = Qwen(a.model, tiny=a.tiny, answer_prefix=PREFIX, question=QUESTION)
-    with open(a.out, "a") as fh:
+    with open(out_path, "a") as fh:
         for i, r in enumerate(idx):
             if r["stem"] in done:
                 continue
@@ -181,12 +241,14 @@ def main():
             s = q.score(conv)
             fh.write(json.dumps({"stem": r["stem"], "rec": r["rec"],
                                  "frame": int(r["frame"]), "conf": float(r["conf"]),
-                                 "tid": r["tid"], "n_claimed": int(r["n_claimed"]),
+                                 "tid": r["tid"],
+                                 "canonical_tid": r.get("canonical_tid", r["tid"]),
+                                 "n_claimed": int(r["n_claimed"]),
                                  **s}) + "\n")
             fh.flush()
             if i % 50 == 0:
                 print("  %d/%d" % (i, len(idx)), flush=True)
-    print("-> %s" % a.out)
+    print("-> %s" % out_path)
 
 
 if __name__ == "__main__":
