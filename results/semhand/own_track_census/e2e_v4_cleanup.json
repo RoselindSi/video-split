@@ -1,0 +1,322 @@
+{
+ "min_frames": 10,
+ "redundant_frac": 0.8,
+ "recordings": [
+  {
+   "recording": "R26_0824_121025",
+   "own_tracks": 6,
+   "own_frames": 200,
+   "frames_gt2": 16,
+   "frames_gt1": 180,
+   "blame": [
+    [
+     "0",
+     16
+    ],
+    [
+     "3",
+     16
+    ],
+    [
+     "4",
+     16
+    ]
+   ],
+   "droppable": [
+    [
+     "6",
+     2,
+     1.0
+    ]
+   ],
+   "kept_short": [
+    [
+     "5",
+     7,
+     0.2857142857142857
+    ]
+   ],
+   "after": {
+    "own_tracks": 5,
+    "own_frames": 200,
+    "frames_gt2": 16,
+    "frames_gt1": 178
+   }
+  },
+  {
+   "recording": "R26_0824_122009",
+   "own_tracks": 3,
+   "own_frames": 400,
+   "frames_gt2": 5,
+   "frames_gt1": 395,
+   "blame": [
+    [
+     "0",
+     5
+    ],
+    [
+     "1",
+     5
+    ],
+    [
+     "6",
+     5
+    ]
+   ],
+   "droppable": [],
+   "kept_short": [],
+   "after": {
+    "own_tracks": 3,
+    "own_frames": 400,
+    "frames_gt2": 5,
+    "frames_gt1": 395
+   }
+  },
+  {
+   "recording": "R26_0824_133848",
+   "own_tracks": 5,
+   "own_frames": 395,
+   "frames_gt2": 5,
+   "frames_gt1": 280,
+   "blame": [
+    [
+     "4",
+     5
+    ],
+    [
+     "9",
+     3
+    ],
+    [
+     "10",
+     3
+    ],
+    [
+     "0",
+     2
+    ],
+    [
+     "1",
+     2
+    ]
+   ],
+   "droppable": [],
+   "kept_short": [],
+   "after": {
+    "own_tracks": 5,
+    "own_frames": 395,
+    "frames_gt2": 5,
+    "frames_gt1": 280
+   }
+  },
+  {
+   "recording": "R26_0824_134748",
+   "own_tracks": 8,
+   "own_frames": 382,
+   "frames_gt2": 0,
+   "frames_gt1": 194,
+   "blame": [],
+   "droppable": [],
+   "kept_short": [],
+   "after": {
+    "own_tracks": 8,
+    "own_frames": 382,
+    "frames_gt2": 0,
+    "frames_gt1": 194
+   }
+  },
+  {
+   "recording": "R26_0824_143303",
+   "own_tracks": 2,
+   "own_frames": 400,
+   "frames_gt2": 0,
+   "frames_gt1": 374,
+   "blame": [],
+   "droppable": [],
+   "kept_short": [],
+   "after": {
+    "own_tracks": 2,
+    "own_frames": 400,
+    "frames_gt2": 0,
+    "frames_gt1": 374
+   }
+  },
+  {
+   "recording": "R26_0824_145525",
+   "own_tracks": 2,
+   "own_frames": 400,
+   "frames_gt2": 0,
+   "frames_gt1": 400,
+   "blame": [],
+   "droppable": [],
+   "kept_short": [],
+   "after": {
+    "own_tracks": 2,
+    "own_frames": 400,
+    "frames_gt2": 0,
+    "frames_gt1": 400
+   }
+  },
+  {
+   "recording": "R26_0824_153159",
+   "own_tracks": 7,
+   "own_frames": 233,
+   "frames_gt2": 3,
+   "frames_gt1": 89,
+   "blame": [
+    [
+     "4",
+     3
+    ],
+    [
+     "6",
+     3
+    ],
+    [
+     "7",
+     3
+    ]
+   ],
+   "droppable": [
+    [
+     "5",
+     3,
+     1.0
+    ],
+    [
+     "7",
+     6,
+     1.0
+    ]
+   ],
+   "kept_short": [
+    [
+     "2",
+     5,
+     0.0
+    ]
+   ],
+   "after": {
+    "own_tracks": 5,
+    "own_frames": 233,
+    "frames_gt2": 0,
+    "frames_gt1": 83
+   }
+  },
+  {
+   "recording": "R26_0825_015550",
+   "own_tracks": 7,
+   "own_frames": 251,
+   "frames_gt2": 0,
+   "frames_gt1": 58,
+   "blame": [],
+   "droppable": [],
+   "kept_short": [
+    [
+     "9",
+     5,
+     0.0
+    ]
+   ],
+   "after": {
+    "own_tracks": 7,
+    "own_frames": 251,
+    "frames_gt2": 0,
+    "frames_gt1": 58
+   }
+  },
+  {
+   "recording": "R26_0825_100512",
+   "own_tracks": 8,
+   "own_frames": 226,
+   "frames_gt2": 6,
+   "frames_gt1": 31,
+   "blame": [
+    [
+     "4",
+     6
+    ],
+    [
+     "5",
+     6
+    ],
+    [
+     "6",
+     6
+    ]
+   ],
+   "droppable": [
+    [
+     "1",
+     2,
+     1.0
+    ],
+    [
+     "2",
+     4,
+     1.0
+    ]
+   ],
+   "kept_short": [],
+   "after": {
+    "own_tracks": 6,
+    "own_frames": 226,
+    "frames_gt2": 6,
+    "frames_gt1": 25
+   }
+  },
+  {
+   "recording": "R26_0826_063732",
+   "own_tracks": 13,
+   "own_frames": 358,
+   "frames_gt2": 17,
+   "frames_gt1": 278,
+   "blame": [
+    [
+     "2",
+     13
+    ],
+    [
+     "4",
+     13
+    ],
+    [
+     "3",
+     12
+    ],
+    [
+     "8",
+     4
+    ],
+    [
+     "9",
+     4
+    ],
+    [
+     "10",
+     4
+    ]
+   ],
+   "droppable": [
+    [
+     "5",
+     1,
+     1.0
+    ]
+   ],
+   "kept_short": [
+    [
+     "7",
+     4,
+     0.0
+    ]
+   ],
+   "after": {
+    "own_tracks": 12,
+    "own_frames": 358,
+    "frames_gt2": 16,
+    "frames_gt1": 278
+   }
+  }
+ ]
+}
