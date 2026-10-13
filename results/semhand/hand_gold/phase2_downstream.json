@@ -1,0 +1,141 @@
+{
+ "n_merged": 32,
+ "hands": [
+  {
+   "recording": "R26_0824_121025",
+   "hand": "A",
+   "visible": 18,
+   "groups_before": 2,
+   "groups_after": 2
+  },
+  {
+   "recording": "R26_0824_121025",
+   "hand": "B",
+   "visible": 21,
+   "groups_before": 2,
+   "groups_after": 2
+  },
+  {
+   "recording": "R26_0824_122009",
+   "hand": "A",
+   "visible": 31,
+   "groups_before": 1,
+   "groups_after": 1
+  },
+  {
+   "recording": "R26_0824_122009",
+   "hand": "B",
+   "visible": 32,
+   "groups_before": 1,
+   "groups_after": 1
+  },
+  {
+   "recording": "R26_0824_133848",
+   "hand": "A",
+   "visible": 37,
+   "groups_before": 2,
+   "groups_after": 1
+  },
+  {
+   "recording": "R26_0824_133848",
+   "hand": "B",
+   "visible": 37,
+   "groups_before": 2,
+   "groups_after": 1
+  },
+  {
+   "recording": "R26_0824_134748",
+   "hand": "A",
+   "visible": 34,
+   "groups_before": 2,
+   "groups_after": 1
+  },
+  {
+   "recording": "R26_0824_134748",
+   "hand": "B",
+   "visible": 34,
+   "groups_before": 2,
+   "groups_after": 1
+  },
+  {
+   "recording": "R26_0824_143303",
+   "hand": "A",
+   "visible": 32,
+   "groups_before": 1,
+   "groups_after": 1
+  },
+  {
+   "recording": "R26_0824_143303",
+   "hand": "B",
+   "visible": 32,
+   "groups_before": 1,
+   "groups_after": 1
+  },
+  {
+   "recording": "R26_0824_145525",
+   "hand": "A",
+   "visible": 31,
+   "groups_before": 1,
+   "groups_after": 1
+  },
+  {
+   "recording": "R26_0824_145525",
+   "hand": "B",
+   "visible": 31,
+   "groups_before": 1,
+   "groups_after": 1
+  },
+  {
+   "recording": "R26_0824_153159",
+   "hand": "B",
+   "visible": 24,
+   "groups_before": 3,
+   "groups_after": 3
+  },
+  {
+   "recording": "R26_0825_015550",
+   "hand": "A",
+   "visible": 13,
+   "groups_before": 1,
+   "groups_after": 1
+  },
+  {
+   "recording": "R26_0825_015550",
+   "hand": "B",
+   "visible": 22,
+   "groups_before": 3,
+   "groups_after": 1
+  },
+  {
+   "recording": "R26_0825_100512",
+   "hand": "A",
+   "visible": 17,
+   "groups_before": 4,
+   "groups_after": 3
+  },
+  {
+   "recording": "R26_0825_100512",
+   "hand": "B",
+   "visible": 10,
+   "groups_before": 4,
+   "groups_after": 3
+  },
+  {
+   "recording": "R26_0826_063732",
+   "hand": "A",
+   "visible": 31,
+   "groups_before": 3,
+   "groups_after": 2
+  },
+  {
+   "recording": "R26_0826_063732",
+   "hand": "B",
+   "visible": 32,
+   "groups_before": 5,
+   "groups_after": 3
+  }
+ ],
+ "single_before": 7,
+ "single_after": 12,
+ "total": 19
+}
