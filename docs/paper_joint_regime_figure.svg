@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 580" width="820" height="580" font-family="Helvetica, Arial, sans-serif">
+<rect width="820" height="580" fill="#ffffff"/>
+<text x="40" y="34" font-size="16" font-weight="700" fill="#16181d">A transition prior needs recurrence and branching at once.</text>
+<text x="40" y="54" font-size="12" fill="#5b6270">每个点一个 scenario，同一个 classify、同一套严格前缀。点面积 = 决策数。</text>
+<text x="40" y="74" font-size="12" fill="#5b6270">倾向是中等强度，Spearman rho = -0.535（16 个 keystep scenario）。</text>
+<text x="40" y="92" font-size="11" fill="#8a4b2a">注意：y 轴依赖窗口单位（这里 180s）。几乎每个 scenario 的 |S|&#8805;2 都随窗口单调上升，缩到 60s / 90s 后无点越过两条门槛；x 轴不依赖窗口。</text>
+<rect x="405.0" y="110.0" width="295.0" height="212.5" fill="#eaf3ea"/>
+<text x="692.0" y="128.0" font-size="11" font-weight="700" fill="#4a7a52" text-anchor="end">期望区间：命中 &#8805;50% 且 |S|&#8805;2 &#8805;3%</text>
+<line x1="110" y1="450" x2="700" y2="450" stroke="#16181d" stroke-width="1.4"/>
+<line x1="110" y1="450" x2="110" y2="110" stroke="#16181d" stroke-width="1.4"/>
+<line x1="110.0" y1="450" x2="110.0" y2="455" stroke="#16181d"/>
+<text x="110.0" y="470" font-size="11" fill="#5b6270" text-anchor="middle">0</text>
+<line x1="228.0" y1="450" x2="228.0" y2="455" stroke="#16181d"/>
+<text x="228.0" y="470" font-size="11" fill="#5b6270" text-anchor="middle">20</text>
+<line x1="346.0" y1="450" x2="346.0" y2="455" stroke="#16181d"/>
+<text x="346.0" y="470" font-size="11" fill="#5b6270" text-anchor="middle">40</text>
+<line x1="464.0" y1="450" x2="464.0" y2="455" stroke="#16181d"/>
+<text x="464.0" y="470" font-size="11" fill="#5b6270" text-anchor="middle">60</text>
+<line x1="582.0" y1="450" x2="582.0" y2="455" stroke="#16181d"/>
+<text x="582.0" y="470" font-size="11" fill="#5b6270" text-anchor="middle">80</text>
+<line x1="700.0" y1="450" x2="700.0" y2="455" stroke="#16181d"/>
+<text x="700.0" y="470" font-size="11" fill="#5b6270" text-anchor="middle">100</text>
+<line x1="105" y1="450.0" x2="110" y2="450.0" stroke="#16181d"/>
+<text x="101" y="454.0" font-size="11" fill="#5b6270" text-anchor="end">0</text>
+<line x1="105" y1="407.5" x2="110" y2="407.5" stroke="#16181d"/>
+<text x="101" y="411.5" font-size="11" fill="#5b6270" text-anchor="end">1</text>
+<line x1="105" y1="365.0" x2="110" y2="365.0" stroke="#16181d"/>
+<text x="101" y="369.0" font-size="11" fill="#5b6270" text-anchor="end">2</text>
+<line x1="105" y1="322.5" x2="110" y2="322.5" stroke="#16181d"/>
+<text x="101" y="326.5" font-size="11" fill="#5b6270" text-anchor="end">3</text>
+<line x1="105" y1="280.0" x2="110" y2="280.0" stroke="#16181d"/>
+<text x="101" y="284.0" font-size="11" fill="#5b6270" text-anchor="end">4</text>
+<line x1="105" y1="237.5" x2="110" y2="237.5" stroke="#16181d"/>
+<text x="101" y="241.5" font-size="11" fill="#5b6270" text-anchor="end">5</text>
+<line x1="105" y1="195.0" x2="110" y2="195.0" stroke="#16181d"/>
+<text x="101" y="199.0" font-size="11" fill="#5b6270" text-anchor="end">6</text>
+<line x1="105" y1="152.5" x2="110" y2="152.5" stroke="#16181d"/>
+<text x="101" y="156.5" font-size="11" fill="#5b6270" text-anchor="end">7</text>
+<line x1="105" y1="110.0" x2="110" y2="110.0" stroke="#16181d"/>
+<text x="101" y="114.0" font-size="11" fill="#5b6270" text-anchor="end">8</text>
+<text x="405.0" y="494" font-size="13" font-weight="600" fill="#16181d" text-anchor="middle">状态复现：S 非空时 gold 真在可达集里的比例（%）</text>
+<text x="405" y="512" font-size="11" fill="#5b6270" text-anchor="middle">不是 P(n_t = n_{t-1}) —— 那是原地不动，不是回到做过的状态</text>
+<text x="30" y="280" font-size="13" font-weight="600" fill="#16181d" text-anchor="middle" transform="rotate(-90 30 280)">分叉机会：|S|&#8805;2 占决策的比例（%）</text>
+<line x1="405.0" y1="110" x2="405.0" y2="450" stroke="#aeb4c0" stroke-dasharray="4 4"/>
+<line x1="110" y1="322.5" x2="700" y2="322.5" stroke="#aeb4c0" stroke-dasharray="4 4"/>
+<circle cx="178.6" cy="260.2" r="13.0" fill="#a4453f" fill-opacity="0.55" stroke="#a4453f" stroke-width="1"/>
+<circle cx="221.6" cy="179.7" r="11.7" fill="#a4453f" fill-opacity="0.55" stroke="#a4453f" stroke-width="1"/>
+<circle cx="186.4" cy="335.7" r="11.0" fill="#a4453f" fill-opacity="0.55" stroke="#a4453f" stroke-width="1"/>
+<circle cx="226.6" cy="150.5" r="10.8" fill="#a4453f" fill-opacity="0.55" stroke="#a4453f" stroke-width="1"/>
+<circle cx="213.0" cy="288.3" r="9.3" fill="#a4453f" fill-opacity="0.55" stroke="#a4453f" stroke-width="1"/>
+<circle cx="257.5" cy="430.5" r="8.9" fill="#a4453f" fill-opacity="0.55" stroke="#a4453f" stroke-width="1"/>
+<circle cx="448.4" cy="338.4" r="8.8" fill="#a4453f" fill-opacity="0.55" stroke="#a4453f" stroke-width="1"/>
+<text x="434.5" y="342.4" font-size="11" fill="#a4453f" text-anchor="end">Making Cucumber &amp; Tomato Salad</text>
+<circle cx="300.0" cy="277.5" r="8.4" fill="#a4453f" fill-opacity="0.55" stroke="#a4453f" stroke-width="1"/>
+<circle cx="260.6" cy="292.0" r="7.9" fill="#a4453f" fill-opacity="0.55" stroke="#a4453f" stroke-width="1"/>
+<circle cx="186.6" cy="221.6" r="7.5" fill="#a4453f" fill-opacity="0.55" stroke="#a4453f" stroke-width="1"/>
+<circle cx="674.1" cy="304.8" r="7.0" fill="#2f5d8c" fill-opacity="0.80" stroke="#2f5d8c" stroke-width="1"/>
+<text x="662.1" y="308.8" font-size="11" fill="#2f5d8c" text-anchor="end">内部 release（人工合同）</text>
+<circle cx="270.0" cy="383.2" r="7.0" fill="#a4453f" fill-opacity="0.55" stroke="#a4453f" stroke-width="1"/>
+<circle cx="275.9" cy="356.2" r="7.0" fill="#a4453f" fill-opacity="0.55" stroke="#a4453f" stroke-width="1"/>
+<circle cx="565.9" cy="315.5" r="7.0" fill="#a4453f" fill-opacity="0.55" stroke="#a4453f" stroke-width="1"/>
+<text x="553.9" y="319.5" font-size="11" fill="#a4453f" text-anchor="end">First Aid - CPR</text>
+<circle cx="468.2" cy="419.6" r="6.0" fill="#a4453f" fill-opacity="0.55" stroke="#a4453f" stroke-width="1"/>
+<text x="457.2" y="423.6" font-size="11" fill="#a4453f" text-anchor="end">Clean and Lubricate the Chain</text>
+<circle cx="427.7" cy="365.8" r="5.7" fill="#a4453f" fill-opacity="0.55" stroke="#a4453f" stroke-width="1"/>
+<text x="417.0" y="369.8" font-size="11" fill="#a4453f" text-anchor="end">Cooking Pasta</text>
+<circle cx="306.7" cy="400.6" r="5.6" fill="#a4453f" fill-opacity="0.55" stroke="#a4453f" stroke-width="1"/>
+<circle cx="200.8" cy="110.0" r="5.2" fill="#6a7a3a" fill-opacity="0.80" stroke="#6a7a3a" stroke-width="1"/>
+<text x="211.0" y="114.0" font-size="11" fill="#6a7a3a" text-anchor="start">人工 修车（动作级）</text>
+<circle cx="110.0" cy="450.0" r="5.2" fill="#6a7a3a" fill-opacity="0.80" stroke="#6a7a3a" stroke-width="1"/>
+<text x="120.2" y="454.0" font-size="11" fill="#6a7a3a" text-anchor="start">人工 烹饪（活动级）</text>
+<circle cx="124" cy="340" r="6" fill="#a4453f" fill-opacity="0.55" stroke="#a4453f"/>
+<text x="136" y="344" font-size="11" fill="#5b6270">Ego-Exo4D scenario（keystep 粒度）</text>
+<circle cx="124" cy="360" r="6" fill="#2f5d8c" fill-opacity="0.80" stroke="#2f5d8c"/>
+<text x="136" y="364" font-size="11" fill="#5b6270">内部 release（人工合同粒度）</text>
+<circle cx="124" cy="380" r="6" fill="#6a7a3a" fill-opacity="0.80" stroke="#6a7a3a"/>
+<text x="136" y="384" font-size="11" fill="#5b6270">人工粗标批次</text>
+<text x="40" y="568" font-size="10" fill="#8a8f9a">数据 results/auditor/b2_egoexo/paper_regime_points.json，由 paper_regime_scatter.py 测量、paper_regime_figure.py 生成。窗口 180s，scenario 少于 10 个窗口的不画。</text>
+</svg>

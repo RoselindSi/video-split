@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 520" width="820" height="520" font-family="Helvetica, Arial, sans-serif">
+<rect width="820" height="520" fill="#ffffff"/>
+<text x="40" y="34" font-size="16" font-weight="700" fill="#16181d">Finer grain manufactures a transport primitive, not branching.</text>
+<text x="40" y="54" font-size="12" fill="#5b6270">B2 第三轮，修车族 10 个窗口，动作级粒度 + 强制 id 复用。</text>
+<line x1="110.0" y1="300.0" x2="110.0" y2="120.0" stroke="#16181d" stroke-width="1.3"/>
+<line x1="105.0" y1="300.0" x2="110.0" y2="300.0" stroke="#16181d"/>
+<text x="102.0" y="303.0" font-size="10" fill="#5b6270" text-anchor="end">0.0</text>
+<line x1="105.0" y1="270.0" x2="110.0" y2="270.0" stroke="#16181d"/>
+<text x="102.0" y="273.0" font-size="10" fill="#5b6270" text-anchor="end">0.1</text>
+<line x1="105.0" y1="240.0" x2="110.0" y2="240.0" stroke="#16181d"/>
+<text x="102.0" y="243.0" font-size="10" fill="#5b6270" text-anchor="end">0.2</text>
+<line x1="105.0" y1="210.0" x2="110.0" y2="210.0" stroke="#16181d"/>
+<text x="102.0" y="213.0" font-size="10" fill="#5b6270" text-anchor="end">0.3</text>
+<line x1="105.0" y1="180.0" x2="110.0" y2="180.0" stroke="#16181d"/>
+<text x="102.0" y="183.0" font-size="10" fill="#5b6270" text-anchor="end">0.4</text>
+<line x1="105.0" y1="150.0" x2="110.0" y2="150.0" stroke="#16181d"/>
+<text x="102.0" y="153.0" font-size="10" fill="#5b6270" text-anchor="end">0.5</text>
+<line x1="105.0" y1="120.0" x2="110.0" y2="120.0" stroke="#16181d"/>
+<text x="102.0" y="123.0" font-size="10" fill="#5b6270" text-anchor="end">0.6</text>
+<text x="64.0" y="210.0" font-size="12" font-weight="600" fill="#16181d" text-anchor="middle" transform="rotate(-90 64.0 210.0)">G-branch / 窗口</text>
+<line x1="110" y1="300" x2="410" y2="300" stroke="#16181d" stroke-width="1.3"/>
+<rect x="134.0" y="300.0" width="70" height="0.0" fill="#8a8f9a"/>
+<text x="169.0" y="294.0" font-size="11" fill="#5b6270" text-anchor="middle">0.00</text>
+<text x="169.0" y="318" font-size="11" fill="#16181d" text-anchor="middle">keystep 粒度</text>
+<rect x="230.0" y="150.0" width="70" height="150.0" fill="#a4453f"/>
+<text x="265.0" y="144.0" font-size="11" fill="#5b6270" text-anchor="middle">0.50</text>
+<text x="265.0" y="318" font-size="11" fill="#16181d" text-anchor="middle">① 按标注原样</text>
+<rect x="326.0" y="300.0" width="70" height="0.0" fill="#4a7a52"/>
+<text x="361.0" y="294.0" font-size="11" fill="#5b6270" text-anchor="middle">0.00</text>
+<text x="361.0" y="318" font-size="11" fill="#16181d" text-anchor="middle">去掉纯取得工具状态</text>
+<line x1="110" y1="150.0" x2="410" y2="150.0" stroke="#aeb4c0" stroke-dasharray="4 3"/>
+<text x="412" y="153.0" font-size="10" fill="#5b6270">冻结判据宽端 0.5</text>
+<text x="510" y="106" font-size="13" font-weight="700" fill="#16181d">G-branch 的前提：某状态被访问 &#8805;3 次</text>
+<rect x="510.0" y="300.0" width="20.0" height="0.0" fill="#a4453f"/>
+<rect x="532.0" y="288.0" width="20.0" height="12.0" fill="#8a8f9a"/>
+<text x="543.0" y="284.0" font-size="9" fill="#5b6270" text-anchor="middle">1</text>
+<text x="532.0" y="318" font-size="11" fill="#16181d" text-anchor="middle">0 次</text>
+<rect x="562.0" y="228.0" width="20.0" height="72.0" fill="#a4453f"/>
+<text x="573.0" y="224.0" font-size="9" fill="#5b6270" text-anchor="middle">6</text>
+<rect x="584.0" y="264.0" width="20.0" height="36.0" fill="#8a8f9a"/>
+<text x="595.0" y="260.0" font-size="9" fill="#5b6270" text-anchor="middle">3</text>
+<text x="584.0" y="318" font-size="11" fill="#16181d" text-anchor="middle">1 次</text>
+<rect x="614.0" y="252.0" width="20.0" height="48.0" fill="#a4453f"/>
+<text x="625.0" y="248.0" font-size="9" fill="#5b6270" text-anchor="middle">4</text>
+<rect x="636.0" y="276.0" width="20.0" height="24.0" fill="#8a8f9a"/>
+<text x="647.0" y="272.0" font-size="9" fill="#5b6270" text-anchor="middle">2</text>
+<text x="636.0" y="318" font-size="11" fill="#16181d" text-anchor="middle">2 次</text>
+<rect x="666.0" y="300.0" width="20.0" height="0.0" fill="#a4453f"/>
+<rect x="688.0" y="264.0" width="20.0" height="36.0" fill="#8a8f9a"/>
+<text x="699.0" y="260.0" font-size="9" fill="#5b6270" text-anchor="middle">3</text>
+<text x="688.0" y="318" font-size="11" fill="#16181d" text-anchor="middle">3 次</text>
+<rect x="718.0" y="300.0" width="20.0" height="0.0" fill="#a4453f"/>
+<rect x="740.0" y="288.0" width="20.0" height="12.0" fill="#8a8f9a"/>
+<text x="751.0" y="284.0" font-size="9" fill="#5b6270" text-anchor="middle">1</text>
+<text x="740.0" y="318" font-size="11" fill="#16181d" text-anchor="middle">4 次</text>
+<line x1="510" y1="300" x2="770" y2="300" stroke="#16181d" stroke-width="1.3"/>
+<text x="510" y="336" font-size="10" fill="#5b6270">纵向 = 录像条数</text>
+<rect x="510" y="119" width="11" height="11" fill="#a4453f"/>
+<text x="527" y="128" font-size="11" fill="#5b6270">真实状态的最大访问次数</text>
+<rect x="510" y="135" width="11" height="11" fill="#8a8f9a"/>
+<text x="527" y="144" font-size="11" fill="#5b6270">取得类状态的最大访问次数</text>
+<text x="110" y="372" font-size="12" font-weight="600" fill="#8a4b2a">真实状态达到 3 次的录像：0 / 10 —— 为 0 则 G-branch 不可能由真实状态产生</text>
+<text x="110" y="392" font-size="12" fill="#16181d">如实计的 5 个 G-branch 里，前驱是「拿工具」的占 5 个（100%）</text>
+<text x="110" y="414" font-size="11" fill="#8a4b2a">产出率可以靠把过渡动作切得更碎无限刷高，所以它不能作为「域里有 branching」的证据</text>
+<text x="40" y="508" font-size="10" fill="#8a8f9a">数据 b2_bike_fold_r1.json。折叠规则：状态 = 作用于什么 + 怎么作用；只为取得手段而存在的移动不建状态。</text>
+</svg>

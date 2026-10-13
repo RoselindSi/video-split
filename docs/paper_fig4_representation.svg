@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 520" width="820" height="520" font-family="Helvetica, Arial, sans-serif">
+<rect width="820" height="520" fill="#ffffff"/>
+<text x="40" y="34" font-size="16" font-weight="700" fill="#16181d">Serialising history into language keeps the cost and loses the structure.</text>
+<text x="40" y="54" font-size="12" fill="#5b6270">E2 表示消融：长度与结构解耦之后的效应，外加两个内容无关对照。</text>
+<line x1="440.0" y1="110" x2="440.0" y2="270" stroke="#16181d" stroke-width="1.3"/>
+<text x="440.0" y="104" font-size="10" fill="#5b6270" text-anchor="middle">0</text>
+<rect x="304.8" y="122.0" width="135.2" height="16" fill="#a4453f" fill-opacity="0.85"/>
+<text x="250.0" y="134.0" font-size="12" fill="#16181d" text-anchor="end">上下文长度本身</text>
+<text x="446.0" y="134.0" font-size="11" fill="#5b6270">-16.9 [-25.3, -9.7] </text>
+<line x1="237.6" y1="130.0" x2="362.4" y2="130.0" stroke="#a4453f" stroke-width="1"/>
+<rect x="424.0" y="156.0" width="16.0" height="16" fill="#a4453f" fill-opacity="0.85"/>
+<text x="250.0" y="168.0" font-size="12" fill="#16181d" text-anchor="end">结构（长度与排版已对齐）</text>
+<text x="446.0" y="168.0" font-size="11" fill="#5b6270">-2.0 [-4.5, +0.7] （不显著）</text>
+<line x1="404.0" y1="164.0" x2="445.6" y2="164.0" stroke="#a4453f" stroke-width="1"/>
+<rect x="440.0" y="190.0" width="5.6" height="16" fill="#4a7a52" fill-opacity="0.85"/>
+<text x="250.0" y="202.0" font-size="12" fill="#16181d" text-anchor="end">标签随机置换</text>
+<text x="451.6" y="202.0" font-size="11" fill="#5b6270">+0.7 [-1.3, +2.7] （不显著）</text>
+<line x1="429.6" y1="198.0" x2="461.6" y2="198.0" stroke="#4a7a52" stroke-width="1"/>
+<rect x="440.0" y="224.0" width="20.8" height="16" fill="#4a7a52" fill-opacity="0.85"/>
+<text x="250.0" y="236.0" font-size="12" fill="#16181d" text-anchor="end">无意义占位符</text>
+<text x="466.8" y="236.0" font-size="11" fill="#5b6270">+2.6 [-2.3, +7.1] （不显著）</text>
+<line x1="421.6" y1="232.0" x2="496.8" y2="232.0" stroke="#4a7a52" stroke-width="1"/>
+<text x="70" y="300" font-size="13" font-weight="700" fill="#16181d">一处混淆的更正</text>
+<text x="70" y="322" font-size="12" fill="#16181d">M2raw 最初 +11.4 [+4.6, +18.8] → 加入对照臂后 -3.9 [-8.9, +1.3]（跨零）</text>
+<text x="70" y="342" font-size="11" fill="#8a4b2a">M2raw 的字典用了 canonical（oracle）名，等于泄漏标签；M2rawd 把字典也换成原始措辞之后，身份效应消失</text>
+<text x="70" y="374" font-size="12" font-weight="600" fill="#4a7a52">把交互历史序列化成语言上下文，不保留它的有用结构：长度代价 −16.9% 显著，而长度与排版对齐后的结构净效应 −2.0% 不显著；两个内容无关对照都不显著，唯一显著的内容效应来自 oracle 词汇（+7.8%），那是标签泄漏。</text>
+<text x="40" y="508" font-size="10" fill="#8a8f9a">数据 paper_fig4_e2_measured.json，n=307 / 49 条视频，从服务器逐条 jsonl 重新评分（零模型调用）</text>
+</svg>

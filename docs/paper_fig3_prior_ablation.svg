@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 520" width="820" height="520" font-family="Helvetica, Arial, sans-serif">
+<rect width="820" height="520" fill="#ffffff"/>
+<text x="40" y="34" font-size="16" font-weight="700" fill="#16181d">The signal is successor-set membership, not degree or frequency.</text>
+<text x="40" y="54" font-size="12" fill="#5b6270">纯先验排序，无视觉模型、无语言模型。n=116 决策 / 25 录像。top-1 是随机打破平局下的期望值。</text>
+<line x1="110.0" y1="360.0" x2="110.0" y2="120.0" stroke="#16181d" stroke-width="1.3"/>
+<line x1="105.0" y1="360.0" x2="110.0" y2="360.0" stroke="#16181d"/>
+<text x="102.0" y="363.0" font-size="10" fill="#5b6270" text-anchor="end">0</text>
+<line x1="105.0" y1="312.0" x2="110.0" y2="312.0" stroke="#16181d"/>
+<text x="102.0" y="315.0" font-size="10" fill="#5b6270" text-anchor="end">20</text>
+<line x1="105.0" y1="264.0" x2="110.0" y2="264.0" stroke="#16181d"/>
+<text x="102.0" y="267.0" font-size="10" fill="#5b6270" text-anchor="end">40</text>
+<line x1="105.0" y1="216.0" x2="110.0" y2="216.0" stroke="#16181d"/>
+<text x="102.0" y="219.0" font-size="10" fill="#5b6270" text-anchor="end">60</text>
+<line x1="105.0" y1="168.0" x2="110.0" y2="168.0" stroke="#16181d"/>
+<text x="102.0" y="171.0" font-size="10" fill="#5b6270" text-anchor="end">80</text>
+<line x1="105.0" y1="120.0" x2="110.0" y2="120.0" stroke="#16181d"/>
+<text x="102.0" y="123.0" font-size="10" fill="#5b6270" text-anchor="end">100</text>
+<text x="64.0" y="240.0" font-size="12" font-weight="600" fill="#16181d" text-anchor="middle" transform="rotate(-90 64.0 240.0)">top-1（%）</text>
+<line x1="110" y1="360" x2="650" y2="360" stroke="#16181d" stroke-width="1.3"/>
+<rect x="137.0" y="259.7" width="41.9" height="100.3" fill="#8a8f9a"/>
+<text x="157.9" y="254.7" font-size="10" fill="#5b6270" text-anchor="middle">41.8</text>
+<rect x="182.9" y="286.0" width="41.9" height="74.0" fill="#9a7f3a"/>
+<text x="203.9" y="281.0" font-size="10" fill="#5b6270" text-anchor="middle">30.8</text>
+<rect x="228.8" y="166.0" width="41.9" height="194.0" fill="#a4453f"/>
+<text x="249.8" y="161.0" font-size="10" fill="#5b6270" text-anchor="middle">80.8</text>
+<rect x="274.7" y="254.4" width="41.9" height="105.6" fill="#2f5d8c"/>
+<text x="295.7" y="249.4" font-size="10" fill="#5b6270" text-anchor="middle">44.0</text>
+<text x="245.0" y="380" font-size="12" font-weight="600" fill="#16181d" text-anchor="middle">全部决策（n=116）</text>
+<text x="245.0" y="398" font-size="11" fill="#a4453f" text-anchor="middle">Rt − Rs = +36.8% CI [+21.0, +49.5]</text>
+<rect x="407.0" y="260.0" width="41.9" height="100.0" fill="#8a8f9a"/>
+<text x="427.9" y="255.0" font-size="10" fill="#5b6270" text-anchor="middle">41.7</text>
+<rect x="452.9" y="312.6" width="41.9" height="47.4" fill="#9a7f3a"/>
+<text x="473.8" y="307.6" font-size="10" fill="#5b6270" text-anchor="middle">19.8</text>
+<rect x="498.8" y="125.9" width="41.9" height="234.1" fill="#a4453f"/>
+<text x="519.8" y="120.9" font-size="10" fill="#5b6270" text-anchor="middle">97.5</text>
+<rect x="544.7" y="255.3" width="41.9" height="104.7" fill="#2f5d8c"/>
+<text x="565.7" y="250.3" font-size="10" fill="#5b6270" text-anchor="middle">43.6</text>
+<text x="515.0" y="380" font-size="12" font-weight="600" fill="#16181d" text-anchor="middle">只取约束非空的（n=81）</text>
+<text x="515.0" y="398" font-size="11" fill="#a4453f" text-anchor="middle">Rt − Rs = +53.9% CI [+39.2, +70.7]</text>
+<rect x="124" y="125" width="11" height="11" fill="#8a8f9a"/>
+<text x="141" y="134" font-size="11" fill="#5b6270">均匀</text>
+<rect x="124" y="141" width="11" height="11" fill="#9a7f3a"/>
+<text x="141" y="150" font-size="11" fill="#5b6270">节点频率</text>
+<rect x="124" y="157" width="11" height="11" fill="#a4453f"/>
+<text x="141" y="166" font-size="11" fill="#5b6270">真可达集</text>
+<rect x="124" y="173" width="11" height="11" fill="#2f5d8c"/>
+<text x="141" y="182" font-size="11" fill="#5b6270">度匹配打乱</text>
+<text x="110" y="436" font-size="12" fill="#16181d">度匹配打乱之后一点不剩：Rs − U = +2.2% CI [-7.1, +11.3]，跨零</text>
+<text x="110" y="456" font-size="12" fill="#16181d">频率先验低于均匀：F − U = -11.0% —— 转移频次的贡献不成立</text>
+<text x="110" y="478" font-size="12" font-weight="600" fill="#4a7a52">约束真的收窄候选时，可达集命中 97.5% —— 稀缺但不空洞</text>
+<text x="40" y="508" font-size="10" fill="#8a8f9a">数据 interaction_graph_g1b_summary.json。注意：均匀先验 41.8% 不是视觉基线 —— 视觉基线是 ladder 的 0.730（n=322），这里没有视觉模型。</text>
+</svg>
