@@ -113,6 +113,13 @@ def build(gold_path, pre_path, window, dist_factor, min_iou=0.3):
                 "gap": gap,
                 "d_plain": round(((bx - cx) ** 2 + (by - cy) ** 2) ** 0.5, 1),
                 "d_motion": round(((bx - px) ** 2 + (by - py) ** 2) ** 0.5, 1),
+                # 归一化必须留在产物里：距离门是 d <= 3.0*width_a，是**相对**框宽
+                # 的阈值，所以框大的录像允许更大的绝对距离。直接比绝对距离，
+                # 「哪条录像正例多」这个构成差异会被当成区分力 —— pooled AUC
+                # 0.879 高过决策点内 0.821 就是这么来的，是录像间捷径。
+                "width_a": round(wa, 1),
+                "s_plain": round(((bx - cx) ** 2 + (by - cy) ** 2) ** 0.5 / wa, 3),
+                "s_motion": round(((bx - px) ** 2 + (by - py) ** 2) ** 0.5 / wa, 3),
                 "log_scale": round(__import__("math").log(wb / wa), 3),
                 "n_cands": len(cands),
             })
