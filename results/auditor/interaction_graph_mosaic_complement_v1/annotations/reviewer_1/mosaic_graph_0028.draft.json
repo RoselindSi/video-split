@@ -1,0 +1,164 @@
+{
+  "schema_version": "interaction_graph_timeline_v1",
+  "video_id": "mosaic_graph_0028",
+  "events": [
+    {
+      "event_id": "A",
+      "description": "在衣服上缝爱心"
+    },
+    {
+      "event_id": "B",
+      "description": "特殊事件"
+    },
+    {
+      "event_id": "C",
+      "description": "处理爱心的收尾工作"
+    },
+    {
+      "event_id": "D",
+      "description": "拿笔在衣服上为下一个图案打草稿"
+    }
+  ],
+  "segments": [
+    {
+      "start_s": 0.0,
+      "end_s": 43.4,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 43.4,
+      "end_s": 64.3,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": "看手机"
+    },
+    {
+      "start_s": 64.3,
+      "end_s": 82.1,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 82.1,
+      "end_s": 120.0,
+      "event_id": "D",
+      "repeats_within_segment": false,
+      "note": ""
+    }
+  ],
+  "confirmed_full_video": true,
+  "manifest_sha256": "13ec96fbbfb20eba2cc431ddb116eaa964d95590461b309ef4e3430a91446700",
+  "annotator": "reviewer_1",
+  "saved_at": "2026-09-20T10:58:32.460271+00:00",
+  "status": "draft",
+  "graph": {
+    "nodes": [
+      {
+        "event_id": "A",
+        "description": "在衣服上缝爱心",
+        "segment_count": 1,
+        "total_duration_s": 43.4,
+        "segment_indices": [
+          1
+        ]
+      },
+      {
+        "event_id": "B",
+        "description": "特殊事件",
+        "segment_count": 1,
+        "total_duration_s": 20.9,
+        "segment_indices": [
+          2
+        ]
+      },
+      {
+        "event_id": "C",
+        "description": "处理爱心的收尾工作",
+        "segment_count": 1,
+        "total_duration_s": 17.8,
+        "segment_indices": [
+          3
+        ]
+      },
+      {
+        "event_id": "D",
+        "description": "拿笔在衣服上为下一个图案打草稿",
+        "segment_count": 1,
+        "total_duration_s": 37.9,
+        "segment_indices": [
+          4
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "source": "A",
+        "target": "B",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          43.4
+        ]
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          64.3
+        ]
+      },
+      {
+        "source": "C",
+        "target": "D",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          82.1
+        ]
+      }
+    ],
+    "edge_occurrences": [
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 43.4,
+        "from_segment": 1,
+        "to_segment": 2
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 64.3,
+        "from_segment": 2,
+        "to_segment": 3
+      },
+      {
+        "source": "C",
+        "target": "D",
+        "kind": "transition",
+        "at_s": 82.1,
+        "from_segment": 3,
+        "to_segment": 4
+      }
+    ],
+    "event_sequence": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ]
+  }
+}

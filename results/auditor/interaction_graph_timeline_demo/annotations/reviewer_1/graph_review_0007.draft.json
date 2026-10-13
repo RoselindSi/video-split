@@ -1,0 +1,310 @@
+{
+  "schema_version": "interaction_graph_timeline_v1",
+  "video_id": "graph_review_0007",
+  "events": [
+    {
+      "event_id": "A",
+      "description": "团纸巾扔垃圾桶"
+    },
+    {
+      "event_id": "B",
+      "description": "抽纸巾"
+    },
+    {
+      "event_id": "C",
+      "description": "叠纸巾"
+    },
+    {
+      "event_id": "D",
+      "description": "擦桌子"
+    }
+  ],
+  "segments": [
+    {
+      "start_s": 0.0,
+      "end_s": 3.2,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 3.2,
+      "end_s": 5.5,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 5.5,
+      "end_s": 8.4,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 8.4,
+      "end_s": 46.8,
+      "event_id": "D",
+      "repeats_within_segment": true,
+      "note": ""
+    },
+    {
+      "start_s": 46.8,
+      "end_s": 49.8,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 49.8,
+      "end_s": 52.6,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 52.6,
+      "end_s": 54.8,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 54.8,
+      "end_s": 97.8,
+      "event_id": "D",
+      "repeats_within_segment": true,
+      "note": ""
+    },
+    {
+      "start_s": 97.8,
+      "end_s": 101.3,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 101.3,
+      "end_s": 103.0,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    }
+  ],
+  "confirmed_full_video": true,
+  "manifest_sha256": "158a3af90dc1e7636fbcb54fd483b4113259e65dc5c60b0bc61dd9c39b4c9b29",
+  "annotator": "reviewer_1",
+  "saved_at": "2026-09-19T06:16:50.122614+00:00",
+  "status": "draft",
+  "graph": {
+    "nodes": [
+      {
+        "event_id": "A",
+        "description": "团纸巾扔垃圾桶",
+        "segment_count": 3,
+        "total_duration_s": 9.7,
+        "segment_indices": [
+          1,
+          5,
+          9
+        ]
+      },
+      {
+        "event_id": "B",
+        "description": "抽纸巾",
+        "segment_count": 3,
+        "total_duration_s": 6.8,
+        "segment_indices": [
+          2,
+          6,
+          10
+        ]
+      },
+      {
+        "event_id": "C",
+        "description": "叠纸巾",
+        "segment_count": 2,
+        "total_duration_s": 5.1,
+        "segment_indices": [
+          3,
+          7
+        ]
+      },
+      {
+        "event_id": "D",
+        "description": "擦桌子",
+        "segment_count": 2,
+        "total_duration_s": 81.4,
+        "segment_indices": [
+          4,
+          8
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "source": "A",
+        "target": "B",
+        "count": 3,
+        "kinds": {
+          "transition": 3
+        },
+        "times_s": [
+          3.2,
+          49.8,
+          101.3
+        ]
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "count": 2,
+        "kinds": {
+          "transition": 2
+        },
+        "times_s": [
+          5.5,
+          52.6
+        ]
+      },
+      {
+        "source": "C",
+        "target": "D",
+        "count": 2,
+        "kinds": {
+          "transition": 2
+        },
+        "times_s": [
+          8.4,
+          54.8
+        ]
+      },
+      {
+        "source": "D",
+        "target": "A",
+        "count": 2,
+        "kinds": {
+          "transition": 2
+        },
+        "times_s": [
+          46.8,
+          97.8
+        ]
+      },
+      {
+        "source": "D",
+        "target": "D",
+        "count": 2,
+        "kinds": {
+          "internal_repeat": 2
+        },
+        "times_s": [
+          8.4,
+          54.8
+        ]
+      }
+    ],
+    "edge_occurrences": [
+      {
+        "source": "D",
+        "target": "D",
+        "kind": "internal_repeat",
+        "at_s": 8.4,
+        "from_segment": 4,
+        "to_segment": 4
+      },
+      {
+        "source": "D",
+        "target": "D",
+        "kind": "internal_repeat",
+        "at_s": 54.8,
+        "from_segment": 8,
+        "to_segment": 8
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 3.2,
+        "from_segment": 1,
+        "to_segment": 2
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 5.5,
+        "from_segment": 2,
+        "to_segment": 3
+      },
+      {
+        "source": "C",
+        "target": "D",
+        "kind": "transition",
+        "at_s": 8.4,
+        "from_segment": 3,
+        "to_segment": 4
+      },
+      {
+        "source": "D",
+        "target": "A",
+        "kind": "transition",
+        "at_s": 46.8,
+        "from_segment": 4,
+        "to_segment": 5
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 49.8,
+        "from_segment": 5,
+        "to_segment": 6
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 52.6,
+        "from_segment": 6,
+        "to_segment": 7
+      },
+      {
+        "source": "C",
+        "target": "D",
+        "kind": "transition",
+        "at_s": 54.8,
+        "from_segment": 7,
+        "to_segment": 8
+      },
+      {
+        "source": "D",
+        "target": "A",
+        "kind": "transition",
+        "at_s": 97.8,
+        "from_segment": 8,
+        "to_segment": 9
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 101.3,
+        "from_segment": 9,
+        "to_segment": 10
+      }
+    ],
+    "event_sequence": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "A",
+      "B",
+      "C",
+      "D",
+      "A",
+      "B"
+    ]
+  }
+}

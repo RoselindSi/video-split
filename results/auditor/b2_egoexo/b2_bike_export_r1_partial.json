@@ -1,0 +1,285 @@
+{
+  "schema_version": "b2_coarse_export_v1",
+  "batch_id": "egoexo_b2_bike_action",
+  "manifest_sha256": "76aba32f8c8c",
+  "annotator": "r1",
+  "n_videos": 30,
+  "note": "30 窗口里 10 条 status=final，其余 20 条为空草稿（revision 0）。按 docs/branching_pilot_b2_round3_result.md 的结论停标，不再续标。",
+  "videos": [
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "cmu_bike02_3_w000129",
+      "duration_s": 74.8,
+      "codes": [
+        { "id": "A", "name": "拿充气枪" },
+        { "id": "B", "name": "拿充气枪给轮胎充气" },
+        { "id": "C", "name": "放回充气枪" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 6.695531, "code": "?" },
+        { "start_s": 6.695531, "end_s": 9.183263, "code": "A" },
+        { "start_s": 9.183263, "end_s": 69.106835, "code": "B" },
+        { "start_s": 69.106835, "end_s": 74.8, "code": "C" }
+      ],
+      "branch_conditions": [],
+      "status": "final",
+      "revision": 92,
+      "saved_at": "2026-10-12T02:07:24.857Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "cmu_bike05_4_w000008",
+      "duration_s": 130.667,
+      "codes": [
+        { "id": "A", "name": "给轮胎充气" },
+        { "id": "B", "name": "拿起工具" },
+        { "id": "C", "name": "把轮胎从轮毂上拆下" },
+        { "id": "D", "name": "把轮胎装回轮毂" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 11.662694912349487, "code": "?" },
+        { "start_s": 11.662694912349487, "end_s": 26.561979, "code": "A" },
+        { "start_s": 26.561979, "end_s": 30.476651, "code": "B" },
+        { "start_s": 30.476651, "end_s": 61.63095676293155, "code": "C" },
+        { "start_s": 61.63095676293155, "end_s": 106.777576, "code": "D" },
+        { "start_s": 106.777576, "end_s": 114.602708, "code": "B" },
+        { "start_s": 114.602708, "end_s": 130.667, "code": "A" }
+      ],
+      "branch_conditions": [
+        { "from": "B", "to": "A", "condition": "这次拿的是充气枪" },
+        { "from": "B", "to": "C", "condition": "这次拿的是刻刀" }
+      ],
+      "status": "final",
+      "revision": 121,
+      "saved_at": "2026-10-12T02:46:16.704Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "cmu_bike11_2_w000001",
+      "duration_s": 63.367,
+      "codes": [
+        { "id": "A", "name": "拧紧车轮上的零件" },
+        { "id": "B", "name": "用工具取下轮轴" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 18.310642, "code": "A" },
+        { "start_s": 18.310642, "end_s": 35.211847, "code": "?" },
+        { "start_s": 35.211847, "end_s": 44.216886, "code": "A" },
+        { "start_s": 44.216886, "end_s": 63.367, "code": "B" }
+      ],
+      "branch_conditions": [],
+      "status": "final",
+      "revision": 62,
+      "saved_at": "2026-10-12T02:53:30.630Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "cmu_bike18_3_w000001",
+      "duration_s": 135.467,
+      "codes": [
+        { "id": "A", "name": "把辐条固定好" },
+        { "id": "B", "name": "拆下轮圈" },
+        { "id": "C", "name": "装回轮圈" },
+        { "id": "D", "name": "拿工具" },
+        { "id": "E", "name": "给轮胎充气" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 34.237338, "code": "A" },
+        { "start_s": 34.237338, "end_s": 57.291738, "code": "B" },
+        { "start_s": 57.291738, "end_s": 103.53137563943683, "code": "C" },
+        { "start_s": 103.53137563943683, "end_s": 107.630632, "code": "D" },
+        { "start_s": 107.630632, "end_s": 135.467, "code": "E" }
+      ],
+      "branch_conditions": [],
+      "status": "final",
+      "revision": 91,
+      "saved_at": "2026-10-12T03:10:22.811Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "cmu_bike19_3_w000001",
+      "duration_s": 121.633,
+      "codes": [
+        { "id": "A", "name": "拿工具" },
+        { "id": "B", "name": "把充气阀门拧上" },
+        { "id": "C", "name": "检查轮圈气是否充足" },
+        { "id": "D", "name": "取下轮圈" },
+        { "id": "E", "name": "装回轮圈" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 3.258738, "code": "A" },
+        { "start_s": 3.258738, "end_s": 15.671206286833483, "code": "B" },
+        { "start_s": 15.671206286833483, "end_s": 40.365949, "code": "?" },
+        { "start_s": 40.365949, "end_s": 54.15805, "code": "C" },
+        { "start_s": 54.15805, "end_s": 56.662469, "code": "A" },
+        { "start_s": 56.662469, "end_s": 106.8904569760662, "code": "D" },
+        { "start_s": 106.8904569760662, "end_s": 121.633, "code": "E" }
+      ],
+      "branch_conditions": [
+        { "from": "A", "to": "B", "condition": "下一个动作的交互物品是充气阀门" },
+        { "from": "A", "to": "D", "condition": "拿的工具是刻刀" }
+      ],
+      "status": "final",
+      "revision": 106,
+      "saved_at": "2026-10-12T03:15:45.599Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "cmu_bike20_3_w000001",
+      "duration_s": 130.8,
+      "codes": [
+        { "id": "A", "name": "把充气阀门拧下" },
+        { "id": "B", "name": "拿工具" },
+        { "id": "C", "name": "把充气阀门拧回去" },
+        { "id": "D", "name": "检查轮圈气是否充足" },
+        { "id": "E", "name": "拆轮圈" },
+        { "id": "F", "name": "拆轮圈" },
+        { "id": "G", "name": "给轮圈充气" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 10.897808, "code": "A" },
+        { "start_s": 10.897808, "end_s": 12.462291, "code": "B" },
+        { "start_s": 12.462291, "end_s": 31.993137, "code": "C" },
+        { "start_s": 31.993137, "end_s": 36.536626, "code": "D" },
+        { "start_s": 36.536626, "end_s": 38.36341942009406, "code": "B" },
+        { "start_s": 38.36341942009406, "end_s": 55.738497, "code": "E" },
+        { "start_s": 55.738497, "end_s": 107.637442, "code": "F" },
+        { "start_s": 107.637442, "end_s": 110.011981, "code": "B" },
+        { "start_s": 110.011981, "end_s": 130.8, "code": "G" }
+      ],
+      "branch_conditions": [
+        { "from": "B", "to": "E", "condition": "这次拿的是刻刀用来拆轮圈" },
+        { "from": "B", "to": "C", "condition": "这次拿的是螺丝刀，下一个作用物体是充气阀门" },
+        { "from": "B", "to": "G", "condition": "拿到的是充气枪" }
+      ],
+      "status": "final",
+      "revision": 140,
+      "saved_at": "2026-10-12T03:21:25.739Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "fair_bike_01_15_w000005",
+      "duration_s": 181.233,
+      "codes": [
+        { "id": "A", "name": "拿工具" },
+        { "id": "B", "name": "取下轮圈" },
+        { "id": "C", "name": "检查轮圈" },
+        { "id": "D", "name": "检查轮毂" },
+        { "id": "E", "name": "整理工具" },
+        { "id": "F", "name": "装回轮圈" },
+        { "id": "G", "name": "给轮圈充气" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 3.622498, "code": "A" },
+        { "start_s": 3.622498, "end_s": 31.429655, "code": "B" },
+        { "start_s": 31.429655, "end_s": 43.389206, "code": "C" },
+        { "start_s": 43.389206, "end_s": 54.781205, "code": "D" },
+        { "start_s": 54.781205, "end_s": 82.59463615697148, "code": "E" },
+        { "start_s": 82.59463615697148, "end_s": 131.266685, "code": "F" },
+        { "start_s": 131.266685, "end_s": 134.841755, "code": "A" },
+        { "start_s": 134.841755, "end_s": 171.044293, "code": "G" },
+        { "start_s": 171.044293, "end_s": 173.953, "code": "A" },
+        { "start_s": 173.953, "end_s": 181.233, "code": "B" }
+      ],
+      "branch_conditions": [
+        { "from": "A", "to": "G", "condition": "拿的是充气枪" },
+        { "from": "A", "to": "B", "condition": "拿的是刻刀" }
+      ],
+      "status": "final",
+      "revision": 105,
+      "saved_at": "2026-10-12T03:40:03.364Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "fair_bike_01_3_w000003",
+      "duration_s": 167.9,
+      "codes": [
+        { "id": "A", "name": "拿工具" },
+        { "id": "B", "name": "取下轮圈" },
+        { "id": "C", "name": "给轮圈充气" },
+        { "id": "D", "name": "装回轮圈" },
+        { "id": "E", "name": "检查轮圈" },
+        { "id": "F", "name": "拿一个新轮圈，用充气枪充气" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 4.793494, "code": "A" },
+        { "start_s": 4.793494, "end_s": 27.689065, "code": "B" },
+        { "start_s": 27.689065, "end_s": 29.044201, "code": "A" },
+        { "start_s": 29.044201, "end_s": 34.656541, "code": "C" },
+        { "start_s": 34.656541, "end_s": 72.977173, "code": "D" },
+        { "start_s": 72.977173, "end_s": 89.613924, "code": "A" },
+        { "start_s": 89.613924, "end_s": 138.28279129537106, "code": "E" },
+        { "start_s": 138.28279129537106, "end_s": 167.9, "code": "F" }
+      ],
+      "branch_conditions": [
+        { "from": "A", "to": "C", "condition": "拿的是充气枪" },
+        { "from": "A", "to": "B", "condition": "拿的是刻刀" },
+        { "from": "A", "to": "E", "condition": "因为拿的是钳子" }
+      ],
+      "status": "final",
+      "revision": 115,
+      "saved_at": "2026-10-12T03:45:49.208Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "fair_bike_01_7_w000000",
+      "duration_s": 153.967,
+      "codes": [
+        { "id": "A", "name": "拿工具" },
+        { "id": "B", "name": "取下轮圈" },
+        { "id": "C", "name": "拿一个新的轮圈充气" },
+        { "id": "D", "name": "检查轮圈" },
+        { "id": "E", "name": "检查轮毂" },
+        { "id": "F", "name": "装回轮圈" },
+        { "id": "G", "name": "拿一个新轮圈" },
+        { "id": "H", "name": "给装好的轮圈充气" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 4.100874, "code": "A" },
+        { "start_s": 4.100874, "end_s": 20.86384, "code": "B" },
+        { "start_s": 20.86384, "end_s": 25.675372, "code": "A" },
+        { "start_s": 25.675372, "end_s": 37.107245, "code": "C" },
+        { "start_s": 37.107245, "end_s": 46.054882, "code": "D" },
+        { "start_s": 46.054882, "end_s": 69.878452, "code": "E" },
+        { "start_s": 69.878452, "end_s": 87.189076, "code": "F" },
+        { "start_s": 87.189076, "end_s": 102.822248, "code": "G" },
+        { "start_s": 102.822248, "end_s": 108.217455, "code": "A" },
+        { "start_s": 108.217455, "end_s": 111.196178, "code": "C" },
+        { "start_s": 111.196178, "end_s": 141.384499, "code": "F" },
+        { "start_s": 141.384499, "end_s": 145.14973068480995, "code": "A" },
+        { "start_s": 145.14973068480995, "end_s": 153.967, "code": "H" }
+      ],
+      "branch_conditions": [
+        { "from": "A", "to": "C", "condition": "这次作用物体是新轮圈和充气枪" },
+        { "from": "A", "to": "B", "condition": "拿的是切刀" },
+        { "from": "C", "to": "F", "condition": "下一个动作是作用在轮毂和轮圈" },
+        { "from": "C", "to": "D", "condition": "下一个动作是放下了新轮圈，拿起了装好的轮圈" },
+        { "from": "F", "to": "A", "condition": "拿的是充气枪" },
+        { "from": "F", "to": "G", "condition": "拿的是新轮圈" },
+        { "from": "A", "to": "H", "condition": "因为这次充气的轮圈是装好的" }
+      ],
+      "status": "final",
+      "revision": 146,
+      "saved_at": "2026-10-12T03:55:07.709Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "fair_bike_02_11_w000167",
+      "duration_s": 108.367,
+      "codes": [
+        { "id": "A", "name": "装轮圈" },
+        { "id": "B", "name": "拿工具" },
+        { "id": "C", "name": "给轮圈充气" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 26.80256, "code": "A" },
+        { "start_s": 26.80256, "end_s": 28.752071, "code": "B" },
+        { "start_s": 28.752071, "end_s": 108.367, "code": "C" }
+      ],
+      "branch_conditions": [],
+      "status": "final",
+      "revision": 38,
+      "saved_at": "2026-10-12T03:56:34.880Z"
+    }
+  ]
+}

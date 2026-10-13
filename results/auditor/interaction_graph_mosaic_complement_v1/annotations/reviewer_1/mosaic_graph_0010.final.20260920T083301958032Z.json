@@ -1,0 +1,112 @@
+{
+  "schema_version": "interaction_graph_timeline_v1",
+  "video_id": "mosaic_graph_0010",
+  "events": [
+    {
+      "event_id": "A",
+      "description": "拿着手机穿梭在电动车里"
+    },
+    {
+      "event_id": "B",
+      "description": "摆放一台电动车"
+    }
+  ],
+  "segments": [
+    {
+      "start_s": 0.0,
+      "end_s": 69.0,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 69.0,
+      "end_s": 77.6,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 77.6,
+      "end_s": 120.0,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    }
+  ],
+  "confirmed_full_video": true,
+  "manifest_sha256": "13ec96fbbfb20eba2cc431ddb116eaa964d95590461b309ef4e3430a91446700",
+  "annotator": "reviewer_1",
+  "saved_at": "2026-09-20T08:33:01.957850+00:00",
+  "status": "final",
+  "graph": {
+    "nodes": [
+      {
+        "event_id": "A",
+        "description": "拿着手机穿梭在电动车里",
+        "segment_count": 2,
+        "total_duration_s": 111.4,
+        "segment_indices": [
+          1,
+          3
+        ]
+      },
+      {
+        "event_id": "B",
+        "description": "摆放一台电动车",
+        "segment_count": 1,
+        "total_duration_s": 8.6,
+        "segment_indices": [
+          2
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "source": "A",
+        "target": "B",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          69.0
+        ]
+      },
+      {
+        "source": "B",
+        "target": "A",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          77.6
+        ]
+      }
+    ],
+    "edge_occurrences": [
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 69.0,
+        "from_segment": 1,
+        "to_segment": 2
+      },
+      {
+        "source": "B",
+        "target": "A",
+        "kind": "transition",
+        "at_s": 77.6,
+        "from_segment": 2,
+        "to_segment": 3
+      }
+    ],
+    "event_sequence": [
+      "A",
+      "B",
+      "A"
+    ]
+  }
+}

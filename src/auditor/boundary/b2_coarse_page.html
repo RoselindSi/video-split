@@ -189,8 +189,23 @@ function askIfBranch(){
       cand.push({from:p,to:t})}
   const last={from:c[c.length-2],to:c[c.length-1]};
   let pend=cand.find(x=>x.from===last.from&&x.to===last.to)||cand[0]||null;
-  if(!pend){$("#ask").className="card hidden";return}
+  if(!pend){$("#ask").className="card hidden";window.__askKey=null;return}
+  // 卡片在折叠线以下（页面 1104、视窗 768），标注者刚标完一段、视线还在
+  // 时间轴上，弹出来也看不见——实测就是这样被当成「写不了」。所以它一出现
+  // 就滚到视野里并短暂高亮；只在这一对是新追问时滚，否则每次 render 都跳。
+  const was=$("#ask").className;
   $("#ask").className="card";
+  const pend_key=pend.from+">"+pend.to;
+  if(was.indexOf("hidden")>=0 || window.__askKey!==pend_key){
+    window.__askKey=pend_key;
+    setTimeout(()=>{
+      $("#ask").scrollIntoView({block:"center",behavior:"smooth"});
+      $("#ask").style.transition="box-shadow .3s";
+      $("#ask").style.boxShadow="0 0 0 3px rgba(200,60,60,.45)";
+      setTimeout(()=>{$("#ask").style.boxShadow=""},1400);
+      const c=$("#cond"); if(c) c.focus();
+    },60);
+  }
   $("#askq").textContent=`为什么这次从 ${pend.from}（${codeName(pend.from)}）`
     +`去了 ${pend.to}（${codeName(pend.to)}）？`;
   $("#cond").value="";$("#cond").dataset.from=pend.from;$("#cond").dataset.to=pend.to;

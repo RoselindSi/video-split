@@ -1,0 +1,24 @@
+{
+  "min_hist": 3,
+  "rows": [
+    {
+      "label": "Ego-Exo4D keystep bike",
+      "n_units": 30,
+      "n_decisions": 162,
+      "p_support": 0.12962962962962962,
+      "hit_given_support": 0.5238095238095238,
+      "p_S_ge_2": 0.0,
+      "n_S_ge_2": 0,
+      "n_vacuous": 0,
+      "p_g_branch": 0.0,
+      "g_branch": 0,
+      "g_simple": 21,
+      "g_novel": 10,
+      "novel_per_branch": null,
+      "S_dist": {
+        "0": 141,
+        "1": 21
+      }
+    }
+  ]
+}

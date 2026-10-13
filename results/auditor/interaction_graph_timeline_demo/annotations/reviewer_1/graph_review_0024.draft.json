@@ -1,0 +1,192 @@
+{
+  "schema_version": "interaction_graph_timeline_v1",
+  "video_id": "graph_review_0024",
+  "events": [
+    {
+      "event_id": "A",
+      "description": "充电线放到抽屉里"
+    },
+    {
+      "event_id": "B",
+      "description": "抽屉里拿出充电线"
+    },
+    {
+      "event_id": "C",
+      "description": "解开充电线"
+    },
+    {
+      "event_id": "D",
+      "description": "缠充电线"
+    }
+  ],
+  "segments": [
+    {
+      "start_s": 0.0,
+      "end_s": 10.3,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 10.3,
+      "end_s": 18.5,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 18.5,
+      "end_s": 38.9,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 38.9,
+      "end_s": 66.0,
+      "event_id": "D",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 66.0,
+      "end_s": 76.0,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    }
+  ],
+  "confirmed_full_video": true,
+  "manifest_sha256": "158a3af90dc1e7636fbcb54fd483b4113259e65dc5c60b0bc61dd9c39b4c9b29",
+  "annotator": "reviewer_1",
+  "saved_at": "2026-09-19T09:48:18.306167+00:00",
+  "status": "draft",
+  "graph": {
+    "nodes": [
+      {
+        "event_id": "A",
+        "description": "充电线放到抽屉里",
+        "segment_count": 2,
+        "total_duration_s": 20.3,
+        "segment_indices": [
+          1,
+          5
+        ]
+      },
+      {
+        "event_id": "B",
+        "description": "抽屉里拿出充电线",
+        "segment_count": 1,
+        "total_duration_s": 8.2,
+        "segment_indices": [
+          2
+        ]
+      },
+      {
+        "event_id": "C",
+        "description": "解开充电线",
+        "segment_count": 1,
+        "total_duration_s": 20.4,
+        "segment_indices": [
+          3
+        ]
+      },
+      {
+        "event_id": "D",
+        "description": "缠充电线",
+        "segment_count": 1,
+        "total_duration_s": 27.1,
+        "segment_indices": [
+          4
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "source": "A",
+        "target": "B",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          10.3
+        ]
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          18.5
+        ]
+      },
+      {
+        "source": "C",
+        "target": "D",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          38.9
+        ]
+      },
+      {
+        "source": "D",
+        "target": "A",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          66.0
+        ]
+      }
+    ],
+    "edge_occurrences": [
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 10.3,
+        "from_segment": 1,
+        "to_segment": 2
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 18.5,
+        "from_segment": 2,
+        "to_segment": 3
+      },
+      {
+        "source": "C",
+        "target": "D",
+        "kind": "transition",
+        "at_s": 38.9,
+        "from_segment": 3,
+        "to_segment": 4
+      },
+      {
+        "source": "D",
+        "target": "A",
+        "kind": "transition",
+        "at_s": 66.0,
+        "from_segment": 4,
+        "to_segment": 5
+      }
+    ],
+    "event_sequence": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "A"
+    ]
+  }
+}

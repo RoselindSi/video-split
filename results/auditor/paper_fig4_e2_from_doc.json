@@ -1,0 +1,26 @@
+{
+  "figure": "fig4_representation_interface",
+  "experiment": "E2 表示消融阶梯（M0/M1raw/M1canon/M2raw/M2rawd/M2canon/M3/M3raw）",
+  "provenance": "逐字转录自 docs/interaction_graph_stage_closed.md 的 Result 2",
+  "reproducible": false,
+  "why_not_reproducible": "E2 的原始运行输出没有存成结果文件，只留在那份文档的正文里。重跑需要重新调用 VLM，不在当前范围内。所以这份文件是转录，标成 reproducible=false，不要当成测量产物；其它五张图都从真实结果 json 生成。",
+  "n": null,
+  "effects": [
+    { "name": "结构（长度已控制）", "delta_points": -4.0, "significant": false,
+      "note": "长度与结构在 M0..M3raw 完全共线，拆开之后才能读" },
+    { "name": "上下文长度", "delta_points": -15.0, "significant": true,
+      "note": "真正主导的是长度代价" },
+    { "name": "标签随机置换", "delta_points": 0.7, "significant": null,
+      "note": "内容无关对照：把标签打乱仍然有正效应" },
+    { "name": "无意义占位符", "delta_points": 2.6, "significant": null,
+      "note": "内容无关对照：换成占位符效应更大" }
+  ],
+  "confound_corrected": {
+    "arm": "M2raw",
+    "before": 20.4,
+    "after": -6.6,
+    "after_crosses_zero": true,
+    "cause": "M2raw 的字典用了 canonical（oracle）名，等于泄漏标签；加入 M2rawd 之后效应消失"
+  },
+  "claim": "把交互历史序列化成语言上下文，不保留它的有用结构：测到的是上下文长度与排版，而唯一的正面效应与内容无关。"
+}

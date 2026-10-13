@@ -1,0 +1,318 @@
+{
+  "seed": 20261011,
+  "window_s": 180.0,
+  "cap_per_take": 2,
+  "skipped_uids_no_video": [
+    "4ffef14c-5ee1-4955-962c-58eae12a2bf5"
+  ],
+  "family": "antigen",
+  "family_keys": [
+    "antigen",
+    "covid"
+  ],
+  "n_pool_windows": 252,
+  "n_picked": 30,
+  "selection": "task family chosen by what the tasks are; uniform random within it, capped per take. No per-scenario or per-take ranking by predicted branching was used.",
+  "windows": [
+    {
+      "take_uid": "a9a3e6d2-398b-41e9-8d74-9a744bb8b171",
+      "take_name": "georgiatech_covid_03_2",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 0,
+      "start_s": 1.3,
+      "end_s": 176.24,
+      "n_keysteps": 11,
+      "n_distinct": 8
+    },
+    {
+      "take_uid": "fb083c14-d568-424b-8450-b7f0455478ec",
+      "take_name": "georgiatech_covid_03_6",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 1,
+      "start_s": 167.56,
+      "end_s": 306.58,
+      "n_keysteps": 7,
+      "n_distinct": 7
+    },
+    {
+      "take_uid": "c8b331da-1756-4836-acc5-f3d1c2142339",
+      "take_name": "georgiatech_covid_05_2",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 0,
+      "start_s": 4.61,
+      "end_s": 167.46,
+      "n_keysteps": 17,
+      "n_distinct": 15
+    },
+    {
+      "take_uid": "77cd56fc-6b68-4c7f-814b-81545484dd2d",
+      "take_name": "georgiatech_covid_07_6",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 0,
+      "start_s": 0.86,
+      "end_s": 178.58,
+      "n_keysteps": 11,
+      "n_distinct": 8
+    },
+    {
+      "take_uid": "77cd56fc-6b68-4c7f-814b-81545484dd2d",
+      "take_name": "georgiatech_covid_07_6",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 1,
+      "start_s": 178.58,
+      "end_s": 305.43,
+      "n_keysteps": 15,
+      "n_distinct": 13
+    },
+    {
+      "take_uid": "11bf68ee-12f0-435d-98eb-925c158ac705",
+      "take_name": "georgiatech_covid_09_10",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 0,
+      "start_s": 0.0,
+      "end_s": 142.63,
+      "n_keysteps": 13,
+      "n_distinct": 12
+    },
+    {
+      "take_uid": "11bf68ee-12f0-435d-98eb-925c158ac705",
+      "take_name": "georgiatech_covid_09_10",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 1,
+      "start_s": 142.83,
+      "end_s": 276.77,
+      "n_keysteps": 8,
+      "n_distinct": 6
+    },
+    {
+      "take_uid": "d0109704-c19c-444a-890f-5796742434a8",
+      "take_name": "georgiatech_covid_09_2",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 0,
+      "start_s": 0.0,
+      "end_s": 166.79,
+      "n_keysteps": 14,
+      "n_distinct": 12
+    },
+    {
+      "take_uid": "d0109704-c19c-444a-890f-5796742434a8",
+      "take_name": "georgiatech_covid_09_2",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 1,
+      "start_s": 171.5,
+      "end_s": 309.83,
+      "n_keysteps": 13,
+      "n_distinct": 9
+    },
+    {
+      "take_uid": "1bd5a43c-9476-4491-b82e-6b02aeee2231",
+      "take_name": "georgiatech_covid_09_8",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 0,
+      "start_s": 0.79,
+      "end_s": 176.29,
+      "n_keysteps": 19,
+      "n_distinct": 17
+    },
+    {
+      "take_uid": "80f65504-a37a-4c84-8a19-df3bba123326",
+      "take_name": "georgiatech_covid_12_9",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 0,
+      "start_s": 0.0,
+      "end_s": 179.38,
+      "n_keysteps": 26,
+      "n_distinct": 18
+    },
+    {
+      "take_uid": "7d6fa5c7-a206-4b36-889b-44bed72b0cc8",
+      "take_name": "georgiatech_covid_13_2",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 1,
+      "start_s": 178.82,
+      "end_s": 295.91,
+      "n_keysteps": 14,
+      "n_distinct": 9
+    },
+    {
+      "take_uid": "87531064-1b80-40c5-896c-344cb3200d5a",
+      "take_name": "georgiatech_covid_13_6",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 0,
+      "start_s": 0.21,
+      "end_s": 178.2,
+      "n_keysteps": 17,
+      "n_distinct": 12
+    },
+    {
+      "take_uid": "a21f41be-388c-40c7-8e9a-58564fcb280a",
+      "take_name": "georgiatech_covid_16_10",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 2,
+      "start_s": 302.29,
+      "end_s": 375.5,
+      "n_keysteps": 2,
+      "n_distinct": 2
+    },
+    {
+      "take_uid": "a58f7f81-1ca2-4f98-bae4-2afce688c685",
+      "take_name": "nus_covidtest_02_3",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 0,
+      "start_s": 4.16,
+      "end_s": 147.93,
+      "n_keysteps": 20,
+      "n_distinct": 16
+    },
+    {
+      "take_uid": "c17c9de6-ecdd-4f94-a1e2-afcf8c0d26bb",
+      "take_name": "nus_covidtest_06_1",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 1,
+      "start_s": 176.03,
+      "end_s": 216.8,
+      "n_keysteps": 2,
+      "n_distinct": 2
+    },
+    {
+      "take_uid": "300ce13f-a96a-4402-a41c-19b0d459a45d",
+      "take_name": "nus_covidtest_08_2",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 0,
+      "start_s": 4.21,
+      "end_s": 105.9,
+      "n_keysteps": 15,
+      "n_distinct": 13
+    },
+    {
+      "take_uid": "a75fcdee-19da-402a-96bd-820a2d2a4379",
+      "take_name": "nus_covidtest_10_2",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 1,
+      "start_s": 174.72,
+      "end_s": 228.52,
+      "n_keysteps": 5,
+      "n_distinct": 4
+    },
+    {
+      "take_uid": "f3f87687-6c1d-415f-9fe0-5f0bdb031371",
+      "take_name": "nus_covidtest_18_2",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 1,
+      "start_s": 133.63,
+      "end_s": 260.7,
+      "n_keysteps": 11,
+      "n_distinct": 8
+    },
+    {
+      "take_uid": "5dc6b68f-c360-4519-8b45-1d9ba21dbeed",
+      "take_name": "nus_covidtest_22_2",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 0,
+      "start_s": 0.0,
+      "end_s": 155.33,
+      "n_keysteps": 18,
+      "n_distinct": 16
+    },
+    {
+      "take_uid": "7535b1a2-6226-4f14-a369-fb72861d2708",
+      "take_name": "nus_covidtest_37_2",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 0,
+      "start_s": 1.34,
+      "end_s": 174.39,
+      "n_keysteps": 21,
+      "n_distinct": 17
+    },
+    {
+      "take_uid": "bd975b4c-373f-434a-b520-c7ad55ee556f",
+      "take_name": "nus_covidtest_39_3",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 0,
+      "start_s": 1.04,
+      "end_s": 175.54,
+      "n_keysteps": 18,
+      "n_distinct": 15
+    },
+    {
+      "take_uid": "e9c37db2-b5f1-461c-a137-e9373730e04a",
+      "take_name": "nus_covidtest_41_2",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 0,
+      "start_s": 11.7,
+      "end_s": 187.05,
+      "n_keysteps": 26,
+      "n_distinct": 18
+    },
+    {
+      "take_uid": "3a7779b2-5d99-46b2-a0c0-28fc2100918e",
+      "take_name": "sfu_covid_001_10",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 0,
+      "start_s": 0.41,
+      "end_s": 147.47,
+      "n_keysteps": 21,
+      "n_distinct": 18
+    },
+    {
+      "take_uid": "29efb99f-abab-4530-8f20-abcdc0653daa",
+      "take_name": "sfu_covid_014_2",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 2,
+      "start_s": 304.23,
+      "end_s": 357.9,
+      "n_keysteps": 1,
+      "n_distinct": 1
+    },
+    {
+      "take_uid": "8f2d56dd-4201-497d-b6a7-d896f50a0347",
+      "take_name": "utokyo_pcr_2001_25_6",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 0,
+      "start_s": 4.47,
+      "end_s": 176.5,
+      "n_keysteps": 20,
+      "n_distinct": 13
+    },
+    {
+      "take_uid": "99123c69-1b1a-421c-b1c7-3b81d7b1d3b0",
+      "take_name": "utokyo_pcr_2001_31_8",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 0,
+      "start_s": 5.22,
+      "end_s": 156.55,
+      "n_keysteps": 10,
+      "n_distinct": 10
+    },
+    {
+      "take_uid": "1e9ba9bd-7c8a-418e-a2e6-7d18fa7ae208",
+      "take_name": "utokyo_pcr_2001_34_2",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 0,
+      "start_s": 5.75,
+      "end_s": 174.89,
+      "n_keysteps": 13,
+      "n_distinct": 8
+    },
+    {
+      "take_uid": "8b08ab18-7e42-462b-86c1-45f6a23a28ac",
+      "take_name": "utokyo_pcr_2001_34_4",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 0,
+      "start_s": 0.75,
+      "end_s": 177.34,
+      "n_keysteps": 6,
+      "n_distinct": 5
+    },
+    {
+      "take_uid": "919edc15-276e-4a76-ace9-b01eec04d94b",
+      "take_name": "utokyo_pcr_2001_38_2",
+      "scenario": "Covid-19 Rapid Antigen Test",
+      "window_index": 0,
+      "start_s": 5.53,
+      "end_s": 178.41,
+      "n_keysteps": 14,
+      "n_distinct": 9
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "source_annotations_modified": false,
+  "all_videos_validated": true,
+  "all_action_nodes_assigned": true,
+  "special_gaps_bridged": false,
+  "assignment_keys_consumed": 134,
+  "unused_assignment_keys": [],
+  "medium_confidence_nodes": [
+    "mosaic_complement/mosaic_graph_0003/A",
+    "mosaic_complement/mosaic_graph_0005/A",
+    "mosaic_complement/mosaic_graph_0008/B",
+    "mosaic_complement/mosaic_graph_0010/A",
+    "mosaic_complement/mosaic_graph_0016/A",
+    "mosaic_complement/mosaic_graph_0016/B",
+    "mosaic_complement/mosaic_graph_0020/A",
+    "mosaic_complement/mosaic_graph_0020/D",
+    "mosaic_complement/mosaic_graph_0023/B"
+  ],
+  "human_inter_annotator_agreement": "not measured",
+  "model_review": {
+    "method": "single-agent context review plus deterministic contract checks",
+    "completed": true,
+    "must_not_be_reported_as_human_agreement": true
+  }
+}

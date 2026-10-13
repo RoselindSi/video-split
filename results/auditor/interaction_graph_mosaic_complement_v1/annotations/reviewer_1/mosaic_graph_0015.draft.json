@@ -1,0 +1,337 @@
+{
+  "schema_version": "interaction_graph_timeline_v1",
+  "video_id": "mosaic_graph_0015",
+  "events": [
+    {
+      "event_id": "A",
+      "description": "在标签上做记录"
+    },
+    {
+      "event_id": "B",
+      "description": "撕下标签"
+    },
+    {
+      "event_id": "C",
+      "description": "从箱子里拿饮料"
+    },
+    {
+      "event_id": "D",
+      "description": "把饮料放到货架上"
+    },
+    {
+      "event_id": "E",
+      "description": "特殊事件"
+    },
+    {
+      "event_id": "F",
+      "description": "在本子上做记录"
+    }
+  ],
+  "segments": [
+    {
+      "start_s": 0.0,
+      "end_s": 28.0,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 28.0,
+      "end_s": 35.6,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 35.6,
+      "end_s": 69.5,
+      "event_id": "C",
+      "repeats_within_segment": true,
+      "note": ""
+    },
+    {
+      "start_s": 69.5,
+      "end_s": 76.4,
+      "event_id": "D",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 76.4,
+      "end_s": 80.2,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 80.2,
+      "end_s": 83.1,
+      "event_id": "D",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 83.1,
+      "end_s": 104.9,
+      "event_id": "E",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 104.9,
+      "end_s": 114.5,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 114.5,
+      "end_s": 120.0,
+      "event_id": "F",
+      "repeats_within_segment": false,
+      "note": ""
+    }
+  ],
+  "confirmed_full_video": true,
+  "manifest_sha256": "13ec96fbbfb20eba2cc431ddb116eaa964d95590461b309ef4e3430a91446700",
+  "annotator": "reviewer_1",
+  "saved_at": "2026-09-20T09:14:01.347025+00:00",
+  "status": "draft",
+  "graph": {
+    "nodes": [
+      {
+        "event_id": "A",
+        "description": "在标签上做记录",
+        "segment_count": 1,
+        "total_duration_s": 28.0,
+        "segment_indices": [
+          1
+        ]
+      },
+      {
+        "event_id": "B",
+        "description": "撕下标签",
+        "segment_count": 1,
+        "total_duration_s": 7.6,
+        "segment_indices": [
+          2
+        ]
+      },
+      {
+        "event_id": "C",
+        "description": "从箱子里拿饮料",
+        "segment_count": 3,
+        "total_duration_s": 47.3,
+        "segment_indices": [
+          3,
+          5,
+          8
+        ]
+      },
+      {
+        "event_id": "D",
+        "description": "把饮料放到货架上",
+        "segment_count": 2,
+        "total_duration_s": 9.8,
+        "segment_indices": [
+          4,
+          6
+        ]
+      },
+      {
+        "event_id": "E",
+        "description": "特殊事件",
+        "segment_count": 1,
+        "total_duration_s": 21.8,
+        "segment_indices": [
+          7
+        ]
+      },
+      {
+        "event_id": "F",
+        "description": "在本子上做记录",
+        "segment_count": 1,
+        "total_duration_s": 5.5,
+        "segment_indices": [
+          9
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "source": "A",
+        "target": "B",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          28.0
+        ]
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          35.6
+        ]
+      },
+      {
+        "source": "C",
+        "target": "C",
+        "count": 1,
+        "kinds": {
+          "internal_repeat": 1
+        },
+        "times_s": [
+          35.6
+        ]
+      },
+      {
+        "source": "C",
+        "target": "D",
+        "count": 2,
+        "kinds": {
+          "transition": 2
+        },
+        "times_s": [
+          69.5,
+          80.2
+        ]
+      },
+      {
+        "source": "C",
+        "target": "F",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          114.5
+        ]
+      },
+      {
+        "source": "D",
+        "target": "C",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          76.4
+        ]
+      },
+      {
+        "source": "D",
+        "target": "E",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          83.1
+        ]
+      },
+      {
+        "source": "E",
+        "target": "C",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          104.9
+        ]
+      }
+    ],
+    "edge_occurrences": [
+      {
+        "source": "C",
+        "target": "C",
+        "kind": "internal_repeat",
+        "at_s": 35.6,
+        "from_segment": 3,
+        "to_segment": 3
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 28.0,
+        "from_segment": 1,
+        "to_segment": 2
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 35.6,
+        "from_segment": 2,
+        "to_segment": 3
+      },
+      {
+        "source": "C",
+        "target": "D",
+        "kind": "transition",
+        "at_s": 69.5,
+        "from_segment": 3,
+        "to_segment": 4
+      },
+      {
+        "source": "D",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 76.4,
+        "from_segment": 4,
+        "to_segment": 5
+      },
+      {
+        "source": "C",
+        "target": "D",
+        "kind": "transition",
+        "at_s": 80.2,
+        "from_segment": 5,
+        "to_segment": 6
+      },
+      {
+        "source": "D",
+        "target": "E",
+        "kind": "transition",
+        "at_s": 83.1,
+        "from_segment": 6,
+        "to_segment": 7
+      },
+      {
+        "source": "E",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 104.9,
+        "from_segment": 7,
+        "to_segment": 8
+      },
+      {
+        "source": "C",
+        "target": "F",
+        "kind": "transition",
+        "at_s": 114.5,
+        "from_segment": 8,
+        "to_segment": 9
+      }
+    ],
+    "event_sequence": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "C",
+      "D",
+      "E",
+      "C",
+      "F"
+    ]
+  }
+}

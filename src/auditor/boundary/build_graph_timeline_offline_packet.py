@@ -19,7 +19,10 @@ def sha256(path: str | Path) -> str:
 
 def build_packet(manifest_path: str | Path, out_dir: str | Path,
                  reviewer_id: str, batch_id: str, title: str,
-                 expected_count: int = 30, force: bool = False) -> dict:
+                 expected_count: int = 30, force: bool = False,
+                 page_name: str | None = None,
+                 readme_rules: str | None = None,
+                 seed_draft: str | None = None) -> dict:
     source_manifest = Path(manifest_path).resolve()
     manifest_raw = source_manifest.read_bytes()
     manifest = json.loads(manifest_raw)
@@ -62,7 +65,7 @@ def build_packet(manifest_path: str | Path, out_dir: str | Path,
 
     manifest_hash = hashlib.sha256(manifest_raw).hexdigest()
     template = Path(__file__).with_name(
-        "interaction_graph_timeline_offline_page.html"
+        page_name or "interaction_graph_timeline_offline_page.html"
     ).read_text(encoding="utf-8")
     replacements = {
         "__CASES__": json.dumps(public_cases, ensure_ascii=False),
@@ -70,6 +73,9 @@ def build_packet(manifest_path: str | Path, out_dir: str | Path,
         "__ANNOTATOR_ID__": reviewer_id,
         "__BATCH_ID__": batch_id,
         "__TITLE__": title,
+        # A draft seeded into an empty slate. "{}" when absent, so the
+        # page has one code path and the placeholder never survives.
+        "__DRAFT__": seed_draft or "{}",
     }
     page = template
     for marker, replacement in replacements.items():
@@ -79,6 +85,12 @@ def build_packet(manifest_path: str | Path, out_dir: str | Path,
     page_path = out / "打开标注页面.html"
     page_path.write_text(page, encoding="utf-8")
 
+    default_rules = """统一规则
+1. 同一次任务继续做，包括来回擦、反复拧：不要切段。
+2. 同一种事已经结束，之后重新开始：在真正开始处切开，右边继续选择原事件。
+3. 目标换了：在新目标真正开始处切开，右边新建或选择另一个事件。
+4. 空白等待本身不单独建事件；切点放在后面动作真正开始的位置。
+5. 每段都写事件，完整看完后再提交。"""
     readme = f"""{title}
 
 打开方法
@@ -86,15 +98,10 @@ def build_packet(manifest_path: str | Path, out_dir: str | Path,
 2. 确认“打开标注页面.html”和 videos 文件夹在同一层。
 3. 用 Chrome 或 Edge 打开“打开标注页面.html”。如果视频仍不显示，点页面里的“选择 videos 文件夹”。
 
-统一规则
-1. 同一次任务继续做，包括来回擦、反复拧：不要切段。
-2. 同一种事已经结束，之后重新开始：在真正开始处切开，右边继续选择原事件。
-3. 目标换了：在新目标真正开始处切开，右边新建或选择另一个事件。
-4. 空白等待本身不单独建事件；切点放在后面动作真正开始的位置。
-5. 每段都写事件，完整看完后再提交。
+{(readme_rules or default_rules).rstrip()}
 
 交回文件
-30 条都提交后，点击“导出最终 JSON”，把导出的 JSON 发回。CSV 只用于人工查看。
+{len(public_cases)} 条都提交后，点击“导出最终 JSON”，把导出的 JSON 发回。CSV 只用于人工查看。
 页面会把草稿存在当前浏览器；换电脑前先点击“导出草稿备份”。
 不要查看另一位标注者的答案，也不要讨论逐条判断。
 """
@@ -143,10 +150,22 @@ def main() -> None:
     parser.add_argument("--title", required=True)
     parser.add_argument("--expected-count", type=int, default=30)
     parser.add_argument("--force", action="store_true")
+    # THE PAGE IS A PARAMETER BECAUSE THE CONTRACT CHANGED, NOT THE PACKER.
+    # v2 adds the state type, the special kind, the three node fields and the
+    # task cluster; the packaging, hashing and README are unchanged.
+    parser.add_argument("--page")
+    parser.add_argument("--readme-rules",
+                        help="file whose text replaces the 统一规则 block")
+    parser.add_argument("--seed-draft",
+                        help="JSON of {video_id: state} pre-loaded as a draft")
     args = parser.parse_args()
     result = build_packet(
         args.manifest, args.out, args.reviewer_id, args.batch_id, args.title,
-        args.expected_count, args.force,
+        args.expected_count, args.force, args.page,
+        Path(args.readme_rules).read_text(encoding='utf-8')
+        if args.readme_rules else None,
+        Path(args.seed_draft).read_text(encoding='utf-8')
+        if args.seed_draft else None,
     )
     print(json.dumps(result, ensure_ascii=False, indent=2))
 

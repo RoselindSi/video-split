@@ -1,0 +1,429 @@
+{
+  "schema_version": "b2_coarse_export_v1",
+  "batch_id": "egoexo_b2_coarse",
+  "manifest_sha256": "ad497d316672",
+  "annotator": "r1",
+  "n_videos": 20,
+  "videos": [
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "georgiatech_cooking_04_02_2_w001027",
+      "duration_s": 181.9,
+      "codes": [
+        { "id": "A", "name": "翻找厨房工具" },
+        { "id": "B", "name": "把锅里的面条里的水沥出" },
+        { "id": "C", "name": "洗手" },
+        { "id": "D", "name": "热锅，下切好的葱和蒜末，翻炒" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 13.454698, "code": "A" },
+        { "start_s": 13.454698, "end_s": 42.191807, "code": "B" },
+        { "start_s": 42.191807, "end_s": 67.682069, "code": "C" },
+        { "start_s": 67.682069, "end_s": 181.9, "code": "D" }
+      ],
+      "branch_conditions": [],
+      "status": "final",
+      "revision": 136,
+      "saved_at": "2026-10-11T08:05:52.562Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "georgiatech_cooking_14_02_2_w000000",
+      "duration_s": 182.333,
+      "codes": [
+        { "id": "A", "name": "特殊状况（翻看instructions）" },
+        { "id": "B", "name": "给锅里装水，放在灶台上烧水" },
+        { "id": "C", "name": "往量杯里分次倒入不同调料" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 13.126911, "code": "A" },
+        { "start_s": 13.126911, "end_s": 42.201439, "code": "B" },
+        { "start_s": 42.201439, "end_s": 182.333, "code": "C" }
+      ],
+      "branch_conditions": [],
+      "status": "final",
+      "revision": 155,
+      "saved_at": "2026-10-11T08:12:26.108Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "indiana_cooking_27_2_w000294",
+      "duration_s": 142.8,
+      "codes": [
+        { "id": "A", "name": "把蒜切成蒜末（反复）" },
+        { "id": "B", "name": "搅动锅里的面条" },
+        { "id": "C", "name": "把葱切段" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 101.841934, "code": "A" },
+        { "start_s": 101.841934, "end_s": 131.961201, "code": "B" },
+        { "start_s": 131.961201, "end_s": 142.8, "code": "C" }
+      ],
+      "branch_conditions": [],
+      "status": "final",
+      "revision": 98,
+      "saved_at": "2026-10-11T08:15:15.107Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "indiana_cooking_27_2_w000756",
+      "duration_s": 175.367,
+      "codes": [
+        { "id": "A", "name": "分次往量杯里加入不同的调料" },
+        { "id": "B", "name": "搅拌调料" },
+        { "id": "C", "name": "把锅里的煮面条里面的水沥出来倒掉，面倒入容器" },
+        { "id": "D", "name": "把锅放在电磁炉上准备" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 77.164351, "code": "A" },
+        { "start_s": 77.164351, "end_s": 110.583943, "code": "B" },
+        { "start_s": 110.583943, "end_s": 159.506266, "code": "C" },
+        { "start_s": 159.506266, "end_s": 175.367, "code": "D" }
+      ],
+      "branch_conditions": [],
+      "status": "final",
+      "revision": 209,
+      "saved_at": "2026-10-11T08:20:05.787Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "upenn_0714_Cooking_1_2_w000358",
+      "duration_s": 182.533,
+      "codes": [
+        { "id": "A", "name": "把蒜切成蒜末" },
+        { "id": "B", "name": "把烧水壶的水倒入锅里" },
+        { "id": "C", "name": "洗手擦手" },
+        { "id": "D", "name": "往锅里下面条" },
+        { "id": "E", "name": "往另一个平底锅里下油" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 45.484883, "code": "A" },
+        { "start_s": 45.484883, "end_s": 63.682302, "code": "B" },
+        { "start_s": 63.682302, "end_s": 77.99039, "code": "C" },
+        { "start_s": 77.99039, "end_s": 162.934186, "code": "D" },
+        { "start_s": 162.934186, "end_s": 182.533, "code": "E" }
+      ],
+      "branch_conditions": [],
+      "status": "final",
+      "revision": 130,
+      "saved_at": "2026-10-11T08:24:31.930Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "minnesota_cooking_031_2_w000002",
+      "duration_s": 181.833,
+      "codes": [
+        { "id": "A", "name": "准备需要用到的厨具和食材" },
+        { "id": "B", "name": "状态 B" },
+        { "id": "C", "name": "用量勺往锅里加入面粉" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 98.984539, "code": "A" },
+        { "start_s": 98.984539, "end_s": 155.51068, "code": "C" },
+        { "start_s": 155.51068, "end_s": 181.833, "code": "?" }
+      ],
+      "branch_conditions": [],
+      "status": "final",
+      "revision": 97,
+      "saved_at": "2026-10-11T08:27:30.506Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "uniandes_cooking_005_2_w000001",
+      "duration_s": 158.433,
+      "codes": [
+        { "id": "A", "name": "拿一个碗，往碗里打一个鸡蛋" },
+        { "id": "B", "name": "拿一个叉子，把鸡蛋在碗里打散" },
+        { "id": "C", "name": "拿一个锅，在灶台上煎鸡蛋" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 24.341746, "code": "A" },
+        { "start_s": 24.341746, "end_s": 51.906349, "code": "B" },
+        { "start_s": 51.906349, "end_s": 158.433, "code": "C" }
+      ],
+      "branch_conditions": [],
+      "status": "final",
+      "revision": 136,
+      "saved_at": "2026-10-11T08:31:09.359Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "georgiatech_cooking_14_01_2_w000863",
+      "duration_s": 131.367,
+      "codes": [
+        { "id": "A", "name": "翻炒锅里的番茄炒鸡蛋" },
+        { "id": "B", "name": "拿盐，往锅里放盐" },
+        { "id": "C", "name": "往锅里放葱" },
+        { "id": "D", "name": "拿一个盘子，把锅里的番茄炒蛋装到盘子里" },
+        { "id": "E", "name": "状态 E" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 26.648572, "code": "A" },
+        { "start_s": 26.648572, "end_s": 63.804256, "code": "B" },
+        { "start_s": 63.804256, "end_s": 69.662382, "code": "C" },
+        { "start_s": 69.662382, "end_s": 90.426453, "code": "A" },
+        { "start_s": 90.426453, "end_s": 131.367, "code": "D" }
+      ],
+      "branch_conditions": [
+        { "from": "A", "to": "D", "condition": "作用的物体变了：变成拿盘子装菜" },
+        { "from": "A", "to": "B", "condition": "作用的物体不一样：这次是拿盐罐" }
+      ],
+      "status": "final",
+      "revision": 143,
+      "saved_at": "2026-10-11T08:36:34.863Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "upenn_0712_Cooking_1_3_w000854",
+      "duration_s": 136.167,
+      "codes": [
+        { "id": "A", "name": "叉一个西红柿炒蛋尝一下" },
+        { "id": "B", "name": "往锅里放盐" },
+        { "id": "C", "name": "翻炒西红柿炒蛋" },
+        { "id": "D", "name": "加胡椒" },
+        { "id": "E", "name": "拿一个碟子，把番茄炒蛋装到盘子里" },
+        { "id": "F", "name": "往番茄炒蛋里面加入葱花" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 17.74323342590825, "code": "A" },
+        { "start_s": 17.74323342590825, "end_s": 26.035755484596574, "code": "B" },
+        { "start_s": 26.035755484596574, "end_s": 46.128112, "code": "C" },
+        { "start_s": 46.128112, "end_s": 56.659446, "code": "A" },
+        { "start_s": 56.659446, "end_s": 63.824448, "code": "D" },
+        { "start_s": 63.824448, "end_s": 70.77826, "code": "C" },
+        { "start_s": 70.77826, "end_s": 103.866352, "code": "E" },
+        { "start_s": 103.866352, "end_s": 112.615084, "code": "F" },
+        { "start_s": 112.615084, "end_s": 136.167, "code": "A" }
+      ],
+      "branch_conditions": [
+        { "from": "A", "to": "D", "condition": "作用的物品换了：胡椒瓶" },
+        { "from": "A", "to": "B", "condition": "作用的物品不一样：盐瓶" },
+        { "from": "C", "to": "A", "condition": "作用物品时叉子" },
+        { "from": "C", "to": "E", "condition": "作用物品是盘子" }
+      ],
+      "status": "final",
+      "revision": 178,
+      "saved_at": "2026-10-11T08:47:24.129Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "iiith_cooking_123_2_w000177",
+      "duration_s": 181.867,
+      "codes": [
+        { "id": "A", "name": "分次加入调料到容器里的蛋液里" },
+        { "id": "B", "name": "搅拌调料和蛋液" },
+        { "id": "C", "name": "往锅里加油，下葱花蒜末，翻炒" },
+        { "id": "D", "name": "倒蛋液入锅，摊成一个蛋饼" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 28.044611, "code": "A" },
+        { "start_s": 28.044611, "end_s": 36.219128, "code": "B" },
+        { "start_s": 36.219128, "end_s": 78.38714783919117, "code": "C" },
+        { "start_s": 78.38714783919117, "end_s": 84.150596, "code": "B" },
+        { "start_s": 84.150596, "end_s": 181.867, "code": "D" }
+      ],
+      "branch_conditions": [
+        { "from": "B", "to": "D", "condition": "动作是倾倒容器倒入蛋液" },
+        { "from": "B", "to": "C", "condition": "作用物品是油瓶和葱花蒜末" }
+      ],
+      "status": "final",
+      "revision": 200,
+      "saved_at": "2026-10-11T08:55:47.940Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "iiith_cooking_28_1_w000208",
+      "duration_s": 131.267,
+      "codes": [
+        { "id": "A", "name": "切葱花放入蛋液" },
+        { "id": "B", "name": "搅拌蛋液" },
+        { "id": "C", "name": "把蛋液加入锅中，摊平" },
+        { "id": "D", "name": "拿一个盘子装起鸡蛋饼" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 13.045859, "code": "A" },
+        { "start_s": 13.045859, "end_s": 32.390258, "code": "B" },
+        { "start_s": 32.390258, "end_s": 120.425102, "code": "C" },
+        { "start_s": 120.425102, "end_s": 131.267, "code": "D" }
+      ],
+      "branch_conditions": [],
+      "status": "final",
+      "revision": 121,
+      "saved_at": "2026-10-11T09:02:16.096Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "utokyo_omelet_6_1001_4_w000527",
+      "duration_s": 178.5,
+      "codes": [
+        { "id": "A", "name": "搅拌蛋液" },
+        { "id": "B", "name": "往灶台上的锅里加油" },
+        { "id": "C", "name": "把蛋液加入锅中，摊平" },
+        { "id": "D", "name": "加入ingredient" },
+        { "id": "E", "name": "拿一个盘子装起鸡蛋饼" },
+        { "id": "F", "name": "往一个碗里加入酱油" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 53.453064959696604, "code": "A" },
+        { "start_s": 53.453064959696604, "end_s": 70.621222, "code": "B" },
+        { "start_s": 70.621222, "end_s": 110.189365, "code": "C" },
+        { "start_s": 110.189365, "end_s": 136.93351255997388, "code": "D" },
+        { "start_s": 136.93351255997388, "end_s": 168.506402, "code": "E" },
+        { "start_s": 168.506402, "end_s": 178.5, "code": "F" }
+      ],
+      "branch_conditions": [],
+      "status": "final",
+      "revision": 172,
+      "saved_at": "2026-10-11T09:07:46.577Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "iiith_cooking_07_1_w000027",
+      "duration_s": 138.367,
+      "codes": [
+        { "id": "A", "name": "把食材切成碎块，放入铁盆" },
+        { "id": "B", "name": "加入调料" },
+        { "id": "C", "name": "拿勺子搅拌食材" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 115.42289222590517, "code": "A" },
+        { "start_s": 115.42289222590517, "end_s": 125.970255, "code": "B" },
+        { "start_s": 125.970255, "end_s": 138.367, "code": "C" }
+      ],
+      "branch_conditions": [],
+      "status": "final",
+      "revision": 82,
+      "saved_at": "2026-10-11T09:10:21.471Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "iiith_cooking_116_4_w000000",
+      "duration_s": 104.6,
+      "codes": [
+        { "id": "A", "name": "把食材切碎，放入铁盘" },
+        { "id": "B", "name": "加入调料" },
+        { "id": "C", "name": "混合食材" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 78.954554, "code": "A" },
+        { "start_s": 78.954554, "end_s": 89.697107, "code": "B" },
+        { "start_s": 89.697107, "end_s": 99.630626, "code": "C" },
+        { "start_s": 99.630626, "end_s": 104.6, "code": "?" }
+      ],
+      "branch_conditions": [],
+      "status": "final",
+      "revision": 96,
+      "saved_at": "2026-10-11T09:12:02.898Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "iiith_cooking_23_1_w000019",
+      "duration_s": 159.433,
+      "codes": [
+        { "id": "A", "name": "把食材切碎，放到塑料碗里" },
+        { "id": "B", "name": "加入调料" },
+        { "id": "C", "name": "拿勺子搅拌食材" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 103.113056, "code": "A" },
+        { "start_s": 103.113056, "end_s": 142.98875093822397, "code": "B" },
+        { "start_s": 142.98875093822397, "end_s": 159.433, "code": "C" }
+      ],
+      "branch_conditions": [],
+      "status": "final",
+      "revision": 88,
+      "saved_at": "2026-10-11T09:14:10.603Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "sfu_cooking023_4_w000000",
+      "duration_s": 48,
+      "codes": [
+        { "id": "A", "name": "把食材切碎放到碗里" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 48, "code": "A" }
+      ],
+      "branch_conditions": [],
+      "status": "final",
+      "revision": 37,
+      "saved_at": "2026-10-11T09:14:54.925Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "upenn_0714_Cooking_7_3_w000194",
+      "duration_s": 172.533,
+      "codes": [
+        { "id": "A", "name": "洗杯子" },
+        { "id": "B", "name": "洗锅铲" },
+        { "id": "C", "name": "洗案板" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 38.920687, "code": "A" },
+        { "start_s": 38.920687, "end_s": 93.045427, "code": "B" },
+        { "start_s": 93.045427, "end_s": 121.624278, "code": "C" },
+        { "start_s": 121.624278, "end_s": 172.533, "code": "?" }
+      ],
+      "branch_conditions": [],
+      "status": "final",
+      "revision": 38,
+      "saved_at": "2026-10-11T09:17:03.562Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "fair_cooking_07_2_w000003",
+      "duration_s": 161.6,
+      "codes": [
+        { "id": "A", "name": "挑选并清洗食材" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 152.237048, "code": "A" },
+        { "start_s": 152.237048, "end_s": 161.6, "code": "?" }
+      ],
+      "branch_conditions": [],
+      "status": "final",
+      "revision": 30,
+      "saved_at": "2026-10-11T09:18:27.947Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "georgiatech_cooking_11_01_4_w000179",
+      "duration_s": 174.8,
+      "codes": [
+        { "id": "A", "name": "用调料勺加入调料到量杯里" },
+        { "id": "B", "name": "拿刨丝器刮了一点姜末到量杯里" },
+        { "id": "C", "name": "拿刨丝器刮了一点蒜末到量杯里" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 42.090246, "code": "A" },
+        { "start_s": 42.090246, "end_s": 137.664072, "code": "B" },
+        { "start_s": 137.664072, "end_s": 174.8, "code": "C" }
+      ],
+      "branch_conditions": [],
+      "status": "final",
+      "revision": 117,
+      "saved_at": "2026-10-11T09:22:38.642Z"
+    },
+    {
+      "schema_version": "b2_coarse_sequence_v1",
+      "video_id": "upenn_0714_Cooking_1_4_w000375",
+      "duration_s": 175.967,
+      "codes": [
+        { "id": "A", "name": "洗碗" },
+        { "id": "B", "name": "把碗擦干" },
+        { "id": "C", "name": "往碗里分次加入不同调料" },
+        { "id": "D", "name": "从冰箱拿出蒜，剥开，切成蒜末" }
+      ],
+      "segments": [
+        { "start_s": 0, "end_s": 35.149385, "code": "A" },
+        { "start_s": 35.149385, "end_s": 51.200126, "code": "B" },
+        { "start_s": 51.200126, "end_s": 106.37417081565425, "code": "C" },
+        { "start_s": 106.37417081565425, "end_s": 175.967, "code": "D" }
+      ],
+      "branch_conditions": [],
+      "status": "final",
+      "revision": 108,
+      "saved_at": "2026-10-11T09:25:34.613Z"
+    }
+  ]
+}

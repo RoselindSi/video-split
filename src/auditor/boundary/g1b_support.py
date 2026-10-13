@@ -108,6 +108,11 @@ def main():
     ap.add_argument("--draws", type=int, default=20)
     ap.add_argument("--rounds", type=int, default=20, help="每条边的交换次数")
     ap.add_argument("--out", help="把逐决策的诊断写成 json，供机会集构造复用")
+    # --out 的 schema 已被机会集构造消费，不能改成 dict；汇总走单独的文件。
+    # 加这个是因为论文图 3 的数字此前只存在于 stdout 和一份文档的正文里，
+    # 手抄进绘图脚本等于让图和数据各自漂移。
+    ap.add_argument("--summary-out", dest="sout",
+                    help="把两个总体的 top-1 与 bootstrap 区间写成 json，供绘图")
     a = ap.parse_args()
 
     rows = task_rows(a.release, a.nodemap)
@@ -243,6 +248,13 @@ def main():
         ds.sort()
         return ds[int(.025 * BOOT)], ds[int(.975 * BOOT)]
 
+    summary = {"n_decisions": len(sub),
+               "n_videos": len({r["video_id"] for r in sub}),
+               "labels": LABEL,
+               "all": {"n": len(sub), "top1": {c: pt[c] for c in CONDS},
+                       "contrasts": {}},
+               "nonvacuous": None}
+
     print("\n  按录像聚类的配对 bootstrap（Rs 每个 replicate 重抽一次 null）")
     for hi, lo, why in (("Rt", "Rs", "★ 可达集成员身份本身（度已匹配）"),
                         ("Rt", "Rs2", "同上，软 null"),
@@ -255,10 +267,14 @@ def main():
               % ("%s − %s" % (hi, lo), 100 * (pt[hi] - pt[lo]),
                  100 * lo_, 100 * hi_, sig))
         print("        （%s）" % why)
+        summary["all"]["contrasts"]["%s-%s" % (hi, lo)] = {
+            "delta": pt[hi] - pt[lo], "ci": [lo_, hi_],
+            "crosses_zero": bool(lo_ < 0 < hi_), "why": why}
 
     # ---- 只在可达集真正有区分力的子集上重读一遍 ----
     if disc and len({r["video_id"] for r in disc}) >= 2:
         print("\n  只取 0 < |N+| < |V_<t| 的 %d 个决策" % len(disc))
+        summary["nonvacuous"] = {"n": len(disc), "top1": {}, "contrasts": {}}
         units2 = collections.defaultdict(list)
         for r in disc:
             units2[r["video_id"]].append(r)
@@ -267,6 +283,7 @@ def main():
         for c in CONDS:
             nd = a.draws if c in ("Rs", "Rs2") else 1
             t = sum(agg(disc, c, d)[0] for d in range(nd)) / nd
+            summary["nonvacuous"]["top1"][c] = t
             print("    %-34s %7.1f%%" % (LABEL[c], 100 * t))
         for hi, lo in (("Rt", "Rs"), ("Rt", "F")):
             ds = []
@@ -283,6 +300,9 @@ def main():
             sig = "  ← CI 不跨 0" if not (l < 0 < h) else ""
             print("    %-10s %+6.1f%%   95%% CI [%+.1f%%, %+.1f%%]%s"
                   % ("%s − %s" % (hi, lo), 100 * (th - tl), 100 * l, 100 * h, sig))
+            summary["nonvacuous"]["contrasts"]["%s-%s" % (hi, lo)] = {
+                "delta": th - tl, "ci": [l, h],
+                "crosses_zero": bool(l < 0 < h)}
 
     if a.out:
         json.dump([{"seg_id": r["seg_id"], "video_id": r["video_id"],
@@ -293,6 +313,11 @@ def main():
                     "gold_in_support": r["gold_node"] in r["S_true"]}
                    for r in sub], open(a.out, "w"), ensure_ascii=False, indent=1)
         print("\n-> %s" % a.out)
+
+    if a.sout:
+        json.dump(summary, open(a.sout, "w", encoding="utf-8"),
+                  ensure_ascii=False, indent=2)
+        print("-> %s" % a.sout)
 
 
 if __name__ == "__main__":

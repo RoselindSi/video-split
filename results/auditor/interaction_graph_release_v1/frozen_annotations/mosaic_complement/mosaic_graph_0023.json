@@ -1,0 +1,238 @@
+{
+  "schema_version": "interaction_graph_timeline_v1",
+  "video_id": "mosaic_graph_0023",
+  "events": [
+    {
+      "event_id": "A",
+      "description": "特殊事件"
+    },
+    {
+      "event_id": "B",
+      "description": "拿，在水龙头下洗，放碟子"
+    }
+  ],
+  "segments": [
+    {
+      "start_s": 0.0,
+      "end_s": 24.0,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": "准备工作：在手机上设置闹铃"
+    },
+    {
+      "start_s": 24.0,
+      "end_s": 38.5,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 38.5,
+      "end_s": 49.4,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 49.4,
+      "end_s": 64.1,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 64.1,
+      "end_s": 72.4,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 72.4,
+      "end_s": 83.0,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 83.0,
+      "end_s": 92.8,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 92.8,
+      "end_s": 102.6,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 102.6,
+      "end_s": 112.2,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 112.2,
+      "end_s": 120.0,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    }
+  ],
+  "confirmed_full_video": true,
+  "manifest_sha256": "13ec96fbbfb20eba2cc431ddb116eaa964d95590461b309ef4e3430a91446700",
+  "annotator": "reviewer_1",
+  "saved_at": "2026-09-20T10:39:15.235856+00:00",
+  "status": "final",
+  "graph": {
+    "nodes": [
+      {
+        "event_id": "A",
+        "description": "特殊事件",
+        "segment_count": 1,
+        "total_duration_s": 24.0,
+        "segment_indices": [
+          1
+        ]
+      },
+      {
+        "event_id": "B",
+        "description": "拿，在水龙头下洗，放碟子",
+        "segment_count": 9,
+        "total_duration_s": 96.0,
+        "segment_indices": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "source": "A",
+        "target": "B",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          24.0
+        ]
+      },
+      {
+        "source": "B",
+        "target": "B",
+        "count": 8,
+        "kinds": {
+          "self_transition": 8
+        },
+        "times_s": [
+          38.5,
+          49.4,
+          64.1,
+          72.4,
+          83.0,
+          92.8,
+          102.6,
+          112.2
+        ]
+      }
+    ],
+    "edge_occurrences": [
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 24.0,
+        "from_segment": 1,
+        "to_segment": 2
+      },
+      {
+        "source": "B",
+        "target": "B",
+        "kind": "self_transition",
+        "at_s": 38.5,
+        "from_segment": 2,
+        "to_segment": 3
+      },
+      {
+        "source": "B",
+        "target": "B",
+        "kind": "self_transition",
+        "at_s": 49.4,
+        "from_segment": 3,
+        "to_segment": 4
+      },
+      {
+        "source": "B",
+        "target": "B",
+        "kind": "self_transition",
+        "at_s": 64.1,
+        "from_segment": 4,
+        "to_segment": 5
+      },
+      {
+        "source": "B",
+        "target": "B",
+        "kind": "self_transition",
+        "at_s": 72.4,
+        "from_segment": 5,
+        "to_segment": 6
+      },
+      {
+        "source": "B",
+        "target": "B",
+        "kind": "self_transition",
+        "at_s": 83.0,
+        "from_segment": 6,
+        "to_segment": 7
+      },
+      {
+        "source": "B",
+        "target": "B",
+        "kind": "self_transition",
+        "at_s": 92.8,
+        "from_segment": 7,
+        "to_segment": 8
+      },
+      {
+        "source": "B",
+        "target": "B",
+        "kind": "self_transition",
+        "at_s": 102.6,
+        "from_segment": 8,
+        "to_segment": 9
+      },
+      {
+        "source": "B",
+        "target": "B",
+        "kind": "self_transition",
+        "at_s": 112.2,
+        "from_segment": 9,
+        "to_segment": 10
+      }
+    ],
+    "event_sequence": [
+      "A",
+      "B",
+      "B",
+      "B",
+      "B",
+      "B",
+      "B",
+      "B",
+      "B",
+      "B"
+    ]
+  }
+}

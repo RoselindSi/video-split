@@ -1,0 +1,51 @@
+{
+  "schema_version": "interaction_graph_qwen_5fold_v1",
+  "video_id": "blind_graph_0002",
+  "fold": 3,
+  "test_video_ids": [
+    "blind_graph_0002",
+    "blind_graph_0004",
+    "blind_graph_0009",
+    "blind_graph_0019",
+    "blind_graph_0021",
+    "blind_graph_0024"
+  ],
+  "demo_video_ids": [
+    "blind_graph_0016",
+    "blind_graph_0008",
+    "blind_graph_0012",
+    "blind_graph_0007",
+    "blind_graph_0013",
+    "blind_graph_0025",
+    "blind_graph_0026",
+    "blind_graph_0029"
+  ],
+  "target_gold_was_in_prompt": false,
+  "backend": "mock",
+  "model_id": null,
+  "fps": 1.0,
+  "passes": 2,
+  "raw_passes": [],
+  "prediction": {
+    "schema_version": "interaction_graph_timeline_v1",
+    "video_id": "blind_graph_0002",
+    "events": [
+      {
+        "event_id": "A",
+        "description": "mock only"
+      }
+    ],
+    "segments": [
+      {
+        "start_s": 0.0,
+        "end_s": 120.0,
+        "event_id": "A",
+        "repeats_within_segment": false,
+        "note": ""
+      }
+    ],
+    "confirmed_full_video": true,
+    "status": "final"
+  },
+  "status": "ok"
+}

@@ -1,0 +1,69 @@
+{
+  "schema_version": "interaction_graph_qwen_5fold_v1",
+  "video_id": "blind_graph_0024",
+  "fold": 3,
+  "test_video_ids": [
+    "blind_graph_0002",
+    "blind_graph_0004",
+    "blind_graph_0009",
+    "blind_graph_0019",
+    "blind_graph_0021",
+    "blind_graph_0024"
+  ],
+  "demo_video_ids": [
+    "blind_graph_0016",
+    "blind_graph_0008",
+    "blind_graph_0012",
+    "blind_graph_0007",
+    "blind_graph_0013",
+    "blind_graph_0025",
+    "blind_graph_0026",
+    "blind_graph_0029"
+  ],
+  "target_gold_was_in_prompt": false,
+  "backend": "qwen",
+  "model_id": "/workspace/tr1/ckpts/Qwen3-VL-8B-Instruct",
+  "fps": 1.0,
+  "passes": 2,
+  "resumed_from_saved_raw": true,
+  "previous_error": "ValueError: 第 1 段和第 2 段之间有空白或重叠",
+  "raw_passes": [
+    "{\"events\":[{\"event_id\":\"A\",\"description\":\"整理彩色小零件\"},{\"event_id\":\"B\",\"description\":\"用笔在透明盒上做标记\"}],\"segments\":[{\"start_s\":0.0,\"end_s\":120.0,\"event_id\":\"A\",\"repeats_within_segment\":true,\"note\":\"\"},{\"start_s\":117.0,\"end_s\":120.0,\"event_id\":\"B\",\"repeats_within_segment\":false,\"note\":\"\"}]}",
+    "{\"events\":[{\"event_id\":\"A\",\"description\":\"整理彩色小零件\"},{\"event_id\":\"B\",\"description\":\"用笔在透明盒上做标记\"}],\"segments\":[{\"start_s\":0.0,\"end_s\":120.0,\"event_id\":\"A\",\"repeats_within_segment\":true,\"note\":\"\"}]}"
+  ],
+  "normalizations_by_pass": [
+    [],
+    [
+      {
+        "kind": "drop_unused_events",
+        "event_ids": [
+          "B"
+        ]
+      }
+    ]
+  ],
+  "pass_1_error": "ValueError: 第 1 段和第 2 段之间有空白或重叠",
+  "used_pass": 2,
+  "prediction": {
+    "schema_version": "interaction_graph_timeline_v1",
+    "video_id": "blind_graph_0024",
+    "events": [
+      {
+        "event_id": "A",
+        "description": "整理彩色小零件"
+      }
+    ],
+    "segments": [
+      {
+        "start_s": 0.0,
+        "end_s": 120.0,
+        "event_id": "A",
+        "repeats_within_segment": true,
+        "note": ""
+      }
+    ],
+    "confirmed_full_video": true,
+    "status": "final"
+  },
+  "status": "ok"
+}

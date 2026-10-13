@@ -1,0 +1,486 @@
+{
+  "schema_version": "interaction_graph_contract_agreement_v1",
+  "manifest_sha256": "85ae4ac60e571cae639530e4248ea68fd3edfa1f2bcaabf7109f49dada301d88",
+  "reviewer_1_sha256": "fcb474a0c3889d4fe77aca97a3055d4785962dba5b3428e6e3161415f25eefc0",
+  "reviewer_2_sha256": "dbfc5e8b608492ccb982bde4aa0289ddc100011f0c5ef06eba596de61dc823a7",
+  "n_cases": 30,
+  "primary_exact": 11,
+  "primary_exact_rate": 0.36666666666666664,
+  "passes_primary_gate": false,
+  "field_exact_agreement": {
+    "relation": 0.36666666666666664,
+    "type_equivalence": 0.4,
+    "prior_episode_status": 0.7666666666666667,
+    "return_to_prior_type": 0.43333333333333335,
+    "instance_link": 0.7333333333333333,
+    "overlap_present": 0.9333333333333333
+  },
+  "timing_comparisons": [
+    {
+      "review_id": "graph_review_0003",
+      "interval_gap_s": 6.1,
+      "within_1s": false
+    },
+    {
+      "review_id": "graph_review_0005",
+      "interval_gap_s": 0.0,
+      "within_1s": true
+    },
+    {
+      "review_id": "graph_review_0006",
+      "interval_gap_s": 0.0,
+      "within_1s": true
+    },
+    {
+      "review_id": "graph_review_0008",
+      "interval_gap_s": 13.1,
+      "within_1s": false
+    },
+    {
+      "review_id": "graph_review_0011",
+      "interval_gap_s": 2.0,
+      "within_1s": false
+    },
+    {
+      "review_id": "graph_review_0012",
+      "interval_gap_s": 0.2,
+      "within_1s": true
+    },
+    {
+      "review_id": "graph_review_0013",
+      "interval_gap_s": 0.0,
+      "within_1s": true
+    },
+    {
+      "review_id": "graph_review_0016",
+      "interval_gap_s": 0.3,
+      "within_1s": true
+    },
+    {
+      "review_id": "graph_review_0017",
+      "interval_gap_s": 3.4,
+      "within_1s": false
+    },
+    {
+      "review_id": "graph_review_0018",
+      "interval_gap_s": 0.0,
+      "within_1s": true
+    },
+    {
+      "review_id": "graph_review_0019",
+      "interval_gap_s": 4.2,
+      "within_1s": false
+    },
+    {
+      "review_id": "graph_review_0021",
+      "interval_gap_s": 9.1,
+      "within_1s": false
+    },
+    {
+      "review_id": "graph_review_0022",
+      "interval_gap_s": 6.2,
+      "within_1s": false
+    },
+    {
+      "review_id": "graph_review_0023",
+      "interval_gap_s": 10.7,
+      "within_1s": false
+    },
+    {
+      "review_id": "graph_review_0024",
+      "interval_gap_s": 25.4,
+      "within_1s": false
+    },
+    {
+      "review_id": "graph_review_0025",
+      "interval_gap_s": 3.7,
+      "within_1s": false
+    },
+    {
+      "review_id": "graph_review_0026",
+      "interval_gap_s": 17.6,
+      "within_1s": false
+    },
+    {
+      "review_id": "graph_review_0027",
+      "interval_gap_s": 9.5,
+      "within_1s": false
+    },
+    {
+      "review_id": "graph_review_0029",
+      "interval_gap_s": 9.3,
+      "within_1s": false
+    },
+    {
+      "review_id": "graph_review_0030",
+      "interval_gap_s": 3.0,
+      "within_1s": false
+    }
+  ],
+  "timing_within_1s": 6,
+  "disagreements": [
+    {
+      "review_id": "graph_review_0002",
+      "reviewer_1": {
+        "relation": "NEW_ACTION",
+        "type_equivalence": "different",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "yes",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      },
+      "reviewer_2": {
+        "relation": "CONTINUE",
+        "type_equivalence": "same",
+        "prior_episode_status": "ongoing",
+        "return_to_prior_type": "not_applicable",
+        "instance_link": "same_instance",
+        "overlap_present": "no"
+      }
+    },
+    {
+      "review_id": "graph_review_0003",
+      "reviewer_1": {
+        "relation": "END_ONLY",
+        "type_equivalence": "not_applicable",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "not_applicable",
+        "instance_link": "not_applicable",
+        "overlap_present": "no"
+      },
+      "reviewer_2": {
+        "relation": "SAME_ACTION_NEW_INSTANCE",
+        "type_equivalence": "same",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "not_applicable",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      }
+    },
+    {
+      "review_id": "graph_review_0004",
+      "reviewer_1": {
+        "relation": "NEW_ACTION",
+        "type_equivalence": "different",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "yes",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      },
+      "reviewer_2": {
+        "relation": "CONTINUE",
+        "type_equivalence": "same",
+        "prior_episode_status": "ongoing",
+        "return_to_prior_type": "not_applicable",
+        "instance_link": "same_instance",
+        "overlap_present": "no"
+      }
+    },
+    {
+      "review_id": "graph_review_0007",
+      "reviewer_1": {
+        "relation": "CONTINUE",
+        "type_equivalence": "same",
+        "prior_episode_status": "ongoing",
+        "return_to_prior_type": "not_applicable",
+        "instance_link": "same_instance",
+        "overlap_present": "no"
+      },
+      "reviewer_2": {
+        "relation": "SAME_ACTION_NEW_INSTANCE",
+        "type_equivalence": "same",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "not_applicable",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      }
+    },
+    {
+      "review_id": "graph_review_0009",
+      "reviewer_1": {
+        "relation": "NEW_ACTION",
+        "type_equivalence": "different",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "yes",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      },
+      "reviewer_2": {
+        "relation": "CONTINUE",
+        "type_equivalence": "same",
+        "prior_episode_status": "ongoing",
+        "return_to_prior_type": "not_applicable",
+        "instance_link": "same_instance",
+        "overlap_present": "no"
+      }
+    },
+    {
+      "review_id": "graph_review_0010",
+      "reviewer_1": {
+        "relation": "UNOBSERVABLE",
+        "type_equivalence": "unknown",
+        "prior_episode_status": "unknown",
+        "return_to_prior_type": "unknown",
+        "instance_link": "unknown",
+        "overlap_present": "uncertain"
+      },
+      "reviewer_2": {
+        "relation": "CONTINUE",
+        "type_equivalence": "same",
+        "prior_episode_status": "ongoing",
+        "return_to_prior_type": "not_applicable",
+        "instance_link": "same_instance",
+        "overlap_present": "no"
+      }
+    },
+    {
+      "review_id": "graph_review_0011",
+      "reviewer_1": {
+        "relation": "NEW_ACTION",
+        "type_equivalence": "different",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "yes",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      },
+      "reviewer_2": {
+        "relation": "SAME_ACTION_NEW_INSTANCE",
+        "type_equivalence": "same",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "not_applicable",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      }
+    },
+    {
+      "review_id": "graph_review_0012",
+      "reviewer_1": {
+        "relation": "NEW_ACTION",
+        "type_equivalence": "different",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "yes",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      },
+      "reviewer_2": {
+        "relation": "SAME_ACTION_NEW_INSTANCE",
+        "type_equivalence": "same",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "not_applicable",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      }
+    },
+    {
+      "review_id": "graph_review_0015",
+      "reviewer_1": {
+        "relation": "UNOBSERVABLE",
+        "type_equivalence": "unknown",
+        "prior_episode_status": "unknown",
+        "return_to_prior_type": "unknown",
+        "instance_link": "unknown",
+        "overlap_present": "uncertain"
+      },
+      "reviewer_2": {
+        "relation": "SAME_ACTION_NEW_INSTANCE",
+        "type_equivalence": "same",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "not_applicable",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      }
+    },
+    {
+      "review_id": "graph_review_0018",
+      "reviewer_1": {
+        "relation": "NEW_ACTION",
+        "type_equivalence": "different",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "yes",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      },
+      "reviewer_2": {
+        "relation": "SAME_ACTION_NEW_INSTANCE",
+        "type_equivalence": "same",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "not_applicable",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      }
+    },
+    {
+      "review_id": "graph_review_0019",
+      "reviewer_1": {
+        "relation": "NEW_ACTION",
+        "type_equivalence": "different",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "yes",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      },
+      "reviewer_2": {
+        "relation": "SAME_ACTION_NEW_INSTANCE",
+        "type_equivalence": "same",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "not_applicable",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      }
+    },
+    {
+      "review_id": "graph_review_0020",
+      "reviewer_1": {
+        "relation": "NEW_ACTION",
+        "type_equivalence": "different",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "yes",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      },
+      "reviewer_2": {
+        "relation": "CONTINUE",
+        "type_equivalence": "same",
+        "prior_episode_status": "ongoing",
+        "return_to_prior_type": "not_applicable",
+        "instance_link": "same_instance",
+        "overlap_present": "no"
+      }
+    },
+    {
+      "review_id": "graph_review_0021",
+      "reviewer_1": {
+        "relation": "NEW_ACTION",
+        "type_equivalence": "different",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "yes",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      },
+      "reviewer_2": {
+        "relation": "SAME_ACTION_NEW_INSTANCE",
+        "type_equivalence": "same",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "not_applicable",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      }
+    },
+    {
+      "review_id": "graph_review_0022",
+      "reviewer_1": {
+        "relation": "NEW_ACTION",
+        "type_equivalence": "different",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "yes",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      },
+      "reviewer_2": {
+        "relation": "SAME_ACTION_NEW_INSTANCE",
+        "type_equivalence": "same",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "not_applicable",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      }
+    },
+    {
+      "review_id": "graph_review_0023",
+      "reviewer_1": {
+        "relation": "NEW_ACTION",
+        "type_equivalence": "different",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "yes",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      },
+      "reviewer_2": {
+        "relation": "SAME_ACTION_NEW_INSTANCE",
+        "type_equivalence": "same",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "not_applicable",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      }
+    },
+    {
+      "review_id": "graph_review_0024",
+      "reviewer_1": {
+        "relation": "NEW_ACTION",
+        "type_equivalence": "different",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "yes",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      },
+      "reviewer_2": {
+        "relation": "SAME_ACTION_NEW_INSTANCE",
+        "type_equivalence": "same",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "not_applicable",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      }
+    },
+    {
+      "review_id": "graph_review_0025",
+      "reviewer_1": {
+        "relation": "NEW_ACTION",
+        "type_equivalence": "different",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "yes",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      },
+      "reviewer_2": {
+        "relation": "SAME_ACTION_NEW_INSTANCE",
+        "type_equivalence": "same",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "not_applicable",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      }
+    },
+    {
+      "review_id": "graph_review_0027",
+      "reviewer_1": {
+        "relation": "NEW_ACTION",
+        "type_equivalence": "different",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "yes",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      },
+      "reviewer_2": {
+        "relation": "SAME_ACTION_NEW_INSTANCE",
+        "type_equivalence": "same",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "not_applicable",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      }
+    },
+    {
+      "review_id": "graph_review_0030",
+      "reviewer_1": {
+        "relation": "NEW_ACTION",
+        "type_equivalence": "different",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "yes",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      },
+      "reviewer_2": {
+        "relation": "SAME_ACTION_NEW_INSTANCE",
+        "type_equivalence": "same",
+        "prior_episode_status": "completed",
+        "return_to_prior_type": "not_applicable",
+        "instance_link": "new_instance",
+        "overlap_present": "no"
+      }
+    }
+  ],
+  "ratified": false,
+  "ratification_note": "Set true only after every disagreement is human-adjudicated against the contract."
+}

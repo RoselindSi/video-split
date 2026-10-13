@@ -1,0 +1,84 @@
+{
+  "schema_version": "interaction_graph_timeline_v1",
+  "video_id": "mosaic_graph_0013",
+  "events": [
+    {
+      "event_id": "A",
+      "description": "特殊事件"
+    },
+    {
+      "event_id": "B",
+      "description": "整理一卷标签纸"
+    }
+  ],
+  "segments": [
+    {
+      "start_s": 0.0,
+      "end_s": 5.9,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 5.9,
+      "end_s": 53.133,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": "把这一卷整个全部打开再全部卷好"
+    }
+  ],
+  "confirmed_full_video": true,
+  "manifest_sha256": "13ec96fbbfb20eba2cc431ddb116eaa964d95590461b309ef4e3430a91446700",
+  "annotator": "reviewer_1",
+  "saved_at": "2026-09-20T09:01:10.839424+00:00",
+  "status": "draft",
+  "graph": {
+    "nodes": [
+      {
+        "event_id": "A",
+        "description": "特殊事件",
+        "segment_count": 1,
+        "total_duration_s": 5.9,
+        "segment_indices": [
+          1
+        ]
+      },
+      {
+        "event_id": "B",
+        "description": "整理一卷标签纸",
+        "segment_count": 1,
+        "total_duration_s": 47.233,
+        "segment_indices": [
+          2
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "source": "A",
+        "target": "B",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          5.9
+        ]
+      }
+    ],
+    "edge_occurrences": [
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 5.9,
+        "from_segment": 1,
+        "to_segment": 2
+      }
+    ],
+    "event_sequence": [
+      "A",
+      "B"
+    ]
+  }
+}

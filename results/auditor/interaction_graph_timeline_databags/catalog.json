@@ -1,0 +1,2808 @@
+{
+  "schema_version": "interaction_graph_databag_catalog_v1",
+  "annotations_root": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations",
+  "n_databags": 280,
+  "n_sources_available_here": 0,
+  "databags": [
+    {
+      "recording_id": "R0820_151218",
+      "databag_id": "databag-26_0820_151218",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/d09309f3d88b4f95978466c77a637595/databag-26_0820_151218/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 11533,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0820_151218/R0820_151218__roselindsi__final_2026-09-18T105509.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0820_171752",
+      "databag_id": "databag-26_0820_171752",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/c38ce5c3457442e6a86206a3d205d570/databag-26_0820_171752/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 1268,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0820_171752/R0820_171752__roselindsi__final_2026-09-17T152905.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0821_100327",
+      "databag_id": "databag-26_0821_100327",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/b29b8ea6d32a4d06a55689f7e9c3c14c/databag-26_0821_100327/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 3496,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0821_100327/R0821_100327__roselindsi__final_2026-09-17T152925.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0821_100746",
+      "databag_id": "databag-26_0821_100746",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ae47ecbd77d4480c9de2abcab9dcb6c0/databag-26_0821_100746/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 25583,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0821_100746/R0821_100746__roselindsi__final_2026-09-17T152945.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0821_103904",
+      "databag_id": "databag-26_0821_103904",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/e937c2ac7c3f47299d04a164f893298f/databag-26_0821_103904/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 45210,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0821_103904/R0821_103904__roselindsi__final_2026-09-17T153007.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0821_104146",
+      "databag_id": "databag-26_0821_104146",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/14ad0aef9e574f6cb45497c0bb769815/databag-26_0821_104146/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 2522,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0821_104146/R0821_104146__roselindsi__final_2026-09-11T184707.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0821_112946",
+      "databag_id": "databag-26_0821_112946",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/659069695ef749748fcf2fa1fac98b18/databag-26_0821_112946/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 562,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0821_112946/R0821_112946__roselindsi__final_2026-09-14T114106.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0821_130136",
+      "databag_id": "databag-26_0821_130136",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/14ad0aef9e574f6cb45497c0bb769815/databag-26_0821_130136/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 18832,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0821_130136/R0821_130136__roselindsi__final_2026-09-17T153028.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0821_131910",
+      "databag_id": "databag-26_0821_131910",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/14ad0aef9e574f6cb45497c0bb769815/databag-26_0821_131910/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 588,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0821_131910/R0821_131910__roselindsi__final_2026-09-18T105620.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0821_140416",
+      "databag_id": "databag-26_0821_140416",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/d09309f3d88b4f95978466c77a637595/databag-26_0821_140416/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 47944,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0821_140416/R0821_140416__roselindsi__final_2026-09-18T105637.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0821_145853",
+      "databag_id": "databag-26_0821_145853",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/2cdc65a8c67c4818916cd24497e43d68/databag-26_0821_145853/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 27246,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0821_145853/R0821_145853__roselindsi__final_2026-09-17T153049.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0821_152222",
+      "databag_id": "databag-26_0821_152222",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/2cdc65a8c67c4818916cd24497e43d68/databag-26_0821_152222/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 10450,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0821_152222/R0821_152222__roselindsi__final_2026-09-18T105731.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0821_165001",
+      "databag_id": "databag-26_0821_165001",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/25fdb1396bb3407399decb8dbd97af7b/databag-26_0821_165001/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 213,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0821_165001/R0821_165001__roselindsi__final_2026-09-14T114133.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0821_170041",
+      "databag_id": "databag-26_0821_170041",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/bf287d497ee64a2e94a52712446bd5e5/databag-26_0821_170041/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 41900,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0821_170041/R0821_170041__roselindsi__final_2026-09-17T153110.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0821_172625",
+      "databag_id": "databag-26_0821_172625",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/38ec9c3340c74e93b0eb8fff8de6d4bb/databag-26_0821_172625/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 663,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0821_172625/R0821_172625__roselindsi__final_2026-09-18T105745.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0822_161350",
+      "databag_id": "databag-26_0822_161350",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/0ec613f393c140ec8a89ea73d486523f/databag-26_0822_161350/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 60508,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0822_161350/R0822_161350__roselindsi__final_2026-09-17T153132.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0822_174640",
+      "databag_id": "databag-26_0822_174640",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/fb605d95022e4fc7b526a2bb6dd226fb/databag-26_0822_174640/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 46216,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0822_174640/R0822_174640__roselindsi__final_2026-09-17T153159.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0822_181627",
+      "databag_id": "databag-26_0822_181627",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/fb605d95022e4fc7b526a2bb6dd226fb/databag-26_0822_181627/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 996,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0822_181627/R0822_181627__roselindsi__final_2026-09-18T105814.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0822_190706",
+      "databag_id": "databag-26_0822_190706",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/04ad1490de574085aac6886a075fef90/databag-26_0822_190706/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 720,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0822_190706/R0822_190706__roselindsi__final_2026-09-14T114201.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0822_195833",
+      "databag_id": "databag-26_0822_195833",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/2cdc65a8c67c4818916cd24497e43d68/databag-26_0822_195833/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 5940,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0822_195833/R0822_195833__roselindsi__final_2026-09-14T103039.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0823_113343",
+      "databag_id": "databag-26_0823_113343",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/803df3dca09146d294208effe6c99fc8/databag-26_0823_113343/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 449,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0823_113343/R0823_113343__roselindsi__final_2026-09-17T153220.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0823_130556",
+      "databag_id": "databag-26_0823_130556",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/c38ce5c3457442e6a86206a3d205d570/databag-26_0823_130556/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 330,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0823_130556/R0823_130556__roselindsi__final_2026-09-17T153240.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0823_132505",
+      "databag_id": "databag-26_0823_132505",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/d09309f3d88b4f95978466c77a637595/databag-26_0823_132505/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 483,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0823_132505/R0823_132505__roselindsi__final_2026-09-17T153305.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0823_133032",
+      "databag_id": "databag-26_0823_133032",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/0ec613f393c140ec8a89ea73d486523f/databag-26_0823_133032/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 11202,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0823_133032/R0823_133032__roselindsi__final_2026-09-17T153332.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0823_135310",
+      "databag_id": "databag-26_0823_135310",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/14ad0aef9e574f6cb45497c0bb769815/databag-26_0823_135310/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 0,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0823_135310/R0823_135310__roselindsi__final_2026-09-17T153403.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0823_142534",
+      "databag_id": "databag-26_0823_142534",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/fb605d95022e4fc7b526a2bb6dd226fb/databag-26_0823_142534/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 2760,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0823_142534/R0823_142534__roselindsi__final_2026-09-17T153703.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0823_154536",
+      "databag_id": "databag-26_0823_154536",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ae47ecbd77d4480c9de2abcab9dcb6c0/databag-26_0823_154536/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 0,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0823_154536/R0823_154536__roselindsi__final_2026-09-18T105829.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0823_155637",
+      "databag_id": "databag-26_0823_155637",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/d09309f3d88b4f95978466c77a637595/databag-26_0823_155637/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 48185,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0823_155637/R0823_155637__roselindsi__final_2026-09-14T103130.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0823_155930",
+      "databag_id": "databag-26_0823_155930",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/0ec613f393c140ec8a89ea73d486523f/databag-26_0823_155930/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 899,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0823_155930/R0823_155930__roselindsi__final_2026-09-14T114225.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0823_161702",
+      "databag_id": "databag-26_0823_161702",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ae31b53fe034445dbe0b12f748999c46/databag-26_0823_161702/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 515,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0823_161702/R0823_161702__roselindsi__final_2026-09-17T153851.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0824_103104",
+      "databag_id": "databag-26_0824_103104",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/659069695ef749748fcf2fa1fac98b18/databag-26_0824_103104/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 9068,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0824_103104/R0824_103104__roselindsi__final_2026-09-14T103210.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0824_104854",
+      "databag_id": "databag-26_0824_104854",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/d09309f3d88b4f95978466c77a637595/databag-26_0824_104854/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 14466,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0824_104854/R0824_104854__roselindsi__final_2026-09-17T153931.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0824_111055",
+      "databag_id": "databag-26_0824_111055",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/e937c2ac7c3f47299d04a164f893298f/databag-26_0824_111055/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 47346,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0824_111055/R0824_111055__roselindsi__final_2026-09-18T105936.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0824_120917",
+      "databag_id": "databag-26_0824_120917",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/b29b8ea6d32a4d06a55689f7e9c3c14c/databag-26_0824_120917/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 554,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0824_120917/R0824_120917__roselindsi__final_2026-09-18T110013.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0824_124201",
+      "databag_id": "databag-26_0824_124201",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/c38ce5c3457442e6a86206a3d205d570/databag-26_0824_124201/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 13001,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0824_124201/R0824_124201__roselindsi__final_2026-09-17T154038.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0824_131056",
+      "databag_id": "databag-26_0824_131056",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/952af12a235540b485a66f78180357c4/databag-26_0824_131056/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 80,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0824_131056/R0824_131056__roselindsi__final_2026-09-14T114314.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0824_132753",
+      "databag_id": "databag-26_0824_132753",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/952af12a235540b485a66f78180357c4/databag-26_0824_132753/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 667,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0824_132753/R0824_132753__roselindsi__final_2026-09-14T114358.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0824_143219",
+      "databag_id": "databag-26_0824_143219",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/b29b8ea6d32a4d06a55689f7e9c3c14c/databag-26_0824_143219/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 347,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0824_143219/R0824_143219__roselindsi__final_2026-09-14T114501.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0824_151558",
+      "databag_id": "databag-26_0824_151558",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/09869e49663d4b8391a3384145976b9f/databag-26_0824_151558/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 39917,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0824_151558/R0824_151558__roselindsi__final_2026-09-14T103258.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0824_160752",
+      "databag_id": "databag-26_0824_160752",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/5b571ae6eb0843cdaba3d5ba7c61902c/databag-26_0824_160752/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 78,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0824_160752/R0824_160752__roselindsi__final_2026-09-11T184816.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0824_162825",
+      "databag_id": "databag-26_0824_162825",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ab7302bbd10e4b2a9b2c77d74d7b1068/databag-26_0824_162825/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 874,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0824_162825/R0824_162825__roselindsi__final_2026-09-14T114518.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0824_165955",
+      "databag_id": "databag-26_0824_165955",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/b29b8ea6d32a4d06a55689f7e9c3c14c/databag-26_0824_165955/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 841,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0824_165955/R0824_165955__roselindsi__final_2026-09-14T114540.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0824_181613",
+      "databag_id": "databag-26_0824_181613",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/b29b8ea6d32a4d06a55689f7e9c3c14c/databag-26_0824_181613/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 401,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0824_181613/R0824_181613__roselindsi__final_2026-09-14T114730.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0825_021245",
+      "databag_id": "databag-26_0825_021245",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/0c4ec91212b74d138b593f966cefd7a6/databag-26_0825_021245/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 873,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0825_021245/R0825_021245__roselindsi__final_2026-09-18T110035.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0825_084046",
+      "databag_id": "databag-26_0825_084046",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/d09309f3d88b4f95978466c77a637595/databag-26_0825_084046/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 17502,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0825_084046/R0825_084046__roselindsi__final_2026-09-18T110132.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0825_093858",
+      "databag_id": "databag-26_0825_093858",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/e937c2ac7c3f47299d04a164f893298f/databag-26_0825_093858/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 2122,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0825_093858/R0825_093858__roselindsi__final_2026-09-17T154109.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0825_093900",
+      "databag_id": "databag-26_0825_093900",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/c38ce5c3457442e6a86206a3d205d570/databag-26_0825_093900/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 19672,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0825_093900/R0825_093900__roselindsi__final_2026-09-17T154136.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0825_100246",
+      "databag_id": "databag-26_0825_100246",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/0c4ec91212b74d138b593f966cefd7a6/databag-26_0825_100246/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 160,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0825_100246/R0825_100246__roselindsi__final_2026-09-11T184859.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0825_102317",
+      "databag_id": "databag-26_0825_102317",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/09869e49663d4b8391a3384145976b9f/databag-26_0825_102317/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 16045,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0825_102317/R0825_102317__roselindsi__final_2026-09-17T154340.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0825_102625",
+      "databag_id": "databag-26_0825_102625",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/803df3dca09146d294208effe6c99fc8/databag-26_0825_102625/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 34353,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0825_102625/R0825_102625__roselindsi__final_2026-09-17T154415.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0825_102941",
+      "databag_id": "databag-26_0825_102941",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/14ad0aef9e574f6cb45497c0bb769815/databag-26_0825_102941/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 0,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0825_102941/R0825_102941__roselindsi__final_2026-09-17T154436.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0825_105024",
+      "databag_id": "databag-26_0825_105024",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ce109d2c6dd5430bae283186b631c0c8/databag-26_0825_105024/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 20017,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0825_105024/R0825_105024__roselindsi__final_2026-09-17T154525.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0825_114056",
+      "databag_id": "databag-26_0825_114056",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/c38ce5c3457442e6a86206a3d205d570/databag-26_0825_114056/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 119,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0825_114056/R0825_114056__roselindsi__final_2026-09-14T103442.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0825_114424",
+      "databag_id": "databag-26_0825_114424",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/3b58207d11d84101836be0fa02aa3f92/databag-26_0825_114424/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 17345,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0825_114424/R0825_114424__roselindsi__final_2026-09-16T152828.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0825_115923",
+      "databag_id": "databag-26_0825_115923",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/3b58207d11d84101836be0fa02aa3f92/databag-26_0825_115923/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 10887,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0825_115923/R0825_115923__roselindsi__final_2026-09-16T153005.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0825_121354",
+      "databag_id": "databag-26_0825_121354",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/3b58207d11d84101836be0fa02aa3f92/databag-26_0825_121354/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 315,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0825_121354/R0825_121354__roselindsi__final_2026-09-14T114811.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0825_140010",
+      "databag_id": "databag-26_0825_140010",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/9fc77f1ffbf24953b110646d038121a4/databag-26_0825_140010/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 13917,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0825_140010/R0825_140010__roselindsi__final_2026-09-17T154550.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0825_145744",
+      "databag_id": "databag-26_0825_145744",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/516d5cfbaec945fe94071f8cfc2a5eef/databag-26_0825_145744/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 606,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0825_145744/R0825_145744__roselindsi__final_2026-09-14T115204.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0825_151955",
+      "databag_id": "databag-26_0825_151955",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/9fc77f1ffbf24953b110646d038121a4/databag-26_0825_151955/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 11032,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0825_151955/R0825_151955__roselindsi__final_2026-09-16T153145.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0825_155630",
+      "databag_id": "databag-26_0825_155630",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/3b58207d11d84101836be0fa02aa3f92/databag-26_0825_155630/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 6146,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0825_155630/R0825_155630__roselindsi__final_2026-09-18T110215.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0825_160737",
+      "databag_id": "databag-26_0825_160737",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/404c84199ed44dc59c89d7deb3eefd65/databag-26_0825_160737/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 624,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0825_160737/R0825_160737__roselindsi__final_2026-09-14T115418.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0825_165726",
+      "databag_id": "databag-26_0825_165726",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/9f4ac53b675a4d07916d3a7e4b7ed500/databag-26_0825_165726/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 2238,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0825_165726/R0825_165726__roselindsi__final_2026-09-15T164154.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0825_170839",
+      "databag_id": "databag-26_0825_170839",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/09869e49663d4b8391a3384145976b9f/databag-26_0825_170839/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 608,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0825_170839/R0825_170839__roselindsi__final_2026-09-14T115511.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0825_171922",
+      "databag_id": "databag-26_0825_171922",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/516d5cfbaec945fe94071f8cfc2a5eef/databag-26_0825_171922/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 5299,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0825_171922/R0825_171922__roselindsi__final_2026-09-18T110234.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0825_180550",
+      "databag_id": "databag-26_0825_180550",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/9fc77f1ffbf24953b110646d038121a4/databag-26_0825_180550/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 3351,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0825_180550/R0825_180550__roselindsi__final_2026-09-15T164720.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0825_182613",
+      "databag_id": "databag-26_0825_182613",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/516d5cfbaec945fe94071f8cfc2a5eef/databag-26_0825_182613/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 17901,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0825_182613/R0825_182613__roselindsi__final_2026-09-16T153208.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0826_085624",
+      "databag_id": "databag-26_0826_085624",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/3b58207d11d84101836be0fa02aa3f92/databag-26_0826_085624/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 2837,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0826_085624/R0826_085624__roselindsi__final_2026-09-15T164748.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0826_092449",
+      "databag_id": "databag-26_0826_092449",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/09869e49663d4b8391a3384145976b9f/databag-26_0826_092449/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 2155,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0826_092449/R0826_092449__roselindsi__final_2026-09-17T154640.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0826_093428",
+      "databag_id": "databag-26_0826_093428",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/c86a069b34b94812aa46cdd0cc06929f/databag-26_0826_093428/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 5307,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0826_093428/R0826_093428__roselindsi__final_2026-09-17T154703.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0826_094809",
+      "databag_id": "databag-26_0826_094809",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/fb605d95022e4fc7b526a2bb6dd226fb/databag-26_0826_094809/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 19,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0826_094809/R0826_094809__roselindsi__final_2026-09-17T154831.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0826_095019",
+      "databag_id": "databag-26_0826_095019",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/c38ce5c3457442e6a86206a3d205d570/databag-26_0826_095019/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 10758,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0826_095019/R0826_095019__roselindsi__final_2026-09-17T154955.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0826_102020",
+      "databag_id": "databag-26_0826_102020",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/fb605d95022e4fc7b526a2bb6dd226fb/databag-26_0826_102020/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 5118,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0826_102020/R0826_102020__roselindsi__final_2026-09-18T110351.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0826_103045",
+      "databag_id": "databag-26_0826_103045",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/803df3dca09146d294208effe6c99fc8/databag-26_0826_103045/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 16349,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0826_103045/R0826_103045__roselindsi__final_2026-09-17T155011.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0826_104636",
+      "databag_id": "databag-26_0826_104636",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/2954a4f3cdd346389024b9952e4003c3/databag-26_0826_104636/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 259,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0826_104636/R0826_104636__roselindsi__final_2026-09-17T155055.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0826_105135",
+      "databag_id": "databag-26_0826_105135",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/9ee2301ab09b4f93821c9423fd87a47c/databag-26_0826_105135/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 1349,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0826_105135/R0826_105135__roselindsi__final_2026-09-17T155301.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0826_105201",
+      "databag_id": "databag-26_0826_105201",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/516d5cfbaec945fe94071f8cfc2a5eef/databag-26_0826_105201/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 507,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0826_105201/R0826_105201__roselindsi__final_2026-09-17T155313.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0826_105950",
+      "databag_id": "databag-26_0826_105950",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/2954a4f3cdd346389024b9952e4003c3/databag-26_0826_105950/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 211,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0826_105950/R0826_105950__roselindsi__final_2026-09-18T110520.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0826_111128",
+      "databag_id": "databag-26_0826_111128",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/9ee2301ab09b4f93821c9423fd87a47c/databag-26_0826_111128/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 3037,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0826_111128/R0826_111128__roselindsi__final_2026-09-18T110630.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0826_111232",
+      "databag_id": "databag-26_0826_111232",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/9f4ac53b675a4d07916d3a7e4b7ed500/databag-26_0826_111232/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 127,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0826_111232/R0826_111232__roselindsi__final_2026-09-17T155343.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0826_115526",
+      "databag_id": "databag-26_0826_115526",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/57b4d61d9e7343ac95aca6bdf6120f43/databag-26_0826_115526/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 272,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0826_115526/R0826_115526__roselindsi__final_2026-09-17T155404.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0826_120814",
+      "databag_id": "databag-26_0826_120814",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/0c4ec91212b74d138b593f966cefd7a6/databag-26_0826_120814/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 474,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0826_120814/R0826_120814__roselindsi__final_2026-09-14T115600.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0826_124714",
+      "databag_id": "databag-26_0826_124714",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/d09309f3d88b4f95978466c77a637595/databag-26_0826_124714/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 31013,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0826_124714/R0826_124714__roselindsi__final_2026-09-17T155430.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0826_125650",
+      "databag_id": "databag-26_0826_125650",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/0c4f72e997b9438b91f8818e55ef2ae4/databag-26_0826_125650/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 501,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0826_125650/R0826_125650__roselindsi__final_2026-09-14T115626.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0826_125827",
+      "databag_id": "databag-26_0826_125827",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/fb605d95022e4fc7b526a2bb6dd226fb/databag-26_0826_125827/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 14908,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0826_125827/R0826_125827__roselindsi__final_2026-09-11T185042.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0826_133358",
+      "databag_id": "databag-26_0826_133358",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/404c84199ed44dc59c89d7deb3eefd65/databag-26_0826_133358/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 867,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0826_133358/R0826_133358__roselindsi__final_2026-09-14T115642.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0826_134839",
+      "databag_id": "databag-26_0826_134839",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/2954a4f3cdd346389024b9952e4003c3/databag-26_0826_134839/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 4244,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0826_134839/R0826_134839__roselindsi__final_2026-09-16T153230.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0826_164156",
+      "databag_id": "databag-26_0826_164156",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/9fc77f1ffbf24953b110646d038121a4/databag-26_0826_164156/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 26623,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0826_164156/R0826_164156__roselindsi__final_2026-09-16T153250.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0826_180122",
+      "databag_id": "databag-26_0826_180122",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/5b571ae6eb0843cdaba3d5ba7c61902c/databag-26_0826_180122/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 22,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0826_180122/R0826_180122__roselindsi__final_2026-09-18T110723.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0826_183253",
+      "databag_id": "databag-26_0826_183253",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/48880eb4c50146429f964b4998678c19/databag-26_0826_183253/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 14583,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0826_183253/R0826_183253__roselindsi__final_2026-09-17T160650.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0826_193027",
+      "databag_id": "databag-26_0826_193027",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/5b571ae6eb0843cdaba3d5ba7c61902c/databag-26_0826_193027/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 21340,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0826_193027/R0826_193027__roselindsi__final_2026-09-15T165031.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_083920",
+      "databag_id": "databag-26_0827_083920",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/d09309f3d88b4f95978466c77a637595/databag-26_0827_083920/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 3353,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_083920/R0827_083920__roselindsi__final_2026-09-17T160733.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_085341",
+      "databag_id": "databag-26_0827_085341",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/5b571ae6eb0843cdaba3d5ba7c61902c/databag-26_0827_085341/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 1368,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_085341/R0827_085341__roselindsi__final_2026-09-17T160820.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_085825",
+      "databag_id": "databag-26_0827_085825",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/0c4ec91212b74d138b593f966cefd7a6/databag-26_0827_085825/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 2633,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_085825/R0827_085825__roselindsi__final_2026-09-17T160844.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_090325",
+      "databag_id": "databag-26_0827_090325",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/5b571ae6eb0843cdaba3d5ba7c61902c/databag-26_0827_090325/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 1572,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_090325/R0827_090325__roselindsi__final_2026-09-14T103529.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_091143",
+      "databag_id": "databag-26_0827_091143",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/7a27751c5de24e4da2c72cbdabb6f323/databag-26_0827_091143/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 527,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_091143/R0827_091143__roselindsi__final_2026-09-14T115710.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_093558",
+      "databag_id": "databag-26_0827_093558",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/fb605d95022e4fc7b526a2bb6dd226fb/databag-26_0827_093558/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 4920,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_093558/R0827_093558__roselindsi__final_2026-09-17T160911.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_093710",
+      "databag_id": "databag-26_0827_093710",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/c86a069b34b94812aa46cdd0cc06929f/databag-26_0827_093710/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 2882,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_093710/R0827_093710__roselindsi__final_2026-09-17T161002.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_101021",
+      "databag_id": "databag-26_0827_101021",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/c86a069b34b94812aa46cdd0cc06929f/databag-26_0827_101021/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 2400,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_101021/R0827_101021__roselindsi__final_2026-09-11T185145.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_101949",
+      "databag_id": "databag-26_0827_101949",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/5b571ae6eb0843cdaba3d5ba7c61902c/databag-26_0827_101949/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 1456,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_101949/R0827_101949__roselindsi__final_2026-09-18T110750.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_102952",
+      "databag_id": "databag-26_0827_102952",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/516d5cfbaec945fe94071f8cfc2a5eef/databag-26_0827_102952/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 286,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_102952/R0827_102952__roselindsi__final_2026-09-17T161027.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_103344",
+      "databag_id": "databag-26_0827_103344",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/5b571ae6eb0843cdaba3d5ba7c61902c/databag-26_0827_103344/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 14415,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_103344/R0827_103344__roselindsi__final_2026-09-16T153542.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_104144",
+      "databag_id": "databag-26_0827_104144",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ae47ecbd77d4480c9de2abcab9dcb6c0/databag-26_0827_104144/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 184,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_104144/R0827_104144__roselindsi__final_2026-09-14T115754.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_104410",
+      "databag_id": "databag-26_0827_104410",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/2954a4f3cdd346389024b9952e4003c3/databag-26_0827_104410/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 4303,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_104410/R0827_104410__roselindsi__final_2026-09-17T161053.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_105138",
+      "databag_id": "databag-26_0827_105138",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/244b53cc2f324d00b134a2f4ee108dcf/databag-26_0827_105138/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 161,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_105138/R0827_105138__roselindsi__final_2026-09-14T115828.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_110835",
+      "databag_id": "databag-26_0827_110835",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/2954a4f3cdd346389024b9952e4003c3/databag-26_0827_110835/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 1303,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_110835/R0827_110835__roselindsi__final_2026-09-18T110810.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_111235",
+      "databag_id": "databag-26_0827_111235",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/48880eb4c50146429f964b4998678c19/databag-26_0827_111235/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 281,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_111235/R0827_111235__roselindsi__final_2026-09-17T161123.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_112822",
+      "databag_id": "databag-26_0827_112822",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/05c41d5470c746f1aa59aef3106ffd96/databag-26_0827_112822/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 685,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_112822/R0827_112822__roselindsi__final_2026-09-14T115846.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_113308",
+      "databag_id": "databag-26_0827_113308",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/8f53cd92554544ea9337799993419c87/databag-26_0827_113308/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 6220,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_113308/R0827_113308__roselindsi__final_2026-09-15T165056.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_115255",
+      "databag_id": "databag-26_0827_115255",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/8f53cd92554544ea9337799993419c87/databag-26_0827_115255/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 399,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_115255/R0827_115255__roselindsi__final_2026-09-18T110829.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_115421",
+      "databag_id": "databag-26_0827_115421",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/9f4ac53b675a4d07916d3a7e4b7ed500/databag-26_0827_115421/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 10097,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_115421/R0827_115421__roselindsi__final_2026-09-16T153602.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_132314",
+      "databag_id": "databag-26_0827_132314",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/9f4ac53b675a4d07916d3a7e4b7ed500/databag-26_0827_132314/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 8681,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_132314/R0827_132314__roselindsi__final_2026-09-17T161147.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_133158",
+      "databag_id": "databag-26_0827_133158",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/2954a4f3cdd346389024b9952e4003c3/databag-26_0827_133158/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 14674,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_133158/R0827_133158__roselindsi__final_2026-09-15T165120.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_135300",
+      "databag_id": "databag-26_0827_135300",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/2954a4f3cdd346389024b9952e4003c3/databag-26_0827_135300/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 13288,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_135300/R0827_135300__roselindsi__final_2026-09-16T153908.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_150704",
+      "databag_id": "databag-26_0827_150704",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/5b571ae6eb0843cdaba3d5ba7c61902c/databag-26_0827_150704/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 3893,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_150704/R0827_150704__roselindsi__final_2026-09-16T153930.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_150937",
+      "databag_id": "databag-26_0827_150937",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/1219380f1e3c4cf1a54bae19b4172453/databag-26_0827_150937/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 121,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_150937/R0827_150937__roselindsi__final_2026-09-14T120044.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_152311",
+      "databag_id": "databag-26_0827_152311",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ae31b53fe034445dbe0b12f748999c46/databag-26_0827_152311/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 236,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_152311/R0827_152311__roselindsi__final_2026-09-11T185234.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_153336",
+      "databag_id": "databag-26_0827_153336",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/14ad0aef9e574f6cb45497c0bb769815/databag-26_0827_153336/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 724,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_153336/R0827_153336__roselindsi__final_2026-09-14T120133.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0827_153928",
+      "databag_id": "databag-26_0827_153928",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/de64fa32c1e4429c9a41d7731039fdb2/databag-26_0827_153928/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 18061,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0827_153928/R0827_153928__roselindsi__final_2026-09-16T154033.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0828_095925",
+      "databag_id": "databag-26_0828_095925",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/e937c2ac7c3f47299d04a164f893298f/databag-26_0828_095925/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 530,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0828_095925/R0828_095925__roselindsi__final_2026-09-18T110935.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0828_102518",
+      "databag_id": "databag-26_0828_102518",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/0df5f8ac50c24dc89a0cddcd0eacf190/databag-26_0828_102518/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 48307,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0828_102518/R0828_102518__roselindsi__final_2026-09-16T154055.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0828_102638",
+      "databag_id": "databag-26_0828_102638",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/7bbdf85651d24933a6760e4af9c55718/databag-26_0828_102638/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 707,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0828_102638/R0828_102638__roselindsi__final_2026-09-17T161643.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0828_102838",
+      "databag_id": "databag-26_0828_102838",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ed512dd829ce475294a0219554efca53/databag-26_0828_102838/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 15449,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0828_102838/R0828_102838__roselindsi__final_2026-09-15T165149.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0828_105127",
+      "databag_id": "databag-26_0828_105127",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/fb605d95022e4fc7b526a2bb6dd226fb/databag-26_0828_105127/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 201,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0828_105127/R0828_105127__roselindsi__final_2026-09-17T161837.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0828_105458",
+      "databag_id": "databag-26_0828_105458",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/57b4d61d9e7343ac95aca6bdf6120f43/databag-26_0828_105458/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 4419,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0828_105458/R0828_105458__roselindsi__final_2026-09-18T111444.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0828_110346",
+      "databag_id": "databag-26_0828_110346",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/bf287d497ee64a2e94a52712446bd5e5/databag-26_0828_110346/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 347,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0828_110346/R0828_110346__roselindsi__final_2026-09-14T120207.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0828_110629",
+      "databag_id": "databag-26_0828_110629",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/0df5f8ac50c24dc89a0cddcd0eacf190/databag-26_0828_110629/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 30060,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0828_110629/R0828_110629__roselindsi__final_2026-09-15T165212.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0828_112658",
+      "databag_id": "databag-26_0828_112658",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/cc9e8bdddec34d9fbe742a638eca5d18/databag-26_0828_112658/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 20788,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0828_112658/R0828_112658__roselindsi__final_2026-09-17T161903.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0828_114117",
+      "databag_id": "databag-26_0828_114117",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/0df5f8ac50c24dc89a0cddcd0eacf190/databag-26_0828_114117/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 40446,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0828_114117/R0828_114117__roselindsi__final_2026-09-16T154117.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0828_115627",
+      "databag_id": "databag-26_0828_115627",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/cc9e8bdddec34d9fbe742a638eca5d18/databag-26_0828_115627/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 2573,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0828_115627/R0828_115627__roselindsi__final_2026-09-18T111501.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0828_123713",
+      "databag_id": "databag-26_0828_123713",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/bf287d497ee64a2e94a52712446bd5e5/databag-26_0828_123713/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 11797,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0828_123713/R0828_123713__roselindsi__final_2026-09-17T162049.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0828_133755",
+      "databag_id": "databag-26_0828_133755",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/9ee2301ab09b4f93821c9423fd87a47c/databag-26_0828_133755/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 3655,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0828_133755/R0828_133755__roselindsi__final_2026-09-17T162425.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0828_145805",
+      "databag_id": "databag-26_0828_145805",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/516d5cfbaec945fe94071f8cfc2a5eef/databag-26_0828_145805/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 20559,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0828_145805/R0828_145805__roselindsi__final_2026-09-15T165236.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0828_154924",
+      "databag_id": "databag-26_0828_154924",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/cc9e8bdddec34d9fbe742a638eca5d18/databag-26_0828_154924/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 406,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0828_154924/R0828_154924__roselindsi__final_2026-09-14T120235.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0828_155201",
+      "databag_id": "databag-26_0828_155201",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ee114f4cf4234b33ba93402a2a90ced0/databag-26_0828_155201/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 15853,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0828_155201/R0828_155201__roselindsi__final_2026-09-18T111743.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0828_160752",
+      "databag_id": "databag-26_0828_160752",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/38ec9c3340c74e93b0eb8fff8de6d4bb/databag-26_0828_160752/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 9139,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0828_160752/R0828_160752__roselindsi__final_2026-09-14T103730.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0828_161607",
+      "databag_id": "databag-26_0828_161607",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/516d5cfbaec945fe94071f8cfc2a5eef/databag-26_0828_161607/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 5110,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0828_161607/R0828_161607__roselindsi__final_2026-09-17T162501.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0828_171008",
+      "databag_id": "databag-26_0828_171008",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/516d5cfbaec945fe94071f8cfc2a5eef/databag-26_0828_171008/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 6279,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0828_171008/R0828_171008__roselindsi__final_2026-09-16T154210.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0828_172232",
+      "databag_id": "databag-26_0828_172232",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ee114f4cf4234b33ba93402a2a90ced0/databag-26_0828_172232/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 1312,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0828_172232/R0828_172232__roselindsi__final_2026-09-16T154232.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0828_174005",
+      "databag_id": "databag-26_0828_174005",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ee114f4cf4234b33ba93402a2a90ced0/databag-26_0828_174005/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 13686,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0828_174005/R0828_174005__roselindsi__final_2026-09-15T165300.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0828_181519",
+      "databag_id": "databag-26_0828_181519",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/9ee2301ab09b4f93821c9423fd87a47c/databag-26_0828_181519/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 184,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0828_181519/R0828_181519__roselindsi__final_2026-09-14T120322.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0828_183729",
+      "databag_id": "databag-26_0828_183729",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ee114f4cf4234b33ba93402a2a90ced0/databag-26_0828_183729/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 31127,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0828_183729/R0828_183729__roselindsi__final_2026-09-16T154259.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0829_131415",
+      "databag_id": "databag-26_0829_131415",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/516d5cfbaec945fe94071f8cfc2a5eef/databag-26_0829_131415/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 531,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0829_131415/R0829_131415__roselindsi__final_2026-09-17T163329.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0829_131559",
+      "databag_id": "databag-26_0829_131559",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/516d5cfbaec945fe94071f8cfc2a5eef/databag-26_0829_131559/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 14746,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0829_131559/R0829_131559__roselindsi__final_2026-09-15T165319.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0829_141357",
+      "databag_id": "databag-26_0829_141357",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/9f4ac53b675a4d07916d3a7e4b7ed500/databag-26_0829_141357/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 53332,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0829_141357/R0829_141357__roselindsi__final_2026-09-17T163347.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0829_145705",
+      "databag_id": "databag-26_0829_145705",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/8f53cd92554544ea9337799993419c87/databag-26_0829_145705/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 31566,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0829_145705/R0829_145705__roselindsi__final_2026-09-16T154320.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0829_165139",
+      "databag_id": "databag-26_0829_165139",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/9ee2301ab09b4f93821c9423fd87a47c/databag-26_0829_165139/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 18642,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0829_165139/R0829_165139__roselindsi__final_2026-09-16T154348.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0829_170445",
+      "databag_id": "databag-26_0829_170445",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/516d5cfbaec945fe94071f8cfc2a5eef/databag-26_0829_170445/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 16742,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0829_170445/R0829_170445__roselindsi__final_2026-09-14T103825.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0829_170519",
+      "databag_id": "databag-26_0829_170519",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ce109d2c6dd5430bae283186b631c0c8/databag-26_0829_170519/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 360,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0829_170519/R0829_170519__roselindsi__final_2026-09-14T120400.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0830_113331",
+      "databag_id": "databag-26_0830_113331",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/8f53cd92554544ea9337799993419c87/databag-26_0830_113331/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 5617,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0830_113331/R0830_113331__roselindsi__final_2026-09-17T163415.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0830_114116",
+      "databag_id": "databag-26_0830_114116",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/5b571ae6eb0843cdaba3d5ba7c61902c/databag-26_0830_114116/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 12945,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0830_114116/R0830_114116__roselindsi__final_2026-09-17T163544.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0830_114513",
+      "databag_id": "databag-26_0830_114513",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/8f53cd92554544ea9337799993419c87/databag-26_0830_114513/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 6341,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0830_114513/R0830_114513__roselindsi__final_2026-09-18T111802.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0830_132130",
+      "databag_id": "databag-26_0830_132130",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/404c84199ed44dc59c89d7deb3eefd65/databag-26_0830_132130/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 849,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0830_132130/R0830_132130__roselindsi__final_2026-09-14T120428.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0830_134708",
+      "databag_id": "databag-26_0830_134708",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/5b571ae6eb0843cdaba3d5ba7c61902c/databag-26_0830_134708/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 418,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0830_134708/R0830_134708__roselindsi__final_2026-09-14T120508.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0830_152539",
+      "databag_id": "databag-26_0830_152539",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/9f4ac53b675a4d07916d3a7e4b7ed500/databag-26_0830_152539/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 67139,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0830_152539/R0830_152539__roselindsi__final_2026-09-17T163608.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0830_153835",
+      "databag_id": "databag-26_0830_153835",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/8f53cd92554544ea9337799993419c87/databag-26_0830_153835/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 18915,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0830_153835/R0830_153835__roselindsi__final_2026-09-16T154410.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0830_161805",
+      "databag_id": "databag-26_0830_161805",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/8f53cd92554544ea9337799993419c87/databag-26_0830_161805/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 39703,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0830_161805/R0830_161805__roselindsi__final_2026-09-16T154432.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0830_162054",
+      "databag_id": "databag-26_0830_162054",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/9f4ac53b675a4d07916d3a7e4b7ed500/databag-26_0830_162054/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 11991,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0830_162054/R0830_162054__roselindsi__final_2026-09-16T154521.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0830_170640",
+      "databag_id": "databag-26_0830_170640",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/9f4ac53b675a4d07916d3a7e4b7ed500/databag-26_0830_170640/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 2218,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0830_170640/R0830_170640__roselindsi__final_2026-09-18T111825.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0830_233510",
+      "databag_id": "databag-26_0830_233510",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/de64fa32c1e4429c9a41d7731039fdb2/databag-26_0830_233510/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 3065,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0830_233510/R0830_233510__roselindsi__final_2026-09-16T154544.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_102959",
+      "databag_id": "databag-26_0831_102959",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/d94fb4e4b2034feea9859986b0b86f40/databag-26_0831_102959/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 9370,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_102959/R0831_102959__roselindsi__final_2026-09-16T154623.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_103230",
+      "databag_id": "databag-26_0831_103230",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/8f53cd92554544ea9337799993419c87/databag-26_0831_103230/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 0,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_103230/R0831_103230__roselindsi__final_2026-09-17T163627.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_103415",
+      "databag_id": "databag-26_0831_103415",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/3b58207d11d84101836be0fa02aa3f92/databag-26_0831_103415/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 3550,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_103415/R0831_103415__roselindsi__final_2026-09-17T163736.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_104424",
+      "databag_id": "databag-26_0831_104424",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/3b58207d11d84101836be0fa02aa3f92/databag-26_0831_104424/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 3550,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_104424/R0831_104424__roselindsi__final_2026-09-18T111857.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_104436",
+      "databag_id": "databag-26_0831_104436",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/8f53cd92554544ea9337799993419c87/databag-26_0831_104436/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 2050,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_104436/R0831_104436__roselindsi__final_2026-09-18T111928.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_104730",
+      "databag_id": "databag-26_0831_104730",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ee114f4cf4234b33ba93402a2a90ced0/databag-26_0831_104730/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 4138,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_104730/R0831_104730__roselindsi__final_2026-09-17T163801.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_110142",
+      "databag_id": "databag-26_0831_110142",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/d94fb4e4b2034feea9859986b0b86f40/databag-26_0831_110142/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 12191,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_110142/R0831_110142__roselindsi__final_2026-09-15T165343.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_110634",
+      "databag_id": "databag-26_0831_110634",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/7bbdf85651d24933a6760e4af9c55718/databag-26_0831_110634/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 9571,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_110634/R0831_110634__roselindsi__final_2026-09-16T155613.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_110854",
+      "databag_id": "databag-26_0831_110854",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/bf287d497ee64a2e94a52712446bd5e5/databag-26_0831_110854/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 14053,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_110854/R0831_110854__roselindsi__final_2026-09-17T163848.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_111904",
+      "databag_id": "databag-26_0831_111904",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/bf287d497ee64a2e94a52712446bd5e5/databag-26_0831_111904/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 2643,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_111904/R0831_111904__roselindsi__final_2026-09-16T155631.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_114109",
+      "databag_id": "databag-26_0831_114109",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/bf287d497ee64a2e94a52712446bd5e5/databag-26_0831_114109/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 5942,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_114109/R0831_114109__roselindsi__final_2026-09-16T155653.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_115330",
+      "databag_id": "databag-26_0831_115330",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/7bbdf85651d24933a6760e4af9c55718/databag-26_0831_115330/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 6660,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_115330/R0831_115330__roselindsi__final_2026-09-15T165404.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_133056",
+      "databag_id": "databag-26_0831_133056",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ab7302bbd10e4b2a9b2c77d74d7b1068/databag-26_0831_133056/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 140,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_133056/R0831_133056__roselindsi__final_2026-09-16T155935.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_134035",
+      "databag_id": "databag-26_0831_134035",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/bed6d0c0ee444d08aff3695d489f70c9/databag-26_0831_134035/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 5050,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_134035/R0831_134035__roselindsi__final_2026-09-17T163902.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_140442",
+      "databag_id": "databag-26_0831_140442",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ce109d2c6dd5430bae283186b631c0c8/databag-26_0831_140442/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 461,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_140442/R0831_140442__roselindsi__final_2026-09-17T163929.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_140456",
+      "databag_id": "databag-26_0831_140456",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/9f4ac53b675a4d07916d3a7e4b7ed500/databag-26_0831_140456/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 14859,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_140456/R0831_140456__roselindsi__final_2026-09-16T155956.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_141420",
+      "databag_id": "databag-26_0831_141420",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/7bbdf85651d24933a6760e4af9c55718/databag-26_0831_141420/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 540,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_141420/R0831_141420__roselindsi__final_2026-09-14T100856.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_141647",
+      "databag_id": "databag-26_0831_141647",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/25fdb1396bb3407399decb8dbd97af7b/databag-26_0831_141647/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 7180,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_141647/R0831_141647__roselindsi__final_2026-09-16T160028.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_142213",
+      "databag_id": "databag-26_0831_142213",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ce109d2c6dd5430bae283186b631c0c8/databag-26_0831_142213/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 13701,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_142213/R0831_142213__roselindsi__final_2026-09-16T160155.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_144025",
+      "databag_id": "databag-26_0831_144025",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/bed6d0c0ee444d08aff3695d489f70c9/databag-26_0831_144025/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 10769,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_144025/R0831_144025__roselindsi__final_2026-09-16T160237.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_144111",
+      "databag_id": "databag-26_0831_144111",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/25fdb1396bb3407399decb8dbd97af7b/databag-26_0831_144111/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 824,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_144111/R0831_144111__roselindsi__final_2026-09-18T112011.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_144112",
+      "databag_id": "databag-26_0831_144112",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/57b4d61d9e7343ac95aca6bdf6120f43/databag-26_0831_144112/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 10023,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_144112/R0831_144112__roselindsi__final_2026-09-16T160307.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_144757",
+      "databag_id": "databag-26_0831_144757",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/8f53cd92554544ea9337799993419c87/databag-26_0831_144757/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 1371,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_144757/R0831_144757__roselindsi__final_2026-09-16T160331.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_145024",
+      "databag_id": "databag-26_0831_145024",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ee114f4cf4234b33ba93402a2a90ced0/databag-26_0831_145024/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 3356,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_145024/R0831_145024__roselindsi__final_2026-09-15T165824.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_150130",
+      "databag_id": "databag-26_0831_150130",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/25fdb1396bb3407399decb8dbd97af7b/databag-26_0831_150130/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 6828,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_150130/R0831_150130__roselindsi__final_2026-09-16T160649.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_150131",
+      "databag_id": "databag-26_0831_150131",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/57b4d61d9e7343ac95aca6bdf6120f43/databag-26_0831_150131/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 10467,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_150131/R0831_150131__roselindsi__final_2026-09-15T165849.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_152750",
+      "databag_id": "databag-26_0831_152750",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/57b4d61d9e7343ac95aca6bdf6120f43/databag-26_0831_152750/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 16018,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_152750/R0831_152750__roselindsi__final_2026-09-18T112026.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_153836",
+      "databag_id": "databag-26_0831_153836",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/25fdb1396bb3407399decb8dbd97af7b/databag-26_0831_153836/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 14846,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_153836/R0831_153836__roselindsi__final_2026-09-15T165907.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_155202",
+      "databag_id": "databag-26_0831_155202",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/516d5cfbaec945fe94071f8cfc2a5eef/databag-26_0831_155202/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 550,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_155202/R0831_155202__roselindsi__final_2026-09-17T163945.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_160211",
+      "databag_id": "databag-26_0831_160211",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/516d5cfbaec945fe94071f8cfc2a5eef/databag-26_0831_160211/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 16302,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_160211/R0831_160211__roselindsi__final_2026-09-14T103921.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_161711",
+      "databag_id": "databag-26_0831_161711",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/d94fb4e4b2034feea9859986b0b86f40/databag-26_0831_161711/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 16686,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_161711/R0831_161711__roselindsi__final_2026-09-18T112045.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_172326",
+      "databag_id": "databag-26_0831_172326",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ed512dd829ce475294a0219554efca53/databag-26_0831_172326/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 9153,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_172326/R0831_172326__roselindsi__final_2026-09-14T101013.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_172609",
+      "databag_id": "databag-26_0831_172609",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/516d5cfbaec945fe94071f8cfc2a5eef/databag-26_0831_172609/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 5095,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_172609/R0831_172609__roselindsi__final_2026-09-16T160731.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0831_182444",
+      "databag_id": "databag-26_0831_182444",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ce109d2c6dd5430bae283186b631c0c8/databag-26_0831_182444/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 13211,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0831_182444/R0831_182444__roselindsi__final_2026-09-16T160757.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0901_102512",
+      "databag_id": "databag-26_0901_102512",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/dcd2981be8a34a5a8c9e81c8b94a63de/databag-26_0901_102512/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 18125,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0901_102512/R0901_102512__roselindsi__final_2026-09-17T164004.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0901_102518",
+      "databag_id": "databag-26_0901_102518",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/5ba446c12836445bb2e56b67100df86c/databag-26_0901_102518/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 12227,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0901_102518/R0901_102518__roselindsi__final_2026-09-16T161342.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0901_102811",
+      "databag_id": "databag-26_0901_102811",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/2954a4f3cdd346389024b9952e4003c3/databag-26_0901_102811/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 156,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0901_102811/R0901_102811__roselindsi__final_2026-09-17T164031.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0901_102928",
+      "databag_id": "databag-26_0901_102928",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/2954a4f3cdd346389024b9952e4003c3/databag-26_0901_102928/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 17413,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0901_102928/R0901_102928__roselindsi__final_2026-09-18T112117.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0901_105536",
+      "databag_id": "databag-26_0901_105536",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/d2eac104b1144b62b155af3336330eac/databag-26_0901_105536/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 428,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0901_105536/R0901_105536__roselindsi__final_2026-09-17T164058.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0901_110504",
+      "databag_id": "databag-26_0901_110504",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/c86a069b34b94812aa46cdd0cc06929f/databag-26_0901_110504/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 2986,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0901_110504/R0901_110504__roselindsi__final_2026-09-17T164127.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0901_110921",
+      "databag_id": "databag-26_0901_110921",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/fb605d95022e4fc7b526a2bb6dd226fb/databag-26_0901_110921/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 16350,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0901_110921/R0901_110921__roselindsi__final_2026-09-17T164224.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0901_110931",
+      "databag_id": "databag-26_0901_110931",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/f27cd251598e4f35a486a089dc4af4d0/databag-26_0901_110931/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 15543,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0901_110931/R0901_110931__roselindsi__final_2026-09-17T164854.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0901_111355",
+      "databag_id": "databag-26_0901_111355",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/e937c2ac7c3f47299d04a164f893298f/databag-26_0901_111355/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 760,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0901_111355/R0901_111355__roselindsi__final_2026-09-16T161355.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0901_111404",
+      "databag_id": "databag-26_0901_111404",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/d2eac104b1144b62b155af3336330eac/databag-26_0901_111404/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 8406,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0901_111404/R0901_111404__roselindsi__final_2026-09-18T112129.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0901_135905",
+      "databag_id": "databag-26_0901_135905",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/f27cd251598e4f35a486a089dc4af4d0/databag-26_0901_135905/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 15693,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0901_135905/R0901_135905__roselindsi__final_2026-09-14T101133.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0901_164536",
+      "databag_id": "databag-26_0901_164536",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/5ba446c12836445bb2e56b67100df86c/databag-26_0901_164536/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 780,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0901_164536/R0901_164536__roselindsi__final_2026-09-14T104003.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0901_174308",
+      "databag_id": "databag-26_0901_174308",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/5ba446c12836445bb2e56b67100df86c/databag-26_0901_174308/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 4079,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0901_174308/R0901_174308__roselindsi__final_2026-09-18T112315.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0901_184354",
+      "databag_id": "databag-26_0901_184354",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/7b042b4bb8a34338ba3f28f3a8d01c78/databag-26_0901_184354/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 13777,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0901_184354/R0901_184354__roselindsi__final_2026-09-15T165936.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0902_103012",
+      "databag_id": "databag-26_0902_103012",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/803df3dca09146d294208effe6c99fc8/databag-26_0902_103012/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 15550,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0902_103012/R0902_103012__roselindsi__final_2026-09-17T164909.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0902_104230",
+      "databag_id": "databag-26_0902_104230",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/f27cd251598e4f35a486a089dc4af4d0/databag-26_0902_104230/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 514,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0902_104230/R0902_104230__roselindsi__final_2026-09-17T164943.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0902_104447",
+      "databag_id": "databag-26_0902_104447",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/f880587321bb4fe8aa278de618ea5e9e/databag-26_0902_104447/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 8343,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0902_104447/R0902_104447__roselindsi__final_2026-09-17T165004.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0902_104616",
+      "databag_id": "databag-26_0902_104616",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/dcd2981be8a34a5a8c9e81c8b94a63de/databag-26_0902_104616/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 17051,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0902_104616/R0902_104616__roselindsi__final_2026-09-17T165028.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0902_105201",
+      "databag_id": "databag-26_0902_105201",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/fb605d95022e4fc7b526a2bb6dd226fb/databag-26_0902_105201/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 8116,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0902_105201/R0902_105201__roselindsi__final_2026-09-17T165045.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0902_111004",
+      "databag_id": "databag-26_0902_111004",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/d2eac104b1144b62b155af3336330eac/databag-26_0902_111004/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 4842,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0902_111004/R0902_111004__roselindsi__final_2026-09-17T165932.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0902_135004",
+      "databag_id": "databag-26_0902_135004",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/659069695ef749748fcf2fa1fac98b18/databag-26_0902_135004/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 21432,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0902_135004/R0902_135004__roselindsi__final_2026-09-15T165956.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0902_141843",
+      "databag_id": "databag-26_0902_141843",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/5ba446c12836445bb2e56b67100df86c/databag-26_0902_141843/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 8940,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0902_141843/R0902_141843__roselindsi__final_2026-09-14T104045.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0902_142931",
+      "databag_id": "databag-26_0902_142931",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/659069695ef749748fcf2fa1fac98b18/databag-26_0902_142931/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 15562,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0902_142931/R0902_142931__roselindsi__final_2026-09-18T112329.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0902_143502",
+      "databag_id": "databag-26_0902_143502",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/803df3dca09146d294208effe6c99fc8/databag-26_0902_143502/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 598,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0902_143502/R0902_143502__roselindsi__final_2026-09-14T101516.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0902_143537",
+      "databag_id": "databag-26_0902_143537",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/2954a4f3cdd346389024b9952e4003c3/databag-26_0902_143537/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 75819,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0902_143537/R0902_143537__roselindsi__final_2026-09-15T170012.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0902_145637",
+      "databag_id": "databag-26_0902_145637",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/f880587321bb4fe8aa278de618ea5e9e/databag-26_0902_145637/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 13082,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0902_145637/R0902_145637__roselindsi__final_2026-09-16T161452.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0902_150327",
+      "databag_id": "databag-26_0902_150327",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/3b58207d11d84101836be0fa02aa3f92/databag-26_0902_150327/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 2591,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0902_150327/R0902_150327__roselindsi__final_2026-09-15T170031.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0902_170022",
+      "databag_id": "databag-26_0902_170022",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/f27cd251598e4f35a486a089dc4af4d0/databag-26_0902_170022/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 11533,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0902_170022/R0902_170022__roselindsi__final_2026-09-15T170048.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0902_171035",
+      "databag_id": "databag-26_0902_171035",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/659069695ef749748fcf2fa1fac98b18/databag-26_0902_171035/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 3334,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0902_171035/R0902_171035__roselindsi__final_2026-09-16T161512.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0902_174800",
+      "databag_id": "databag-26_0902_174800",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/803df3dca09146d294208effe6c99fc8/databag-26_0902_174800/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 1508,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0902_174800/R0902_174800__roselindsi__final_2026-09-16T161543.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0902_183417",
+      "databag_id": "databag-26_0902_183417",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/659069695ef749748fcf2fa1fac98b18/databag-26_0902_183417/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 10273,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0902_183417/R0902_183417__roselindsi__final_2026-09-16T161605.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0903_112320",
+      "databag_id": "databag-26_0903_112320",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ee114f4cf4234b33ba93402a2a90ced0/databag-26_0903_112320/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 5051,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0903_112320/R0903_112320__roselindsi__final_2026-09-17T170005.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0903_132112",
+      "databag_id": "databag-26_0903_132112",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/fb605d95022e4fc7b526a2bb6dd226fb/databag-26_0903_132112/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 6844,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0903_132112/R0903_132112__roselindsi__final_2026-09-16T161629.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0903_132145",
+      "databag_id": "databag-26_0903_132145",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ee114f4cf4234b33ba93402a2a90ced0/databag-26_0903_132145/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 436,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0903_132145/R0903_132145__roselindsi__final_2026-09-16T161704.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0903_132614",
+      "databag_id": "databag-26_0903_132614",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/fb605d95022e4fc7b526a2bb6dd226fb/databag-26_0903_132614/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 12359,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0903_132614/R0903_132614__roselindsi__final_2026-09-15T170111.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0903_135034",
+      "databag_id": "databag-26_0903_135034",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/fb605d95022e4fc7b526a2bb6dd226fb/databag-26_0903_135034/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 0,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0903_135034/R0903_135034__roselindsi__final_2026-09-17T170019.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0903_135524",
+      "databag_id": "databag-26_0903_135524",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/fb605d95022e4fc7b526a2bb6dd226fb/databag-26_0903_135524/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 11403,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0903_135524/R0903_135524__roselindsi__final_2026-09-18T112348.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0903_140123",
+      "databag_id": "databag-26_0903_140123",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ee114f4cf4234b33ba93402a2a90ced0/databag-26_0903_140123/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 10503,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0903_140123/R0903_140123__roselindsi__final_2026-09-16T161732.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0903_151234",
+      "databag_id": "databag-26_0903_151234",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/c38ce5c3457442e6a86206a3d205d570/databag-26_0903_151234/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 63,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0903_151234/R0903_151234__roselindsi__final_2026-09-16T161751.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0903_165010",
+      "databag_id": "databag-26_0903_165010",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/516d5cfbaec945fe94071f8cfc2a5eef/databag-26_0903_165010/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 2050,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0903_165010/R0903_165010__roselindsi__final_2026-09-17T170056.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0903_202955",
+      "databag_id": "databag-26_0903_202955",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ae47ecbd77d4480c9de2abcab9dcb6c0/databag-26_0903_202955/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 116,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0903_202955/R0903_202955__roselindsi__final_2026-09-17T170123.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0904_102052",
+      "databag_id": "databag-26_0904_102052",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/d2eac104b1144b62b155af3336330eac/databag-26_0904_102052/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 0,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0904_102052/R0904_102052__roselindsi__final_2026-09-15T170136.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0904_102129",
+      "databag_id": "databag-26_0904_102129",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/fb605d95022e4fc7b526a2bb6dd226fb/databag-26_0904_102129/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 38645,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0904_102129/R0904_102129__roselindsi__final_2026-09-16T161812.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0904_102313",
+      "databag_id": "databag-26_0904_102313",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/c38ce5c3457442e6a86206a3d205d570/databag-26_0904_102313/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 15677,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0904_102313/R0904_102313__roselindsi__final_2026-09-14T104125.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0904_102322",
+      "databag_id": "databag-26_0904_102322",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/d2eac104b1144b62b155af3336330eac/databag-26_0904_102322/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 617,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0904_102322/R0904_102322__roselindsi__final_2026-09-17T170151.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0904_103258",
+      "databag_id": "databag-26_0904_103258",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/8f53cd92554544ea9337799993419c87/databag-26_0904_103258/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 550,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0904_103258/R0904_103258__roselindsi__final_2026-09-17T170211.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0904_104341",
+      "databag_id": "databag-26_0904_104341",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/c38ce5c3457442e6a86206a3d205d570/databag-26_0904_104341/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 1996,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0904_104341/R0904_104341__roselindsi__final_2026-09-17T170259.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0904_104350",
+      "databag_id": "databag-26_0904_104350",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/803df3dca09146d294208effe6c99fc8/databag-26_0904_104350/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 12551,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0904_104350/R0904_104350__roselindsi__final_2026-09-17T170321.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0904_104759",
+      "databag_id": "databag-26_0904_104759",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/f880587321bb4fe8aa278de618ea5e9e/databag-26_0904_104759/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 7619,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0904_104759/R0904_104759__roselindsi__final_2026-09-17T170348.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0904_111649",
+      "databag_id": "databag-26_0904_111649",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/f880587321bb4fe8aa278de618ea5e9e/databag-26_0904_111649/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 4269,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0904_111649/R0904_111649__roselindsi__final_2026-09-18T112359.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0904_112658",
+      "databag_id": "databag-26_0904_112658",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/f880587321bb4fe8aa278de618ea5e9e/databag-26_0904_112658/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 10770,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0904_112658/R0904_112658__roselindsi__final_2026-09-16T161834.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0904_113216",
+      "databag_id": "databag-26_0904_113216",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/803df3dca09146d294208effe6c99fc8/databag-26_0904_113216/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 1282,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0904_113216/R0904_113216__roselindsi__final_2026-09-15T170231.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0904_114035",
+      "databag_id": "databag-26_0904_114035",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/8f53cd92554544ea9337799993419c87/databag-26_0904_114035/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 9789,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0904_114035/R0904_114035__roselindsi__final_2026-09-15T170250.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0904_115223",
+      "databag_id": "databag-26_0904_115223",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/dcd2981be8a34a5a8c9e81c8b94a63de/databag-26_0904_115223/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 1466,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0904_115223/R0904_115223__roselindsi__final_2026-09-14T104302.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0904_135217",
+      "databag_id": "databag-26_0904_135217",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/516d5cfbaec945fe94071f8cfc2a5eef/databag-26_0904_135217/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 134,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0904_135217/R0904_135217__roselindsi__final_2026-09-14T101612.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0904_135747",
+      "databag_id": "databag-26_0904_135747",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/c38ce5c3457442e6a86206a3d205d570/databag-26_0904_135747/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 1516,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0904_135747/R0904_135747__roselindsi__final_2026-09-16T161857.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0904_140645",
+      "databag_id": "databag-26_0904_140645",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/f27cd251598e4f35a486a089dc4af4d0/databag-26_0904_140645/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 3160,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0904_140645/R0904_140645__roselindsi__final_2026-09-14T104344.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0904_141734",
+      "databag_id": "databag-26_0904_141734",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/803df3dca09146d294208effe6c99fc8/databag-26_0904_141734/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 33,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0904_141734/R0904_141734__roselindsi__final_2026-09-18T112420.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0904_151531",
+      "databag_id": "databag-26_0904_151531",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/dcd2981be8a34a5a8c9e81c8b94a63de/databag-26_0904_151531/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 13127,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0904_151531/R0904_151531__roselindsi__final_2026-09-15T170324.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0904_152727",
+      "databag_id": "databag-26_0904_152727",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/c38ce5c3457442e6a86206a3d205d570/databag-26_0904_152727/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 2041,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0904_152727/R0904_152727__roselindsi__final_2026-09-15T170416.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0904_160012",
+      "databag_id": "databag-26_0904_160012",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/57b4d61d9e7343ac95aca6bdf6120f43/databag-26_0904_160012/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 1468,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0904_160012/R0904_160012__roselindsi__final_2026-09-16T161918.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0904_160756",
+      "databag_id": "databag-26_0904_160756",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/de64fa32c1e4429c9a41d7731039fdb2/databag-26_0904_160756/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 3549,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0904_160756/R0904_160756__roselindsi__final_2026-09-17T170413.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0904_161130",
+      "databag_id": "databag-26_0904_161130",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ee114f4cf4234b33ba93402a2a90ced0/databag-26_0904_161130/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 11491,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0904_161130/R0904_161130__roselindsi__final_2026-09-14T104505.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0904_163214",
+      "databag_id": "databag-26_0904_163214",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ae47ecbd77d4480c9de2abcab9dcb6c0/databag-26_0904_163214/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 2643,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0904_163214/R0904_163214__roselindsi__final_2026-09-15T170438.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0904_183431",
+      "databag_id": "databag-26_0904_183431",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ae47ecbd77d4480c9de2abcab9dcb6c0/databag-26_0904_183431/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 6323,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0904_183431/R0904_183431__roselindsi__final_2026-09-16T162118.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0904_184516",
+      "databag_id": "databag-26_0904_184516",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ce109d2c6dd5430bae283186b631c0c8/databag-26_0904_184516/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 13498,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0904_184516/R0904_184516__roselindsi__final_2026-09-18T112445.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0905_102328",
+      "databag_id": "databag-26_0905_102328",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/3b58207d11d84101836be0fa02aa3f92/databag-26_0905_102328/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 0,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0905_102328/R0905_102328__roselindsi__final_2026-09-17T170440.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0905_103047",
+      "databag_id": "databag-26_0905_103047",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/803df3dca09146d294208effe6c99fc8/databag-26_0905_103047/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 13957,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0905_103047/R0905_103047__roselindsi__final_2026-09-16T162150.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0905_103357",
+      "databag_id": "databag-26_0905_103357",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/f27cd251598e4f35a486a089dc4af4d0/databag-26_0905_103357/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 3489,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0905_103357/R0905_103357__roselindsi__final_2026-09-17T170614.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0905_105106",
+      "databag_id": "databag-26_0905_105106",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/803df3dca09146d294208effe6c99fc8/databag-26_0905_105106/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 0,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0905_105106/R0905_105106__roselindsi__final_2026-09-17T170626.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0905_105401",
+      "databag_id": "databag-26_0905_105401",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/dcd2981be8a34a5a8c9e81c8b94a63de/databag-26_0905_105401/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 2779,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0905_105401/R0905_105401__roselindsi__final_2026-09-14T104547.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0905_105647",
+      "databag_id": "databag-26_0905_105647",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/803df3dca09146d294208effe6c99fc8/databag-26_0905_105647/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 5304,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0905_105647/R0905_105647__roselindsi__final_2026-09-18T112500.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0905_111928",
+      "databag_id": "databag-26_0905_111928",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/f27cd251598e4f35a486a089dc4af4d0/databag-26_0905_111928/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 1044,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0905_111928/R0905_111928__roselindsi__final_2026-09-16T162232.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0905_112107",
+      "databag_id": "databag-26_0905_112107",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/f27cd251598e4f35a486a089dc4af4d0/databag-26_0905_112107/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 7949,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0905_112107/R0905_112107__roselindsi__final_2026-09-16T162315.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0905_112649",
+      "databag_id": "databag-26_0905_112649",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/dcd2981be8a34a5a8c9e81c8b94a63de/databag-26_0905_112649/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 14392,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0905_112649/R0905_112649__roselindsi__final_2026-09-16T162614.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0905_113258",
+      "databag_id": "databag-26_0905_113258",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/516d5cfbaec945fe94071f8cfc2a5eef/databag-26_0905_113258/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 6551,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0905_113258/R0905_113258__roselindsi__final_2026-09-17T170659.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0905_114308",
+      "databag_id": "databag-26_0905_114308",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/516d5cfbaec945fe94071f8cfc2a5eef/databag-26_0905_114308/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 1716,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0905_114308/R0905_114308__roselindsi__final_2026-09-18T112525.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0905_120830",
+      "databag_id": "databag-26_0905_120830",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/3b58207d11d84101836be0fa02aa3f92/databag-26_0905_120830/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 76,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0905_120830/R0905_120830__roselindsi__final_2026-09-16T162636.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0905_135334",
+      "databag_id": "databag-26_0905_135334",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/ce109d2c6dd5430bae283186b631c0c8/databag-26_0905_135334/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 6605,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0905_135334/R0905_135334__roselindsi__final_2026-09-15T170456.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0905_143039",
+      "databag_id": "databag-26_0905_143039",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/516d5cfbaec945fe94071f8cfc2a5eef/databag-26_0905_143039/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 9280,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0905_143039/R0905_143039__roselindsi__final_2026-09-16T162802.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0905_154445",
+      "databag_id": "databag-26_0905_154445",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/fb605d95022e4fc7b526a2bb6dd226fb/databag-26_0905_154445/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 42520,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0905_154445/R0905_154445__roselindsi__final_2026-09-14T101704.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0905_163520",
+      "databag_id": "databag-26_0905_163520",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/de64fa32c1e4429c9a41d7731039fdb2/databag-26_0905_163520/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 12421,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0905_163520/R0905_163520__roselindsi__final_2026-09-16T162829.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0905_165202",
+      "databag_id": "databag-26_0905_165202",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/3b58207d11d84101836be0fa02aa3f92/databag-26_0905_165202/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 11875,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0905_165202/R0905_165202__roselindsi__final_2026-09-16T162857.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0905_165806",
+      "databag_id": "databag-26_0905_165806",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/de64fa32c1e4429c9a41d7731039fdb2/databag-26_0905_165806/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 10475,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0905_165806/R0905_165806__roselindsi__final_2026-09-14T104624.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0905_174907",
+      "databag_id": "databag-26_0905_174907",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/de64fa32c1e4429c9a41d7731039fdb2/databag-26_0905_174907/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 3842,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0905_174907/R0905_174907__roselindsi__final_2026-09-16T162918.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0905_181330",
+      "databag_id": "databag-26_0905_181330",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/de64fa32c1e4429c9a41d7731039fdb2/databag-26_0905_181330/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 1351,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0905_181330/R0905_181330__roselindsi__final_2026-09-15T170519.json",
+      "mosaic_annotation_status": "final"
+    },
+    {
+      "recording_id": "R0905_181730",
+      "databag_id": "databag-26_0905_181730",
+      "source_video": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/f27cd251598e4f35a486a089dc4af4d0/databag-26_0905_181730/cam34.mp4",
+      "source_exists_here": false,
+      "clip_start_frame": 6794,
+      "fps": 30.0,
+      "mosaic_annotation": "/Users/roselindsi/Documents/GitHub/Long_Video_Splitting/annotations/databag-26_0905_181730/R0905_181730__roselindsi__final_2026-09-18T112615.json",
+      "mosaic_annotation_status": "final"
+    }
+  ]
+}

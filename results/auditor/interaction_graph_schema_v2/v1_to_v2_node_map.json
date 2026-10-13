@@ -1,0 +1,99 @@
+{
+  "contract_version": "graph_schema_v2_draft",
+  "created": "2026-09-24",
+  "basis": "等待/跟随降为特殊状态（2026-09-24 裁决）。判据必须落在视频可观察的证据上，不能落在标注者有没有把结果写出来——否则同一个视觉事实会因为描述详略不同而得到不同的本体身份。",
+  "rule": {
+    "interaction_node": "视频中能观察到以具体物体为中心的主动取得、运输、交付或放置过程，且能识别一个有意义的交互状态或结果。",
+    "uncertain": "能观察到携带物体或位移，但无法根据当前窗口判断它是独立的目标导向交互状态，还是其他任务中的附带动作。",
+    "special_state": "主要为等待、跟随、巡视或一般位移，且没有足够可观察证据支持其作为独立交互节点。限于本研究界定的交互状态范围，不表示这些行为在一般视频理解中没有语义。"
+  },
+  "decided": [
+    {
+      "local_node_id": "mosaic_complement/mosaic_graph_0006/C",
+      "description": "跟随他人走到厨房另一端",
+      "v1_group": "pg_person_following",
+      "v2": "special_state",
+      "evidence": "跟随移动，无被作用的物体，无可见结果。"
+    },
+    {
+      "local_node_id": "mosaic_complement/mosaic_graph_0009/A",
+      "description": "跟随前方人员行走",
+      "v1_group": "pg_person_following",
+      "v2": "special_state",
+      "evidence": "同上。"
+    },
+    {
+      "local_node_id": "mosaic_complement/mosaic_graph_0020/B",
+      "description": "等待他人继续组装",
+      "v1_group": "pg_collaboration_waiting",
+      "v2": "special_state",
+      "evidence": "等待他人，本身不推进任何任务目标。"
+    },
+    {
+      "local_node_id": "mosaic_complement/mosaic_graph_0010/A",
+      "description": "拿着手机穿梭在电动车里",
+      "v1_group": "pg_electric_scooter_arrangement",
+      "v2": "special_state",
+      "evidence": "看帧 t=5/40/100：街边电动车之间行走，手机屏幕上是通话中的人脸——手机在被使用而不是被操作，没有被作用的物体也没有可见结果。该视频 120s 里这个节点占 111.4s，v2 下这条录像几乎全是特殊状态、只剩一个交互节点（B 摆放一台电动车 8.6s）。这本身是标注粒度的信号，记入未映射清单。"
+    }
+  ],
+  "kept": [
+    {
+      "local_node_id": "mosaic_complement/mosaic_graph_0002/C",
+      "description": "走路去另外一个房间取凳子再走回来",
+      "v1_group": "pg_support_item_retrieval",
+      "v2": "interaction_node",
+      "evidence": "看帧 t=60 空手走出、t=76 到达另一房间、t=94 双手抱着圆形凳面走回。取得与运输都可观察，符合 interaction_node 判据。注意：保留的理由是视频证据，不是它影响任务回访指标。",
+      "granularity_note": "38.7s 的跨度把空手位移、取得、搬回三件事打包成一个状态，颗粒度问题单独记录。"
+    },
+    {
+      "local_node_id": "mosaic_complement/mosaic_graph_0026/D",
+      "description": "拿着杯子走到隔壁房间",
+      "v1_group": "pg_dried_fruit_weighing",
+      "v2": "interaction_node",
+      "evidence": "看帧 t=77：手持杯子走向的那张桌子上，秤就在同一帧里可见；紧接的两个标注事件是 E 调好称、F 用杯子当容器在称上称果干。运送的目的地与被送物体的后续用途都在视频里可观察。",
+      "overrides": "2026-09-24 初次建议为 uncertain。视觉证据不支持——降级理由只能是证据不足，这里证据是足的。"
+    }
+  ],
+  "undecided": [
+    {
+      "local_node_id": "mosaic_complement/mosaic_graph_0022/D",
+      "description": "拿着塑料包装里的茶叶走路",
+      "v1_group": "pg_tea_portioning",
+      "v2": "uncertain",
+      "evidence": "看帧 t=110/115/119：走廊中手持一小包茶叶，画面里没有目的地。该段是 109.3–120.0s，而视频在 120.0s 结束——运送的去向在这个窗口内不可观察。",
+      "why_uncertain": "与 0026/D 是同一类动作，区别完全在于可观察证据：那一条看得到目的地和后续用途，这一条看不到。这正是 uncertain 这个取值要承载的情形。"
+    }
+  ],
+  "groups_emptied": [
+    {
+      "procedure_group_id": "pg_person_following",
+      "name": "跟随他人行走",
+      "v1_members": 2,
+      "v1_videos": 2,
+      "note": "两个成员节点全部降为特殊状态，该组在 v2 消失。它是 v1 那 8 个跨视频复用组之一，所以复用组 8 → 7。"
+    },
+    {
+      "procedure_group_id": "pg_collaboration_waiting",
+      "name": "等待协作者",
+      "v1_members": 1,
+      "v1_videos": 1,
+      "note": "唯一成员降为特殊状态，该组在 v2 消失。"
+    }
+  ],
+  "groups_reduced": [
+    {
+      "procedure_group_id": "pg_electric_scooter_arrangement",
+      "name": "巡视并摆放电动车",
+      "v1_members": 2,
+      "v2_members": 1,
+      "note": "A 降为特殊状态，只剩 B（摆放一台电动车）。单节点簇 v2 允许，但该组的 video_count 仍为 1。"
+    }
+  ],
+  "ambiguity_cases_for_e0": [
+    "mosaic_complement/mosaic_graph_0002/C",
+    "mosaic_complement/mosaic_graph_0022/D",
+    "mosaic_complement/mosaic_graph_0026/D",
+    "mosaic_complement/mosaic_graph_0010/A"
+  ]
+}

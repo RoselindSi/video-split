@@ -1,0 +1,199 @@
+{
+  "schema_version": "interaction_graph_timeline_v1",
+  "video_id": "mosaic_graph_0018",
+  "events": [
+    {
+      "event_id": "A",
+      "description": "特殊事件"
+    },
+    {
+      "event_id": "B",
+      "description": "拿货架上的物品放入推车"
+    },
+    {
+      "event_id": "C",
+      "description": "拿出推车里的标签和本子"
+    }
+  ],
+  "segments": [
+    {
+      "start_s": 0.0,
+      "end_s": 14.4,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 14.4,
+      "end_s": 17.7,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 17.7,
+      "end_s": 37.9,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 37.9,
+      "end_s": 53.9,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 53.9,
+      "end_s": 120.0,
+      "event_id": "B",
+      "repeats_within_segment": true,
+      "note": ""
+    }
+  ],
+  "confirmed_full_video": true,
+  "manifest_sha256": "13ec96fbbfb20eba2cc431ddb116eaa964d95590461b309ef4e3430a91446700",
+  "annotator": "reviewer_1",
+  "saved_at": "2026-09-20T09:25:26.746893+00:00",
+  "status": "draft",
+  "graph": {
+    "nodes": [
+      {
+        "event_id": "A",
+        "description": "特殊事件",
+        "segment_count": 2,
+        "total_duration_s": 34.6,
+        "segment_indices": [
+          1,
+          3
+        ]
+      },
+      {
+        "event_id": "B",
+        "description": "拿货架上的物品放入推车",
+        "segment_count": 2,
+        "total_duration_s": 69.4,
+        "segment_indices": [
+          2,
+          5
+        ]
+      },
+      {
+        "event_id": "C",
+        "description": "拿出推车里的标签和本子",
+        "segment_count": 1,
+        "total_duration_s": 16.0,
+        "segment_indices": [
+          4
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "source": "A",
+        "target": "B",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          14.4
+        ]
+      },
+      {
+        "source": "A",
+        "target": "C",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          37.9
+        ]
+      },
+      {
+        "source": "B",
+        "target": "A",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          17.7
+        ]
+      },
+      {
+        "source": "B",
+        "target": "B",
+        "count": 1,
+        "kinds": {
+          "internal_repeat": 1
+        },
+        "times_s": [
+          53.9
+        ]
+      },
+      {
+        "source": "C",
+        "target": "B",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          53.9
+        ]
+      }
+    ],
+    "edge_occurrences": [
+      {
+        "source": "B",
+        "target": "B",
+        "kind": "internal_repeat",
+        "at_s": 53.9,
+        "from_segment": 5,
+        "to_segment": 5
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 14.4,
+        "from_segment": 1,
+        "to_segment": 2
+      },
+      {
+        "source": "B",
+        "target": "A",
+        "kind": "transition",
+        "at_s": 17.7,
+        "from_segment": 2,
+        "to_segment": 3
+      },
+      {
+        "source": "A",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 37.9,
+        "from_segment": 3,
+        "to_segment": 4
+      },
+      {
+        "source": "C",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 53.9,
+        "from_segment": 4,
+        "to_segment": 5
+      }
+    ],
+    "event_sequence": [
+      "A",
+      "B",
+      "A",
+      "C",
+      "B"
+    ]
+  }
+}

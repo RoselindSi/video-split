@@ -1,0 +1,246 @@
+{
+  "schema_version": "interaction_graph_timeline_v1",
+  "video_id": "mosaic_graph_0022",
+  "events": [
+    {
+      "event_id": "A",
+      "description": "从大袋子里往塑料包装里装茶叶"
+    },
+    {
+      "event_id": "B",
+      "description": "在称上称这一包茶叶"
+    },
+    {
+      "event_id": "C",
+      "description": "倒茶叶回大袋子"
+    },
+    {
+      "event_id": "D",
+      "description": "拿着塑料包装里的茶叶走路"
+    }
+  ],
+  "segments": [
+    {
+      "start_s": 0.0,
+      "end_s": 8.5,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 8.5,
+      "end_s": 25.0,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 25.0,
+      "end_s": 51.8,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 51.8,
+      "end_s": 68.5,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 68.5,
+      "end_s": 98.7,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 98.7,
+      "end_s": 102.7,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 102.7,
+      "end_s": 109.3,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 109.3,
+      "end_s": 120.0,
+      "event_id": "D",
+      "repeats_within_segment": false,
+      "note": ""
+    }
+  ],
+  "confirmed_full_video": true,
+  "manifest_sha256": "13ec96fbbfb20eba2cc431ddb116eaa964d95590461b309ef4e3430a91446700",
+  "annotator": "reviewer_1",
+  "saved_at": "2026-09-20T09:51:12.109711+00:00",
+  "status": "final",
+  "graph": {
+    "nodes": [
+      {
+        "event_id": "A",
+        "description": "从大袋子里往塑料包装里装茶叶",
+        "segment_count": 3,
+        "total_duration_s": 65.5,
+        "segment_indices": [
+          1,
+          3,
+          5
+        ]
+      },
+      {
+        "event_id": "B",
+        "description": "在称上称这一包茶叶",
+        "segment_count": 3,
+        "total_duration_s": 37.2,
+        "segment_indices": [
+          2,
+          4,
+          6
+        ]
+      },
+      {
+        "event_id": "C",
+        "description": "倒茶叶回大袋子",
+        "segment_count": 1,
+        "total_duration_s": 6.6,
+        "segment_indices": [
+          7
+        ]
+      },
+      {
+        "event_id": "D",
+        "description": "拿着塑料包装里的茶叶走路",
+        "segment_count": 1,
+        "total_duration_s": 10.7,
+        "segment_indices": [
+          8
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "source": "A",
+        "target": "B",
+        "count": 3,
+        "kinds": {
+          "transition": 3
+        },
+        "times_s": [
+          8.5,
+          51.8,
+          98.7
+        ]
+      },
+      {
+        "source": "B",
+        "target": "A",
+        "count": 2,
+        "kinds": {
+          "transition": 2
+        },
+        "times_s": [
+          25.0,
+          68.5
+        ]
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          102.7
+        ]
+      },
+      {
+        "source": "C",
+        "target": "D",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          109.3
+        ]
+      }
+    ],
+    "edge_occurrences": [
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 8.5,
+        "from_segment": 1,
+        "to_segment": 2
+      },
+      {
+        "source": "B",
+        "target": "A",
+        "kind": "transition",
+        "at_s": 25.0,
+        "from_segment": 2,
+        "to_segment": 3
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 51.8,
+        "from_segment": 3,
+        "to_segment": 4
+      },
+      {
+        "source": "B",
+        "target": "A",
+        "kind": "transition",
+        "at_s": 68.5,
+        "from_segment": 4,
+        "to_segment": 5
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 98.7,
+        "from_segment": 5,
+        "to_segment": 6
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 102.7,
+        "from_segment": 6,
+        "to_segment": 7
+      },
+      {
+        "source": "C",
+        "target": "D",
+        "kind": "transition",
+        "at_s": 109.3,
+        "from_segment": 7,
+        "to_segment": 8
+      }
+    ],
+    "event_sequence": [
+      "A",
+      "B",
+      "A",
+      "B",
+      "A",
+      "B",
+      "C",
+      "D"
+    ]
+  }
+}

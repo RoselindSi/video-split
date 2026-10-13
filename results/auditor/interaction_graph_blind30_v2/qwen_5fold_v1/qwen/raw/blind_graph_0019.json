@@ -1,0 +1,128 @@
+{
+  "schema_version": "interaction_graph_qwen_5fold_v1",
+  "video_id": "blind_graph_0019",
+  "fold": 3,
+  "test_video_ids": [
+    "blind_graph_0002",
+    "blind_graph_0004",
+    "blind_graph_0009",
+    "blind_graph_0019",
+    "blind_graph_0021",
+    "blind_graph_0024"
+  ],
+  "demo_video_ids": [
+    "blind_graph_0016",
+    "blind_graph_0008",
+    "blind_graph_0012",
+    "blind_graph_0007",
+    "blind_graph_0013",
+    "blind_graph_0025",
+    "blind_graph_0026",
+    "blind_graph_0029"
+  ],
+  "target_gold_was_in_prompt": false,
+  "backend": "qwen",
+  "model_id": "/workspace/tr1/ckpts/Qwen3-VL-8B-Instruct",
+  "fps": 1.0,
+  "passes": 2,
+  "raw_passes": [
+    "{\"events\":[{\"event_id\":\"A\",\"description\":\"推车穿过闸机\"},{\"event_id\":\"B\",\"description\":\"推车进入房间\"},{\"event_id\":\"C\",\"description\":\"从车中取出餐具\"},{\"event_id\":\"D\",\"description\":\"在水槽清洗餐具\"},{\"event_id\":\"E\",\"description\":\"将清洗后的餐具放置在台面上\"},{\"event_id\":\"F\",\"description\":\"将水果碗放置在台面上\"},{\"event_id\":\"G\",\"description\":\"用毛巾擦拭餐具\"}],\"segments\":[{\"start_s\":0.0,\"end_s\":29.0,\"event_id\":\"A\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":29.0,\"end_s\":41.0,\"event_id\":\"B\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":41.0,\"end_s\":55.0,\"event_id\":\"C\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":55.0,\"end_s\":63.0,\"event_id\":\"D\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":63.0,\"end_s\":83.0,\"event_id\":\"E\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":83.0,\"end_s\":96.0,\"event_id\":\"F\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":96.0,\"end_s\":116.0,\"event_id\":\"G\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":116.0,\"end_s\":120.0,\"event_id\":\"D\",\"repeats_within_segment\":false,\"note\":\"\"}]}",
+    "{\"events\":[{\"event_id\":\"A\",\"description\":\"推车穿过闸机\"},{\"event_id\":\"B\",\"description\":\"推车进入房间\"},{\"event_id\":\"C\",\"description\":\"从车中取出餐具\"},{\"event_id\":\"D\",\"description\":\"在水槽清洗餐具\"},{\"event_id\":\"E\",\"description\":\"将清洗后的餐具放置在台面上\"},{\"event_id\":\"F\",\"description\":\"将水果碗放置在台面上\"},{\"event_id\":\"G\",\"description\":\"用毛巾擦拭餐具\"}],\"segments\":[{\"start_s\":0.0,\"end_s\":29.0,\"event_id\":\"A\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":29.0,\"end_s\":41.0,\"event_id\":\"B\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":41.0,\"end_s\":55.0,\"event_id\":\"C\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":55.0,\"end_s\":63.0,\"event_id\":\"D\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":63.0,\"end_s\":83.0,\"event_id\":\"E\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":83.0,\"end_s\":96.0,\"event_id\":\"F\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":96.0,\"end_s\":116.0,\"event_id\":\"G\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":116.0,\"end_s\":120.0,\"event_id\":\"D\",\"repeats_within_segment\":false,\"note\":\"\"}],\"confirmed_full_video\":true,\"status\":\"final\"}"
+  ],
+  "used_pass": 2,
+  "prediction": {
+    "schema_version": "interaction_graph_timeline_v1",
+    "video_id": "blind_graph_0019",
+    "events": [
+      {
+        "event_id": "A",
+        "description": "推车穿过闸机"
+      },
+      {
+        "event_id": "B",
+        "description": "推车进入房间"
+      },
+      {
+        "event_id": "C",
+        "description": "从车中取出餐具"
+      },
+      {
+        "event_id": "D",
+        "description": "在水槽清洗餐具"
+      },
+      {
+        "event_id": "E",
+        "description": "将清洗后的餐具放置在台面上"
+      },
+      {
+        "event_id": "F",
+        "description": "将水果碗放置在台面上"
+      },
+      {
+        "event_id": "G",
+        "description": "用毛巾擦拭餐具"
+      }
+    ],
+    "segments": [
+      {
+        "start_s": 0.0,
+        "end_s": 29.0,
+        "event_id": "A",
+        "repeats_within_segment": false,
+        "note": ""
+      },
+      {
+        "start_s": 29.0,
+        "end_s": 41.0,
+        "event_id": "B",
+        "repeats_within_segment": false,
+        "note": ""
+      },
+      {
+        "start_s": 41.0,
+        "end_s": 55.0,
+        "event_id": "C",
+        "repeats_within_segment": false,
+        "note": ""
+      },
+      {
+        "start_s": 55.0,
+        "end_s": 63.0,
+        "event_id": "D",
+        "repeats_within_segment": false,
+        "note": ""
+      },
+      {
+        "start_s": 63.0,
+        "end_s": 83.0,
+        "event_id": "E",
+        "repeats_within_segment": false,
+        "note": ""
+      },
+      {
+        "start_s": 83.0,
+        "end_s": 96.0,
+        "event_id": "F",
+        "repeats_within_segment": false,
+        "note": ""
+      },
+      {
+        "start_s": 96.0,
+        "end_s": 116.0,
+        "event_id": "G",
+        "repeats_within_segment": false,
+        "note": ""
+      },
+      {
+        "start_s": 116.0,
+        "end_s": 120.0,
+        "event_id": "D",
+        "repeats_within_segment": false,
+        "note": ""
+      }
+    ],
+    "confirmed_full_video": true,
+    "status": "final"
+  },
+  "status": "ok"
+}

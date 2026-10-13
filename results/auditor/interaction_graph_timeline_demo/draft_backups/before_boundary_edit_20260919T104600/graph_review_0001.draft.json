@@ -1,0 +1,130 @@
+{
+  "schema_version": "interaction_graph_timeline_v1",
+  "video_id": "graph_review_0001",
+  "events": [
+    {
+      "event_id": "A",
+      "description": "拿取，冲洗，放回下水道塞子"
+    },
+    {
+      "event_id": "B",
+      "description": "未开始"
+    }
+  ],
+  "segments": [
+    {
+      "start_s": 0.0,
+      "end_s": 3.2,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 3.2,
+      "end_s": 17.9,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 17.9,
+      "end_s": 45.0,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 45.0,
+      "end_s": 47.3,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    }
+  ],
+  "confirmed_full_video": true,
+  "manifest_sha256": "158a3af90dc1e7636fbcb54fd483b4113259e65dc5c60b0bc61dd9c39b4c9b29",
+  "annotator": "reviewer_1",
+  "saved_at": "2026-09-19T02:38:47.264944+00:00",
+  "status": "draft",
+  "graph": {
+    "nodes": [
+      {
+        "event_id": "A",
+        "description": "拿取，冲洗，放回下水道塞子",
+        "segment_count": 3,
+        "total_duration_s": 44.1,
+        "segment_indices": [
+          2,
+          3,
+          4
+        ]
+      },
+      {
+        "event_id": "B",
+        "description": "未开始",
+        "segment_count": 1,
+        "total_duration_s": 3.2,
+        "segment_indices": [
+          1
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "source": "A",
+        "target": "A",
+        "count": 2,
+        "kinds": {
+          "self_transition": 2
+        },
+        "times_s": [
+          17.9,
+          45.0
+        ]
+      },
+      {
+        "source": "B",
+        "target": "A",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          3.2
+        ]
+      }
+    ],
+    "edge_occurrences": [
+      {
+        "source": "B",
+        "target": "A",
+        "kind": "transition",
+        "at_s": 3.2,
+        "from_segment": 1,
+        "to_segment": 2
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 17.9,
+        "from_segment": 2,
+        "to_segment": 3
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 45.0,
+        "from_segment": 3,
+        "to_segment": 4
+      }
+    ],
+    "event_sequence": [
+      "B",
+      "A",
+      "A",
+      "A"
+    ]
+  }
+}

@@ -1,0 +1,301 @@
+{
+  "schema_version": "interaction_graph_timeline_v1",
+  "video_id": "graph_review_0002",
+  "events": [
+    {
+      "event_id": "A",
+      "description": "团纸巾扔到垃圾桶"
+    },
+    {
+      "event_id": "B",
+      "description": "抽纸巾"
+    },
+    {
+      "event_id": "C",
+      "description": "叠纸巾"
+    },
+    {
+      "event_id": "D",
+      "description": "用纸巾擦桌子"
+    }
+  ],
+  "segments": [
+    {
+      "start_s": 0.0,
+      "end_s": 3.0,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 3.0,
+      "end_s": 5.0,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 5.0,
+      "end_s": 7.4,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 7.4,
+      "end_s": 58.7,
+      "event_id": "D",
+      "repeats_within_segment": true,
+      "note": ""
+    },
+    {
+      "start_s": 58.7,
+      "end_s": 61.5,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 61.5,
+      "end_s": 65.6,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 65.6,
+      "end_s": 69.8,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 69.8,
+      "end_s": 119.3,
+      "event_id": "D",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 119.3,
+      "end_s": 123.6,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 123.6,
+      "end_s": 125.0,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    }
+  ],
+  "confirmed_full_video": true,
+  "manifest_sha256": "158a3af90dc1e7636fbcb54fd483b4113259e65dc5c60b0bc61dd9c39b4c9b29",
+  "annotator": "reviewer_1",
+  "saved_at": "2026-09-19T03:12:52.545172+00:00",
+  "status": "draft",
+  "graph": {
+    "nodes": [
+      {
+        "event_id": "A",
+        "description": "团纸巾扔到垃圾桶",
+        "segment_count": 3,
+        "total_duration_s": 10.1,
+        "segment_indices": [
+          1,
+          5,
+          9
+        ]
+      },
+      {
+        "event_id": "B",
+        "description": "抽纸巾",
+        "segment_count": 3,
+        "total_duration_s": 7.5,
+        "segment_indices": [
+          2,
+          6,
+          10
+        ]
+      },
+      {
+        "event_id": "C",
+        "description": "叠纸巾",
+        "segment_count": 2,
+        "total_duration_s": 6.6,
+        "segment_indices": [
+          3,
+          7
+        ]
+      },
+      {
+        "event_id": "D",
+        "description": "用纸巾擦桌子",
+        "segment_count": 2,
+        "total_duration_s": 100.8,
+        "segment_indices": [
+          4,
+          8
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "source": "A",
+        "target": "B",
+        "count": 3,
+        "kinds": {
+          "transition": 3
+        },
+        "times_s": [
+          3.0,
+          61.5,
+          123.6
+        ]
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "count": 2,
+        "kinds": {
+          "transition": 2
+        },
+        "times_s": [
+          5.0,
+          65.6
+        ]
+      },
+      {
+        "source": "C",
+        "target": "D",
+        "count": 2,
+        "kinds": {
+          "transition": 2
+        },
+        "times_s": [
+          7.4,
+          69.8
+        ]
+      },
+      {
+        "source": "D",
+        "target": "A",
+        "count": 2,
+        "kinds": {
+          "transition": 2
+        },
+        "times_s": [
+          58.7,
+          119.3
+        ]
+      },
+      {
+        "source": "D",
+        "target": "D",
+        "count": 1,
+        "kinds": {
+          "internal_repeat": 1
+        },
+        "times_s": [
+          7.4
+        ]
+      }
+    ],
+    "edge_occurrences": [
+      {
+        "source": "D",
+        "target": "D",
+        "kind": "internal_repeat",
+        "at_s": 7.4,
+        "from_segment": 4,
+        "to_segment": 4
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 3.0,
+        "from_segment": 1,
+        "to_segment": 2
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 5.0,
+        "from_segment": 2,
+        "to_segment": 3
+      },
+      {
+        "source": "C",
+        "target": "D",
+        "kind": "transition",
+        "at_s": 7.4,
+        "from_segment": 3,
+        "to_segment": 4
+      },
+      {
+        "source": "D",
+        "target": "A",
+        "kind": "transition",
+        "at_s": 58.7,
+        "from_segment": 4,
+        "to_segment": 5
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 61.5,
+        "from_segment": 5,
+        "to_segment": 6
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 65.6,
+        "from_segment": 6,
+        "to_segment": 7
+      },
+      {
+        "source": "C",
+        "target": "D",
+        "kind": "transition",
+        "at_s": 69.8,
+        "from_segment": 7,
+        "to_segment": 8
+      },
+      {
+        "source": "D",
+        "target": "A",
+        "kind": "transition",
+        "at_s": 119.3,
+        "from_segment": 8,
+        "to_segment": 9
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 123.6,
+        "from_segment": 9,
+        "to_segment": 10
+      }
+    ],
+    "event_sequence": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "A",
+      "B",
+      "C",
+      "D",
+      "A",
+      "B"
+    ]
+  }
+}

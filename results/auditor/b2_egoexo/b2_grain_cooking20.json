@@ -1,0 +1,43 @@
+{
+  "min_hist": 3,
+  "grains": [
+    {
+      "label": "人工粗标粒度",
+      "n_windows": 20,
+      "n_decisions": 54,
+      "states_median": 3.0,
+      "S_dist": {
+        "0": 50,
+        "1": 4
+      },
+      "n_S_ge_2": 0,
+      "g_branch": 0,
+      "g_simple": 4,
+      "g_novel": 4,
+      "per_window": 0.0,
+      "gold_in_S": 0,
+      "gold_out_S": 4,
+      "hit_rate_when_opinionated": 0.0
+    },
+    {
+      "label": "数据集自带 keystep 粒度（同一批窗口）",
+      "n_windows": 20,
+      "n_decisions": 240,
+      "states_median": 10.5,
+      "S_dist": {
+        "0": 202,
+        "1": 29,
+        "2": 8,
+        "3": 1
+      },
+      "n_S_ge_2": 9,
+      "g_branch": 9,
+      "g_simple": 29,
+      "g_novel": 34,
+      "per_window": 0.45,
+      "gold_in_S": 4,
+      "gold_out_S": 34,
+      "hit_rate_when_opinionated": 0.10526315789473684
+    }
+  ]
+}

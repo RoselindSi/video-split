@@ -220,3 +220,29 @@ datasets:
              stored GT at 44.4% wrong, so positives and negatives here do not
              carry the same label quality and every pairwise accuracy against
              it is attenuated toward chance by an unknown amount."
+
+  # ADDED 2026-09-12 before any selected recording was annotated or scored.
+  # The manifest is label-blind and records the hash of all prior-used IDs.
+  final_test_v1:
+    role: final_test
+    path: data/splits/final_test_v1.json
+    n_recordings: 48
+    selection_config: configs/auditor/final_test_v1.yaml
+    may:
+      - generate_blind_outputs
+      - annotate_exhaustive_timeline
+      - score_final_once
+      - report_final
+    may_not:
+      - train
+      - choose_design
+      - inspect_failures_before_freeze
+      - select_thresholds
+      - mine_pairs
+      - contribute_to_any_fit
+      - exploratory_ablation
+      - rerun_after_result
+    note: "The 48 recording IDs were selected by a fixed hash from 141 eligible
+           recordings after excluding 330 previously used or viewed IDs. Model
+           outputs may be generated blind, but may not be inspected before the
+           exhaustive gold and every compared method are frozen."

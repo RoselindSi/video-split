@@ -1,0 +1,256 @@
+{
+  "schema_version": "interaction_graph_timeline_v1",
+  "video_id": "graph_review_0022",
+  "events": [
+    {
+      "event_id": "A",
+      "description": "涮洗杯子"
+    },
+    {
+      "event_id": "B",
+      "description": "水龙头下冲洗杯子"
+    },
+    {
+      "event_id": "C",
+      "description": "放杯子"
+    },
+    {
+      "event_id": "D",
+      "description": "拿杯子"
+    }
+  ],
+  "segments": [
+    {
+      "start_s": 0.0,
+      "end_s": 28.8,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 28.8,
+      "end_s": 37.0,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 37.0,
+      "end_s": 44.0,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 44.0,
+      "end_s": 45.7,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 45.7,
+      "end_s": 47.6,
+      "event_id": "D",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 47.6,
+      "end_s": 55.3,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 55.3,
+      "end_s": 76.5,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 76.5,
+      "end_s": 78.0,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    }
+  ],
+  "confirmed_full_video": true,
+  "manifest_sha256": "158a3af90dc1e7636fbcb54fd483b4113259e65dc5c60b0bc61dd9c39b4c9b29",
+  "annotator": "reviewer_1",
+  "saved_at": "2026-09-19T09:44:13.558261+00:00",
+  "status": "final",
+  "graph": {
+    "nodes": [
+      {
+        "event_id": "A",
+        "description": "涮洗杯子",
+        "segment_count": 3,
+        "total_duration_s": 57.0,
+        "segment_indices": [
+          1,
+          3,
+          7
+        ]
+      },
+      {
+        "event_id": "B",
+        "description": "水龙头下冲洗杯子",
+        "segment_count": 3,
+        "total_duration_s": 17.4,
+        "segment_indices": [
+          2,
+          6,
+          8
+        ]
+      },
+      {
+        "event_id": "C",
+        "description": "放杯子",
+        "segment_count": 1,
+        "total_duration_s": 1.7,
+        "segment_indices": [
+          4
+        ]
+      },
+      {
+        "event_id": "D",
+        "description": "拿杯子",
+        "segment_count": 1,
+        "total_duration_s": 1.9,
+        "segment_indices": [
+          5
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "source": "A",
+        "target": "B",
+        "count": 2,
+        "kinds": {
+          "transition": 2
+        },
+        "times_s": [
+          28.8,
+          76.5
+        ]
+      },
+      {
+        "source": "A",
+        "target": "C",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          44.0
+        ]
+      },
+      {
+        "source": "B",
+        "target": "A",
+        "count": 2,
+        "kinds": {
+          "transition": 2
+        },
+        "times_s": [
+          37.0,
+          55.3
+        ]
+      },
+      {
+        "source": "C",
+        "target": "D",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          45.7
+        ]
+      },
+      {
+        "source": "D",
+        "target": "B",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          47.6
+        ]
+      }
+    ],
+    "edge_occurrences": [
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 28.8,
+        "from_segment": 1,
+        "to_segment": 2
+      },
+      {
+        "source": "B",
+        "target": "A",
+        "kind": "transition",
+        "at_s": 37.0,
+        "from_segment": 2,
+        "to_segment": 3
+      },
+      {
+        "source": "A",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 44.0,
+        "from_segment": 3,
+        "to_segment": 4
+      },
+      {
+        "source": "C",
+        "target": "D",
+        "kind": "transition",
+        "at_s": 45.7,
+        "from_segment": 4,
+        "to_segment": 5
+      },
+      {
+        "source": "D",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 47.6,
+        "from_segment": 5,
+        "to_segment": 6
+      },
+      {
+        "source": "B",
+        "target": "A",
+        "kind": "transition",
+        "at_s": 55.3,
+        "from_segment": 6,
+        "to_segment": 7
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 76.5,
+        "from_segment": 7,
+        "to_segment": 8
+      }
+    ],
+    "event_sequence": [
+      "A",
+      "B",
+      "A",
+      "C",
+      "D",
+      "B",
+      "A",
+      "B"
+    ]
+  }
+}

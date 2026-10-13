@@ -1,0 +1,39 @@
+{
+  "status": "prepared_not_annotated",
+  "contract_version": "v2_draft",
+  "scope": "development_target_definition_audit_not_confirmatory",
+  "primary_events": 54,
+  "reserve_events": 361,
+  "protected_recordings": 48,
+  "clips_prepared": false,
+  "legacy_labels_accepted_as_v2_gold": false,
+  "reserve_is_not_a_request_to_relabel_every_event": true,
+  "pilot_model_or_threshold_changed": false,
+  "sources": {
+    "config": {
+      "path": "/Users/roselindsi/Documents/GitHub/video-split/configs/auditor/interaction_evidence_v1.json",
+      "sha256": "920dd5403c6de697b9dbce7d31b1a268f0bc3fd95708ec8ff98a859c2afc8a14"
+    },
+    "final_test_manifest": {
+      "path": "/Users/roselindsi/Documents/GitHub/video-split/data/splits/final_test_v1.json",
+      "sha256": "d886a58154887093ac426e19b3e1bb2f1d138debbe260e077ab401bacef36a75"
+    },
+    "relations": {
+      "path": "/Users/roselindsi/Documents/GitHub/video-split/data/gold/relation_audit_annotator1_filled.csv",
+      "sha256": "b08f142e9ebf9e84c5a42f21c6b9ac630093145e2e1ab17de7e01bc7e401a7c3"
+    },
+    "migrated": {
+      "path": "/Users/roselindsi/Documents/GitHub/video-split/data/gold/pair_schema_v2_migrated.csv",
+      "sha256": "50d7c0d9976d3c46702197fd83ae12875054ef304eef0013b0e44e1f603c465b"
+    },
+    "contract": {
+      "path": "/Users/roselindsi/Documents/GitHub/video-split/docs/interaction_evidence_v2_target_contract.md",
+      "sha256": "c730ba44f876ccc09c2c46067634dc6cf856f0145b8334e7d6a04bbd5d1605b6"
+    },
+    "pilot_report": {
+      "path": "/Users/roselindsi/Documents/GitHub/video-split/results/auditor/interaction_evidence_v1_20260913_pilot/report.json",
+      "sha256": "9b834d838a07b63f12b1c3cf9a8f29f3f5a841b7c481e6c2ead5871cec329086"
+    }
+  },
+  "code_sha256": "863c645d100b745571339e01cf2decf1b9e5607d93a9df74d3c355b5fb4aa584"
+}

@@ -1,0 +1,396 @@
+{
+  "schema_version": "interaction_graph_timeline_v1",
+  "video_id": "graph_review_0016",
+  "events": [
+    {
+      "event_id": "A",
+      "description": "拿起水壶，平行移动水壶"
+    }
+  ],
+  "segments": [
+    {
+      "start_s": 0.0,
+      "end_s": 4.4,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 4.4,
+      "end_s": 7.7,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 7.7,
+      "end_s": 12.2,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 12.2,
+      "end_s": 15.7,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 15.7,
+      "end_s": 20.6,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 20.6,
+      "end_s": 23.8,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 23.8,
+      "end_s": 28.2,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 28.2,
+      "end_s": 31.4,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 31.4,
+      "end_s": 36.1,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 36.1,
+      "end_s": 40.2,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 40.2,
+      "end_s": 44.8,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 44.8,
+      "end_s": 48.5,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 48.5,
+      "end_s": 52.4,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 52.4,
+      "end_s": 55.9,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 55.9,
+      "end_s": 60.8,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 60.8,
+      "end_s": 64.9,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 64.9,
+      "end_s": 69.1,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 69.1,
+      "end_s": 73.0,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 73.0,
+      "end_s": 77.4,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 77.4,
+      "end_s": 79.0,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    }
+  ],
+  "confirmed_full_video": true,
+  "manifest_sha256": "158a3af90dc1e7636fbcb54fd483b4113259e65dc5c60b0bc61dd9c39b4c9b29",
+  "annotator": "reviewer_1",
+  "saved_at": "2026-09-19T09:21:58.171821+00:00",
+  "status": "final",
+  "graph": {
+    "nodes": [
+      {
+        "event_id": "A",
+        "description": "拿起水壶，平行移动水壶",
+        "segment_count": 20,
+        "total_duration_s": 79.0,
+        "segment_indices": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "source": "A",
+        "target": "A",
+        "count": 19,
+        "kinds": {
+          "self_transition": 19
+        },
+        "times_s": [
+          4.4,
+          7.7,
+          12.2,
+          15.7,
+          20.6,
+          23.8,
+          28.2,
+          31.4,
+          36.1,
+          40.2,
+          44.8,
+          48.5,
+          52.4,
+          55.9,
+          60.8,
+          64.9,
+          69.1,
+          73.0,
+          77.4
+        ]
+      }
+    ],
+    "edge_occurrences": [
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 4.4,
+        "from_segment": 1,
+        "to_segment": 2
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 7.7,
+        "from_segment": 2,
+        "to_segment": 3
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 12.2,
+        "from_segment": 3,
+        "to_segment": 4
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 15.7,
+        "from_segment": 4,
+        "to_segment": 5
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 20.6,
+        "from_segment": 5,
+        "to_segment": 6
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 23.8,
+        "from_segment": 6,
+        "to_segment": 7
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 28.2,
+        "from_segment": 7,
+        "to_segment": 8
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 31.4,
+        "from_segment": 8,
+        "to_segment": 9
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 36.1,
+        "from_segment": 9,
+        "to_segment": 10
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 40.2,
+        "from_segment": 10,
+        "to_segment": 11
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 44.8,
+        "from_segment": 11,
+        "to_segment": 12
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 48.5,
+        "from_segment": 12,
+        "to_segment": 13
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 52.4,
+        "from_segment": 13,
+        "to_segment": 14
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 55.9,
+        "from_segment": 14,
+        "to_segment": 15
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 60.8,
+        "from_segment": 15,
+        "to_segment": 16
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 64.9,
+        "from_segment": 16,
+        "to_segment": 17
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 69.1,
+        "from_segment": 17,
+        "to_segment": 18
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 73.0,
+        "from_segment": 18,
+        "to_segment": 19
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 77.4,
+        "from_segment": 19,
+        "to_segment": 20
+      }
+    ],
+    "event_sequence": [
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A"
+    ]
+  }
+}

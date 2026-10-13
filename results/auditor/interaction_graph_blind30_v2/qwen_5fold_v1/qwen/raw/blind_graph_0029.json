@@ -1,0 +1,113 @@
+{
+  "schema_version": "interaction_graph_qwen_5fold_v1",
+  "video_id": "blind_graph_0029",
+  "fold": 0,
+  "test_video_ids": [
+    "blind_graph_0007",
+    "blind_graph_0011",
+    "blind_graph_0016",
+    "blind_graph_0018",
+    "blind_graph_0020",
+    "blind_graph_0029"
+  ],
+  "demo_video_ids": [
+    "blind_graph_0010",
+    "blind_graph_0009",
+    "blind_graph_0002",
+    "blind_graph_0023",
+    "blind_graph_0027",
+    "blind_graph_0005",
+    "blind_graph_0012",
+    "blind_graph_0003"
+  ],
+  "target_gold_was_in_prompt": false,
+  "backend": "qwen",
+  "model_id": "/workspace/tr1/ckpts/Qwen3-VL-8B-Instruct",
+  "fps": 1.0,
+  "passes": 2,
+  "raw_passes": [
+    "{\"events\":[{\"event_id\":\"A\",\"description\":\"搬运并安装隔板\"},{\"event_id\":\"B\",\"description\":\"从纸箱中挑选零件\"},{\"event_id\":\"C\",\"description\":\"用锤子敲击隔板\"},{\"event_id\":\"D\",\"description\":\"用螺丝刀拧紧隔板螺丝\"},{\"event_id\":\"E\",\"description\":\"用胶带固定隔板\"}],\"segments\":[{\"start_s\":0.0,\"end_s\":12.3,\"event_id\":\"A\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":12.3,\"end_s\":26.7,\"event_id\":\"A\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":26.7,\"end_s\":57.1,\"event_id\":\"B\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":57.1,\"end_s\":63.1,\"event_id\":\"C\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":63.1,\"end_s\":77.6,\"event_id\":\"D\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":77.6,\"end_s\":85.2,\"event_id\":\"E\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":85.2,\"end_s\":120.0,\"event_id\":\"D\",\"repeats_within_segment\":false,\"note\":\"\"}]}",
+    "{\"events\":[{\"event_id\":\"A\",\"description\":\"搬运并安装隔板\"},{\"event_id\":\"B\",\"description\":\"从纸箱中挑选零件\"},{\"event_id\":\"C\",\"description\":\"用锤子敲击隔板\"},{\"event_id\":\"D\",\"description\":\"用螺丝刀拧紧隔板螺丝\"},{\"event_id\":\"E\",\"description\":\"用胶带固定隔板\"}],\"segments\":[{\"start_s\":0.0,\"end_s\":12.3,\"event_id\":\"A\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":12.3,\"end_s\":26.7,\"event_id\":\"A\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":26.7,\"end_s\":57.1,\"event_id\":\"B\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":57.1,\"end_s\":63.1,\"event_id\":\"C\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":63.1,\"end_s\":77.6,\"event_id\":\"D\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":77.6,\"end_s\":85.2,\"event_id\":\"E\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":85.2,\"end_s\":120.0,\"event_id\":\"D\",\"repeats_within_segment\":false,\"note\":\"\"}],\"confirmed_full_video\":true,\"status\":\"final\"}"
+  ],
+  "used_pass": 2,
+  "prediction": {
+    "schema_version": "interaction_graph_timeline_v1",
+    "video_id": "blind_graph_0029",
+    "events": [
+      {
+        "event_id": "A",
+        "description": "搬运并安装隔板"
+      },
+      {
+        "event_id": "B",
+        "description": "从纸箱中挑选零件"
+      },
+      {
+        "event_id": "C",
+        "description": "用锤子敲击隔板"
+      },
+      {
+        "event_id": "D",
+        "description": "用螺丝刀拧紧隔板螺丝"
+      },
+      {
+        "event_id": "E",
+        "description": "用胶带固定隔板"
+      }
+    ],
+    "segments": [
+      {
+        "start_s": 0.0,
+        "end_s": 12.3,
+        "event_id": "A",
+        "repeats_within_segment": false,
+        "note": ""
+      },
+      {
+        "start_s": 12.3,
+        "end_s": 26.7,
+        "event_id": "A",
+        "repeats_within_segment": false,
+        "note": ""
+      },
+      {
+        "start_s": 26.7,
+        "end_s": 57.1,
+        "event_id": "B",
+        "repeats_within_segment": false,
+        "note": ""
+      },
+      {
+        "start_s": 57.1,
+        "end_s": 63.1,
+        "event_id": "C",
+        "repeats_within_segment": false,
+        "note": ""
+      },
+      {
+        "start_s": 63.1,
+        "end_s": 77.6,
+        "event_id": "D",
+        "repeats_within_segment": false,
+        "note": ""
+      },
+      {
+        "start_s": 77.6,
+        "end_s": 85.2,
+        "event_id": "E",
+        "repeats_within_segment": false,
+        "note": ""
+      },
+      {
+        "start_s": 85.2,
+        "end_s": 120.0,
+        "event_id": "D",
+        "repeats_within_segment": false,
+        "note": ""
+      }
+    ],
+    "confirmed_full_video": true,
+    "status": "final"
+  },
+  "status": "ok"
+}

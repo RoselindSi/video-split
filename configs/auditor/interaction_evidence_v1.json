@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "scope": "development_pilot_only",
+  "target": "explicit_instance_relation",
+  "final_test_manifest_sha256": "d886a58154887093ac426e19b3e1bb2f1d138debbe260e077ab401bacef36a75",
+  "seed": 20260913,
+  "folds": 5,
+  "logistic_C": 1.0,
+  "threshold": 0.5,
+  "bootstrap_replicates": 1000,
+  "minimum_class_events": 15,
+  "minimum_class_recordings": 5,
+  "feature_groups": {
+    "visual": ["conc_0.25s", "conc_0.5s", "conc_1.0s", "peak_offset_s", "peak_over_median", "peak_width_s", "side_change_left", "side_change_right"],
+    "hand": ["pre_motion_speed", "post_motion_speed", "direction_cosine_pre_vs_post", "reversal_count", "candidate_velocity_change", "candidate_acceleration_peak", "minimum_speed_near_candidate", "stop_duration_near_candidate", "stop_then_start_score", "velocity_autocorrelation_max", "autocorrelation_lag_s", "dominant_frequency_strength", "repeated_reversal_rate", "hand_orientation_change", "box_scale_change_across_candidate", "inter_hand_distance_change", "two_hand_synchrony", "two_hand_presence_change"],
+    "quality": ["hand_detect_coverage", "candidate_centered_missing_gap_s", "longest_missing_gap_s", "interpolated_fraction", "edge_touch_rate"]
+  },
+  "unavailable_cues": ["validated_contact_release", "hand_object_relative_motion", "object_state_or_relation_change"],
+  "graph": "deferred_until_local_evidence_and_target_readiness"
+}

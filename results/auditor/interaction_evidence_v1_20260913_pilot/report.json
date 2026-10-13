@@ -1,0 +1,1513 @@
+{
+  "stage": "E1_exploratory_pilot_complete",
+  "config": {
+    "version": 1,
+    "scope": "development_pilot_only",
+    "target": "explicit_instance_relation",
+    "final_test_manifest_sha256": "d886a58154887093ac426e19b3e1bb2f1d138debbe260e077ab401bacef36a75",
+    "seed": 20260913,
+    "folds": 5,
+    "logistic_C": 1.0,
+    "threshold": 0.5,
+    "bootstrap_replicates": 1000,
+    "minimum_class_events": 15,
+    "minimum_class_recordings": 5,
+    "feature_groups": {
+      "visual": [
+        "conc_0.25s",
+        "conc_0.5s",
+        "conc_1.0s",
+        "peak_offset_s",
+        "peak_over_median",
+        "peak_width_s",
+        "side_change_left",
+        "side_change_right"
+      ],
+      "hand": [
+        "pre_motion_speed",
+        "post_motion_speed",
+        "direction_cosine_pre_vs_post",
+        "reversal_count",
+        "candidate_velocity_change",
+        "candidate_acceleration_peak",
+        "minimum_speed_near_candidate",
+        "stop_duration_near_candidate",
+        "stop_then_start_score",
+        "velocity_autocorrelation_max",
+        "autocorrelation_lag_s",
+        "dominant_frequency_strength",
+        "repeated_reversal_rate",
+        "hand_orientation_change",
+        "box_scale_change_across_candidate",
+        "inter_hand_distance_change",
+        "two_hand_synchrony",
+        "two_hand_presence_change"
+      ],
+      "quality": [
+        "hand_detect_coverage",
+        "candidate_centered_missing_gap_s",
+        "longest_missing_gap_s",
+        "interpolated_fraction",
+        "edge_touch_rate"
+      ]
+    },
+    "unavailable_cues": [
+      "validated_contact_release",
+      "hand_object_relative_motion",
+      "object_state_or_relation_change"
+    ],
+    "graph": "deferred_until_local_evidence_and_target_readiness"
+  },
+  "sources": {
+    "config": {
+      "path": "/Users/roselindsi/Documents/GitHub/video-split/configs/auditor/interaction_evidence_v1.json",
+      "sha256": "920dd5403c6de697b9dbce7d31b1a268f0bc3fd95708ec8ff98a859c2afc8a14"
+    },
+    "final_test_manifest": {
+      "path": "/Users/roselindsi/Documents/GitHub/video-split/data/splits/final_test_v1.json",
+      "sha256": "d886a58154887093ac426e19b3e1bb2f1d138debbe260e077ab401bacef36a75"
+    },
+    "relations": {
+      "path": "/Users/roselindsi/Documents/GitHub/video-split/data/gold/relation_audit_annotator1_filled.csv",
+      "sha256": "b08f142e9ebf9e84c5a42f21c6b9ac630093145e2e1ab17de7e01bc7e401a7c3"
+    },
+    "migrated": {
+      "path": "/Users/roselindsi/Documents/GitHub/video-split/data/gold/pair_schema_v2_migrated.csv",
+      "sha256": "50d7c0d9976d3c46702197fd83ae12875054ef304eef0013b0e44e1f603c465b"
+    },
+    "negative_subtypes": {
+      "path": "/Users/roselindsi/Documents/GitHub/video-split/data/gold/same_action_subtype_v1.csv",
+      "sha256": "699c58b4d790ad1f4f3aea08ff113c048cc462ec0fa89e314b6f09f0f0000028"
+    },
+    "visual_csv": {
+      "path": "/private/tmp/interaction_evidence_v1_inputs/concentration_features_full.csv",
+      "sha256": "fc5ba5d1a27f77aeb1682c12c1799c3504123618a332e92c8bff75a88779e6a2"
+    },
+    "hand_csv": {
+      "path": "/private/tmp/interaction_evidence_v1_inputs/hand_trajectory_features.csv",
+      "sha256": "170e2b56d30aec35431b633989e1be11e361da5f96ad79856252a0d031eb6466"
+    },
+    "historical_hoi_csv": {
+      "path": "/private/tmp/interaction_evidence_v1_inputs/hand_object_pilot.csv",
+      "sha256": "e2400ce06f3142f673035f24b80724c9b4f384b8aa6700529c02c25a666b1ecb"
+    }
+  },
+  "code_sha256": "08f76a1930cf4f6602d74b3738d8b69646be168e948abd18cc1b8e97c0c3f969",
+  "python": "3.13.3 (main, Apr  8 2025, 13:54:08) [Clang 16.0.0 (clang-1600.0.26.6)]",
+  "target_audit": {
+    "scope": "development_only_not_a_new_confirmatory_gold",
+    "migrated_rows": 415,
+    "legacy_relation_counts": {
+      "cannot_determine": 33,
+      "same_instance": 149,
+      "UNKNOWN": 169,
+      "initial_action_start": 1,
+      "same_action_new_instance": 40,
+      "new_action": 18,
+      "terminal_action_end": 5
+    },
+    "legacy_source_counts": {
+      "double_48": 45,
+      "": 169,
+      "relation_audit_54": 54,
+      "legacy:batch3_pair_labels_v1_relabel_v1.csv": 83,
+      "ontology_37": 25,
+      "legacy:pair_labels_v1.csv": 39
+    },
+    "explicit_rows": 54,
+    "explicit_relation_counts": {
+      "same_action_new_instance": 16,
+      "new_action": 18,
+      "cannot_determine": 8,
+      "same_instance": 9,
+      "initial_action_start": 1,
+      "terminal_action_end": 2
+    },
+    "binary_support": {
+      "events_per_class": {
+        "0": 9,
+        "1": 34
+      },
+      "recordings_per_class": {
+        "0": 8,
+        "1": 30
+      },
+      "sufficient": false
+    },
+    "reannotation_queue_rows": 361,
+    "unmeasured_strata": [
+      "continuous_contact_transition",
+      "release_without_boundary",
+      "human_observability_at_candidate"
+    ],
+    "blocked_cues": [
+      "validated_contact_release",
+      "hand_object_relative_motion",
+      "object_state_or_relation_change"
+    ],
+    "protected_final_recordings": 48
+  },
+  "historical_hand_object_cache": {
+    "n": 36,
+    "distributions": {
+      "frames": {
+        "41": 36
+      },
+      "hand_visible_frac": {
+        "1.0": 36
+      },
+      "object_visible_frac": {
+        "0.8536585365853658": 36
+      },
+      "n_release": {
+        "1": 36
+      },
+      "n_target_switch": {
+        "1": 36
+      }
+    },
+    "matches_scripted_synthetic_summary": true,
+    "status": "quarantined_unverified_provenance",
+    "usable_as_features": false
+  },
+  "evaluation_status": "exploratory_oof",
+  "evidence_status": "insufficient_scored_class_support",
+  "sklearn": "1.9.1",
+  "numpy": "2.2.4",
+  "common_pool_support": {
+    "events_per_class": {
+      "0": 7,
+      "1": 21
+    },
+    "recordings_per_class": {
+      "0": 7,
+      "1": 19
+    },
+    "sufficient": false
+  },
+  "scored_support": {
+    "events_per_class": {
+      "0": 7,
+      "1": 21
+    },
+    "recordings_per_class": {
+      "0": 7,
+      "1": 19
+    },
+    "sufficient": false
+  },
+  "excluded_features": [
+    {
+      "event_id": "recording_000197_batch3_raw_change_peak_t32.0",
+      "recording_id": "recording_000197",
+      "candidate_time": 32.0,
+      "relation": "new_action",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "reason": "no_hand_signal"
+    },
+    {
+      "event_id": "recording_000122_batch3_raw_change_peak_t544.0",
+      "recording_id": "recording_000122",
+      "candidate_time": 544.0,
+      "relation": "cannot_determine",
+      "target": null,
+      "target_source": "explicit_relation_audit",
+      "reason": "no_hand_signal"
+    },
+    {
+      "event_id": "recording_000157_batch3_raw_change_peak_t632.0",
+      "recording_id": "recording_000157",
+      "candidate_time": 632.0,
+      "relation": "new_action",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "reason": "no_hand_signal"
+    },
+    {
+      "event_id": "recording_000005_batch3_raw_change_peak_t372.0",
+      "recording_id": "recording_000005",
+      "candidate_time": 372.0,
+      "relation": "initial_action_start",
+      "target": null,
+      "target_source": "explicit_relation_audit",
+      "reason": "no_hand_signal"
+    },
+    {
+      "event_id": "recording_000050_batch3_gt_boundary_t291.5",
+      "recording_id": "recording_000050",
+      "candidate_time": 291.5,
+      "relation": "new_action",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "reason": "no_hand_signal"
+    },
+    {
+      "event_id": "recording_000160_exact_t575.6",
+      "recording_id": "recording_000160",
+      "candidate_time": 575.6,
+      "relation": "same_action_new_instance",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "reason": "no_hand_signal"
+    },
+    {
+      "event_id": "recording_000135_batch3_gt_boundary_t559.0",
+      "recording_id": "recording_000135",
+      "candidate_time": 559.0,
+      "relation": "new_action",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "reason": "no_hand_signal"
+    },
+    {
+      "event_id": "recording_000022_missed_signal_present_not_top_t366.5",
+      "recording_id": "recording_000022",
+      "candidate_time": 366.5,
+      "relation": "new_action",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "reason": "no_hand_signal"
+    },
+    {
+      "event_id": "recording_000167_batch3_raw_change_peak_t689.0",
+      "recording_id": "recording_000167",
+      "candidate_time": 689.0,
+      "relation": "cannot_determine",
+      "target": null,
+      "target_source": "explicit_relation_audit",
+      "reason": "no_hand_signal"
+    },
+    {
+      "event_id": "recording_000327_duplicate_t11.5",
+      "recording_id": "recording_000327",
+      "candidate_time": 11.5,
+      "relation": "same_action_new_instance",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "reason": "no_hand_signal"
+    },
+    {
+      "event_id": "recording_000220_early_t143.8",
+      "recording_id": "recording_000220",
+      "candidate_time": 143.8,
+      "relation": "same_instance",
+      "target": 0,
+      "target_source": "explicit_relation_audit",
+      "reason": "no_hand_signal"
+    },
+    {
+      "event_id": "recording_000068_batch3_raw_change_peak_t464.0",
+      "recording_id": "recording_000068",
+      "candidate_time": 464.0,
+      "relation": "cannot_determine",
+      "target": null,
+      "target_source": "explicit_relation_audit",
+      "reason": "no_hand_signal"
+    },
+    {
+      "event_id": "recording_000242_false_near_edge_t29.5",
+      "recording_id": "recording_000242",
+      "candidate_time": 29.5,
+      "relation": "same_instance",
+      "target": 0,
+      "target_source": "explicit_relation_audit",
+      "reason": "no_hand_signal"
+    },
+    {
+      "event_id": "recording_000058_batch3_raw_change_peak_t585.0",
+      "recording_id": "recording_000058",
+      "candidate_time": 585.0,
+      "relation": "new_action",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "reason": "no_hand_signal"
+    },
+    {
+      "event_id": "recording_000202_batch3_raw_change_peak_t712.0",
+      "recording_id": "recording_000202",
+      "candidate_time": 712.0,
+      "relation": "cannot_determine",
+      "target": null,
+      "target_source": "explicit_relation_audit",
+      "reason": "no_visual_signal+no_hand_signal"
+    },
+    {
+      "event_id": "recording_000212_batch3_gt_boundary_t502.2",
+      "recording_id": "recording_000212",
+      "candidate_time": 502.2,
+      "relation": "new_action",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "reason": "no_hand_signal"
+    },
+    {
+      "event_id": "recording_000211_batch3_raw_change_peak_t36.0",
+      "recording_id": "recording_000211",
+      "candidate_time": 36.0,
+      "relation": "cannot_determine",
+      "target": null,
+      "target_source": "explicit_relation_audit",
+      "reason": "no_hand_signal"
+    },
+    {
+      "event_id": "recording_000156_batch3_gt_boundary_t254.0",
+      "recording_id": "recording_000156",
+      "candidate_time": 254.0,
+      "relation": "new_action",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "reason": "no_hand_signal"
+    },
+    {
+      "event_id": "recording_000431_missed_signal_present_not_top_t178.2",
+      "recording_id": "recording_000431",
+      "candidate_time": 178.2,
+      "relation": "new_action",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "reason": "no_hand_signal"
+    },
+    {
+      "event_id": "recording_000005_batch3_raw_change_peak_t513.0",
+      "recording_id": "recording_000005",
+      "candidate_time": 513.0,
+      "relation": "same_action_new_instance",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "reason": "no_hand_signal"
+    },
+    {
+      "event_id": "recording_000438_missed_signal_present_not_top_t181.0",
+      "recording_id": "recording_000438",
+      "candidate_time": 181.0,
+      "relation": "cannot_determine",
+      "target": null,
+      "target_source": "explicit_relation_audit",
+      "reason": "no_hand_signal"
+    },
+    {
+      "event_id": "recording_000145_batch3_gt_boundary_t558.0",
+      "recording_id": "recording_000145",
+      "candidate_time": 558.0,
+      "relation": "new_action",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "reason": "no_hand_signal"
+    }
+  ],
+  "predictions": [
+    {
+      "event_id": "recording_000170_batch3_gt_boundary_t659.4",
+      "recording_id": "recording_000170",
+      "candidate_time": 659.4,
+      "relation": "same_action_new_instance",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.557492394198555,
+        "hand_kinematics": 0.426105993926407,
+        "visual_plus_hand": 0.7450274370914848,
+        "missingness_only": 0.26984592873651264
+      },
+      "negative_subtype": null
+    },
+    {
+      "event_id": "recording_000088_batch3_gt_boundary_t275.0",
+      "recording_id": "recording_000088",
+      "candidate_time": 275.0,
+      "relation": "same_instance",
+      "target": 0,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.9888272669015071,
+        "hand_kinematics": 0.9885018173698341,
+        "visual_plus_hand": 0.9903039330779755,
+        "missingness_only": 0.9958377094401247
+      },
+      "negative_subtype": "unmeasured"
+    },
+    {
+      "event_id": "recording_000137_batch3_raw_change_peak_t299.0",
+      "recording_id": "recording_000137",
+      "candidate_time": 299.0,
+      "relation": "new_action",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.2802547293930742,
+        "hand_kinematics": 0.018583783859034357,
+        "visual_plus_hand": 0.04108564051565733,
+        "missingness_only": 0.38056088346310823
+      },
+      "negative_subtype": null
+    },
+    {
+      "event_id": "recording_000101_batch3_gt_boundary_t48.0",
+      "recording_id": "recording_000101",
+      "candidate_time": 48.0,
+      "relation": "same_instance",
+      "target": 0,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.9776028948138017,
+        "hand_kinematics": 0.9387861033889493,
+        "visual_plus_hand": 0.9183791276334063,
+        "missingness_only": 0.9231917606376572
+      },
+      "negative_subtype": "unmeasured"
+    },
+    {
+      "event_id": "recording_000046_missed_signal_present_not_top_t378.7",
+      "recording_id": "recording_000046",
+      "candidate_time": 378.7,
+      "relation": "new_action",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.2417589799218991,
+        "hand_kinematics": 0.8588264203310982,
+        "visual_plus_hand": 0.40435656138312415,
+        "missingness_only": 0.7686452830858961
+      },
+      "negative_subtype": null
+    },
+    {
+      "event_id": "recording_000406_duplicate_t571.0",
+      "recording_id": "recording_000406",
+      "candidate_time": 571.0,
+      "relation": "same_instance",
+      "target": 0,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.9493093224054506,
+        "hand_kinematics": 0.9990621717219919,
+        "visual_plus_hand": 0.999588264284908,
+        "missingness_only": 0.7345894767605605
+      },
+      "negative_subtype": "unmeasured"
+    },
+    {
+      "event_id": "recording_000104_batch3_gt_boundary_t392.0",
+      "recording_id": "recording_000104",
+      "candidate_time": 392.0,
+      "relation": "same_action_new_instance",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.05956576995239332,
+        "hand_kinematics": 0.044815711551447236,
+        "visual_plus_hand": 0.08609581580470978,
+        "missingness_only": 0.42928214986941154
+      },
+      "negative_subtype": null
+    },
+    {
+      "event_id": "recording_000067_batch3_gt_boundary_t440.5",
+      "recording_id": "recording_000067",
+      "candidate_time": 440.5,
+      "relation": "new_action",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.9808625753035304,
+        "hand_kinematics": 0.8591945786723286,
+        "visual_plus_hand": 0.9227675547807224,
+        "missingness_only": 0.9258423498921869
+      },
+      "negative_subtype": null
+    },
+    {
+      "event_id": "recording_000179_batch3_gt_boundary_t688.5",
+      "recording_id": "recording_000179",
+      "candidate_time": 688.5,
+      "relation": "terminal_action_end",
+      "target": null,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": null,
+        "hand_kinematics": null,
+        "visual_plus_hand": null,
+        "missingness_only": null
+      },
+      "negative_subtype": null
+    },
+    {
+      "event_id": "recording_000061_early_t167.3",
+      "recording_id": "recording_000061",
+      "candidate_time": 167.3,
+      "relation": "cannot_determine",
+      "target": null,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": null,
+        "hand_kinematics": null,
+        "visual_plus_hand": null,
+        "missingness_only": null
+      },
+      "negative_subtype": null
+    },
+    {
+      "event_id": "recording_000035_batch3_raw_change_peak_t351.0",
+      "recording_id": "recording_000035",
+      "candidate_time": 351.0,
+      "relation": "same_action_new_instance",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.3614046629296969,
+        "hand_kinematics": 0.5152178467301503,
+        "visual_plus_hand": 0.4635556405012189,
+        "missingness_only": 0.45866263594640455
+      },
+      "negative_subtype": null
+    },
+    {
+      "event_id": "recording_000048_batch3_raw_change_peak_t96.0",
+      "recording_id": "recording_000048",
+      "candidate_time": 96.0,
+      "relation": "new_action",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.47360110429552515,
+        "hand_kinematics": 0.2552226187108159,
+        "visual_plus_hand": 0.3142142621784637,
+        "missingness_only": 0.2833353785664086
+      },
+      "negative_subtype": null
+    },
+    {
+      "event_id": "recording_000022_missed_weak_signal_t466.8",
+      "recording_id": "recording_000022",
+      "candidate_time": 466.8,
+      "relation": "same_action_new_instance",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.892167940182811,
+        "hand_kinematics": 0.91501862955363,
+        "visual_plus_hand": 0.8999854627050439,
+        "missingness_only": 0.6159238502674421
+      },
+      "negative_subtype": null
+    },
+    {
+      "event_id": "recording_000108_batch3_gt_boundary_t517.5",
+      "recording_id": "recording_000108",
+      "candidate_time": 517.5,
+      "relation": "same_instance",
+      "target": 0,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.8874500063072223,
+        "hand_kinematics": 0.9875089116702165,
+        "visual_plus_hand": 0.9759368346696613,
+        "missingness_only": 0.7197625491058002
+      },
+      "negative_subtype": "unmeasured"
+    },
+    {
+      "event_id": "recording_000183_exact_t144.0",
+      "recording_id": "recording_000183",
+      "candidate_time": 144.0,
+      "relation": "same_action_new_instance",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.11267638379864647,
+        "hand_kinematics": 0.9601197425069626,
+        "visual_plus_hand": 0.5408665923685831,
+        "missingness_only": 0.5235478618028726
+      },
+      "negative_subtype": null
+    },
+    {
+      "event_id": "recording_000103_batch3_gt_boundary_t333.0",
+      "recording_id": "recording_000103",
+      "candidate_time": 333.0,
+      "relation": "same_instance",
+      "target": 0,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.9621230377310577,
+        "hand_kinematics": 0.9914436320614372,
+        "visual_plus_hand": 0.9894170991017298,
+        "missingness_only": 0.8019123040704996
+      },
+      "negative_subtype": "unmeasured"
+    },
+    {
+      "event_id": "recording_000053_late_t207.5",
+      "recording_id": "recording_000053",
+      "candidate_time": 207.5,
+      "relation": "new_action",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.9537620786054727,
+        "hand_kinematics": 0.9255609817602777,
+        "visual_plus_hand": 0.8986937849318405,
+        "missingness_only": 0.9542240239707559
+      },
+      "negative_subtype": null
+    },
+    {
+      "event_id": "recording_000030_false_gap_t556.0",
+      "recording_id": "recording_000030",
+      "candidate_time": 556.0,
+      "relation": "same_action_new_instance",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.5942887213660853,
+        "hand_kinematics": 0.828680651111482,
+        "visual_plus_hand": 0.5371663024422882,
+        "missingness_only": 0.5806311868175295
+      },
+      "negative_subtype": null
+    },
+    {
+      "event_id": "recording_000325_late_t40.5",
+      "recording_id": "recording_000325",
+      "candidate_time": 40.5,
+      "relation": "same_action_new_instance",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.3006994673044347,
+        "hand_kinematics": 0.8307726753288217,
+        "visual_plus_hand": 0.7568636718114438,
+        "missingness_only": 0.42718195833927186
+      },
+      "negative_subtype": null
+    },
+    {
+      "event_id": "recording_000250_exact_t590.0",
+      "recording_id": "recording_000250",
+      "candidate_time": 590.0,
+      "relation": "terminal_action_end",
+      "target": null,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": null,
+        "hand_kinematics": null,
+        "visual_plus_hand": null,
+        "missingness_only": null
+      },
+      "negative_subtype": null
+    },
+    {
+      "event_id": "recording_000030_late_t387.5",
+      "recording_id": "recording_000030",
+      "candidate_time": 387.5,
+      "relation": "same_action_new_instance",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.06451621658164586,
+        "hand_kinematics": 0.12564177086789338,
+        "visual_plus_hand": 0.02846305367119047,
+        "missingness_only": 0.42928214986941154
+      },
+      "negative_subtype": null
+    },
+    {
+      "event_id": "recording_000209_batch3_gt_boundary_t257.0",
+      "recording_id": "recording_000209",
+      "candidate_time": 257.0,
+      "relation": "same_action_new_instance",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.9236976054357728,
+        "hand_kinematics": 0.41806899264360575,
+        "visual_plus_hand": 0.33797831720236565,
+        "missingness_only": 0.8757281309525451
+      },
+      "negative_subtype": null
+    },
+    {
+      "event_id": "recording_000005_batch3_raw_change_peak_t30.0",
+      "recording_id": "recording_000005",
+      "candidate_time": 30.0,
+      "relation": "cannot_determine",
+      "target": null,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": null,
+        "hand_kinematics": null,
+        "visual_plus_hand": null,
+        "missingness_only": null
+      },
+      "negative_subtype": null
+    },
+    {
+      "event_id": "recording_000030_late_t501.0",
+      "recording_id": "recording_000030",
+      "candidate_time": 501.0,
+      "relation": "same_action_new_instance",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.19230560276326317,
+        "hand_kinematics": 0.5347154189370189,
+        "visual_plus_hand": 0.2797059413615354,
+        "missingness_only": 0.46976623553143415
+      },
+      "negative_subtype": null
+    },
+    {
+      "event_id": "recording_000140_batch3_raw_change_peak_t574.0",
+      "recording_id": "recording_000140",
+      "candidate_time": 574.0,
+      "relation": "new_action",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.8496323146269216,
+        "hand_kinematics": 0.9048101750704003,
+        "visual_plus_hand": 0.9472714040445631,
+        "missingness_only": 0.549527538097842
+      },
+      "negative_subtype": null
+    },
+    {
+      "event_id": "recording_000242_missed_signal_present_not_top_t156.5",
+      "recording_id": "recording_000242",
+      "candidate_time": 156.5,
+      "relation": "same_instance",
+      "target": 0,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.9681947608362422,
+        "hand_kinematics": 0.9342108630687681,
+        "visual_plus_hand": 0.9934910015455537,
+        "missingness_only": 0.30993941976991407
+      },
+      "negative_subtype": "unmeasured"
+    },
+    {
+      "event_id": "recording_000020_batch3_raw_change_peak_t67.0",
+      "recording_id": "recording_000020",
+      "candidate_time": 67.0,
+      "relation": "new_action",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.9948774458904344,
+        "hand_kinematics": 0.9942014380140856,
+        "visual_plus_hand": 0.9962500921898771,
+        "missingness_only": 0.9012890408145829
+      },
+      "negative_subtype": null
+    },
+    {
+      "event_id": "recording_000242_late_t143.5",
+      "recording_id": "recording_000242",
+      "candidate_time": 143.5,
+      "relation": "same_action_new_instance",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.9510860084510655,
+        "hand_kinematics": 0.9684865653976257,
+        "visual_plus_hand": 0.9949399055520173,
+        "missingness_only": 0.3949423434345548
+      },
+      "negative_subtype": null
+    },
+    {
+      "event_id": "recording_000169_batch3_gt_boundary_t350.0",
+      "recording_id": "recording_000169",
+      "candidate_time": 350.0,
+      "relation": "same_action_new_instance",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.9613391666113875,
+        "hand_kinematics": 0.9777389062359412,
+        "visual_plus_hand": 0.9770882266987704,
+        "missingness_only": 0.6374225895670423
+      },
+      "negative_subtype": null
+    },
+    {
+      "event_id": "recording_000037_early_t156.0",
+      "recording_id": "recording_000037",
+      "candidate_time": 156.0,
+      "relation": "same_instance",
+      "target": 0,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.9891444335364685,
+        "hand_kinematics": 0.9588100806418238,
+        "visual_plus_hand": 0.9940998061995656,
+        "missingness_only": 0.9235377196819019
+      },
+      "negative_subtype": "unmeasured"
+    },
+    {
+      "event_id": "recording_000050_batch3_raw_change_peak_t104.0",
+      "recording_id": "recording_000050",
+      "candidate_time": 104.0,
+      "relation": "new_action",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.578605675962818,
+        "hand_kinematics": 0.9698233282847405,
+        "visual_plus_hand": 0.9545424334983711,
+        "missingness_only": 0.8254837531499122
+      },
+      "negative_subtype": null
+    },
+    {
+      "event_id": "recording_000201_batch3_raw_change_peak_t498.0",
+      "recording_id": "recording_000201",
+      "candidate_time": 498.0,
+      "relation": "same_action_new_instance",
+      "target": 1,
+      "target_source": "explicit_relation_audit",
+      "scores": {
+        "visual_change_shape": 0.9125843146126442,
+        "hand_kinematics": 0.6622439790047584,
+        "visual_plus_hand": 0.5784361460332662,
+        "missingness_only": 0.8794908384829533
+      },
+      "negative_subtype": null
+    }
+  ],
+  "folds": [
+    {
+      "fold": 0,
+      "train_recordings": [
+        "recording_000020",
+        "recording_000022",
+        "recording_000037",
+        "recording_000046",
+        "recording_000048",
+        "recording_000050",
+        "recording_000067",
+        "recording_000088",
+        "recording_000101",
+        "recording_000103",
+        "recording_000108",
+        "recording_000137",
+        "recording_000140",
+        "recording_000169",
+        "recording_000170",
+        "recording_000183",
+        "recording_000201",
+        "recording_000209",
+        "recording_000242",
+        "recording_000325",
+        "recording_000406"
+      ],
+      "test_recordings": [
+        "recording_000030",
+        "recording_000035",
+        "recording_000053",
+        "recording_000104"
+      ],
+      "train_events": 22,
+      "test_events": 6,
+      "status": "ok"
+    },
+    {
+      "fold": 1,
+      "train_recordings": [
+        "recording_000020",
+        "recording_000030",
+        "recording_000035",
+        "recording_000037",
+        "recording_000046",
+        "recording_000048",
+        "recording_000053",
+        "recording_000067",
+        "recording_000088",
+        "recording_000101",
+        "recording_000104",
+        "recording_000108",
+        "recording_000137",
+        "recording_000140",
+        "recording_000170",
+        "recording_000183",
+        "recording_000201",
+        "recording_000209",
+        "recording_000325",
+        "recording_000406"
+      ],
+      "test_recordings": [
+        "recording_000022",
+        "recording_000050",
+        "recording_000103",
+        "recording_000169",
+        "recording_000242"
+      ],
+      "train_events": 22,
+      "test_events": 6,
+      "status": "ok"
+    },
+    {
+      "fold": 2,
+      "train_recordings": [
+        "recording_000022",
+        "recording_000030",
+        "recording_000035",
+        "recording_000037",
+        "recording_000046",
+        "recording_000050",
+        "recording_000053",
+        "recording_000067",
+        "recording_000088",
+        "recording_000103",
+        "recording_000104",
+        "recording_000108",
+        "recording_000137",
+        "recording_000169",
+        "recording_000170",
+        "recording_000183",
+        "recording_000209",
+        "recording_000242",
+        "recording_000325"
+      ],
+      "test_recordings": [
+        "recording_000020",
+        "recording_000048",
+        "recording_000101",
+        "recording_000140",
+        "recording_000201",
+        "recording_000406"
+      ],
+      "train_events": 22,
+      "test_events": 6,
+      "status": "ok"
+    },
+    {
+      "fold": 3,
+      "train_recordings": [
+        "recording_000020",
+        "recording_000022",
+        "recording_000030",
+        "recording_000035",
+        "recording_000037",
+        "recording_000048",
+        "recording_000050",
+        "recording_000053",
+        "recording_000067",
+        "recording_000101",
+        "recording_000103",
+        "recording_000104",
+        "recording_000108",
+        "recording_000140",
+        "recording_000169",
+        "recording_000170",
+        "recording_000201",
+        "recording_000209",
+        "recording_000242",
+        "recording_000406"
+      ],
+      "test_recordings": [
+        "recording_000046",
+        "recording_000088",
+        "recording_000137",
+        "recording_000183",
+        "recording_000325"
+      ],
+      "train_events": 23,
+      "test_events": 5,
+      "status": "ok"
+    },
+    {
+      "fold": 4,
+      "train_recordings": [
+        "recording_000020",
+        "recording_000022",
+        "recording_000030",
+        "recording_000035",
+        "recording_000046",
+        "recording_000048",
+        "recording_000050",
+        "recording_000053",
+        "recording_000088",
+        "recording_000101",
+        "recording_000103",
+        "recording_000104",
+        "recording_000137",
+        "recording_000140",
+        "recording_000169",
+        "recording_000183",
+        "recording_000201",
+        "recording_000242",
+        "recording_000325",
+        "recording_000406"
+      ],
+      "test_recordings": [
+        "recording_000037",
+        "recording_000067",
+        "recording_000108",
+        "recording_000170",
+        "recording_000209"
+      ],
+      "train_events": 23,
+      "test_events": 5,
+      "status": "ok"
+    }
+  ],
+  "arms": {
+    "visual_change_shape": {
+      "n": 28,
+      "recordings": 25,
+      "positives": 21,
+      "negatives": 7,
+      "auroc": 0.14285714285714285,
+      "average_precision": 0.626987630198711,
+      "candidate_tpr": 0.5714285714285714,
+      "candidate_fpr": 1.0,
+      "recording_macro_accuracy": 0.43333333333333335,
+      "within_recording_pair_accuracy": 0.0,
+      "pair_eligible_recordings": 1
+    },
+    "hand_kinematics": {
+      "n": 28,
+      "recordings": 25,
+      "positives": 21,
+      "negatives": 7,
+      "auroc": 0.12244897959183673,
+      "average_precision": 0.597606561531928,
+      "candidate_tpr": 0.7142857142857143,
+      "candidate_fpr": 1.0,
+      "recording_macro_accuracy": 0.5266666666666666,
+      "within_recording_pair_accuracy": 1.0,
+      "pair_eligible_recordings": 1
+    },
+    "visual_plus_hand": {
+      "n": 28,
+      "recordings": 25,
+      "positives": 21,
+      "negatives": 7,
+      "auroc": 0.11564625850340135,
+      "average_precision": 0.6031881492563729,
+      "candidate_tpr": 0.6190476190476191,
+      "candidate_fpr": 1.0,
+      "recording_macro_accuracy": 0.4733333333333334,
+      "within_recording_pair_accuracy": 1.0,
+      "pair_eligible_recordings": 1
+    },
+    "missingness_only": {
+      "n": 28,
+      "recordings": 25,
+      "positives": 21,
+      "negatives": 7,
+      "auroc": 0.2925170068027211,
+      "average_precision": 0.6597574647207041,
+      "candidate_tpr": 0.5714285714285714,
+      "candidate_fpr": 0.8571428571428571,
+      "recording_macro_accuracy": 0.4733333333333334,
+      "within_recording_pair_accuracy": 1.0,
+      "pair_eligible_recordings": 1
+    }
+  },
+  "by_relation": {
+    "cannot_determine": {
+      "visual_change_shape": {
+        "n": 0,
+        "recordings": 0,
+        "positives": 0,
+        "negatives": 0,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": null,
+        "candidate_fpr": null,
+        "recording_macro_accuracy": null,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      },
+      "hand_kinematics": {
+        "n": 0,
+        "recordings": 0,
+        "positives": 0,
+        "negatives": 0,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": null,
+        "candidate_fpr": null,
+        "recording_macro_accuracy": null,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      },
+      "visual_plus_hand": {
+        "n": 0,
+        "recordings": 0,
+        "positives": 0,
+        "negatives": 0,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": null,
+        "candidate_fpr": null,
+        "recording_macro_accuracy": null,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      },
+      "missingness_only": {
+        "n": 0,
+        "recordings": 0,
+        "positives": 0,
+        "negatives": 0,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": null,
+        "candidate_fpr": null,
+        "recording_macro_accuracy": null,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      }
+    },
+    "initial_action_start": {
+      "visual_change_shape": {
+        "n": 0,
+        "recordings": 0,
+        "positives": 0,
+        "negatives": 0,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": null,
+        "candidate_fpr": null,
+        "recording_macro_accuracy": null,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      },
+      "hand_kinematics": {
+        "n": 0,
+        "recordings": 0,
+        "positives": 0,
+        "negatives": 0,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": null,
+        "candidate_fpr": null,
+        "recording_macro_accuracy": null,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      },
+      "visual_plus_hand": {
+        "n": 0,
+        "recordings": 0,
+        "positives": 0,
+        "negatives": 0,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": null,
+        "candidate_fpr": null,
+        "recording_macro_accuracy": null,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      },
+      "missingness_only": {
+        "n": 0,
+        "recordings": 0,
+        "positives": 0,
+        "negatives": 0,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": null,
+        "candidate_fpr": null,
+        "recording_macro_accuracy": null,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      }
+    },
+    "new_action": {
+      "visual_change_shape": {
+        "n": 8,
+        "recordings": 8,
+        "positives": 8,
+        "negatives": 0,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": 0.625,
+        "candidate_fpr": null,
+        "recording_macro_accuracy": 0.625,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      },
+      "hand_kinematics": {
+        "n": 8,
+        "recordings": 8,
+        "positives": 8,
+        "negatives": 0,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": 0.75,
+        "candidate_fpr": null,
+        "recording_macro_accuracy": 0.75,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      },
+      "visual_plus_hand": {
+        "n": 8,
+        "recordings": 8,
+        "positives": 8,
+        "negatives": 0,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": 0.625,
+        "candidate_fpr": null,
+        "recording_macro_accuracy": 0.625,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      },
+      "missingness_only": {
+        "n": 8,
+        "recordings": 8,
+        "positives": 8,
+        "negatives": 0,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": 0.75,
+        "candidate_fpr": null,
+        "recording_macro_accuracy": 0.75,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      }
+    },
+    "same_action_new_instance": {
+      "visual_change_shape": {
+        "n": 13,
+        "recordings": 11,
+        "positives": 13,
+        "negatives": 0,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": 0.5384615384615384,
+        "candidate_fpr": null,
+        "recording_macro_accuracy": 0.5757575757575757,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      },
+      "hand_kinematics": {
+        "n": 13,
+        "recordings": 11,
+        "positives": 13,
+        "negatives": 0,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": 0.6923076923076923,
+        "candidate_fpr": null,
+        "recording_macro_accuracy": 0.696969696969697,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      },
+      "visual_plus_hand": {
+        "n": 13,
+        "recordings": 11,
+        "positives": 13,
+        "negatives": 0,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": 0.6153846153846154,
+        "candidate_fpr": null,
+        "recording_macro_accuracy": 0.6666666666666666,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      },
+      "missingness_only": {
+        "n": 13,
+        "recordings": 11,
+        "positives": 13,
+        "negatives": 0,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": 0.46153846153846156,
+        "candidate_fpr": null,
+        "recording_macro_accuracy": 0.4848484848484848,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      }
+    },
+    "same_instance": {
+      "visual_change_shape": {
+        "n": 7,
+        "recordings": 7,
+        "positives": 0,
+        "negatives": 7,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": null,
+        "candidate_fpr": 1.0,
+        "recording_macro_accuracy": 0.0,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      },
+      "hand_kinematics": {
+        "n": 7,
+        "recordings": 7,
+        "positives": 0,
+        "negatives": 7,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": null,
+        "candidate_fpr": 1.0,
+        "recording_macro_accuracy": 0.0,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      },
+      "visual_plus_hand": {
+        "n": 7,
+        "recordings": 7,
+        "positives": 0,
+        "negatives": 7,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": null,
+        "candidate_fpr": 1.0,
+        "recording_macro_accuracy": 0.0,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      },
+      "missingness_only": {
+        "n": 7,
+        "recordings": 7,
+        "positives": 0,
+        "negatives": 7,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": null,
+        "candidate_fpr": 0.8571428571428571,
+        "recording_macro_accuracy": 0.14285714285714285,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      }
+    },
+    "terminal_action_end": {
+      "visual_change_shape": {
+        "n": 0,
+        "recordings": 0,
+        "positives": 0,
+        "negatives": 0,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": null,
+        "candidate_fpr": null,
+        "recording_macro_accuracy": null,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      },
+      "hand_kinematics": {
+        "n": 0,
+        "recordings": 0,
+        "positives": 0,
+        "negatives": 0,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": null,
+        "candidate_fpr": null,
+        "recording_macro_accuracy": null,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      },
+      "visual_plus_hand": {
+        "n": 0,
+        "recordings": 0,
+        "positives": 0,
+        "negatives": 0,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": null,
+        "candidate_fpr": null,
+        "recording_macro_accuracy": null,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      },
+      "missingness_only": {
+        "n": 0,
+        "recordings": 0,
+        "positives": 0,
+        "negatives": 0,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": null,
+        "candidate_fpr": null,
+        "recording_macro_accuracy": null,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      }
+    }
+  },
+  "by_negative_subtype": {
+    "unmeasured": {
+      "visual_change_shape": {
+        "n": 7,
+        "recordings": 7,
+        "positives": 0,
+        "negatives": 7,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": null,
+        "candidate_fpr": 1.0,
+        "recording_macro_accuracy": 0.0,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      },
+      "hand_kinematics": {
+        "n": 7,
+        "recordings": 7,
+        "positives": 0,
+        "negatives": 7,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": null,
+        "candidate_fpr": 1.0,
+        "recording_macro_accuracy": 0.0,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      },
+      "visual_plus_hand": {
+        "n": 7,
+        "recordings": 7,
+        "positives": 0,
+        "negatives": 7,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": null,
+        "candidate_fpr": 1.0,
+        "recording_macro_accuracy": 0.0,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      },
+      "missingness_only": {
+        "n": 7,
+        "recordings": 7,
+        "positives": 0,
+        "negatives": 7,
+        "auroc": null,
+        "average_precision": null,
+        "candidate_tpr": null,
+        "candidate_fpr": 0.8571428571428571,
+        "recording_macro_accuracy": 0.14285714285714285,
+        "within_recording_pair_accuracy": null,
+        "pair_eligible_recordings": 0
+      }
+    }
+  },
+  "paired_auroc_difference": {
+    "visual_plus_hand minus visual_change_shape": {
+      "ci95": [
+        -0.20650793650793653,
+        0.1252604166666664
+      ],
+      "valid_replicates": 999,
+      "conditional_on_fixed_oof_predictions": true
+    },
+    "visual_plus_hand minus missingness_only": {
+      "ci95": [
+        -0.4353835978835978,
+        0.03571428571428571
+      ],
+      "valid_replicates": 999,
+      "conditional_on_fixed_oof_predictions": true
+    }
+  },
+  "promotion_allowed": false
+}

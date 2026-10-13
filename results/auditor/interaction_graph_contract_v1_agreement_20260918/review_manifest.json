@@ -1,0 +1,217 @@
+{
+  "schema_version": "interaction_graph_contract_review_v1",
+  "n_cases": 30,
+  "contract_sha256": "ca1576fac40f5c08025ff1f81bfe112f9ccc5a4f51b78eb70c619e6fe20f1c58",
+  "cases": [
+    {
+      "review_id": "graph_review_0001",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0001.mp4",
+      "video_sha256": "fa734c3f2e7e0f5103a43e2228c02aa2f8b325b28c4eb1db8e1aacc9a8c3046f",
+      "duration_s": 47.30000000000001,
+      "candidate_offset_s": 25.700000000000045
+    },
+    {
+      "review_id": "graph_review_0002",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0002.mp4",
+      "video_sha256": "02fa274dfa1b5017b79a35757ecef9d0ec799015b6dc390ca7650d0625693edc",
+      "duration_s": 125.0,
+      "candidate_offset_s": 66.0
+    },
+    {
+      "review_id": "graph_review_0003",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0003.mp4",
+      "video_sha256": "06382b6ea619399885b62b74d5440b2353448c79c16ea72b05a14a2829aee616",
+      "duration_s": 74.0,
+      "candidate_offset_s": 35.0
+    },
+    {
+      "review_id": "graph_review_0004",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0004.mp4",
+      "video_sha256": "7c20daa432425f51b7db425be5849a466b89338cb33d547f33f3c43a74ba105a",
+      "duration_s": 84.0,
+      "candidate_offset_s": 32.0
+    },
+    {
+      "review_id": "graph_review_0005",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0005.mp4",
+      "video_sha256": "b01c3551e99987cb5c4f68e8fa0b8149a4241fc0df85503ce4e6eb9920dc3bfa",
+      "duration_s": 49.5,
+      "candidate_offset_s": 38.5
+    },
+    {
+      "review_id": "graph_review_0006",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0006.mp4",
+      "video_sha256": "fabe46c56b21814f68ae342b2994a2d9ede3af4907ce1108ec177751c529d6fa",
+      "duration_s": 89.9,
+      "candidate_offset_s": 50.5
+    },
+    {
+      "review_id": "graph_review_0007",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0007.mp4",
+      "video_sha256": "ecf6b36a55a59d4d409b2cd741ae7924a1038adf71f5b6f22ec2da7e596ae355",
+      "duration_s": 103.0,
+      "candidate_offset_s": 39.5
+    },
+    {
+      "review_id": "graph_review_0008",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0008.mp4",
+      "video_sha256": "cebe6284531777feed5ec3e54d28ce3ee0de8fe08c9bba181317d829c48bdf5b",
+      "duration_s": 76.5,
+      "candidate_offset_s": 39.5
+    },
+    {
+      "review_id": "graph_review_0009",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0009.mp4",
+      "video_sha256": "131e55d361833fa67030a96c352bf4d0cd6a62f6541c54282ff85010cc746f7a",
+      "duration_s": 70.0,
+      "candidate_offset_s": 35.0
+    },
+    {
+      "review_id": "graph_review_0010",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0010.mp4",
+      "video_sha256": "5ae35df498b01602c051d10d3b5eb254b57e31e295f046baacd58977a6ecafe2",
+      "duration_s": 70.0,
+      "candidate_offset_s": 35.0
+    },
+    {
+      "review_id": "graph_review_0011",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0011.mp4",
+      "video_sha256": "7023b6b74fdf1cca3d594c4cc9989de26d70fd15167d256c04ea8094e109f942",
+      "duration_s": 24.80000000000001,
+      "candidate_offset_s": 11.800000000000011
+    },
+    {
+      "review_id": "graph_review_0012",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0012.mp4",
+      "video_sha256": "ae0b6af03f6f95581f3db58b22d6fb8261963ba4866f4f13793dcde569204d68",
+      "duration_s": 28.5,
+      "candidate_offset_s": 17.69999999999999
+    },
+    {
+      "review_id": "graph_review_0013",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0013.mp4",
+      "video_sha256": "65b119028c1fbd17a4b56c046eea31958a08e017d2cb4be8303bffa28213e8c6",
+      "duration_s": 101.5,
+      "candidate_offset_s": 54.0
+    },
+    {
+      "review_id": "graph_review_0014",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0014.mp4",
+      "video_sha256": "4bcde816e2b4a98eca4bb6bc77b92886d2b3729a5f0eae68851ab8a2f936625c",
+      "duration_s": 70.0,
+      "candidate_offset_s": 35.0
+    },
+    {
+      "review_id": "graph_review_0015",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0015.mp4",
+      "video_sha256": "1c141ffd9f5977597b1a98864e1e641b1ea31edcda2b47b65c35ea4b1ad87c2d",
+      "duration_s": 96.0,
+      "candidate_offset_s": 40.0
+    },
+    {
+      "review_id": "graph_review_0016",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0016.mp4",
+      "video_sha256": "85e06d00b7642ccc10c09a1bdbfe3d42bbcb3628a4c2956bc3202fe876264fca",
+      "duration_s": 79.0,
+      "candidate_offset_s": 38.5
+    },
+    {
+      "review_id": "graph_review_0017",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0017.mp4",
+      "video_sha256": "50d20b66f240f22826126b7ef856c3c566b655eac5650979cf08f4dfa1bfdb46",
+      "duration_s": 80.0,
+      "candidate_offset_s": 39.80000000000001
+    },
+    {
+      "review_id": "graph_review_0018",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0018.mp4",
+      "video_sha256": "257476394cedcd716d0469cea18aa19aeec048137a3b553ffa1893fa0b774880",
+      "duration_s": 73.80000000000001,
+      "candidate_offset_s": 37.5
+    },
+    {
+      "review_id": "graph_review_0019",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0019.mp4",
+      "video_sha256": "aebc6199c248c4ef4a85caf6a9a223d85574041ade8a1ceed877da6b61574e9b",
+      "duration_s": 81.0,
+      "candidate_offset_s": 37.5
+    },
+    {
+      "review_id": "graph_review_0020",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0020.mp4",
+      "video_sha256": "d8f4d088add4a9684ada07ed9212ec4f79386bfb15a0cc533889c51e63111582",
+      "duration_s": 100.0,
+      "candidate_offset_s": 45.39999999999998
+    },
+    {
+      "review_id": "graph_review_0021",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0021.mp4",
+      "video_sha256": "6221fcb6299d13d211724c37339981d8d7f2c668cc7c5c0ce694b0486e110f17",
+      "duration_s": 89.0,
+      "candidate_offset_s": 42.0
+    },
+    {
+      "review_id": "graph_review_0022",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0022.mp4",
+      "video_sha256": "3734a54f422c8541d04c8f7e99475b9bac86687e3cb672b2edffbce6122765b0",
+      "duration_s": 78.0,
+      "candidate_offset_s": 39.0
+    },
+    {
+      "review_id": "graph_review_0023",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0023.mp4",
+      "video_sha256": "0ae5c79c2e4b7798e867f04a4bb127fd6fc06e3a15e07e23a67a8c8899463168",
+      "duration_s": 116.9,
+      "candidate_offset_s": 62.5
+    },
+    {
+      "review_id": "graph_review_0024",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0024.mp4",
+      "video_sha256": "7358b07f3a41b7fab736316662e36fca9f561fb4aa90abdc7d2f67d9c97eaea3",
+      "duration_s": 76.0,
+      "candidate_offset_s": 41.0
+    },
+    {
+      "review_id": "graph_review_0025",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0025.mp4",
+      "video_sha256": "2112b9c27043d35e000a9f8c69aef8d65edcf70b293b3f779a6701e9042cebde",
+      "duration_s": 82.0,
+      "candidate_offset_s": 39.0
+    },
+    {
+      "review_id": "graph_review_0026",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0026.mp4",
+      "video_sha256": "8cc6bb094ba5171066ade6f303c966fbc13f0d04649438b25d921eb9a687a13e",
+      "duration_s": 48.0,
+      "candidate_offset_s": 11.5
+    },
+    {
+      "review_id": "graph_review_0027",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0027.mp4",
+      "video_sha256": "7288d1c76a752aa339afe46da4f3f0ccf9f6ebc6514b3ac29d26c41e7b2c92a0",
+      "duration_s": 98.80000000000001,
+      "candidate_offset_s": 60.30000000000001
+    },
+    {
+      "review_id": "graph_review_0028",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0028.mp4",
+      "video_sha256": "79c774093c6fd36dd3a4dd73ebc83be66a3efc0ff4814493895f6190f995aa38",
+      "duration_s": 77.80000000000001,
+      "candidate_offset_s": 40.80000000000001
+    },
+    {
+      "review_id": "graph_review_0029",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0029.mp4",
+      "video_sha256": "cf634c2c8ab5e5959471e0647f3f349a8b50cee33444e980076ff867150a0a8e",
+      "duration_s": 85.5,
+      "candidate_offset_s": 39.5
+    },
+    {
+      "review_id": "graph_review_0030",
+      "video": "/workspace/tr1/interaction_evidence_v2_20260914/results/auditor/interaction_graph_contract_v1_review30/clips/graph_review_0030.mp4",
+      "video_sha256": "ff1c3efd3509258a0dadb064880231c2646fb6f44ba9e81beb0802270442d374",
+      "duration_s": 97.0,
+      "candidate_offset_s": 35.0
+    }
+  ]
+}

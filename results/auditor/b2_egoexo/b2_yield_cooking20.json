@@ -1,0 +1,199 @@
+{
+  "min_hist": 3,
+  "n_recordings": 20,
+  "g_branch_total": 0,
+  "per_recording_rate": 0.0,
+  "recordings_with_outdegree_2": 3,
+  "g_novel_total": 4,
+  "reachable_set_sizes": [],
+  "regime": {
+    "无前缀支持: S 为空": 50,
+    "novel: gold 不在 S 里，hard constraint 会锁死": 4
+  },
+  "grounded": 0,
+  "ungrounded": 0,
+  "top_recording_share": 0.0,
+  "verdict": "NO-GO —— 按 spec 最要紧的那一行：直接停掉 Graph 作为主方法方向，不要变成「再拍 20 条看看」",
+  "per_recording": [
+    {
+      "annotator": "r1",
+      "video_id": "fair_cooking_07_2_w000003",
+      "n_states": 1,
+      "n_decisions": 0,
+      "g_branch": 0,
+      "g_novel": 0,
+      "max_outdegree": 0
+    },
+    {
+      "annotator": "r1",
+      "video_id": "georgiatech_cooking_04_02_2_w001027",
+      "n_states": 4,
+      "n_decisions": 3,
+      "g_branch": 0,
+      "g_novel": 0,
+      "max_outdegree": 1
+    },
+    {
+      "annotator": "r1",
+      "video_id": "georgiatech_cooking_11_01_4_w000179",
+      "n_states": 3,
+      "n_decisions": 2,
+      "g_branch": 0,
+      "g_novel": 0,
+      "max_outdegree": 1
+    },
+    {
+      "annotator": "r1",
+      "video_id": "georgiatech_cooking_14_01_2_w000863",
+      "n_states": 4,
+      "n_decisions": 4,
+      "g_branch": 0,
+      "g_novel": 1,
+      "max_outdegree": 2
+    },
+    {
+      "annotator": "r1",
+      "video_id": "georgiatech_cooking_14_02_2_w000000",
+      "n_states": 3,
+      "n_decisions": 2,
+      "g_branch": 0,
+      "g_novel": 0,
+      "max_outdegree": 1
+    },
+    {
+      "annotator": "r1",
+      "video_id": "iiith_cooking_07_1_w000027",
+      "n_states": 3,
+      "n_decisions": 2,
+      "g_branch": 0,
+      "g_novel": 0,
+      "max_outdegree": 1
+    },
+    {
+      "annotator": "r1",
+      "video_id": "iiith_cooking_116_4_w000000",
+      "n_states": 3,
+      "n_decisions": 2,
+      "g_branch": 0,
+      "g_novel": 0,
+      "max_outdegree": 1
+    },
+    {
+      "annotator": "r1",
+      "video_id": "iiith_cooking_123_2_w000177",
+      "n_states": 4,
+      "n_decisions": 4,
+      "g_branch": 0,
+      "g_novel": 1,
+      "max_outdegree": 2
+    },
+    {
+      "annotator": "r1",
+      "video_id": "iiith_cooking_23_1_w000019",
+      "n_states": 3,
+      "n_decisions": 2,
+      "g_branch": 0,
+      "g_novel": 0,
+      "max_outdegree": 1
+    },
+    {
+      "annotator": "r1",
+      "video_id": "iiith_cooking_28_1_w000208",
+      "n_states": 4,
+      "n_decisions": 3,
+      "g_branch": 0,
+      "g_novel": 0,
+      "max_outdegree": 1
+    },
+    {
+      "annotator": "r1",
+      "video_id": "indiana_cooking_27_2_w000294",
+      "n_states": 3,
+      "n_decisions": 2,
+      "g_branch": 0,
+      "g_novel": 0,
+      "max_outdegree": 1
+    },
+    {
+      "annotator": "r1",
+      "video_id": "indiana_cooking_27_2_w000756",
+      "n_states": 4,
+      "n_decisions": 3,
+      "g_branch": 0,
+      "g_novel": 0,
+      "max_outdegree": 1
+    },
+    {
+      "annotator": "r1",
+      "video_id": "minnesota_cooking_031_2_w000002",
+      "n_states": 2,
+      "n_decisions": 1,
+      "g_branch": 0,
+      "g_novel": 0,
+      "max_outdegree": 1
+    },
+    {
+      "annotator": "r1",
+      "video_id": "sfu_cooking023_4_w000000",
+      "n_states": 1,
+      "n_decisions": 0,
+      "g_branch": 0,
+      "g_novel": 0,
+      "max_outdegree": 0
+    },
+    {
+      "annotator": "r1",
+      "video_id": "uniandes_cooking_005_2_w000001",
+      "n_states": 3,
+      "n_decisions": 2,
+      "g_branch": 0,
+      "g_novel": 0,
+      "max_outdegree": 1
+    },
+    {
+      "annotator": "r1",
+      "video_id": "upenn_0712_Cooking_1_3_w000854",
+      "n_states": 6,
+      "n_decisions": 8,
+      "g_branch": 0,
+      "g_novel": 2,
+      "max_outdegree": 2
+    },
+    {
+      "annotator": "r1",
+      "video_id": "upenn_0714_Cooking_1_2_w000358",
+      "n_states": 5,
+      "n_decisions": 4,
+      "g_branch": 0,
+      "g_novel": 0,
+      "max_outdegree": 1
+    },
+    {
+      "annotator": "r1",
+      "video_id": "upenn_0714_Cooking_1_4_w000375",
+      "n_states": 4,
+      "n_decisions": 3,
+      "g_branch": 0,
+      "g_novel": 0,
+      "max_outdegree": 1
+    },
+    {
+      "annotator": "r1",
+      "video_id": "upenn_0714_Cooking_7_3_w000194",
+      "n_states": 3,
+      "n_decisions": 2,
+      "g_branch": 0,
+      "g_novel": 0,
+      "max_outdegree": 1
+    },
+    {
+      "annotator": "r1",
+      "video_id": "utokyo_omelet_6_1001_4_w000527",
+      "n_states": 6,
+      "n_decisions": 5,
+      "g_branch": 0,
+      "g_novel": 0,
+      "max_outdegree": 1
+    }
+  ]
+}

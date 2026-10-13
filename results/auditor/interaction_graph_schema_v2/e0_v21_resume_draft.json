@@ -1,0 +1,1161 @@
+{
+ "graph_review_0016": {
+  "schema_version": "interaction_graph_timeline_v2_1",
+  "video_id": "graph_review_0016",
+  "events": [
+   {
+    "event_id": "A",
+    "description": "移动杯子",
+    "object": "杯子",
+    "observed_action": "移动",
+    "observed_result": "杯子位置变动到另外一边",
+    "inferred_goal": "",
+    "evidence_timestamp": 2.9,
+    "retrospective_confirmation": false,
+    "cluster_id": "T1"
+   }
+  ],
+  "clusters": [
+   {
+    "cluster_id": "T1",
+    "goal_evidence": "移动杯子"
+   }
+  ],
+  "segments": [
+   {
+    "start_s": 0,
+    "end_s": 3.4,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 3.4,
+    "end_s": 6.8,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 6.8,
+    "end_s": 10.4,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 10.4,
+    "end_s": 14.6,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 14.6,
+    "end_s": 19.1,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 19.1,
+    "end_s": 23.8,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 23.8,
+    "end_s": 27.1,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 27.1,
+    "end_s": 31.1,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 31.1,
+    "end_s": 35.6,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 35.6,
+    "end_s": 39.1,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 39.1,
+    "end_s": 44.2,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 44.2,
+    "end_s": 47.5,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 47.5,
+    "end_s": 51.9,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 51.9,
+    "end_s": 55.1,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 55.1,
+    "end_s": 60,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 60,
+    "end_s": 63.9,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 63.9,
+    "end_s": 68.2,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 68.2,
+    "end_s": 72.3,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 72.3,
+    "end_s": 76.6,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 76.6,
+    "end_s": 79,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   }
+  ],
+  "confirmed_full_video": true,
+  "status": "final",
+  "revision": 50,
+  "saved_at": "2026-09-26T02:42:19.828Z",
+  "annotator": "reviewer_2",
+  "manifest_sha256": "427d68b7dbd8ed7c0d9b7a4ce2ff2e4075ce2461d925177e77cd76e7392930e6"
+ },
+ "mosaic_graph_0006": {
+  "schema_version": "interaction_graph_timeline_v2_1",
+  "video_id": "mosaic_graph_0006",
+  "events": [
+   {
+    "event_id": "A",
+    "description": "清洁桌面，反复搽桌子，单抹布和双抹布。",
+    "object": "桌面",
+    "observed_action": "抹布清洁桌面",
+    "observed_result": "桌面被清洁干净",
+    "inferred_goal": "",
+    "evidence_timestamp": 11.8,
+    "retrospective_confirmation": false,
+    "cluster_id": "T1"
+   },
+   {
+    "event_id": "B",
+    "description": "在双层不同位置整理物品",
+    "object": "锅盖碗盆等",
+    "observed_action": "整理",
+    "observed_result": "台面被清理整洁",
+    "inferred_goal": "",
+    "evidence_timestamp": 19.4,
+    "retrospective_confirmation": false,
+    "cluster_id": "T1"
+   },
+   {
+    "event_id": "C",
+    "description": "将抹布放置盆中放水清洁抹布",
+    "object": "抹布及盆",
+    "observed_action": "接过抹布放置盆中，接水并清洗",
+    "observed_result": "抹布被清洗干净",
+    "inferred_goal": "",
+    "evidence_timestamp": 43.9,
+    "retrospective_confirmation": false,
+    "cluster_id": "T1"
+   }
+  ],
+  "clusters": [
+   {
+    "cluster_id": "T1",
+    "goal_evidence": "清洁抹布属于厨房后厨辅助工作的一个工序"
+   }
+  ],
+  "segments": [
+   {
+    "start_s": 0,
+    "end_s": 11.8,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": true,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 11.8,
+    "end_s": 19.4,
+    "seg_type": "interaction_node",
+    "event_id": "B",
+    "special_kind": "",
+    "repeats_within_segment": true,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 19.4,
+    "end_s": 30.7,
+    "seg_type": "special_state",
+    "event_id": "",
+    "special_kind": "patrolling",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 30.7,
+    "end_s": 44.067,
+    "seg_type": "interaction_node",
+    "event_id": "C",
+    "special_kind": "",
+    "repeats_within_segment": true,
+    "confidence": "high",
+    "note": ""
+   }
+  ],
+  "confirmed_full_video": true,
+  "status": "final",
+  "revision": 95,
+  "saved_at": "2026-09-26T02:47:09.210Z",
+  "annotator": "reviewer_2",
+  "manifest_sha256": "427d68b7dbd8ed7c0d9b7a4ce2ff2e4075ce2461d925177e77cd76e7392930e6"
+ },
+ "graph_review_0002": {
+  "schema_version": "interaction_graph_timeline_v2_1",
+  "video_id": "graph_review_0002",
+  "events": [
+   {
+    "event_id": "A",
+    "description": "将使用过的纸巾揉成团丢弃在垃圾桶",
+    "object": "纸巾",
+    "observed_action": "揉成团并丢弃",
+    "observed_result": "纸团被丢弃在垃圾桶",
+    "inferred_goal": "",
+    "evidence_timestamp": 122.1,
+    "retrospective_confirmation": false,
+    "cluster_id": "T1"
+   },
+   {
+    "event_id": "B",
+    "description": "抽出新纸巾并折叠好",
+    "object": "纸巾",
+    "observed_action": "折叠",
+    "observed_result": "纸巾被折叠",
+    "inferred_goal": "",
+    "evidence_timestamp": 125,
+    "retrospective_confirmation": false,
+    "cluster_id": "T1"
+   },
+   {
+    "event_id": "C",
+    "description": "反复搽桌子",
+    "object": "桌子 纸巾",
+    "observed_action": "搽",
+    "observed_result": "桌子被搽拭干净",
+    "inferred_goal": "",
+    "evidence_timestamp": 121.2,
+    "retrospective_confirmation": false,
+    "cluster_id": "T1"
+   }
+  ],
+  "clusters": [
+   {
+    "cluster_id": "T1",
+    "goal_evidence": "搽桌子"
+   }
+  ],
+  "segments": [
+   {
+    "start_s": 0,
+    "end_s": 1.7,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 1.7,
+    "end_s": 9.3,
+    "seg_type": "interaction_node",
+    "event_id": "B",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 9.3,
+    "end_s": 59.1,
+    "seg_type": "interaction_node",
+    "event_id": "C",
+    "special_kind": "",
+    "repeats_within_segment": true,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 59.1,
+    "end_s": 61.5,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 61.5,
+    "end_s": 67.4,
+    "seg_type": "interaction_node",
+    "event_id": "B",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 67.4,
+    "end_s": 121.2,
+    "seg_type": "interaction_node",
+    "event_id": "C",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 121.2,
+    "end_s": 122.1,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 122.1,
+    "end_s": 125,
+    "seg_type": "interaction_node",
+    "event_id": "B",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   }
+  ],
+  "confirmed_full_video": true,
+  "status": "final",
+  "revision": 103,
+  "saved_at": "2026-09-26T02:53:08.248Z",
+  "annotator": "reviewer_2",
+  "manifest_sha256": "427d68b7dbd8ed7c0d9b7a4ce2ff2e4075ce2461d925177e77cd76e7392930e6"
+ },
+ "graph_review_0023": {
+  "schema_version": "interaction_graph_timeline_v2_1",
+  "video_id": "graph_review_0023",
+  "events": [
+   {
+    "event_id": "A",
+    "description": "手将充电宝放置回包装盒内并封口",
+    "object": "充电宝及包装盒",
+    "observed_action": "手放回",
+    "observed_result": "充电宝放回盒内",
+    "inferred_goal": "",
+    "evidence_timestamp": 116.9,
+    "retrospective_confirmation": false,
+    "cluster_id": "T1"
+   },
+   {
+    "event_id": "B",
+    "description": "手将充电宝从包装盒内取出",
+    "object": "充电宝及包装盒",
+    "observed_action": "手取出",
+    "observed_result": "充电宝被从盒中取出",
+    "inferred_goal": "",
+    "evidence_timestamp": 92.7,
+    "retrospective_confirmation": false,
+    "cluster_id": "T1"
+   },
+   {
+    "event_id": "C",
+    "description": "手将充电宝上下左右侧面检查外观是否良好",
+    "object": "充电宝",
+    "observed_action": "手不断上下左右翻转充电宝检查外观",
+    "observed_result": "充电宝被检查",
+    "inferred_goal": "",
+    "evidence_timestamp": 106.6,
+    "retrospective_confirmation": false,
+    "cluster_id": "T1"
+   }
+  ],
+  "clusters": [
+   {
+    "cluster_id": "T1",
+    "goal_evidence": "手取出充电宝检测并放回包装盒的一系列动作"
+   }
+  ],
+  "segments": [
+   {
+    "start_s": 0,
+    "end_s": 9.3,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 9.3,
+    "end_s": 23.1,
+    "seg_type": "interaction_node",
+    "event_id": "B",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 23.1,
+    "end_s": 34.3,
+    "seg_type": "interaction_node",
+    "event_id": "C",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 34.3,
+    "end_s": 34.4,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 34.4,
+    "end_s": 57,
+    "seg_type": "interaction_node",
+    "event_id": "B",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 57,
+    "end_s": 70.5,
+    "seg_type": "interaction_node",
+    "event_id": "C",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 70.5,
+    "end_s": 80.2,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 80.2,
+    "end_s": 92.7,
+    "seg_type": "interaction_node",
+    "event_id": "B",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 92.7,
+    "end_s": 106.2,
+    "seg_type": "interaction_node",
+    "event_id": "C",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 106.2,
+    "end_s": 116.9,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   }
+  ],
+  "confirmed_full_video": true,
+  "status": "final",
+  "revision": 113,
+  "saved_at": "2026-09-26T02:58:48.646Z",
+  "annotator": "reviewer_2",
+  "manifest_sha256": "427d68b7dbd8ed7c0d9b7a4ce2ff2e4075ce2461d925177e77cd76e7392930e6"
+ },
+ "mosaic_graph_0026": {
+  "schema_version": "interaction_graph_timeline_v2_1",
+  "video_id": "mosaic_graph_0026",
+  "events": [
+   {
+    "event_id": "A",
+    "description": "清洗杯子",
+    "object": "杯子",
+    "observed_action": "清洗",
+    "observed_result": "杯子被洗干净",
+    "inferred_goal": "",
+    "evidence_timestamp": 12.1,
+    "retrospective_confirmation": false,
+    "cluster_id": "T1"
+   },
+   {
+    "event_id": "B",
+    "description": "取出纸巾搽手并丢弃纸巾",
+    "object": "纸巾",
+    "observed_action": "用纸巾搽手",
+    "observed_result": "纸巾被丢弃在垃圾桶",
+    "inferred_goal": "",
+    "evidence_timestamp": 23,
+    "retrospective_confirmation": false,
+    "cluster_id": "T2"
+   },
+   {
+    "event_id": "C",
+    "description": "手用纸巾搽杯子",
+    "object": "杯子",
+    "observed_action": "手用纸巾搽",
+    "observed_result": "杯子被搽干水渍",
+    "inferred_goal": "",
+    "evidence_timestamp": 66.9,
+    "retrospective_confirmation": false,
+    "cluster_id": "T3"
+   },
+   {
+    "event_id": "D",
+    "description": "杯子称重并一颗一颗添加颗粒称重观察变化",
+    "object": "杯子",
+    "observed_action": "手放置杯子到称重计并添加颗粒观察变化",
+    "observed_result": "杯子内放置不同颗粒并称重",
+    "inferred_goal": "",
+    "evidence_timestamp": 120,
+    "retrospective_confirmation": false,
+    "cluster_id": "T4"
+   }
+  ],
+  "clusters": [
+   {
+    "cluster_id": "T1",
+    "goal_evidence": "清洗杯子"
+   },
+   {
+    "cluster_id": "T2",
+    "goal_evidence": "用纸巾搽手"
+   },
+   {
+    "cluster_id": "T3",
+    "goal_evidence": "用纸巾搽杯子"
+   },
+   {
+    "cluster_id": "T4",
+    "goal_evidence": "手将杯子放置在称重计并添加颗粒物观察刻度变化"
+   }
+  ],
+  "segments": [
+   {
+    "start_s": 0,
+    "end_s": 11.7,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": true,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 11.7,
+    "end_s": 22.6,
+    "seg_type": "interaction_node",
+    "event_id": "B",
+    "special_kind": "",
+    "repeats_within_segment": true,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 22.6,
+    "end_s": 66.9,
+    "seg_type": "interaction_node",
+    "event_id": "C",
+    "special_kind": "",
+    "repeats_within_segment": true,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 66.9,
+    "end_s": 81.2,
+    "seg_type": "special_state",
+    "event_id": "",
+    "special_kind": "locomotion",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 81.2,
+    "end_s": 120,
+    "seg_type": "interaction_node",
+    "event_id": "D",
+    "special_kind": "",
+    "repeats_within_segment": true,
+    "confidence": "high",
+    "note": ""
+   }
+  ],
+  "confirmed_full_video": true,
+  "status": "final",
+  "revision": 146,
+  "saved_at": "2026-09-26T03:02:58.745Z",
+  "annotator": "reviewer_2",
+  "manifest_sha256": "427d68b7dbd8ed7c0d9b7a4ce2ff2e4075ce2461d925177e77cd76e7392930e6"
+ },
+ "mosaic_graph_0030": {
+  "schema_version": "interaction_graph_timeline_v2_1",
+  "video_id": "mosaic_graph_0030",
+  "events": [
+   {
+    "event_id": "A",
+    "description": "手持一叠布放置到指定区域",
+    "object": "一叠布",
+    "observed_action": "手持并步行",
+    "observed_result": "一叠纸被放置好",
+    "inferred_goal": "",
+    "evidence_timestamp": 18.8,
+    "retrospective_confirmation": false,
+    "cluster_id": "T1"
+   },
+   {
+    "event_id": "B",
+    "description": "手将箱内餐具进行整理",
+    "object": "箱子内的餐具",
+    "observed_action": "手部整理",
+    "observed_result": "餐具被整理好",
+    "inferred_goal": "",
+    "evidence_timestamp": 46.1,
+    "retrospective_confirmation": true,
+    "cluster_id": "T2"
+   }
+  ],
+  "clusters": [
+   {
+    "cluster_id": "T1",
+    "goal_evidence": "手持一叠布到指定区域放置"
+   },
+   {
+    "cluster_id": "T2",
+    "goal_evidence": "手将餐具整理整洁"
+   }
+  ],
+  "segments": [
+   {
+    "start_s": 0,
+    "end_s": 19,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 19,
+    "end_s": 38.8,
+    "seg_type": "special_state",
+    "event_id": "",
+    "special_kind": "locomotion",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 38.8,
+    "end_s": 46.067,
+    "seg_type": "interaction_node",
+    "event_id": "B",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   }
+  ],
+  "confirmed_full_video": true,
+  "status": "final",
+  "revision": 52,
+  "saved_at": "2026-09-26T03:04:36.753Z",
+  "annotator": "reviewer_2",
+  "manifest_sha256": "427d68b7dbd8ed7c0d9b7a4ce2ff2e4075ce2461d925177e77cd76e7392930e6"
+ },
+ "mosaic_graph_0008": {
+  "schema_version": "interaction_graph_timeline_v2_1",
+  "video_id": "mosaic_graph_0008",
+  "events": [
+   {
+    "event_id": "A",
+    "description": "手将线送入设备进行线束归拢",
+    "object": "线束",
+    "observed_action": "手将线束送入设备并取出",
+    "observed_result": "线束头归拢整齐",
+    "inferred_goal": "",
+    "evidence_timestamp": 120,
+    "retrospective_confirmation": false,
+    "cluster_id": "T1"
+   },
+   {
+    "event_id": "B",
+    "description": "完成一捆线束后移开，拿来新一捆需要加工的线束",
+    "object": "线束",
+    "observed_action": "移动",
+    "observed_result": "加工好的线束被移开 需要加工的移动过来",
+    "inferred_goal": "",
+    "evidence_timestamp": 42.9,
+    "retrospective_confirmation": false,
+    "cluster_id": "T1"
+   }
+  ],
+  "clusters": [
+   {
+    "cluster_id": "T1",
+    "goal_evidence": "线束归拢"
+   }
+  ],
+  "segments": [
+   {
+    "start_s": 0,
+    "end_s": 38.7,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": true,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 38.7,
+    "end_s": 42.8,
+    "seg_type": "interaction_node",
+    "event_id": "B",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 42.8,
+    "end_s": 120,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": true,
+    "confidence": "high",
+    "note": ""
+   }
+  ],
+  "confirmed_full_video": true,
+  "status": "final",
+  "revision": 112,
+  "saved_at": "2026-09-26T03:07:01.007Z",
+  "annotator": "reviewer_2",
+  "manifest_sha256": "427d68b7dbd8ed7c0d9b7a4ce2ff2e4075ce2461d925177e77cd76e7392930e6"
+ },
+ "mosaic_graph_0010": {
+  "schema_version": "interaction_graph_timeline_v2_1",
+  "video_id": "mosaic_graph_0010",
+  "events": [],
+  "clusters": [
+   {
+    "cluster_id": "T1",
+    "goal_evidence": "挑选电动摩托车"
+   }
+  ],
+  "segments": [
+   {
+    "start_s": 0,
+    "end_s": 120,
+    "seg_type": "uncertain",
+    "event_id": "",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": "随机走动并视频联系某人"
+   }
+  ],
+  "confirmed_full_video": true,
+  "status": "draft",
+  "revision": 52,
+  "saved_at": "2026-09-26T03:26:33.779Z"
+ },
+ "mosaic_graph_0020": {
+  "schema_version": "interaction_graph_timeline_v2_1",
+  "video_id": "mosaic_graph_0020",
+  "events": [
+   {
+    "event_id": "A",
+    "description": "手将端子插入接线盒测试是否匹配",
+    "object": "端子及接线盒",
+    "observed_action": "插入并测试",
+    "observed_result": "无观察结果",
+    "inferred_goal": "",
+    "evidence_timestamp": 54.5,
+    "retrospective_confirmation": false,
+    "cluster_id": "T1"
+   },
+   {
+    "event_id": "C",
+    "description": "在盒子上写标签",
+    "object": "盒子",
+    "observed_action": "书写标签",
+    "observed_result": "盒子被标注",
+    "inferred_goal": "",
+    "evidence_timestamp": 74.2,
+    "retrospective_confirmation": false,
+    "cluster_id": "T1"
+   },
+   {
+    "event_id": "D",
+    "description": "线束剥皮整理线头",
+    "object": "线束",
+    "observed_action": "剥皮并整理线头",
+    "observed_result": "线头清晰归拢",
+    "inferred_goal": "",
+    "evidence_timestamp": 119.1,
+    "retrospective_confirmation": false,
+    "cluster_id": "T1"
+   }
+  ],
+  "clusters": [
+   {
+    "cluster_id": "T1",
+    "goal_evidence": "端子适配接线盒的一系列动作"
+   }
+  ],
+  "segments": [
+   {
+    "start_s": 0,
+    "end_s": 54.5,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": true,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 54.5,
+    "end_s": 73.9,
+    "seg_type": "interaction_node",
+    "event_id": "C",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 73.9,
+    "end_s": 120,
+    "seg_type": "interaction_node",
+    "event_id": "D",
+    "special_kind": "",
+    "repeats_within_segment": true,
+    "confidence": "high",
+    "note": ""
+   }
+  ],
+  "confirmed_full_video": true,
+  "status": "final",
+  "revision": 64,
+  "saved_at": "2026-09-26T03:11:39.565Z",
+  "annotator": "reviewer_2",
+  "manifest_sha256": "427d68b7dbd8ed7c0d9b7a4ce2ff2e4075ce2461d925177e77cd76e7392930e6"
+ },
+ "mosaic_graph_0022": {
+  "schema_version": "interaction_graph_timeline_v2_1",
+  "video_id": "mosaic_graph_0022",
+  "events": [
+   {
+    "event_id": "A",
+    "description": "手从大袋中取出茶叶放置小袋反复称重确保刻度精密，反复补充数量。",
+    "object": "茶叶和袋子",
+    "observed_action": "手将茶叶取出放入小袋称重",
+    "observed_result": "茶叶称重后选择精细重量包装好",
+    "inferred_goal": "",
+    "evidence_timestamp": 111.1,
+    "retrospective_confirmation": false,
+    "cluster_id": "T1"
+   }
+  ],
+  "clusters": [
+   {
+    "cluster_id": "T1",
+    "goal_evidence": "取出茶叶放置小袋并称重"
+   }
+  ],
+  "segments": [
+   {
+    "start_s": 0,
+    "end_s": 111.1,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": true,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 111.1,
+    "end_s": 120,
+    "seg_type": "special_state",
+    "event_id": "",
+    "special_kind": "locomotion",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   }
+  ],
+  "confirmed_full_video": true,
+  "status": "final",
+  "revision": 63,
+  "saved_at": "2026-09-26T03:12:59.686Z",
+  "annotator": "reviewer_2",
+  "manifest_sha256": "427d68b7dbd8ed7c0d9b7a4ce2ff2e4075ce2461d925177e77cd76e7392930e6"
+ },
+ "mosaic_graph_0002": {
+  "schema_version": "interaction_graph_timeline_v2_1",
+  "video_id": "mosaic_graph_0002",
+  "events": [
+   {
+    "event_id": "A",
+    "description": "手将风扇头拆下",
+    "object": "风扇",
+    "observed_action": "拆",
+    "observed_result": "风扇头被取下",
+    "inferred_goal": "",
+    "evidence_timestamp": 28.6,
+    "retrospective_confirmation": false,
+    "cluster_id": "T1"
+   },
+   {
+    "event_id": "B",
+    "description": "手将风扇支架拆除",
+    "object": "风扇支架",
+    "observed_action": "扭 拆下",
+    "observed_result": "风扇支架被取下",
+    "inferred_goal": "",
+    "evidence_timestamp": 56.8,
+    "retrospective_confirmation": false,
+    "cluster_id": "T1"
+   },
+   {
+    "event_id": "C",
+    "description": "手持凳子回到原来位置",
+    "object": "凳子",
+    "observed_action": "手持",
+    "observed_result": "手取凳子回到原位",
+    "inferred_goal": "",
+    "evidence_timestamp": 97.1,
+    "retrospective_confirmation": false,
+    "cluster_id": "T1"
+   },
+   {
+    "event_id": "D",
+    "description": "手将风扇头螺丝拧下拆开",
+    "object": "风扇头",
+    "observed_action": "拧螺丝 拆除",
+    "observed_result": "风扇头被拆下螺丝",
+    "inferred_goal": "",
+    "evidence_timestamp": 119.6,
+    "retrospective_confirmation": false,
+    "cluster_id": "T1"
+   }
+  ],
+  "clusters": [
+   {
+    "cluster_id": "T1",
+    "goal_evidence": "风扇拆解全过程"
+   }
+  ],
+  "segments": [
+   {
+    "start_s": 0,
+    "end_s": 28.5,
+    "seg_type": "interaction_node",
+    "event_id": "A",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 28.5,
+    "end_s": 57.1,
+    "seg_type": "interaction_node",
+    "event_id": "B",
+    "special_kind": "",
+    "repeats_within_segment": true,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 57.1,
+    "end_s": 78.4,
+    "seg_type": "special_state",
+    "event_id": "",
+    "special_kind": "locomotion",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 78.4,
+    "end_s": 97.4,
+    "seg_type": "interaction_node",
+    "event_id": "C",
+    "special_kind": "",
+    "repeats_within_segment": true,
+    "confidence": "high",
+    "note": ""
+   },
+   {
+    "start_s": 97.4,
+    "end_s": 120,
+    "seg_type": "interaction_node",
+    "event_id": "D",
+    "special_kind": "",
+    "repeats_within_segment": false,
+    "confidence": "high",
+    "note": ""
+   }
+  ],
+  "confirmed_full_video": true,
+  "status": "final",
+  "revision": 119,
+  "saved_at": "2026-09-26T03:16:08.812Z",
+  "annotator": "reviewer_2",
+  "manifest_sha256": "427d68b7dbd8ed7c0d9b7a4ce2ff2e4075ce2461d925177e77cd76e7392930e6"
+ }
+}

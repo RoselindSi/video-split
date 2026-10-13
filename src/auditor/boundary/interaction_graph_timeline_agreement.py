@@ -18,7 +18,7 @@ from src.auditor.boundary.final_timeline_audit import file_sha256
 
 
 PRIMARY_TOLERANCE_S = 1.0
-TOLERANCES_S = (0.25, 0.5, 1.0)
+TOLERANCES_S = (0.25, 0.5, 1.0, 2.0)
 
 
 def latest_finals(directory: str | Path) -> dict[str, dict]:
@@ -328,7 +328,7 @@ def write_outputs(result: dict, out_dir: str | Path) -> None:
     )
     fields = ["video_id", "duration_s", "n_segments_reviewer_1",
               "n_segments_reviewer_2", "boundary_f1_0.25s",
-              "boundary_f1_0.5s", "boundary_f1_1.0s",
+              "boundary_f1_0.5s", "boundary_f1_1.0s", "boundary_f1_2.0s",
               "relation_agreement_1.0s", "temporal_type_partition_ari",
               "exact_normalized_path", "internal_repeat_time_agreement"]
     with (root / "per_video.csv").open("w", encoding="utf-8-sig", newline="") as handle:
@@ -342,6 +342,7 @@ def write_outputs(result: dict, out_dir: str | Path) -> None:
                 "boundary_f1_0.25s": row["boundary"]["0.25"]["f1"],
                 "boundary_f1_0.5s": row["boundary"]["0.5"]["f1"],
                 "boundary_f1_1.0s": row["boundary"]["1.0"]["f1"],
+                "boundary_f1_2.0s": row["boundary"]["2.0"]["f1"],
                 "relation_agreement_1.0s": row["primary_matched_boundary_relation"]["agreement"],
                 "temporal_type_partition_ari": row["temporal_type_partition_ari"],
                 "exact_normalized_path": row["exact_normalized_path"],
@@ -354,6 +355,7 @@ def write_outputs(result: dict, out_dir: str | Path) -> None:
 - Boundary F1 at 0.25 s: {metrics['boundary_micro_by_tolerance_s']['0.25']['f1']:.3f}
 - Boundary F1 at 0.5 s: {metrics['boundary_micro_by_tolerance_s']['0.5']['f1']:.3f}
 - Boundary F1 at 1.0 s: {metrics['boundary_micro_by_tolerance_s']['1.0']['f1']:.3f}
+- Boundary F1 at 2.0 s: {metrics['boundary_micro_by_tolerance_s']['2.0']['f1']:.3f}
 - Same-new-instance vs new-action agreement at matched 1.0 s boundaries: {metrics['matched_relation_at_1s']['agreement']}
 - Median temporal event-partition ARI: {metrics['median_temporal_type_partition_ari']}
 - Internal-repeat time agreement: {metrics['internal_repeat_time_agreement']}

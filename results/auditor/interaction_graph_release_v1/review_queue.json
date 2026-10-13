@@ -1,0 +1,191 @@
+[
+  {
+    "local_node_id": "mosaic_complement/mosaic_graph_0003/A",
+    "batch_id": "mosaic_complement",
+    "video_id": "mosaic_graph_0003",
+    "event_id": "A",
+    "original_description": "拧机器上的螺丝",
+    "canonical_description": "旋拧机器上的螺丝",
+    "procedure_group_id": "pg_machine_screw_adjustment",
+    "procedure_group_name": "调整机器螺丝",
+    "confidence": "medium",
+    "review_note": "画面可确认旋拧，但无法稳定判断拧紧或拧松方向。",
+    "description": "拧机器上的螺丝",
+    "segment_count": 3,
+    "total_duration_s": 90.5,
+    "segment_indices": [
+      1,
+      3,
+      5
+    ]
+  },
+  {
+    "local_node_id": "mosaic_complement/mosaic_graph_0005/A",
+    "batch_id": "mosaic_complement",
+    "video_id": "mosaic_graph_0005",
+    "event_id": "A",
+    "original_description": "安装零部件",
+    "canonical_description": "在电机组件上安装零部件",
+    "procedure_group_id": "pg_motor_component_assembly",
+    "procedure_group_name": "组装电机组件",
+    "confidence": "medium",
+    "review_note": "根据画面将对象收窄为机电组件，具体产品型号不可见。",
+    "description": "安装零部件",
+    "segment_count": 1,
+    "total_duration_s": 120.0,
+    "segment_indices": [
+      1
+    ]
+  },
+  {
+    "local_node_id": "mosaic_complement/mosaic_graph_0008/B",
+    "batch_id": "mosaic_complement",
+    "video_id": "mosaic_graph_0008",
+    "event_id": "B",
+    "original_description": "给一根电线",
+    "canonical_description": "将线束上的白色扎带逐个送入机器处理",
+    "procedure_group_id": "pg_wire_harness_tie_processing",
+    "procedure_group_name": "处理线束扎带",
+    "confidence": "medium",
+    "review_note": "根据视频补全机器操作；设备具体是收紧、切断还是检测仍不可完全确认。",
+    "description": "给一根电线",
+    "segment_count": 12,
+    "total_duration_s": 113.7,
+    "segment_indices": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13
+    ]
+  },
+  {
+    "local_node_id": "mosaic_complement/mosaic_graph_0010/A",
+    "batch_id": "mosaic_complement",
+    "video_id": "mosaic_graph_0010",
+    "event_id": "A",
+    "original_description": "拿着手机穿梭在电动车里",
+    "canonical_description": "拿着手机在电动车之间巡视",
+    "procedure_group_id": "pg_electric_scooter_arrangement",
+    "procedure_group_name": "巡视并摆放电动车",
+    "confidence": "medium",
+    "review_note": "可见巡视和手机操作，手机中的具体任务信息不可见。",
+    "description": "拿着手机穿梭在电动车里",
+    "segment_count": 2,
+    "total_duration_s": 111.4,
+    "segment_indices": [
+      1,
+      3
+    ]
+  },
+  {
+    "local_node_id": "mosaic_complement/mosaic_graph_0016/A",
+    "batch_id": "mosaic_complement",
+    "video_id": "mosaic_graph_0016",
+    "event_id": "A",
+    "original_description": "用机器处理一个黑色物件",
+    "canonical_description": "将黑色塑料件放入机器处理",
+    "procedure_group_id": "pg_black_component_processing",
+    "procedure_group_name": "加工黑色塑料件",
+    "confidence": "medium",
+    "review_note": "物体外观可见，但机器执行的是检测还是加工不可完全确认。",
+    "description": "用机器处理一个黑色物件",
+    "segment_count": 6,
+    "total_duration_s": 91.1,
+    "segment_indices": [
+      1,
+      3,
+      4,
+      5,
+      6,
+      7
+    ]
+  },
+  {
+    "local_node_id": "mosaic_complement/mosaic_graph_0016/B",
+    "batch_id": "mosaic_complement",
+    "video_id": "mosaic_graph_0016",
+    "event_id": "B",
+    "original_description": "用喷枪处理一个黑色物件",
+    "canonical_description": "用气枪清理黑色塑料件",
+    "procedure_group_id": "pg_black_component_processing",
+    "procedure_group_name": "加工黑色塑料件",
+    "confidence": "medium",
+    "review_note": "按画面将喷枪规范为气枪，处理目的推定为清理。",
+    "description": "用喷枪处理一个黑色物件",
+    "segment_count": 1,
+    "total_duration_s": 28.9,
+    "segment_indices": [
+      2
+    ]
+  },
+  {
+    "local_node_id": "mosaic_complement/mosaic_graph_0020/A",
+    "batch_id": "mosaic_complement",
+    "video_id": "mosaic_graph_0020",
+    "event_id": "A",
+    "original_description": "安装设备1",
+    "canonical_description": "组装线缆测试组件",
+    "procedure_group_id": "pg_electrical_assembly",
+    "procedure_group_name": "组装线缆测试组件",
+    "confidence": "medium",
+    "review_note": "画面可见小型线缆组件，无法确认设备正式名称。",
+    "description": "安装设备1",
+    "segment_count": 1,
+    "total_duration_s": 33.6,
+    "segment_indices": [
+      1
+    ]
+  },
+  {
+    "local_node_id": "mosaic_complement/mosaic_graph_0020/D",
+    "batch_id": "mosaic_complement",
+    "video_id": "mosaic_graph_0020",
+    "event_id": "D",
+    "original_description": "逐个整理一捆电线的头的裸露部分",
+    "canonical_description": "逐根整理线束端部裸线",
+    "procedure_group_id": "pg_electrical_assembly",
+    "procedure_group_name": "组装线缆测试组件",
+    "confidence": "medium",
+    "review_note": "按同一视频上下文归入线缆组件组装。",
+    "description": "逐个整理一捆电线的头的裸露部分",
+    "segment_count": 1,
+    "total_duration_s": 46.8,
+    "segment_indices": [
+      4
+    ]
+  },
+  {
+    "local_node_id": "mosaic_complement/mosaic_graph_0023/B",
+    "batch_id": "mosaic_complement",
+    "video_id": "mosaic_graph_0023",
+    "event_id": "B",
+    "original_description": "拿，在水龙头下洗，放碟子",
+    "canonical_description": "拿取餐具，在水龙头下冲洗后放置",
+    "procedure_group_id": "pg_tableware_washing",
+    "procedure_group_name": "清洗餐具",
+    "confidence": "medium",
+    "review_note": "原描述未明确具体餐具种类，保留上位对象名称。",
+    "description": "拿，在水龙头下洗，放碟子",
+    "segment_count": 9,
+    "total_duration_s": 96.0,
+    "segment_indices": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ]
+  }
+]
