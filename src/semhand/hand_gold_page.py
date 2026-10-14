@@ -196,11 +196,21 @@ function render(){
 const getCSS=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const same=(a,b)=>a&&b&&a.every((v,i)=>Math.abs(v-b[i])<0.5);
 function assign(box,drawn){ if(who==="O")return;
-  rec()[who]={state:"box",box:box.slice(),drawn:!!drawn};
+  // 指认为手时，清掉这个框在「其他框」里的判定 —— 否则同一个框会既是手
+  // 又是 others，在安全判据里同时进正例和负例，把那个事件变成必败。
+  // 第三批标到第 3 条就出现了一次（124431 帧 680，IoU=1.0）。
+  const r=rec(); const f=SAMP[cur];
+  (CAND[f]||[]).forEach((b,i)=>{ if(same(b,box)&&r.other&&r.other[i]) delete r.other[i]; });
+  r[who]={state:"box",box:box.slice(),drawn:!!drawn};
   save(); who=who==="A"?"B":"A"; render(); }
 function mark(state){ if(who==="O")return;
   rec()[who]={state:state}; save(); who=who==="A"?"B":"A"; render(); }
-function cycleOther(i){ const r=rec(); r.other=r.other||{};
+function cycleOther(i){ const r=rec();
+  // 反方向也要堵：已经指认成 A/B 的框不接受「其他框」判定
+  const b=(CAND[SAMP[cur]]||[])[i];
+  if(b&&((r.A&&r.A.box&&same(r.A.box,b))||(r.B&&r.B.box&&same(r.B.box,b)))){
+    $("#msg").textContent="这个框已经指认为手，先清除再判"; return; }
+  r.other=r.other||{};
   const k=OKIND.indexOf(r.other[i]);
   if(k+1>=OKIND.length) delete r.other[i]; else r.other[i]=OKIND[k+1];
   save(); render(); }
