@@ -26,7 +26,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from semhand.hand_level_metrics import assign_by_anchors  # noqa: E402
+from semhand.hand_level_metrics import assign_by_anchors, iou  # noqa: E402
 from semhand.join_window_sweep import (frags_from_tracks,  # noqa: E402
                                        read_pre_join)
 from rig.track_join import DIST_FACTOR, WINDOW, centre, width  # noqa: E402
@@ -56,6 +56,18 @@ def decision_points(frag, window, dist_factor):
     return out
 
 
+def lookup_kind(track, oth, complete, min_iou):
+    """-> 该轨迹在 v2 标注里的多数 kind；没有任何一帧被判过就返回 None。"""
+    votes = collections.Counter()
+    for f, box in track["boxes"].items():
+        if f not in complete:
+            continue
+        for ob, kind in oth.get(f, []):
+            if iou(box, ob) >= min_iou:
+                votes[kind] += 1
+    return votes.most_common(1)[0][0] if votes else None
+
+
 def motion_predict(fa, gap):
     """A 末尾速度外推 gap 帧后的中心。用最后两帧估速度，估不出就当静止。"""
     cx, cy = centre(fa["end_box"])
@@ -79,10 +91,28 @@ def with_velocity(tracks, frag):
     return frag
 
 
+def others_lookup(gold, min_iou=0.3):
+    """-> (frame -> [(box, kind)])，v2 的「其他框」标注；v1 返回空。
+
+    v1 只标本人的两只手，凡不是这两只的一律落进同一个 `unassigned` 桶，
+    而那个桶里混着两种代价完全不同的东西：别人的手（并错 = 隐私泄露）
+    和前臂/倒影（并错 = 轨迹脏，零泄露）。目视确认过：零人脸录像里那些
+    own=1 的大框是前臂和车身倒影，有脸录像里的小框是真手。
+    所以安全判据只该约束前者，而 v1 的 gold 表达不了这个区分。
+    """
+    out = collections.defaultdict(list)
+    for o in gold.get("others") or []:
+        out[int(o["frame"])].append((tuple(o["box"]), o["kind"]))
+    return out
+
+
 def build(gold_path, pre_path, window, dist_factor, min_iou=0.3):
     gold = json.load(open(gold_path, encoding="utf-8"))
     pre = read_pre_join(pre_path)
     assign, diag = assign_by_anchors(gold["hands"], pre, min_iou=min_iou)
+    oth = others_lookup(gold, min_iou)
+    complete = set(gold.get("others_complete_frames") or [])
+    v2 = gold.get("schema_version") == "hand_gold_v2"
     blind = set(diag["blind_no_anchor"])
     frag = with_velocity(pre, frags_from_tracks(pre))
 
@@ -100,7 +130,14 @@ def build(gold_path, pre_path, window, dist_factor, min_iou=0.3):
             elif b in blind:
                 label, kind = None, "blind_no_anchor"
             else:
-                label, kind = 0, "unassigned"
+                # v2：到 `others` 里查这条轨迹到底是别人的手还是根本不是手。
+                # 查不到就退回 v1 的笼统桶，并在 kind 上留痕，免得两种
+                # 来源的标签在下游被当成同一回事。
+                kind = "unassigned"
+                if v2:
+                    k = lookup_kind(pre[b], oth, complete, min_iou)
+                    kind = k or "unassigned_unlabelled"
+                label = 0
             fa, fb = frag[a], frag[b]
             gap = fb["first"] - fa["last"]
             px, py = motion_predict(fa, gap)
@@ -151,10 +188,18 @@ def main():
     print("  %-18s %6s  %s" % ("候选是什么", "对数", "作为标签"))
     for k, desc, lab in [
             ("same_hand", "同一只手 —— 本该并", "正例"),
-            ("other_own_hand", "自己的另一只手", "负例"),
-            ("unassigned", "没匹配上任何一只手（别人的手 / 非手）", "负例"),
+            ("other_own_hand", "自己的另一只手（隐私无后果）", "负例"),
+            ("other_hand", "**别人的手 —— 并错=隐私泄露**", "负例·危险"),
+            ("not_hand", "不是手（前臂/倒影/物体）—— 并错=轨迹脏，零泄露", "负例·良性"),
+            ("unsure", "标注者判不准", "**排除**"),
+            ("unassigned", "v1 gold：没匹配上，两类混在一起", "负例·口径混"),
+            ("unassigned_unlabelled", "v2 gold 但这条轨迹没被判过", "**排除**"),
             ("blind_no_anchor", "一个 anchor 帧都没盖住 —— 盲区", "**不可判，排除**")]:
         print("  %-18s %6d  %-12s %s" % (k, kinds[k], lab, desc))
+    EXCLUDE = {"blind_no_anchor", "unsure", "unassigned_unlabelled"}
+    for r in rows:
+        if r["kind"] in EXCLUDE:
+            r["label"] = None
     usable = [r for r in rows if r["label"] is not None]
     pos = [r for r in usable if r["label"] == 1]
     print()

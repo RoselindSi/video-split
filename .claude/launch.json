@@ -4,8 +4,13 @@
     {
       "name": "handgold-static",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8777", "--directory",
-        "/private/tmp/claude-501/-Users-roselindsi-Documents-GitHub-video-split/0a05a2aa-0a36-497d-88ca-c57ed080fe8b/scratchpad/r0out"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8777",
+        "--directory",
+        "/private/tmp/claude-501/-Users-roselindsi-Documents-GitHub-video-split/0a05a2aa-0a36-497d-88ca-c57ed080fe8b/scratchpad"
+      ],
       "port": 8777
     }
   ]

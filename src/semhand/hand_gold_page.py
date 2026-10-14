@@ -72,7 +72,10 @@ textarea{width:100%%;height:150px;font:12px ui-monospace,Menlo,monospace;
 <h1>%(rec)s — 指认自己的两只手</h1>
 <p class="hint">每 %(stride)d 帧停一次。对这一帧分别指认 <b>A</b> 和 <b>B</b>：点一个候选框，
 或按 <b>D</b> 自己画，或点「不在画面」/「不确定」。<b>A/B 是匿名的，不要求判断左右</b>，
-只要在这条录像里一直跟住同一只手。候选框不带任何标签，这是故意的。</p>
+只要在这条录像里一直跟住同一只手。候选框不带任何标签，这是故意的。<br>
+标完 A/B 后按 <b>O</b> 进「其他框」模式，把剩下的候选框逐个点成
+<b>别人的手</b> / <b>不是手</b>（前臂、倒影、物体）/ <b>不确定</b>（再点一次清除）。
+这两类的代价不同：并错别人的手是隐私泄露，并错自己的前臂只是轨迹脏。</p>
 
 <div class="row">
   <button id="pick" hidden>选择 frames 文件夹</button>
@@ -86,7 +89,8 @@ textarea{width:100%%;height:150px;font:12px ui-monospace,Menlo,monospace;
 <div class="row">
   <button id="prev">← 上一帧</button><button id="next">下一帧 →</button>
   <span class="pill" id="fr">—</span>
-  <button id="draw">D 画框</button>
+  <button id="draw">D 画框</button><button id="selO">O 其他框</button>
+  <span class="pill" id="oleft"></span>
 </div>
 <div class="row">
   <span class="pill">正在指认</span>
@@ -108,6 +112,13 @@ const SAMP=%(samp)s;      // 抽样帧号
 const CAND=%(cand)s;      // {frame: [[x0,y0,x1,y1],...]}  无标签
 const IMGS=%(imgs)s;      // {frame: base64 jpeg} 或 null
 const KEY="handgold-"+REC;
+// who 取 "A" / "B" / "O"。O 是「其他框」模式：点一个候选框就在
+// 别人的手 -> 不是手 -> 不确定 -> 清除 之间循环。
+// 为什么需要它：v1 只标本人的两只手，凡不是这两只的一律落进同一个桶，
+// 而那个桶里混着两种代价完全不同的东西 —— 别人的手（并错了 = 隐私泄露）
+// 和前臂/倒影（并错了 = 轨迹脏，零泄露）。安全判据只该约束前者。
+const OKIND=["other_hand","not_hand","unsure"];
+const OLABEL={other_hand:"别人的手", not_hand:"不是手", unsure:"不确定"};
 let st={}, cur=0, who="A", drawing=false, files=new Map(), dragging=null;
 try{const s=localStorage.getItem(KEY); if(s) st=JSON.parse(s);}catch(e){}
 const $=s=>document.querySelector(s);
@@ -132,12 +143,26 @@ function render(){
     el.setAttribute("x",b[0]); el.setAttribute("y",b[1]);
     el.setAttribute("width",b[2]-b[0]); el.setAttribute("height",b[3]-b[1]);
     let col="#9aa1ad", wdt=3;
-    if(r.A&&r.A.box&&same(r.A.box,b)){col=getCSS("--a");wdt=6;}
-    if(r.B&&r.B.box&&same(r.B.box,b)){col=getCSS("--b");wdt=6;}
+    const isA=r.A&&r.A.box&&same(r.A.box,b), isB=r.B&&r.B.box&&same(r.B.box,b);
+    if(isA){col=getCSS("--a");wdt=6;}
+    if(isB){col=getCSS("--b");wdt=6;}
+    const ok=(r.other||{})[i];
+    if(!isA&&!isB&&ok){ col=ok==="other_hand"?getCSS("--warn"):"#6b7280"; wdt=5; }
     el.setAttribute("fill","none"); el.setAttribute("stroke",col);
+    if(!isA&&!isB&&ok==="unsure") el.setAttribute("stroke-dasharray","8 6");
     el.setAttribute("stroke-width",wdt); el.style.cursor="pointer";
-    el.onclick=()=>{assign(b,false);};
+    el.onclick=()=>{ if(who==="O") cycleOther(i); else assign(b,false); };
     ov.appendChild(el);
+    if(!isA&&!isB&&ok){
+      const t=document.createElementNS("http://www.w3.org/2000/svg","text");
+      t.setAttribute("x",b[0]+6); t.setAttribute("y",b[1]-10);
+      t.setAttribute("fill",col); t.setAttribute("font-size","52");
+      // 加描边光晕：这些框常落在杂乱背景上（车间、货架），纯色字读不出来。
+      // 52 是在 1920 宽的坐标系里的值，页面缩到约 480px 宽时约合 13px。
+      t.setAttribute("stroke","#000"); t.setAttribute("stroke-width","6");
+      t.setAttribute("paint-order","stroke"); t.setAttribute("font-weight","700");
+      t.textContent=OLABEL[ok]; ov.appendChild(t);
+    }
   });
   ["A","B"].forEach(k=>{
     const v=r[k];
@@ -155,7 +180,12 @@ function render(){
   });
   $("#selA").classList.toggle("on",who==="A");
   $("#selB").classList.toggle("on",who==="B");
+  $("#selO").classList.toggle("on",who==="O");
   $("#draw").classList.toggle("on",drawing);
+  const left=othersLeft(f);
+  $("#oleft").textContent = left===0 ? "其他框：判完了"
+    : "其他框：还剩 "+left+" 个要判";
+  $("#oleft").style.color = left===0 ? "" : getCSS("--warn");
   $("#tbl").innerHTML="<tr><th>手</th><th>这一帧</th></tr>"+
     ["A","B"].map(k=>{const v=r[k];
       return "<tr><td>"+k+"</td><td>"+(!v?"未标":
@@ -165,9 +195,24 @@ function render(){
 }
 const getCSS=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const same=(a,b)=>a&&b&&a.every((v,i)=>Math.abs(v-b[i])<0.5);
-function assign(box,drawn){ rec()[who]={state:"box",box:box.slice(),drawn:!!drawn};
+function assign(box,drawn){ if(who==="O")return;
+  rec()[who]={state:"box",box:box.slice(),drawn:!!drawn};
   save(); who=who==="A"?"B":"A"; render(); }
-function mark(state){ rec()[who]={state:state}; save(); who=who==="A"?"B":"A"; render(); }
+function mark(state){ if(who==="O")return;
+  rec()[who]={state:state}; save(); who=who==="A"?"B":"A"; render(); }
+function cycleOther(i){ const r=rec(); r.other=r.other||{};
+  const k=OKIND.indexOf(r.other[i]);
+  if(k+1>=OKIND.length) delete r.other[i]; else r.other[i]=OKIND[k+1];
+  save(); render(); }
+// 这一帧还有几个候选框既不是 A/B 也没被判过。导出时用它决定这一帧算不算
+// 「判全了」—— 不记这个就分不清「这帧没有别的框」和「还没判到这帧」，
+// 而那正是分母会被悄悄改小的地方。
+function othersLeft(f){ const r=st[f]||{}; const o=r.other||{}; let n=0;
+  (CAND[f]||[]).forEach((b,i)=>{
+    if(r.A&&r.A.box&&same(r.A.box,b))return;
+    if(r.B&&r.B.box&&same(r.B.box,b))return;
+    if(!o[i]) n++; });
+  return n; }
 
 $("#pick").onclick=()=>{const i=document.createElement("input");
   i.type="file"; i.webkitdirectory=true; i.multiple=true;
@@ -178,6 +223,7 @@ $("#prev").onclick=()=>{cur=Math.max(0,cur-1);render();};
 $("#next").onclick=()=>{cur=Math.min(SAMP.length-1,cur+1);render();};
 $("#selA").onclick=()=>{who="A";render();};
 $("#selB").onclick=()=>{who="B";render();};
+$("#selO").onclick=()=>{who=who==="O"?"A":"O";render();};
 $("#absent").onclick=()=>mark("absent");
 $("#unsure").onclick=()=>mark("unsure");
 $("#clear").onclick=()=>{delete st[SAMP[cur]];save();render();};
@@ -191,6 +237,7 @@ document.onkeydown=e=>{
   if(e.key==="d"||e.key==="D")$("#draw").click();
   if(e.key==="n"||e.key==="N")$("#absent").click();
   if(e.key==="u"||e.key==="U")$("#unsure").click();
+  if(e.key==="o"||e.key==="O")$("#selO").click();
 };
 const ov=$("#ov");
 ov.addEventListener("pointerdown",e=>{ if(!drawing)return;
@@ -227,14 +274,23 @@ function build(){
   });
   const unc=[]; SAMP.forEach(f=>["A","B"].forEach(k=>{
     const v=(st[f]||{})[k]; if(v&&v.state==="unsure") unc.push({frame:f,hand_key:k});}));
-  return {schema_version:"hand_gold_v1", recording:REC, stride:STRIDE,
+  const others=[], complete=[];
+  SAMP.forEach(f=>{
+    const o=((st[f]||{}).other)||{};
+    (CAND[f]||[]).forEach((b,i)=>{ if(o[i])
+      others.push({frame:f, box:b.map(x=>Math.round(x)), kind:o[i]}); });
+    if(othersLeft(f)===0) complete.push(f);
+  });
+  return {schema_version:"hand_gold_v2", recording:REC, stride:STRIDE,
           annotator:"", frame_size:[W,H], hands:hands, uncertain:unc,
-          sampled_frames:SAMP};
+          sampled_frames:SAMP, others:others,
+          others_complete_frames:complete};
 }
 $("#exp").onclick=()=>{ $("#out").value=JSON.stringify(build(),null,1);
   const n=SAMP.filter(f=>st[f]&&st[f].A&&st[f].B).length;
-  $("#msg").textContent="已标 "+n+" / "+SAMP.length+" 帧"+
-    (n<SAMP.length?"（未标完）":"");};
+  const oc=SAMP.filter(f=>othersLeft(f)===0).length;
+  $("#msg").textContent="手 "+n+"/"+SAMP.length+"，其他框判全的 "+oc+"/"+SAMP.length+
+    ((n<SAMP.length||oc<SAMP.length)?"（未标完）":"");};
 $("#copy").onclick=async()=>{ if(!$("#out").value)$("#exp").click();
   try{await navigator.clipboard.writeText($("#out").value);
     $("#msg").textContent="已复制";}
