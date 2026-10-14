@@ -1,0 +1,76 @@
+{
+ "feat": "s_plain",
+ "criterion_passed": false,
+ "recall": 0.25925925925925924,
+ "aggregate": {
+  "tp": 7,
+  "fn": 20,
+  "fp_own": 0,
+  "fp_un": 2
+ },
+ "per_recording": [
+  {
+   "recording": "R26_0824_130347",
+   "threshold": 0.8069999999999999,
+   "tp": 1,
+   "fn": 0,
+   "fp_own": 0,
+   "fp_unassigned": 0,
+   "n_pos": 1
+  },
+  {
+   "recording": "R26_0824_154741",
+   "threshold": 0.8069999999999999,
+   "tp": 1,
+   "fn": 0,
+   "fp_own": 0,
+   "fp_unassigned": 0,
+   "n_pos": 1
+  },
+  {
+   "recording": "R26_0825_133807",
+   "threshold": 0.8069999999999999,
+   "tp": 1,
+   "fn": 2,
+   "fp_own": 0,
+   "fp_unassigned": 0,
+   "n_pos": 3
+  },
+  {
+   "recording": "R26_0825_152505",
+   "threshold": 0.728,
+   "tp": 1,
+   "fn": 3,
+   "fp_own": 0,
+   "fp_unassigned": 0,
+   "n_pos": 4
+  },
+  {
+   "recording": "R26_0826_095006",
+   "threshold": 0.8069999999999999,
+   "tp": 0,
+   "fn": 2,
+   "fp_own": 0,
+   "fp_unassigned": 0,
+   "n_pos": 2
+  },
+  {
+   "recording": "R26_0827_150022",
+   "threshold": 1.0870000000000002,
+   "tp": 3,
+   "fn": 9,
+   "fp_own": 0,
+   "fp_unassigned": 2,
+   "n_pos": 12
+  },
+  {
+   "recording": "R26_0903_150006",
+   "threshold": 0.8069999999999999,
+   "tp": 0,
+   "fn": 4,
+   "fp_own": 0,
+   "fp_unassigned": 0,
+   "n_pos": 4
+  }
+ ]
+}
