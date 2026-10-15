@@ -1,0 +1,112 @@
+{
+  "n_decisions": 322,
+  "n_videos": 49,
+  "regimes": {
+    "no-support": 117,
+    "novel": 9,
+    "deterministic": 185,
+    "branching": 11
+  },
+  "arms": {
+    "visual": {
+      "lam": 0.0,
+      "tau": 0.9,
+      "overall": 0.7298136645962733,
+      "deterministic": 0.7837837837837838,
+      "branching": 1.0,
+      "novel": 0.8888888888888888,
+      "no-support": 0.6068376068376068
+    },
+    "self": {
+      "lam": 0.0,
+      "tau": 0.9,
+      "overall": 0.7298136645962733,
+      "deterministic": 0.7837837837837838,
+      "branching": 1.0,
+      "novel": 0.8888888888888888,
+      "no-support": 0.6068376068376068
+    },
+    "recency": {
+      "lam": 0.0,
+      "tau": 0.9,
+      "overall": 0.7298136645962733,
+      "deterministic": 0.7837837837837838,
+      "branching": 1.0,
+      "novel": 0.8888888888888888,
+      "no-support": 0.6068376068376068
+    },
+    "frequency": {
+      "lam": 0.0,
+      "tau": 0.9,
+      "overall": 0.7298136645962733,
+      "deterministic": 0.7837837837837838,
+      "branching": 1.0,
+      "novel": 0.8888888888888888,
+      "no-support": 0.6068376068376068
+    },
+    "cache": {
+      "lam": 0.05,
+      "tau": 0.9,
+      "overall": 0.7857142857142857,
+      "deterministic": 0.8810810810810811,
+      "branching": 1.0,
+      "novel": 0.8888888888888888,
+      "no-support": 0.6068376068376068
+    },
+    "support": {
+      "lam": 0.1,
+      "tau": 0.9,
+      "overall": 0.7888198757763976,
+      "deterministic": 0.8864864864864865,
+      "branching": 1.0,
+      "novel": 0.8888888888888888,
+      "no-support": 0.6068376068376068
+    },
+    "shuffled": {
+      "lam": 0.02,
+      "tau": 0.9,
+      "overall": 0.7298136645962733,
+      "deterministic": 0.7891891891891892,
+      "branching": 0.9090909090909091,
+      "novel": 0.8888888888888888,
+      "no-support": 0.6068376068376068
+    }
+  },
+  "support_minus": {
+    "visual": {
+      "delta": 0.059,
+      "ci": [
+        0.0131,
+        0.1254
+      ]
+    },
+    "self": {
+      "delta": 0.059,
+      "ci": [
+        0.0131,
+        0.1273
+      ]
+    },
+    "recency": {
+      "delta": 0.059,
+      "ci": [
+        0.0137,
+        0.1273
+      ]
+    },
+    "frequency": {
+      "delta": 0.059,
+      "ci": [
+        0.0132,
+        0.1278
+      ]
+    },
+    "cache": {
+      "delta": 0.0031,
+      "ci": [
+        0.0,
+        0.0111
+      ]
+    }
+  }
+}

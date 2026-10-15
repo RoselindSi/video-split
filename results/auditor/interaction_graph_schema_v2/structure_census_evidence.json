@@ -1,0 +1,1713 @@
+{
+ "mosaic_graph_0001": {
+  "single_state_repeat": [
+   {
+    "at_s": 6.0,
+    "node": "B"
+   }
+  ],
+  "single_state_recurrence": [],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "mosaic_graph_0002": {
+  "single_state_repeat": [
+   {
+    "at_s": 0.0,
+    "node": "A"
+   }
+  ],
+  "single_state_recurrence": [
+   {
+    "at_s": 47.1,
+    "node": "B",
+    "across_special_gap": false
+   }
+  ],
+  "linear_procedure": [
+   {
+    "group": "pg_fan_disassembly",
+    "nodes": [
+     "A",
+     "B",
+     "D"
+    ]
+   }
+  ],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [
+   {
+    "at_s": 58.0,
+    "from": "pg_fan_disassembly",
+    "to": "pg_support_item_retrieval"
+   },
+   {
+    "at_s": 96.7,
+    "from": "pg_support_item_retrieval",
+    "to": "pg_fan_disassembly"
+   }
+  ],
+  "task_return": [
+   {
+    "group": "pg_fan_disassembly",
+    "run_index": 2
+   }
+  ]
+ },
+ "mosaic_graph_0003": {
+  "single_state_repeat": [
+   {
+    "at_s": 0.0,
+    "node": "A"
+   },
+   {
+    "at_s": 54.3,
+    "node": "A"
+   },
+   {
+    "at_s": 99.6,
+    "node": "A"
+   }
+  ],
+  "single_state_recurrence": [],
+  "linear_procedure": [],
+  "multi_state_recurrence": [
+   {
+    "group": "pg_machine_screw_adjustment",
+    "node": "A",
+    "first_i": 0,
+    "again_i": 2
+   }
+  ],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "mosaic_graph_0004": {
+  "single_state_repeat": [
+   {
+    "at_s": 0.0,
+    "node": "A"
+   },
+   {
+    "at_s": 102.0,
+    "node": "B"
+   }
+  ],
+  "single_state_recurrence": [],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "mosaic_graph_0005": {
+  "single_state_repeat": [
+   {
+    "at_s": 0.0,
+    "node": "A"
+   }
+  ],
+  "single_state_recurrence": [],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "mosaic_graph_0006": {
+  "single_state_repeat": [
+   {
+    "at_s": 0.0,
+    "node": "A"
+   },
+   {
+    "at_s": 12.6,
+    "node": "B"
+   }
+  ],
+  "single_state_recurrence": [],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [
+   {
+    "at_s": 12.6,
+    "from": "pg_surface_cleaning",
+    "to": "pg_kitchenware_organization"
+   },
+   {
+    "at_s": 19.0,
+    "from": "pg_kitchenware_organization",
+    "to": "pg_person_following"
+   },
+   {
+    "at_s": 30.5,
+    "from": "pg_person_following",
+    "to": "pg_hot_water_collection"
+   }
+  ],
+  "task_return": []
+ },
+ "mosaic_graph_0007": {
+  "single_state_repeat": [
+   {
+    "at_s": 27.6,
+    "node": "B"
+   }
+  ],
+  "single_state_recurrence": [],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "mosaic_graph_0008": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [
+   {
+    "at_s": 8.8,
+    "node": "B",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 16.7,
+    "node": "B",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 22.8,
+    "node": "B",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 28.6,
+    "node": "B",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 56.9,
+    "node": "B",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 62.5,
+    "node": "B",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 74.6,
+    "node": "B",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 88.0,
+    "node": "B",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 97.7,
+    "node": "B",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 116.4,
+    "node": "B",
+    "across_special_gap": false
+   }
+  ],
+  "linear_procedure": [],
+  "multi_state_recurrence": [
+   {
+    "group": "pg_wire_harness_tie_processing",
+    "node": "B",
+    "first_i": 0,
+    "again_i": 6
+   }
+  ],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "mosaic_graph_0009": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "mosaic_graph_0010": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [],
+  "linear_procedure": [],
+  "multi_state_recurrence": [
+   {
+    "group": "pg_electric_scooter_arrangement",
+    "node": "A",
+    "first_i": 0,
+    "again_i": 2
+   }
+  ],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "mosaic_graph_0011": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [
+   {
+    "at_s": 4.9,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 6.7,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 10.0,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 13.4,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 17.6,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 18.9,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 22.1,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 23.6,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 36.3,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 38.1,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 46.6,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 47.5,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 48.6,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 51.1,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 53.4,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 56.6,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 63.5,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 65.0,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 75.4,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 77.1,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 79.8,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 82.7,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 92.5,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 93.9,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 100.1,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 101.5,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 103.6,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 109.1,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 110.5,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 115.3,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 116.6,
+    "node": "A",
+    "across_special_gap": false
+   }
+  ],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "mosaic_graph_0012": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [
+   {
+    "at_s": 5.0,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 14.1,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 24.8,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 33.8,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 46.8,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 56.8,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 75.4,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 84.9,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 99.5,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 111.9,
+    "node": "A",
+    "across_special_gap": false
+   }
+  ],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "mosaic_graph_0013": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "mosaic_graph_0014": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [
+   {
+    "at_s": 14.3,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 23.1,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 37.0,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 64.7,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 74.4,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 84.0,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 107.3,
+    "node": "A",
+    "across_special_gap": false
+   }
+  ],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "mosaic_graph_0015": {
+  "single_state_repeat": [
+   {
+    "at_s": 35.6,
+    "node": "C"
+   }
+  ],
+  "single_state_recurrence": [],
+  "linear_procedure": [
+   {
+    "group": "pg_beverage_shelf_stocking",
+    "nodes": [
+     "A",
+     "B",
+     "C",
+     "D",
+     "F"
+    ]
+   }
+  ],
+  "multi_state_recurrence": [
+   {
+    "group": "pg_beverage_shelf_stocking",
+    "node": "C",
+    "first_i": 2,
+    "again_i": 4
+   }
+  ],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "mosaic_graph_0016": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [
+   {
+    "at_s": 63.9,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 77.7,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 97.8,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 113.6,
+    "node": "A",
+    "across_special_gap": false
+   }
+  ],
+  "linear_procedure": [],
+  "multi_state_recurrence": [
+   {
+    "group": "pg_black_component_processing",
+    "node": "A",
+    "first_i": 0,
+    "again_i": 2
+   }
+  ],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "mosaic_graph_0017": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [],
+  "linear_procedure": [
+   {
+    "group": "pg_fan_assembly",
+    "nodes": [
+     "A",
+     "B",
+     "C"
+    ]
+   }
+  ],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "mosaic_graph_0018": {
+  "single_state_repeat": [
+   {
+    "at_s": 53.9,
+    "node": "B"
+   }
+  ],
+  "single_state_recurrence": [],
+  "linear_procedure": [],
+  "multi_state_recurrence": [
+   {
+    "group": "pg_inventory_collection",
+    "node": "B",
+    "first_i": 0,
+    "again_i": 2
+   }
+  ],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "mosaic_graph_0019": {
+  "single_state_repeat": [
+   {
+    "at_s": 79.2,
+    "node": "B"
+   }
+  ],
+  "single_state_recurrence": [
+   {
+    "at_s": 13.0,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 29.1,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 54.7,
+    "node": "A",
+    "across_special_gap": false
+   }
+  ],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "mosaic_graph_0020": {
+  "single_state_repeat": [
+   {
+    "at_s": 73.2,
+    "node": "D"
+   }
+  ],
+  "single_state_recurrence": [],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [
+   {
+    "at_s": 33.6,
+    "from": "pg_electrical_assembly",
+    "to": "pg_collaboration_waiting"
+   },
+   {
+    "at_s": 55.1,
+    "from": "pg_collaboration_waiting",
+    "to": "pg_work_documentation"
+   },
+   {
+    "at_s": 73.2,
+    "from": "pg_work_documentation",
+    "to": "pg_electrical_assembly"
+   }
+  ],
+  "task_return": [
+   {
+    "group": "pg_electrical_assembly",
+    "run_index": 3
+   }
+  ]
+ },
+ "mosaic_graph_0021": {
+  "single_state_repeat": [
+   {
+    "at_s": 0.0,
+    "node": "A"
+   },
+   {
+    "at_s": 9.8,
+    "node": "A"
+   }
+  ],
+  "single_state_recurrence": [
+   {
+    "at_s": 9.8,
+    "node": "A",
+    "across_special_gap": false
+   }
+  ],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "mosaic_graph_0022": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [],
+  "linear_procedure": [
+   {
+    "group": "pg_tea_portioning",
+    "nodes": [
+     "A",
+     "B",
+     "C",
+     "D"
+    ]
+   }
+  ],
+  "multi_state_recurrence": [
+   {
+    "group": "pg_tea_portioning",
+    "node": "A",
+    "first_i": 0,
+    "again_i": 2
+   }
+  ],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "mosaic_graph_0023": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [
+   {
+    "at_s": 38.5,
+    "node": "B",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 49.4,
+    "node": "B",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 64.1,
+    "node": "B",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 72.4,
+    "node": "B",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 83.0,
+    "node": "B",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 92.8,
+    "node": "B",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 102.6,
+    "node": "B",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 112.2,
+    "node": "B",
+    "across_special_gap": false
+   }
+  ],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "mosaic_graph_0024": {
+  "single_state_repeat": [
+   {
+    "at_s": 5.0,
+    "node": "C"
+   }
+  ],
+  "single_state_recurrence": [
+   {
+    "at_s": 72.6,
+    "node": "C",
+    "across_special_gap": true
+   }
+  ],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "mosaic_graph_0025": {
+  "single_state_repeat": [
+   {
+    "at_s": 0.0,
+    "node": "A"
+   },
+   {
+    "at_s": 53.4,
+    "node": "B"
+   }
+  ],
+  "single_state_recurrence": [],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "mosaic_graph_0026": {
+  "single_state_repeat": [
+   {
+    "at_s": 90.8,
+    "node": "F"
+   }
+  ],
+  "single_state_recurrence": [],
+  "linear_procedure": [
+   {
+    "group": "pg_dried_fruit_weighing",
+    "nodes": [
+     "A",
+     "B",
+     "C",
+     "D",
+     "E",
+     "F"
+    ]
+   }
+  ],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "mosaic_graph_0027": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "mosaic_graph_0028": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [],
+  "linear_procedure": [
+   {
+    "group": "pg_heart_embroidery",
+    "nodes": [
+     "A",
+     "C",
+     "D"
+    ]
+   }
+  ],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "mosaic_graph_0029": {
+  "single_state_repeat": [
+   {
+    "at_s": 78.3,
+    "node": "B"
+   }
+  ],
+  "single_state_recurrence": [
+   {
+    "at_s": 9.2,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 42.3,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 50.9,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 72.9,
+    "node": "A",
+    "across_special_gap": false
+   }
+  ],
+  "linear_procedure": [
+   {
+    "group": "pg_bottle_washing_packing",
+    "nodes": [
+     "A",
+     "B",
+     "C"
+    ]
+   }
+  ],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "mosaic_graph_0030": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [
+   {
+    "at_s": 39.0,
+    "from": "pg_tablecloth_delivery",
+    "to": "pg_cart_organization"
+   }
+  ],
+  "task_return": []
+ },
+ "graph_review_0001": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [
+   {
+    "at_s": 17.9,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 45.0,
+    "node": "A",
+    "across_special_gap": false
+   }
+  ],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0002": {
+  "single_state_repeat": [
+   {
+    "at_s": 7.4,
+    "node": "D"
+   }
+  ],
+  "single_state_recurrence": [],
+  "linear_procedure": [
+   {
+    "group": "pg_surface_cleaning",
+    "nodes": [
+     "A",
+     "B",
+     "C",
+     "D"
+    ]
+   }
+  ],
+  "multi_state_recurrence": [
+   {
+    "group": "pg_surface_cleaning",
+    "node": "A",
+    "first_i": 0,
+    "again_i": 4
+   }
+  ],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0003": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [],
+  "linear_procedure": [],
+  "multi_state_recurrence": [
+   {
+    "group": "pg_slipper_storage",
+    "node": "A",
+    "first_i": 0,
+    "again_i": 2
+   }
+  ],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0004": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [],
+  "linear_procedure": [
+   {
+    "group": "pg_power_bank_inspection",
+    "nodes": [
+     "B",
+     "C",
+     "D"
+    ]
+   }
+  ],
+  "multi_state_recurrence": [
+   {
+    "group": "pg_power_bank_inspection",
+    "node": "B",
+    "first_i": 0,
+    "again_i": 3
+   }
+  ],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0005": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [],
+  "linear_procedure": [],
+  "multi_state_recurrence": [
+   {
+    "group": "pg_charging_cable_management",
+    "node": "A",
+    "first_i": 0,
+    "again_i": 2
+   }
+  ],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0006": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [
+   {
+    "at_s": 3.6,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 22.7,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 50.2,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 70.9,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 87.1,
+    "node": "A",
+    "across_special_gap": false
+   }
+  ],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0007": {
+  "single_state_repeat": [
+   {
+    "at_s": 8.4,
+    "node": "D"
+   },
+   {
+    "at_s": 54.8,
+    "node": "D"
+   }
+  ],
+  "single_state_recurrence": [],
+  "linear_procedure": [
+   {
+    "group": "pg_surface_cleaning",
+    "nodes": [
+     "A",
+     "B",
+     "C",
+     "D"
+    ]
+   }
+  ],
+  "multi_state_recurrence": [
+   {
+    "group": "pg_surface_cleaning",
+    "node": "A",
+    "first_i": 0,
+    "again_i": 4
+   }
+  ],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0008": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [
+   {
+    "at_s": 4.7,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 15.5,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 23.3,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 33.1,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 42.2,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 50.9,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 58.6,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 67.0,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 76.2,
+    "node": "A",
+    "across_special_gap": false
+   }
+  ],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0009": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [],
+  "linear_procedure": [
+   {
+    "group": "pg_power_bank_inspection",
+    "nodes": [
+     "B",
+     "C",
+     "D"
+    ]
+   }
+  ],
+  "multi_state_recurrence": [
+   {
+    "group": "pg_power_bank_inspection",
+    "node": "B",
+    "first_i": 0,
+    "again_i": 3
+   }
+  ],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0010": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0011": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [],
+  "linear_procedure": [],
+  "multi_state_recurrence": [
+   {
+    "group": "pg_slipper_storage",
+    "node": "B",
+    "first_i": 0,
+    "again_i": 2
+   }
+  ],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0012": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [],
+  "linear_procedure": [],
+  "multi_state_recurrence": [
+   {
+    "group": "pg_tableware_washing",
+    "node": "B",
+    "first_i": 0,
+    "again_i": 2
+   }
+  ],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0013": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [
+   {
+    "at_s": 4.6,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 28.7,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 42.4,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 56.3,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 73.3,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 86.9,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 100.1,
+    "node": "A",
+    "across_special_gap": false
+   }
+  ],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0014": {
+  "single_state_repeat": [
+   {
+    "at_s": 0.0,
+    "node": "A"
+   }
+  ],
+  "single_state_recurrence": [],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0015": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0016": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [
+   {
+    "at_s": 4.4,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 7.7,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 12.2,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 15.7,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 20.6,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 23.8,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 28.2,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 31.4,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 36.1,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 40.2,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 44.8,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 48.5,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 52.4,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 55.9,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 60.8,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 64.9,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 69.1,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 73.0,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 77.4,
+    "node": "A",
+    "across_special_gap": false
+   }
+  ],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0017": {
+  "single_state_repeat": [
+   {
+    "at_s": 0.0,
+    "node": "A"
+   }
+  ],
+  "single_state_recurrence": [],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0018": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [],
+  "linear_procedure": [],
+  "multi_state_recurrence": [
+   {
+    "group": "pg_metal_box_arrangement",
+    "node": "A",
+    "first_i": 0,
+    "again_i": 2
+   }
+  ],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0019": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [],
+  "linear_procedure": [],
+  "multi_state_recurrence": [
+   {
+    "group": "pg_charging_cable_management",
+    "node": "A",
+    "first_i": 0,
+    "again_i": 2
+   }
+  ],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0020": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [],
+  "linear_procedure": [
+   {
+    "group": "pg_bowl_plastic_wrap",
+    "nodes": [
+     "A",
+     "B",
+     "C",
+     "D"
+    ]
+   }
+  ],
+  "multi_state_recurrence": [
+   {
+    "group": "pg_bowl_plastic_wrap",
+    "node": "A",
+    "first_i": 0,
+    "again_i": 4
+   }
+  ],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0021": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [],
+  "linear_procedure": [
+   {
+    "group": "pg_charging_cable_management",
+    "nodes": [
+     "B",
+     "C",
+     "D",
+     "E"
+    ]
+   }
+  ],
+  "multi_state_recurrence": [
+   {
+    "group": "pg_charging_cable_management",
+    "node": "B",
+    "first_i": 0,
+    "again_i": 4
+   }
+  ],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0022": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [],
+  "linear_procedure": [
+   {
+    "group": "pg_tableware_washing",
+    "nodes": [
+     "A",
+     "B",
+     "C",
+     "D"
+    ]
+   }
+  ],
+  "multi_state_recurrence": [
+   {
+    "group": "pg_tableware_washing",
+    "node": "A",
+    "first_i": 0,
+    "again_i": 2
+   }
+  ],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0023": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [],
+  "linear_procedure": [
+   {
+    "group": "pg_power_bank_inspection",
+    "nodes": [
+     "A",
+     "B",
+     "C"
+    ]
+   }
+  ],
+  "multi_state_recurrence": [
+   {
+    "group": "pg_power_bank_inspection",
+    "node": "A",
+    "first_i": 0,
+    "again_i": 3
+   }
+  ],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0024": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [],
+  "linear_procedure": [
+   {
+    "group": "pg_charging_cable_management",
+    "nodes": [
+     "A",
+     "B",
+     "C",
+     "D"
+    ]
+   }
+  ],
+  "multi_state_recurrence": [
+   {
+    "group": "pg_charging_cable_management",
+    "node": "A",
+    "first_i": 0,
+    "again_i": 4
+   }
+  ],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0025": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [],
+  "linear_procedure": [],
+  "multi_state_recurrence": [
+   {
+    "group": "pg_phone_case_handling",
+    "node": "A",
+    "first_i": 0,
+    "again_i": 2
+   }
+  ],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0026": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [
+   {
+    "at_s": 12.0,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 26.6,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 37.1,
+    "node": "A",
+    "across_special_gap": false
+   }
+  ],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0027": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [],
+  "linear_procedure": [
+   {
+    "group": "pg_tableware_washing",
+    "nodes": [
+     "A",
+     "B",
+     "C",
+     "D"
+    ]
+   }
+  ],
+  "multi_state_recurrence": [
+   {
+    "group": "pg_tableware_washing",
+    "node": "A",
+    "first_i": 0,
+    "again_i": 2
+   }
+  ],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0028": {
+  "single_state_repeat": [
+   {
+    "at_s": 0.0,
+    "node": "A"
+   }
+  ],
+  "single_state_recurrence": [],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0029": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [
+   {
+    "at_s": 6.7,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 15.0,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 24.3,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 33.8,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 43.2,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 53.2,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 64.6,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 73.5,
+    "node": "A",
+    "across_special_gap": false
+   },
+   {
+    "at_s": 82.2,
+    "node": "A",
+    "across_special_gap": false
+   }
+  ],
+  "linear_procedure": [],
+  "multi_state_recurrence": [],
+  "cross_task_transition": [],
+  "task_return": []
+ },
+ "graph_review_0030": {
+  "single_state_repeat": [],
+  "single_state_recurrence": [],
+  "linear_procedure": [
+   {
+    "group": "pg_surface_cleaning",
+    "nodes": [
+     "A",
+     "B",
+     "C",
+     "D"
+    ]
+   }
+  ],
+  "multi_state_recurrence": [
+   {
+    "group": "pg_surface_cleaning",
+    "node": "A",
+    "first_i": 0,
+    "again_i": 4
+   }
+  ],
+  "cross_task_transition": [],
+  "task_return": []
+ }
+}

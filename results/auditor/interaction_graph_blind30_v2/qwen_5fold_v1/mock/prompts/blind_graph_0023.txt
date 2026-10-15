@@ -1,0 +1,42 @@
+你是独立的视频动作图标注者。目标视频的人工答案对你完全隐藏。
+
+把整条视频从 0 秒到结尾切成连续、无空白、无重叠的时间段，并建立当前视频内可复用的事件节点 A、B、C……
+
+硬规则：
+1. 同一次动作继续进行时不要切段。来回擦、反复拧、调整手势、短暂停顿都仍可属于同一次动作。
+2. 同一种动作已经结束、随后重新开始时要切段，并让新段复用原事件 ID。这形成 A->A，表示同类新实例。
+3. 目标或任务改变时要切段。若回到此前事件就复用旧 ID，例如 A->B->A；否则创建新 ID。
+4. repeats_within_segment 只表示同一次事件内部有肉眼可见的重复，不代替同类新实例之间的切点。
+5. 事件 ID 只在当前视频内有效。描述使用简短、可观察的中文动作，不猜测看不到的意图。
+6. 只有确实无法给出可观察动作描述的过渡或遮挡段才写“特殊事件”，不要把普通等待、走路或拿取笼统地写成特殊事件。
+7. 边界保留一位小数。第一段从 0.0 开始，最后一段必须到视频时长。
+
+只输出一个 JSON 对象，不要使用 Markdown。格式：
+{"events":[{"event_id":"A","description":"动作描述"}],"segments":[{"start_s":0.0,"end_s":12.3,"event_id":"A","repeats_within_segment":false,"note":""}]}
+
+以下示例全部来自其他视频：
+示例 1：
+{"events":[{"event_id":"A","description":"擦桌子"},{"event_id":"B","description":"擦隔板"},{"event_id":"C","description":"特殊事件"}],"segments":[{"start_s":0.0,"end_s":18.4,"event_id":"A","repeats_within_segment":true,"note":""},{"start_s":18.4,"end_s":32.8,"event_id":"B","repeats_within_segment":false,"note":""},{"start_s":32.8,"end_s":46.8,"event_id":"A","repeats_within_segment":true,"note":""},{"start_s":46.8,"end_s":67.3,"event_id":"A","repeats_within_segment":true,"note":"换了一个桌子"},{"start_s":67.3,"end_s":86.6,"event_id":"C","repeats_within_segment":false,"note":""},{"start_s":86.6,"end_s":120.0,"event_id":"A","repeats_within_segment":true,"note":""}]}
+
+示例 2：
+{"events":[{"event_id":"A","description":"剥豌豆"}],"segments":[{"start_s":0.0,"end_s":120.0,"event_id":"A","repeats_within_segment":true,"note":""}]}
+
+示例 3：
+{"events":[{"event_id":"A","description":"写标签纸"}],"segments":[{"start_s":0.0,"end_s":35.4,"event_id":"A","repeats_within_segment":false,"note":""},{"start_s":35.4,"end_s":62.4,"event_id":"A","repeats_within_segment":false,"note":""},{"start_s":62.4,"end_s":97.3,"event_id":"A","repeats_within_segment":false,"note":""},{"start_s":97.3,"end_s":120.0,"event_id":"A","repeats_within_segment":false,"note":""}]}
+
+示例 4：
+{"events":[{"event_id":"A","description":"拿起工具清理汽车前盖"},{"event_id":"B","description":"打开汽车前盖"},{"event_id":"C","description":"取膜布，扯下一块盖在车的前挡风玻璃上"}],"segments":[{"start_s":0.0,"end_s":26.9,"event_id":"A","repeats_within_segment":true,"note":""},{"start_s":26.9,"end_s":32.5,"event_id":"B","repeats_within_segment":false,"note":""},{"start_s":32.5,"end_s":120.0,"event_id":"C","repeats_within_segment":false,"note":""}]}
+
+示例 5：
+{"events":[{"event_id":"A","description":"特殊事件"},{"event_id":"B","description":"把电风扇从一个隔间转移到另外一个隔间"},{"event_id":"C","description":"把电风扇头拧下来"},{"event_id":"D","description":"拧下电风扇杆的一节"}],"segments":[{"start_s":0.0,"end_s":51.8,"event_id":"A","repeats_within_segment":false,"note":""},{"start_s":51.8,"end_s":67.5,"event_id":"B","repeats_within_segment":false,"note":""},{"start_s":67.5,"end_s":92.4,"event_id":"C","repeats_within_segment":false,"note":""},{"start_s":92.4,"end_s":110.4,"event_id":"D","repeats_within_segment":false,"note":""},{"start_s":110.4,"end_s":120.0,"event_id":"D","repeats_within_segment":false,"note":""}]}
+
+示例 6：
+{"events":[{"event_id":"A","description":"用电钻上螺丝"}],"segments":[{"start_s":0.0,"end_s":13.8,"event_id":"A","repeats_within_segment":false,"note":""},{"start_s":13.8,"end_s":45.8,"event_id":"A","repeats_within_segment":false,"note":""},{"start_s":45.8,"end_s":67.9,"event_id":"A","repeats_within_segment":false,"note":""},{"start_s":67.9,"end_s":84.0,"event_id":"A","repeats_within_segment":false,"note":""},{"start_s":84.0,"end_s":91.8,"event_id":"A","repeats_within_segment":false,"note":""},{"start_s":91.8,"end_s":105.8,"event_id":"A","repeats_within_segment":false,"note":""},{"start_s":105.8,"end_s":120.0,"event_id":"A","repeats_within_segment":false,"note":""}]}
+
+示例 7：
+{"events":[{"event_id":"A","description":"双手各抓一把塑料小管子放到身前的盒子里"},{"event_id":"B","description":"写表记录"},{"event_id":"C","description":"特殊事件"}],"segments":[{"start_s":0.0,"end_s":7.7,"event_id":"A","repeats_within_segment":false,"note":""},{"start_s":7.7,"end_s":24.5,"event_id":"B","repeats_within_segment":false,"note":""},{"start_s":24.5,"end_s":31.033,"event_id":"C","repeats_within_segment":false,"note":""}]}
+
+示例 8：
+{"events":[{"event_id":"A","description":"拿一块积木，放到沙发上同一颜色的积木群的位置"},{"event_id":"B","description":"在积木小车上，拿刚刚沙发上的积木拼图纸上的积木造型"},{"event_id":"C","description":"把积木拆下来"}],"segments":[{"start_s":0.0,"end_s":9.7,"event_id":"A","repeats_within_segment":false,"note":""},{"start_s":9.7,"end_s":15.9,"event_id":"A","repeats_within_segment":false,"note":""},{"start_s":15.9,"end_s":20.9,"event_id":"A","repeats_within_segment":false,"note":""},{"start_s":20.9,"end_s":25.4,"event_id":"A","repeats_within_segment":false,"note":""},{"start_s":25.4,"end_s":29.4,"event_id":"A","repeats_within_segment":false,"note":""},{"start_s":29.4,"end_s":35.0,"event_id":"A","repeats_within_segment":false,"note":""},{"start_s":35.0,"end_s":108.2,"event_id":"B","repeats_within_segment":true,"note":""},{"start_s":108.2,"end_s":120.0,"event_id":"C","repeats_within_segment":true,"note":""}]}
+
+现在独立标注目标视频。视频时长为 120.000 秒。不要假设目标视频和示例有相同事件。

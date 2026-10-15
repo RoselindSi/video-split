@@ -1,0 +1,63 @@
+{
+  "schema_version": "interaction_graph_timeline_v1",
+  "video_id": "graph_review_0014",
+  "events": [
+    {
+      "event_id": "A",
+      "description": "擦路由器"
+    }
+  ],
+  "segments": [
+    {
+      "start_s": 0.0,
+      "end_s": 70.0,
+      "event_id": "A",
+      "repeats_within_segment": true,
+      "note": ""
+    }
+  ],
+  "confirmed_full_video": true,
+  "manifest_sha256": "158a3af90dc1e7636fbcb54fd483b4113259e65dc5c60b0bc61dd9c39b4c9b29",
+  "annotator": "reviewer_1",
+  "saved_at": "2026-09-19T09:18:53.272398+00:00",
+  "status": "final",
+  "graph": {
+    "nodes": [
+      {
+        "event_id": "A",
+        "description": "擦路由器",
+        "segment_count": 1,
+        "total_duration_s": 70.0,
+        "segment_indices": [
+          1
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "source": "A",
+        "target": "A",
+        "count": 1,
+        "kinds": {
+          "internal_repeat": 1
+        },
+        "times_s": [
+          0.0
+        ]
+      }
+    ],
+    "edge_occurrences": [
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "internal_repeat",
+        "at_s": 0.0,
+        "from_segment": 1,
+        "to_segment": 1
+      }
+    ],
+    "event_sequence": [
+      "A"
+    ]
+  }
+}

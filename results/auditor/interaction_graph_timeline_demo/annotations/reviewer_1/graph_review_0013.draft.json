@@ -1,0 +1,180 @@
+{
+  "schema_version": "interaction_graph_timeline_v1",
+  "video_id": "graph_review_0013",
+  "events": [
+    {
+      "event_id": "A",
+      "description": "拿出，冲洗，放回下水道塞子"
+    }
+  ],
+  "segments": [
+    {
+      "start_s": 0.0,
+      "end_s": 4.6,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 4.6,
+      "end_s": 28.7,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 28.7,
+      "end_s": 42.4,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 42.4,
+      "end_s": 56.3,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 56.3,
+      "end_s": 73.3,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 73.3,
+      "end_s": 86.9,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 86.9,
+      "end_s": 100.1,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 100.1,
+      "end_s": 101.5,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    }
+  ],
+  "confirmed_full_video": true,
+  "manifest_sha256": "158a3af90dc1e7636fbcb54fd483b4113259e65dc5c60b0bc61dd9c39b4c9b29",
+  "annotator": "reviewer_1",
+  "saved_at": "2026-09-19T09:17:46.794493+00:00",
+  "status": "draft",
+  "graph": {
+    "nodes": [
+      {
+        "event_id": "A",
+        "description": "拿出，冲洗，放回下水道塞子",
+        "segment_count": 8,
+        "total_duration_s": 101.5,
+        "segment_indices": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "source": "A",
+        "target": "A",
+        "count": 7,
+        "kinds": {
+          "self_transition": 7
+        },
+        "times_s": [
+          4.6,
+          28.7,
+          42.4,
+          56.3,
+          73.3,
+          86.9,
+          100.1
+        ]
+      }
+    ],
+    "edge_occurrences": [
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 4.6,
+        "from_segment": 1,
+        "to_segment": 2
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 28.7,
+        "from_segment": 2,
+        "to_segment": 3
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 42.4,
+        "from_segment": 3,
+        "to_segment": 4
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 56.3,
+        "from_segment": 4,
+        "to_segment": 5
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 73.3,
+        "from_segment": 5,
+        "to_segment": 6
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 86.9,
+        "from_segment": 6,
+        "to_segment": 7
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 100.1,
+        "from_segment": 7,
+        "to_segment": 8
+      }
+    ],
+    "event_sequence": [
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A"
+    ]
+  }
+}

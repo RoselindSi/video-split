@@ -1,0 +1,79 @@
+{
+  "status": "prepared_not_annotated",
+  "contract_version": "v2_draft",
+  "scope": "development_target_definition_audit_not_confirmatory",
+  "primary_events": 150,
+  "reserve_events": 265,
+  "legacy_events_retained": 54,
+  "new_events": 96,
+  "recordings": 80,
+  "recordings_with_multiple_events": 67,
+  "events_per_recording_histogram": {
+    "1": 13,
+    "2": 64,
+    "3": 3
+  },
+  "selection": {
+    "method": "recording_pair_expansion_v1",
+    "requested_events": 150,
+    "seed": 20260913,
+    "min_separation_s": 2.0,
+    "max_per_recording": 3,
+    "uses_label_values_scores_or_feature_coverage": false
+  },
+  "protected_recordings": 48,
+  "clips_prepared": false,
+  "legacy_labels_accepted_as_v2_gold": false,
+  "reserve_is_not_a_request_to_relabel_every_event": true,
+  "pilot_model_or_threshold_changed": false,
+  "sources": {
+    "config": {
+      "path": "/Users/roselindsi/Documents/GitHub/video-split/configs/auditor/interaction_evidence_v1.json",
+      "sha256": "920dd5403c6de697b9dbce7d31b1a268f0bc3fd95708ec8ff98a859c2afc8a14"
+    },
+    "final_test_manifest": {
+      "path": "/Users/roselindsi/Documents/GitHub/video-split/data/splits/final_test_v1.json",
+      "sha256": "d886a58154887093ac426e19b3e1bb2f1d138debbe260e077ab401bacef36a75"
+    },
+    "relations": {
+      "path": "/Users/roselindsi/Documents/GitHub/video-split/data/gold/relation_audit_annotator1_filled.csv",
+      "sha256": "b08f142e9ebf9e84c5a42f21c6b9ac630093145e2e1ab17de7e01bc7e401a7c3"
+    },
+    "migrated": {
+      "path": "/Users/roselindsi/Documents/GitHub/video-split/data/gold/pair_schema_v2_migrated.csv",
+      "sha256": "50d7c0d9976d3c46702197fd83ae12875054ef304eef0013b0e44e1f603c465b"
+    },
+    "contract": {
+      "path": "/Users/roselindsi/Documents/GitHub/video-split/docs/interaction_evidence_v2_target_contract.md",
+      "sha256": "c730ba44f876ccc09c2c46067634dc6cf856f0145b8334e7d6a04bbd5d1605b6"
+    },
+    "pilot_report": {
+      "path": "/Users/roselindsi/Documents/GitHub/video-split/results/auditor/interaction_evidence_v1_20260913_pilot/report.json",
+      "sha256": "9b834d838a07b63f12b1c3cf9a8f29f3f5a841b7c481e6c2ead5871cec329086"
+    },
+    "sampling_protocol": {
+      "path": "/Users/roselindsi/Documents/GitHub/video-split/docs/interaction_evidence_v2_150_sampling.md",
+      "sha256": "2349b8b1889e00061753a680eceb7d60670b01486ab82c33d0454d14938efed1"
+    },
+    "visual_csv": {
+      "path": "/private/tmp/interaction_evidence_v1_inputs/concentration_features_full.csv",
+      "sha256": "fc5ba5d1a27f77aeb1682c12c1799c3504123618a332e92c8bff75a88779e6a2"
+    },
+    "hand_csv": {
+      "path": "/private/tmp/interaction_evidence_v1_inputs/hand_trajectory_features.csv",
+      "sha256": "170e2b56d30aec35431b633989e1be11e361da5f96ad79856252a0d031eb6466"
+    }
+  },
+  "code_sha256": "a396dbeaa4dc1c091722de62cf2260f131f06300bda70fd65e1b631e1e23d3e2",
+  "feature_coverage": {
+    "status": "coverage_only_not_used_for_selection",
+    "events": 150,
+    "signal_coverage": {
+      "visual_only": 38,
+      "both_signals": 111,
+      "neither_signal": 1
+    },
+    "accepted_v2_labels": 0,
+    "missing_input_manifest": "private_missing_features.csv"
+  }
+}

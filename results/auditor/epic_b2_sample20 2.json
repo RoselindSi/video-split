@@ -1,0 +1,331 @@
+{
+  "seed": 20261008,
+  "window_s": 180.0,
+  "cap_per_participant": 2,
+  "n_all_windows": 1998,
+  "n_picked": 20,
+  "selection": "uniform random, stratified only by participant; no quantity correlated with branching was used",
+  "cannot_trigger_b2_nogo": "B2 的 No-Go 条件是「刻意选了 branching-native 任务之后仍只有个位数」；本样本是便利样本，不满足该前提",
+  "windows": [
+    {
+      "window_id": "P01_09_w003499",
+      "video_id": "P01_09",
+      "participant_id": "P01",
+      "start_s": 3498.57,
+      "end_s": 3566.41,
+      "n_segments": 12,
+      "n_distinct_verbnoun": 9,
+      "first_narrations": [
+        "looking for something",
+        "cut pizza",
+        "cut pizza",
+        "take pizza slice",
+        "put pizza slice onto plate"
+      ]
+    },
+    {
+      "window_id": "P01_17_w000743",
+      "video_id": "P01_17",
+      "participant_id": "P01",
+      "start_s": 743.28,
+      "end_s": 916.74,
+      "n_segments": 51,
+      "n_distinct_verbnoun": 36,
+      "first_narrations": [
+        "close oregano",
+        "put down oregano",
+        "take spoon",
+        "stir salad",
+        "continue stirring salad"
+      ]
+    },
+    {
+      "window_id": "P02_09_w000738",
+      "video_id": "P02_09",
+      "participant_id": "P02",
+      "start_s": 737.69,
+      "end_s": 903.48,
+      "n_segments": 29,
+      "n_distinct_verbnoun": 16,
+      "first_narrations": [
+        "open trash bin",
+        "open tap",
+        "pour liquid into hand",
+        "wash hands",
+        "close tap"
+      ]
+    },
+    {
+      "window_id": "P04_02_w000557",
+      "video_id": "P04_02",
+      "participant_id": "P04",
+      "start_s": 556.7,
+      "end_s": 734.37,
+      "n_segments": 38,
+      "n_distinct_verbnoun": 15,
+      "first_narrations": [
+        "pick up tuna mixture",
+        "shape tuna patty",
+        "put in pan",
+        "pick up tuna mixture",
+        "shape tuna patty"
+      ]
+    },
+    {
+      "window_id": "P04_107_w000000",
+      "video_id": "P04_107",
+      "participant_id": "P04",
+      "start_s": 0.0,
+      "end_s": 179.67,
+      "n_segments": 74,
+      "n_distinct_verbnoun": 36,
+      "first_narrations": [
+        "move pan",
+        "pick up tea towel",
+        "crumple up tea towel",
+        "put down tea towel",
+        "pick up dough"
+      ]
+    },
+    {
+      "window_id": "P07_115_w000003",
+      "video_id": "P07_115",
+      "participant_id": "P07",
+      "start_s": 3.34,
+      "end_s": 180.66,
+      "n_segments": 55,
+      "n_distinct_verbnoun": 41,
+      "first_narrations": [
+        "grab spoon",
+        "grab sponge",
+        "squeeze sponge",
+        "grab bottle",
+        "pour washing up liquid on sponge"
+      ]
+    },
+    {
+      "window_id": "P08_02_w000001",
+      "video_id": "P08_02",
+      "participant_id": "P08",
+      "start_s": 0.99,
+      "end_s": 98.28,
+      "n_segments": 34,
+      "n_distinct_verbnoun": 27,
+      "first_narrations": [
+        "enter kitchen",
+        "put plates on counter",
+        "open dishwasher",
+        "place fork",
+        "place plate"
+      ]
+    },
+    {
+      "window_id": "P08_16_w000000",
+      "video_id": "P08_16",
+      "participant_id": "P08",
+      "start_s": 0.0,
+      "end_s": 176.78,
+      "n_segments": 36,
+      "n_distinct_verbnoun": 27,
+      "first_narrations": [
+        "enter kitchen",
+        "open cupboard",
+        "open drawer",
+        "get colander",
+        "move bowl"
+      ]
+    },
+    {
+      "window_id": "P09_106_w000002",
+      "video_id": "P09_106",
+      "participant_id": "P09",
+      "start_s": 1.85,
+      "end_s": 143.96,
+      "n_segments": 27,
+      "n_distinct_verbnoun": 25,
+      "first_narrations": [
+        "take plate",
+        "take spoon",
+        "take pot",
+        "open pot",
+        "take rice"
+      ]
+    },
+    {
+      "window_id": "P15_02_w000199",
+      "video_id": "P15_02",
+      "participant_id": "P15",
+      "start_s": 199.03,
+      "end_s": 374.36,
+      "n_segments": 10,
+      "n_distinct_verbnoun": 10,
+      "first_narrations": [
+        "throw peeling in the trash",
+        "pick up pan",
+        "put frying pan on cooker",
+        "turn on the cooker",
+        "pick up oil"
+      ]
+    },
+    {
+      "window_id": "P21_03_w000374",
+      "video_id": "P21_03",
+      "participant_id": "P21",
+      "start_s": 373.93,
+      "end_s": 548.13,
+      "n_segments": 24,
+      "n_distinct_verbnoun": 23,
+      "first_narrations": [
+        "opening the grapes bag",
+        "taking out some grapes",
+        "closing the grapes bag",
+        "taking out some blueberries",
+        "putting them in the glass"
+      ]
+    },
+    {
+      "window_id": "P21_04_w000371",
+      "video_id": "P21_04",
+      "participant_id": "P21",
+      "start_s": 371.32,
+      "end_s": 545.67,
+      "n_segments": 24,
+      "n_distinct_verbnoun": 20,
+      "first_narrations": [
+        "closing the sauce",
+        "opening the fridge",
+        "taking a yoghurt out",
+        "taking tomato out of fridge",
+        "closing fridge"
+      ]
+    },
+    {
+      "window_id": "P22_17_w001274",
+      "video_id": "P22_17",
+      "participant_id": "P22",
+      "start_s": 1274.42,
+      "end_s": 1299.88,
+      "n_segments": 13,
+      "n_distinct_verbnoun": 13,
+      "first_narrations": [
+        "open tap",
+        "wash cloth",
+        "wring out cloth",
+        "clean sink",
+        "put rag down"
+      ]
+    },
+    {
+      "window_id": "P23_101_w000663",
+      "video_id": "P23_101",
+      "participant_id": "P23",
+      "start_s": 662.88,
+      "end_s": 810.0,
+      "n_segments": 60,
+      "n_distinct_verbnoun": 29,
+      "first_narrations": [
+        "take plate",
+        "put lady's fingers",
+        "put waste in dustbin",
+        "put plate",
+        "take waste"
+      ]
+    },
+    {
+      "window_id": "P25_09_w000445",
+      "video_id": "P25_09",
+      "participant_id": "P25",
+      "start_s": 445.24,
+      "end_s": 612.06,
+      "n_segments": 27,
+      "n_distinct_verbnoun": 23,
+      "first_narrations": [
+        "take chicken",
+        "put chicken",
+        "take salt",
+        "put salt",
+        "wash hands"
+      ]
+    },
+    {
+      "window_id": "P27_101_w001102",
+      "video_id": "P27_101",
+      "participant_id": "P27",
+      "start_s": 1102.21,
+      "end_s": 1279.17,
+      "n_segments": 60,
+      "n_distinct_verbnoun": 31,
+      "first_narrations": [
+        "pick up glass",
+        "turn on tap",
+        "wash glass",
+        "turn off tap",
+        "wash glass"
+      ]
+    },
+    {
+      "window_id": "P28_111_w000185",
+      "video_id": "P28_111",
+      "participant_id": "P28",
+      "start_s": 185.29,
+      "end_s": 358.21,
+      "n_segments": 74,
+      "n_distinct_verbnoun": 38,
+      "first_narrations": [
+        "wash pot",
+        "put sponge",
+        "turn on tap",
+        "rinse pot",
+        "rinse pot"
+      ]
+    },
+    {
+      "window_id": "P28_113_w000377",
+      "video_id": "P28_113",
+      "participant_id": "P28",
+      "start_s": 377.2,
+      "end_s": 530.84,
+      "n_segments": 29,
+      "n_distinct_verbnoun": 22,
+      "first_narrations": [
+        "turn off tap",
+        "put spring onions",
+        "open drawer",
+        "take knife",
+        "close drawer"
+      ]
+    },
+    {
+      "window_id": "P30_08_w000187",
+      "video_id": "P30_08",
+      "participant_id": "P30",
+      "start_s": 186.97,
+      "end_s": 364.06,
+      "n_segments": 53,
+      "n_distinct_verbnoun": 28,
+      "first_narrations": [
+        "open box of food",
+        "transfer food from box into bowl",
+        "continue transferring food from box into bowl",
+        "take bowl",
+        "open microwave"
+      ]
+    },
+    {
+      "window_id": "P35_108_w000548",
+      "video_id": "P35_108",
+      "participant_id": "P35",
+      "start_s": 547.94,
+      "end_s": 723.95,
+      "n_segments": 55,
+      "n_distinct_verbnoun": 22,
+      "first_narrations": [
+        "pick up mug",
+        "wash cup",
+        "pick up cutting board",
+        "move plates",
+        "wash cutting board"
+      ]
+    }
+  ]
+}

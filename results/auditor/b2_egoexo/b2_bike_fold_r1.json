@@ -1,0 +1,241 @@
+{
+  "batch_id": "egoexo_b2_bike_action",
+  "n_final": 10,
+  "code_classification": [
+    {
+      "name": "拿充气枪",
+      "fold": true
+    },
+    {
+      "name": "拿充气枪给轮胎充气",
+      "fold": false
+    },
+    {
+      "name": "放回充气枪",
+      "fold": true
+    },
+    {
+      "name": "给轮胎充气",
+      "fold": false
+    },
+    {
+      "name": "拿起工具",
+      "fold": true
+    },
+    {
+      "name": "把轮胎从轮毂上拆下",
+      "fold": false
+    },
+    {
+      "name": "把轮胎装回轮毂",
+      "fold": false
+    },
+    {
+      "name": "拧紧车轮上的零件",
+      "fold": false
+    },
+    {
+      "name": "用工具取下轮轴",
+      "fold": false
+    },
+    {
+      "name": "把辐条固定好",
+      "fold": false
+    },
+    {
+      "name": "拆下轮圈",
+      "fold": false
+    },
+    {
+      "name": "装回轮圈",
+      "fold": false
+    },
+    {
+      "name": "拿工具",
+      "fold": true
+    },
+    {
+      "name": "把充气阀门拧上",
+      "fold": false
+    },
+    {
+      "name": "检查轮圈气是否充足",
+      "fold": false
+    },
+    {
+      "name": "取下轮圈",
+      "fold": false
+    },
+    {
+      "name": "把充气阀门拧下",
+      "fold": false
+    },
+    {
+      "name": "把充气阀门拧回去",
+      "fold": false
+    },
+    {
+      "name": "拆轮圈",
+      "fold": false
+    },
+    {
+      "name": "给轮圈充气",
+      "fold": false
+    },
+    {
+      "name": "检查轮圈",
+      "fold": false
+    },
+    {
+      "name": "检查轮毂",
+      "fold": false
+    },
+    {
+      "name": "整理工具",
+      "fold": true
+    },
+    {
+      "name": "拿一个新轮圈，用充气枪充气",
+      "fold": false
+    },
+    {
+      "name": "拿一个新的轮圈充气",
+      "fold": false
+    },
+    {
+      "name": "拿一个新轮圈",
+      "fold": false
+    },
+    {
+      "name": "给装好的轮圈充气",
+      "fold": false
+    },
+    {
+      "name": "装轮圈",
+      "fold": false
+    }
+  ],
+  "steps": [
+    {
+      "label": "① 按标注原样",
+      "n_decisions": 55,
+      "n_S_ge_2": 5,
+      "g_branch": 5,
+      "per_window": 0.5,
+      "hubs": {
+        "拿工具": 5
+      }
+    },
+    {
+      "label": "② + 同名代号合并",
+      "n_decisions": 54,
+      "n_S_ge_2": 5,
+      "g_branch": 5,
+      "per_window": 0.5,
+      "hubs": {
+        "拿工具": 5
+      }
+    },
+    {
+      "label": "③ + 「?」阻断相邻合并",
+      "n_decisions": 55,
+      "n_S_ge_2": 5,
+      "g_branch": 5,
+      "per_window": 0.5,
+      "hubs": {
+        "拿工具": 5
+      }
+    },
+    {
+      "label": "④ + 去掉纯取得工具状态",
+      "n_decisions": 33,
+      "n_S_ge_2": 0,
+      "g_branch": 0,
+      "per_window": 0.0,
+      "hubs": {}
+    }
+  ],
+  "visits": [
+    {
+      "video_id": "cmu_bike02_3_w000129",
+      "real_state": "拿充气枪给轮胎充气",
+      "real_visits": 1,
+      "acq_state": "拿充气枪",
+      "acq_visits": 1
+    },
+    {
+      "video_id": "cmu_bike05_4_w000008",
+      "real_state": "给轮胎充气",
+      "real_visits": 2,
+      "acq_state": "拿起工具",
+      "acq_visits": 2
+    },
+    {
+      "video_id": "cmu_bike11_2_w000001",
+      "real_state": "拧紧车轮上的零件",
+      "real_visits": 2,
+      "acq_state": null,
+      "acq_visits": 0
+    },
+    {
+      "video_id": "cmu_bike18_3_w000001",
+      "real_state": "把辐条固定好",
+      "real_visits": 1,
+      "acq_state": "拿工具",
+      "acq_visits": 1
+    },
+    {
+      "video_id": "cmu_bike19_3_w000001",
+      "real_state": "把充气阀门拧上",
+      "real_visits": 1,
+      "acq_state": "拿工具",
+      "acq_visits": 2
+    },
+    {
+      "video_id": "cmu_bike20_3_w000001",
+      "real_state": "把充气阀门拧下",
+      "real_visits": 1,
+      "acq_state": "拿工具",
+      "acq_visits": 3
+    },
+    {
+      "video_id": "fair_bike_01_15_w000005",
+      "real_state": "取下轮圈",
+      "real_visits": 2,
+      "acq_state": "拿工具",
+      "acq_visits": 3
+    },
+    {
+      "video_id": "fair_bike_01_3_w000003",
+      "real_state": "取下轮圈",
+      "real_visits": 1,
+      "acq_state": "拿工具",
+      "acq_visits": 3
+    },
+    {
+      "video_id": "fair_bike_01_7_w000000",
+      "real_state": "拿一个新的轮圈充气",
+      "real_visits": 2,
+      "acq_state": "拿工具",
+      "acq_visits": 4
+    },
+    {
+      "video_id": "fair_bike_02_11_w000167",
+      "real_state": "装轮圈",
+      "real_visits": 1,
+      "acq_state": "拿工具",
+      "acq_visits": 1
+    }
+  ],
+  "real_visit_dist": {
+    "1": 6,
+    "2": 4
+  },
+  "acq_visit_dist": {
+    "0": 1,
+    "1": 3,
+    "2": 2,
+    "3": 3,
+    "4": 1
+  }
+}

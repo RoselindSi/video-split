@@ -1,0 +1,56 @@
+{
+  "figure": "fig4_representation_interface",
+  "experiment": "E2 表示消融阶梯（M0/M1raw/M1canon/M2raw/M2rawd/M2canon/M3/M3raw/M3raw_shuffled/M3raw_other/M2lab_perm/M2lab_opaque/M2lab_first）",
+  "provenance": "2026-10-12 从服务器 /workspace 的逐条 jsonl 重新评分，零模型调用。完整输出 results/auditor/e2_rescore/e2_rescore.txt",
+  "reproducible": true,
+  "replaces": "results/auditor/paper_fig4_e2_from_doc.json（转录版，已作废；见 discrepancy_with_doc）",
+  "n": 307,
+  "n_videos": 49,
+  "effects": [
+    { "name": "上下文长度本身", "delta_points": -16.9, "significant": true,
+      "contrast": "M3raw_shuffled − M0", "ci": [-25.3, -9.7],
+      "note": "把最长的上下文给进去、而历史被打乱，纯长度代价" },
+    { "name": "结构（长度与排版已对齐）", "delta_points": -2.0, "significant": false,
+      "contrast": "M3raw − M3raw_shuffled", "ci": [-4.5, 0.7],
+      "note": "同样长度同样排版，只有「谁接谁」不同 —— 这才是结构的净效应" },
+    { "name": "标签随机置换", "delta_points": 0.7, "significant": false,
+      "contrast": "M2raw − M2lab_perm", "ci": [-1.3, 2.7],
+      "note": "字数逐字相同、只打乱标签语义" },
+    { "name": "无意义占位符", "delta_points": 2.6, "significant": false,
+      "contrast": "M2raw − M2lab_opaque", "ci": [-2.3, 7.1],
+      "note": "语义 vs 只是多一行" }
+  ],
+  "accuracy": {
+    "M0": 0.678, "M1raw": 0.651, "M1canon": 0.596, "M2raw": 0.765,
+    "M2canon": 0.596, "M3": 0.642, "M2rawd": 0.612, "M3raw": 0.489,
+    "M3raw_noloop": 0.485, "M3raw_shuffled": 0.508, "M3raw_other": 0.599,
+    "M2lab_perm": 0.759, "M2lab_opaque": 0.739, "M2lab_first": 0.687
+  },
+  "confound_corrected": {
+    "arm": "M2raw",
+    "before": 11.4,
+    "before_ci": [4.6, 18.8],
+    "after": -3.9,
+    "after_ci": [-8.9, 1.3],
+    "after_crosses_zero": true,
+    "cause": "M2raw 的字典用了 canonical（oracle）名，等于泄漏标签；M2rawd 把字典也换成原始措辞之后，身份效应消失"
+  },
+  "discrepancy_with_doc": {
+    "what": "docs/interaction_graph_stage_closed.md 的 Result 2 写的是 M2raw 最初 +20.4%、加 M2rawd 后 −6.6%；本次重算是 +11.4% 和 −3.9%。",
+    "matches": "两个内容无关对照逐字匹配（+0.7% 与 +2.6%）；长度与结构方向一致但数值不同（−16.9 对文档的 −15；−2.0 对 −4）。",
+    "status": "未解决。可能是文档记的是更早一轮（臂更少或 m0 不同）。论文用本次可复现的数，并在正文注明文档那组数不复现。"
+  },
+  "new_findings_not_in_doc": [
+    { "contrast": "M3raw_other − M3raw_shuffled", "delta_points": 9.1,
+      "ci": [2.2, 17.9], "significant": true,
+      "why": "无关但连贯的历史，比打乱的历史更有用 —— 模型反应的是连贯性而不是正确性" },
+    { "contrast": "M2raw − M2lab_first", "delta_points": 7.8,
+      "ci": [3.1, 13.3], "significant": true,
+      "why": "oracle 词汇胜过模型自己第一次的措辞。这是真实的内容效应，但它是标签泄漏，不是结构" },
+    { "contrast": "M2lab_first − M2rawd", "delta_points": 7.5,
+      "ci": [0.4, 15.6], "significant": true,
+      "why": "一行短锚点胜过多行原始措辞 —— 正面效应挂在排版上" }
+  ],
+  "subgroup_note": "历史只见过 1 个节点的那半（n=155 / 45 录像）上，所有条件压到 79-89%，没有区分度；有区分度的是另一半。正文报全量，附录给这个分组。",
+  "claim": "把交互历史序列化成语言上下文，不保留它的有用结构：长度代价 −16.9% 显著，而长度与排版对齐后的结构净效应 −2.0% 不显著；两个内容无关对照都不显著，唯一显著的内容效应来自 oracle 词汇（+7.8%），那是标签泄漏。"
+}

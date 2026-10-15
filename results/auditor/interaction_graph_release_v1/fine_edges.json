@@ -1,0 +1,4845 @@
+[
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0001/B",
+    "target_local_node": "mosaic_complement/mosaic_graph_0001/B",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "internal_repeat",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0001"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0001",
+        "at_s": 6.0,
+        "from_segment": 2,
+        "to_segment": 2,
+        "original_kind": "internal_repeat"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0002/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0002/A",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "internal_repeat",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0002"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0002",
+        "at_s": 0.0,
+        "from_segment": 1,
+        "to_segment": 1,
+        "original_kind": "internal_repeat"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0002/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0002/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0002"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0002",
+        "at_s": 25.2,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0002/B",
+    "target_local_node": "mosaic_complement/mosaic_graph_0002/B",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "self_transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0002"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0002",
+        "at_s": 47.1,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0002/B",
+    "target_local_node": "mosaic_complement/mosaic_graph_0002/C",
+    "edge_type": "inter_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0002"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0002",
+        "at_s": 58.0,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0002/C",
+    "target_local_node": "mosaic_complement/mosaic_graph_0002/D",
+    "edge_type": "inter_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0002"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0002",
+        "at_s": 96.7,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0003/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0003/A",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "internal_repeat",
+    "count": 3,
+    "videos": [
+      "mosaic_graph_0003"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0003",
+        "at_s": 0.0,
+        "from_segment": 1,
+        "to_segment": 1,
+        "original_kind": "internal_repeat"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0003",
+        "at_s": 54.3,
+        "from_segment": 3,
+        "to_segment": 3,
+        "original_kind": "internal_repeat"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0003",
+        "at_s": 99.6,
+        "from_segment": 5,
+        "to_segment": 5,
+        "original_kind": "internal_repeat"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0003/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0003/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 2,
+    "videos": [
+      "mosaic_graph_0003"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0003",
+        "at_s": 42.0,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0003",
+        "at_s": 82.4,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0003/B",
+    "target_local_node": "mosaic_complement/mosaic_graph_0003/A",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 2,
+    "videos": [
+      "mosaic_graph_0003"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0003",
+        "at_s": 54.3,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0003",
+        "at_s": 99.6,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0004/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0004/A",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "internal_repeat",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0004"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0004",
+        "at_s": 0.0,
+        "from_segment": 1,
+        "to_segment": 1,
+        "original_kind": "internal_repeat"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0004/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0004/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0004"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0004",
+        "at_s": 102.0,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0004/B",
+    "target_local_node": "mosaic_complement/mosaic_graph_0004/B",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "internal_repeat",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0004"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0004",
+        "at_s": 102.0,
+        "from_segment": 2,
+        "to_segment": 2,
+        "original_kind": "internal_repeat"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0005/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0005/A",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "internal_repeat",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0005"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0005",
+        "at_s": 0.0,
+        "from_segment": 1,
+        "to_segment": 1,
+        "original_kind": "internal_repeat"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0006/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0006/A",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "internal_repeat",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0006"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0006",
+        "at_s": 0.0,
+        "from_segment": 1,
+        "to_segment": 1,
+        "original_kind": "internal_repeat"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0006/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0006/B",
+    "edge_type": "inter_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0006"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0006",
+        "at_s": 12.6,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0006/B",
+    "target_local_node": "mosaic_complement/mosaic_graph_0006/B",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "internal_repeat",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0006"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0006",
+        "at_s": 12.6,
+        "from_segment": 2,
+        "to_segment": 2,
+        "original_kind": "internal_repeat"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0006/B",
+    "target_local_node": "mosaic_complement/mosaic_graph_0006/C",
+    "edge_type": "inter_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0006"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0006",
+        "at_s": 19.0,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0006/C",
+    "target_local_node": "mosaic_complement/mosaic_graph_0006/D",
+    "edge_type": "inter_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0006"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0006",
+        "at_s": 30.5,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0006/D",
+    "target_local_node": "mosaic_complement/mosaic_graph_0006/E",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0006"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0006",
+        "at_s": 35.3,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0007/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0007/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0007"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0007",
+        "at_s": 27.6,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0007/B",
+    "target_local_node": "mosaic_complement/mosaic_graph_0007/B",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "internal_repeat",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0007"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0007",
+        "at_s": 27.6,
+        "from_segment": 2,
+        "to_segment": 2,
+        "original_kind": "internal_repeat"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0008/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0008/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0008"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0008",
+        "at_s": 43.1,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0008/B",
+    "target_local_node": "mosaic_complement/mosaic_graph_0008/A",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0008"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0008",
+        "at_s": 36.8,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0008/B",
+    "target_local_node": "mosaic_complement/mosaic_graph_0008/B",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "self_transition",
+    "count": 10,
+    "videos": [
+      "mosaic_graph_0008"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0008",
+        "at_s": 8.8,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0008",
+        "at_s": 16.7,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0008",
+        "at_s": 22.8,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0008",
+        "at_s": 28.6,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0008",
+        "at_s": 56.9,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0008",
+        "at_s": 62.5,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0008",
+        "at_s": 74.6,
+        "from_segment": 9,
+        "to_segment": 10,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0008",
+        "at_s": 88.0,
+        "from_segment": 10,
+        "to_segment": 11,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0008",
+        "at_s": 97.7,
+        "from_segment": 11,
+        "to_segment": 12,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0008",
+        "at_s": 116.4,
+        "from_segment": 12,
+        "to_segment": 13,
+        "original_kind": "self_transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0010/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0010/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0010"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0010",
+        "at_s": 69.0,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0010/B",
+    "target_local_node": "mosaic_complement/mosaic_graph_0010/A",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0010"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0010",
+        "at_s": 77.6,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0011/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0011/A",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "self_transition",
+    "count": 31,
+    "videos": [
+      "mosaic_graph_0011"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 4.9,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 6.7,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 10.0,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 13.4,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 17.6,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 18.9,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 22.1,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 23.6,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 36.3,
+        "from_segment": 9,
+        "to_segment": 10,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 38.1,
+        "from_segment": 10,
+        "to_segment": 11,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 46.6,
+        "from_segment": 11,
+        "to_segment": 12,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 47.5,
+        "from_segment": 12,
+        "to_segment": 13,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 48.6,
+        "from_segment": 13,
+        "to_segment": 14,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 51.1,
+        "from_segment": 14,
+        "to_segment": 15,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 53.4,
+        "from_segment": 15,
+        "to_segment": 16,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 56.6,
+        "from_segment": 16,
+        "to_segment": 17,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 63.5,
+        "from_segment": 17,
+        "to_segment": 18,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 65.0,
+        "from_segment": 18,
+        "to_segment": 19,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 75.4,
+        "from_segment": 19,
+        "to_segment": 20,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 77.1,
+        "from_segment": 20,
+        "to_segment": 21,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 79.8,
+        "from_segment": 21,
+        "to_segment": 22,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 82.7,
+        "from_segment": 22,
+        "to_segment": 23,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 92.5,
+        "from_segment": 23,
+        "to_segment": 24,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 93.9,
+        "from_segment": 24,
+        "to_segment": 25,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 100.1,
+        "from_segment": 25,
+        "to_segment": 26,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 101.5,
+        "from_segment": 26,
+        "to_segment": 27,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 103.6,
+        "from_segment": 27,
+        "to_segment": 28,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 109.1,
+        "from_segment": 28,
+        "to_segment": 29,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 110.5,
+        "from_segment": 29,
+        "to_segment": 30,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 115.3,
+        "from_segment": 30,
+        "to_segment": 31,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 116.6,
+        "from_segment": 31,
+        "to_segment": 32,
+        "original_kind": "self_transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0012/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0012/A",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "self_transition",
+    "count": 10,
+    "videos": [
+      "mosaic_graph_0012"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0012",
+        "at_s": 5.0,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0012",
+        "at_s": 14.1,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0012",
+        "at_s": 24.8,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0012",
+        "at_s": 33.8,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0012",
+        "at_s": 46.8,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0012",
+        "at_s": 56.8,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0012",
+        "at_s": 75.4,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0012",
+        "at_s": 84.9,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0012",
+        "at_s": 99.5,
+        "from_segment": 9,
+        "to_segment": 10,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0012",
+        "at_s": 111.9,
+        "from_segment": 10,
+        "to_segment": 11,
+        "original_kind": "self_transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0014/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0014/A",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "self_transition",
+    "count": 7,
+    "videos": [
+      "mosaic_graph_0014"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0014",
+        "at_s": 14.3,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0014",
+        "at_s": 23.1,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0014",
+        "at_s": 37.0,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0014",
+        "at_s": 64.7,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0014",
+        "at_s": 74.4,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0014",
+        "at_s": 84.0,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0014",
+        "at_s": 107.3,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "self_transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0015/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0015/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0015"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0015",
+        "at_s": 28.0,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0015/B",
+    "target_local_node": "mosaic_complement/mosaic_graph_0015/C",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0015"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0015",
+        "at_s": 35.6,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0015/C",
+    "target_local_node": "mosaic_complement/mosaic_graph_0015/C",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "internal_repeat",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0015"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0015",
+        "at_s": 35.6,
+        "from_segment": 3,
+        "to_segment": 3,
+        "original_kind": "internal_repeat"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0015/C",
+    "target_local_node": "mosaic_complement/mosaic_graph_0015/D",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 2,
+    "videos": [
+      "mosaic_graph_0015"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0015",
+        "at_s": 69.5,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0015",
+        "at_s": 80.2,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0015/C",
+    "target_local_node": "mosaic_complement/mosaic_graph_0015/F",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0015"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0015",
+        "at_s": 114.5,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0015/D",
+    "target_local_node": "mosaic_complement/mosaic_graph_0015/C",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0015"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0015",
+        "at_s": 76.4,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0016/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0016/A",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "self_transition",
+    "count": 4,
+    "videos": [
+      "mosaic_graph_0016"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0016",
+        "at_s": 63.9,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0016",
+        "at_s": 77.7,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0016",
+        "at_s": 97.8,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0016",
+        "at_s": 113.6,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "self_transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0016/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0016/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0016"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0016",
+        "at_s": 18.5,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0016/B",
+    "target_local_node": "mosaic_complement/mosaic_graph_0016/A",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0016"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0016",
+        "at_s": 47.4,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0017/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0017/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0017"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0017",
+        "at_s": 20.1,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0017/B",
+    "target_local_node": "mosaic_complement/mosaic_graph_0017/C",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0017"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0017",
+        "at_s": 45.9,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0018/B",
+    "target_local_node": "mosaic_complement/mosaic_graph_0018/B",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "internal_repeat",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0018"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0018",
+        "at_s": 53.9,
+        "from_segment": 5,
+        "to_segment": 5,
+        "original_kind": "internal_repeat"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0018/C",
+    "target_local_node": "mosaic_complement/mosaic_graph_0018/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0018"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0018",
+        "at_s": 53.9,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0019/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0019/A",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "self_transition",
+    "count": 3,
+    "videos": [
+      "mosaic_graph_0019"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0019",
+        "at_s": 13.0,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0019",
+        "at_s": 29.1,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0019",
+        "at_s": 54.7,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0019/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0019/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0019"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0019",
+        "at_s": 79.2,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0019/B",
+    "target_local_node": "mosaic_complement/mosaic_graph_0019/B",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "internal_repeat",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0019"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0019",
+        "at_s": 79.2,
+        "from_segment": 5,
+        "to_segment": 5,
+        "original_kind": "internal_repeat"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0020/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0020/B",
+    "edge_type": "inter_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0020"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0020",
+        "at_s": 33.6,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0020/B",
+    "target_local_node": "mosaic_complement/mosaic_graph_0020/C",
+    "edge_type": "inter_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0020"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0020",
+        "at_s": 55.1,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0020/C",
+    "target_local_node": "mosaic_complement/mosaic_graph_0020/D",
+    "edge_type": "inter_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0020"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0020",
+        "at_s": 73.2,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0020/D",
+    "target_local_node": "mosaic_complement/mosaic_graph_0020/D",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "internal_repeat",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0020"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0020",
+        "at_s": 73.2,
+        "from_segment": 4,
+        "to_segment": 4,
+        "original_kind": "internal_repeat"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0021/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0021/A",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "internal_repeat",
+    "count": 2,
+    "videos": [
+      "mosaic_graph_0021"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0021",
+        "at_s": 0.0,
+        "from_segment": 1,
+        "to_segment": 1,
+        "original_kind": "internal_repeat"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0021",
+        "at_s": 9.8,
+        "from_segment": 2,
+        "to_segment": 2,
+        "original_kind": "internal_repeat"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0021/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0021/A",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "self_transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0021"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0021",
+        "at_s": 9.8,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "self_transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0022/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0022/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 3,
+    "videos": [
+      "mosaic_graph_0022"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0022",
+        "at_s": 8.5,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0022",
+        "at_s": 51.8,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0022",
+        "at_s": 98.7,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0022/B",
+    "target_local_node": "mosaic_complement/mosaic_graph_0022/A",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 2,
+    "videos": [
+      "mosaic_graph_0022"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0022",
+        "at_s": 25.0,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0022",
+        "at_s": 68.5,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0022/B",
+    "target_local_node": "mosaic_complement/mosaic_graph_0022/C",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0022"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0022",
+        "at_s": 102.7,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0022/C",
+    "target_local_node": "mosaic_complement/mosaic_graph_0022/D",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0022"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0022",
+        "at_s": 109.3,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0023/B",
+    "target_local_node": "mosaic_complement/mosaic_graph_0023/B",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "self_transition",
+    "count": 8,
+    "videos": [
+      "mosaic_graph_0023"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0023",
+        "at_s": 38.5,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0023",
+        "at_s": 49.4,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0023",
+        "at_s": 64.1,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0023",
+        "at_s": 72.4,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0023",
+        "at_s": 83.0,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0023",
+        "at_s": 92.8,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0023",
+        "at_s": 102.6,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0023",
+        "at_s": 112.2,
+        "from_segment": 9,
+        "to_segment": 10,
+        "original_kind": "self_transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0024/B",
+    "target_local_node": "mosaic_complement/mosaic_graph_0024/C",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0024"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0024",
+        "at_s": 5.0,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0024/C",
+    "target_local_node": "mosaic_complement/mosaic_graph_0024/C",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "internal_repeat",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0024"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0024",
+        "at_s": 5.0,
+        "from_segment": 2,
+        "to_segment": 2,
+        "original_kind": "internal_repeat"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0025/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0025/A",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "internal_repeat",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0025"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0025",
+        "at_s": 0.0,
+        "from_segment": 1,
+        "to_segment": 1,
+        "original_kind": "internal_repeat"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0025/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0025/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0025"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0025",
+        "at_s": 53.4,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0025/B",
+    "target_local_node": "mosaic_complement/mosaic_graph_0025/B",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "internal_repeat",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0025"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0025",
+        "at_s": 53.4,
+        "from_segment": 2,
+        "to_segment": 2,
+        "original_kind": "internal_repeat"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0026/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0026/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0026"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0026",
+        "at_s": 10.1,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0026/B",
+    "target_local_node": "mosaic_complement/mosaic_graph_0026/C",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0026"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0026",
+        "at_s": 22.5,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0026/C",
+    "target_local_node": "mosaic_complement/mosaic_graph_0026/D",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0026"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0026",
+        "at_s": 67.5,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0026/D",
+    "target_local_node": "mosaic_complement/mosaic_graph_0026/E",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0026"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0026",
+        "at_s": 78.3,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0026/E",
+    "target_local_node": "mosaic_complement/mosaic_graph_0026/F",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0026"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0026",
+        "at_s": 90.8,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0026/F",
+    "target_local_node": "mosaic_complement/mosaic_graph_0026/F",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "internal_repeat",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0026"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0026",
+        "at_s": 90.8,
+        "from_segment": 6,
+        "to_segment": 6,
+        "original_kind": "internal_repeat"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0028/C",
+    "target_local_node": "mosaic_complement/mosaic_graph_0028/D",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0028"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0028",
+        "at_s": 82.1,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0029/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0029/A",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "self_transition",
+    "count": 4,
+    "videos": [
+      "mosaic_graph_0029"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0029",
+        "at_s": 9.2,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0029",
+        "at_s": 42.3,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0029",
+        "at_s": 50.9,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0029",
+        "at_s": 72.9,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "self_transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0029/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0029/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0029"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0029",
+        "at_s": 78.3,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0029/B",
+    "target_local_node": "mosaic_complement/mosaic_graph_0029/B",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "internal_repeat",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0029"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0029",
+        "at_s": 78.3,
+        "from_segment": 6,
+        "to_segment": 6,
+        "original_kind": "internal_repeat"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0029/B",
+    "target_local_node": "mosaic_complement/mosaic_graph_0029/C",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0029"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0029",
+        "at_s": 99.8,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0030/A",
+    "target_local_node": "mosaic_complement/mosaic_graph_0030/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0030"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0030",
+        "at_s": 19.1,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "mosaic_complement/mosaic_graph_0030/B",
+    "target_local_node": "mosaic_complement/mosaic_graph_0030/C",
+    "edge_type": "inter_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0030"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0030",
+        "at_s": 39.0,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0001/A",
+    "target_local_node": "repeated_actions/graph_review_0001/A",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "self_transition",
+    "count": 2,
+    "videos": [
+      "graph_review_0001"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0001",
+        "at_s": 17.9,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0001",
+        "at_s": 45.0,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0002/A",
+    "target_local_node": "repeated_actions/graph_review_0002/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 3,
+    "videos": [
+      "graph_review_0002"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0002",
+        "at_s": 3.0,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0002",
+        "at_s": 61.5,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0002",
+        "at_s": 123.6,
+        "from_segment": 9,
+        "to_segment": 10,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0002/B",
+    "target_local_node": "repeated_actions/graph_review_0002/C",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 2,
+    "videos": [
+      "graph_review_0002"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0002",
+        "at_s": 5.0,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0002",
+        "at_s": 65.6,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0002/C",
+    "target_local_node": "repeated_actions/graph_review_0002/D",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 2,
+    "videos": [
+      "graph_review_0002"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0002",
+        "at_s": 7.4,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0002",
+        "at_s": 69.8,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0002/D",
+    "target_local_node": "repeated_actions/graph_review_0002/A",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 2,
+    "videos": [
+      "graph_review_0002"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0002",
+        "at_s": 58.7,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0002",
+        "at_s": 119.3,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0002/D",
+    "target_local_node": "repeated_actions/graph_review_0002/D",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "internal_repeat",
+    "count": 1,
+    "videos": [
+      "graph_review_0002"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0002",
+        "at_s": 7.4,
+        "from_segment": 4,
+        "to_segment": 4,
+        "original_kind": "internal_repeat"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0003/C",
+    "target_local_node": "repeated_actions/graph_review_0003/A",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 7,
+    "videos": [
+      "graph_review_0003"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0003",
+        "at_s": 10.4,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0003",
+        "at_s": 21.2,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0003",
+        "at_s": 32.2,
+        "from_segment": 9,
+        "to_segment": 10,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0003",
+        "at_s": 41.1,
+        "from_segment": 12,
+        "to_segment": 13,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0003",
+        "at_s": 52.4,
+        "from_segment": 15,
+        "to_segment": 16,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0003",
+        "at_s": 61.3,
+        "from_segment": 18,
+        "to_segment": 19,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0003",
+        "at_s": 71.3,
+        "from_segment": 21,
+        "to_segment": 22,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0004/B",
+    "target_local_node": "repeated_actions/graph_review_0004/C",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 2,
+    "videos": [
+      "graph_review_0004"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0004",
+        "at_s": 23.7,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0004",
+        "at_s": 55.4,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0004/C",
+    "target_local_node": "repeated_actions/graph_review_0004/D",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 2,
+    "videos": [
+      "graph_review_0004"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0004",
+        "at_s": 33.3,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0004",
+        "at_s": 71.1,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0004/D",
+    "target_local_node": "repeated_actions/graph_review_0004/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 2,
+    "videos": [
+      "graph_review_0004"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0004",
+        "at_s": 46.1,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0004",
+        "at_s": 83.4,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0005/A",
+    "target_local_node": "repeated_actions/graph_review_0005/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 2,
+    "videos": [
+      "graph_review_0005"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0005",
+        "at_s": 6.0,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0005",
+        "at_s": 40.4,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0005/B",
+    "target_local_node": "repeated_actions/graph_review_0005/A",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 2,
+    "videos": [
+      "graph_review_0005"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0005",
+        "at_s": 16.9,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0005",
+        "at_s": 45.9,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0006/A",
+    "target_local_node": "repeated_actions/graph_review_0006/A",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "self_transition",
+    "count": 5,
+    "videos": [
+      "graph_review_0006"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0006",
+        "at_s": 3.6,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0006",
+        "at_s": 22.7,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0006",
+        "at_s": 50.2,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0006",
+        "at_s": 70.9,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0006",
+        "at_s": 87.1,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "self_transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0007/A",
+    "target_local_node": "repeated_actions/graph_review_0007/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 3,
+    "videos": [
+      "graph_review_0007"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0007",
+        "at_s": 3.2,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0007",
+        "at_s": 49.8,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0007",
+        "at_s": 101.3,
+        "from_segment": 9,
+        "to_segment": 10,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0007/B",
+    "target_local_node": "repeated_actions/graph_review_0007/C",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 2,
+    "videos": [
+      "graph_review_0007"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0007",
+        "at_s": 5.5,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0007",
+        "at_s": 52.6,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0007/C",
+    "target_local_node": "repeated_actions/graph_review_0007/D",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 2,
+    "videos": [
+      "graph_review_0007"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0007",
+        "at_s": 8.4,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0007",
+        "at_s": 54.8,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0007/D",
+    "target_local_node": "repeated_actions/graph_review_0007/A",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 2,
+    "videos": [
+      "graph_review_0007"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0007",
+        "at_s": 46.8,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0007",
+        "at_s": 97.8,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0007/D",
+    "target_local_node": "repeated_actions/graph_review_0007/D",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "internal_repeat",
+    "count": 2,
+    "videos": [
+      "graph_review_0007"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0007",
+        "at_s": 8.4,
+        "from_segment": 4,
+        "to_segment": 4,
+        "original_kind": "internal_repeat"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0007",
+        "at_s": 54.8,
+        "from_segment": 8,
+        "to_segment": 8,
+        "original_kind": "internal_repeat"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0008/A",
+    "target_local_node": "repeated_actions/graph_review_0008/A",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "self_transition",
+    "count": 9,
+    "videos": [
+      "graph_review_0008"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0008",
+        "at_s": 4.7,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0008",
+        "at_s": 15.5,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0008",
+        "at_s": 23.3,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0008",
+        "at_s": 33.1,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0008",
+        "at_s": 42.2,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0008",
+        "at_s": 50.9,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0008",
+        "at_s": 58.6,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0008",
+        "at_s": 67.0,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0008",
+        "at_s": 76.2,
+        "from_segment": 9,
+        "to_segment": 10,
+        "original_kind": "self_transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0009/B",
+    "target_local_node": "repeated_actions/graph_review_0009/C",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 2,
+    "videos": [
+      "graph_review_0009"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0009",
+        "at_s": 29.4,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0009",
+        "at_s": 55.0,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0009/C",
+    "target_local_node": "repeated_actions/graph_review_0009/D",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 2,
+    "videos": [
+      "graph_review_0009"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0009",
+        "at_s": 36.6,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0009",
+        "at_s": 63.1,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0009/D",
+    "target_local_node": "repeated_actions/graph_review_0009/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "graph_review_0009"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0009",
+        "at_s": 44.7,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0011/B",
+    "target_local_node": "repeated_actions/graph_review_0011/C",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 3,
+    "videos": [
+      "graph_review_0011"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0011",
+        "at_s": 4.2,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0011",
+        "at_s": 12.6,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0011",
+        "at_s": 20.3,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0012/B",
+    "target_local_node": "repeated_actions/graph_review_0012/C",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "graph_review_0012"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0012",
+        "at_s": 10.7,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0012/C",
+    "target_local_node": "repeated_actions/graph_review_0012/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "graph_review_0012"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0012",
+        "at_s": 17.5,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0013/A",
+    "target_local_node": "repeated_actions/graph_review_0013/A",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "self_transition",
+    "count": 7,
+    "videos": [
+      "graph_review_0013"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0013",
+        "at_s": 4.6,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0013",
+        "at_s": 28.7,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0013",
+        "at_s": 42.4,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0013",
+        "at_s": 56.3,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0013",
+        "at_s": 73.3,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0013",
+        "at_s": 86.9,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0013",
+        "at_s": 100.1,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "self_transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0014/A",
+    "target_local_node": "repeated_actions/graph_review_0014/A",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "internal_repeat",
+    "count": 1,
+    "videos": [
+      "graph_review_0014"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0014",
+        "at_s": 0.0,
+        "from_segment": 1,
+        "to_segment": 1,
+        "original_kind": "internal_repeat"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0016/A",
+    "target_local_node": "repeated_actions/graph_review_0016/A",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "self_transition",
+    "count": 19,
+    "videos": [
+      "graph_review_0016"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 4.4,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 7.7,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 12.2,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 15.7,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 20.6,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 23.8,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 28.2,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 31.4,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 36.1,
+        "from_segment": 9,
+        "to_segment": 10,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 40.2,
+        "from_segment": 10,
+        "to_segment": 11,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 44.8,
+        "from_segment": 11,
+        "to_segment": 12,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 48.5,
+        "from_segment": 12,
+        "to_segment": 13,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 52.4,
+        "from_segment": 13,
+        "to_segment": 14,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 55.9,
+        "from_segment": 14,
+        "to_segment": 15,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 60.8,
+        "from_segment": 15,
+        "to_segment": 16,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 64.9,
+        "from_segment": 16,
+        "to_segment": 17,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 69.1,
+        "from_segment": 17,
+        "to_segment": 18,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 73.0,
+        "from_segment": 18,
+        "to_segment": 19,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 77.4,
+        "from_segment": 19,
+        "to_segment": 20,
+        "original_kind": "self_transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0017/A",
+    "target_local_node": "repeated_actions/graph_review_0017/A",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "internal_repeat",
+    "count": 1,
+    "videos": [
+      "graph_review_0017"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0017",
+        "at_s": 0.0,
+        "from_segment": 1,
+        "to_segment": 1,
+        "original_kind": "internal_repeat"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0018/A",
+    "target_local_node": "repeated_actions/graph_review_0018/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 3,
+    "videos": [
+      "graph_review_0018"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0018",
+        "at_s": 5.7,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0018",
+        "at_s": 23.0,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0018",
+        "at_s": 55.5,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0018/B",
+    "target_local_node": "repeated_actions/graph_review_0018/A",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 3,
+    "videos": [
+      "graph_review_0018"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0018",
+        "at_s": 9.9,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0018",
+        "at_s": 41.0,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0018",
+        "at_s": 64.4,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0019/A",
+    "target_local_node": "repeated_actions/graph_review_0019/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 5,
+    "videos": [
+      "graph_review_0019"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0019",
+        "at_s": 4.6,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0019",
+        "at_s": 20.2,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0019",
+        "at_s": 37.1,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0019",
+        "at_s": 53.2,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0019",
+        "at_s": 69.8,
+        "from_segment": 9,
+        "to_segment": 10,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0019/B",
+    "target_local_node": "repeated_actions/graph_review_0019/A",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 5,
+    "videos": [
+      "graph_review_0019"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0019",
+        "at_s": 12.4,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0019",
+        "at_s": 30.8,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0019",
+        "at_s": 47.9,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0019",
+        "at_s": 61.0,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0019",
+        "at_s": 77.8,
+        "from_segment": 10,
+        "to_segment": 11,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0020/A",
+    "target_local_node": "repeated_actions/graph_review_0020/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "graph_review_0020"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0020",
+        "at_s": 14.5,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0020/B",
+    "target_local_node": "repeated_actions/graph_review_0020/C",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "graph_review_0020"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0020",
+        "at_s": 47.6,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0020/C",
+    "target_local_node": "repeated_actions/graph_review_0020/D",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "graph_review_0020"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0020",
+        "at_s": 86.8,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0020/D",
+    "target_local_node": "repeated_actions/graph_review_0020/A",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "graph_review_0020"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0020",
+        "at_s": 98.4,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0021/B",
+    "target_local_node": "repeated_actions/graph_review_0021/C",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 2,
+    "videos": [
+      "graph_review_0021"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0021",
+        "at_s": 27.7,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0021",
+        "at_s": 79.8,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0021/C",
+    "target_local_node": "repeated_actions/graph_review_0021/D",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 2,
+    "videos": [
+      "graph_review_0021"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0021",
+        "at_s": 32.2,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0021",
+        "at_s": 85.2,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0021/D",
+    "target_local_node": "repeated_actions/graph_review_0021/E",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "graph_review_0021"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0021",
+        "at_s": 37.7,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0021/E",
+    "target_local_node": "repeated_actions/graph_review_0021/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "graph_review_0021"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0021",
+        "at_s": 55.7,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0022/A",
+    "target_local_node": "repeated_actions/graph_review_0022/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 2,
+    "videos": [
+      "graph_review_0022"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0022",
+        "at_s": 28.8,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0022",
+        "at_s": 76.5,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0022/A",
+    "target_local_node": "repeated_actions/graph_review_0022/C",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "graph_review_0022"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0022",
+        "at_s": 44.0,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0022/B",
+    "target_local_node": "repeated_actions/graph_review_0022/A",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 2,
+    "videos": [
+      "graph_review_0022"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0022",
+        "at_s": 37.0,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0022",
+        "at_s": 55.3,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0022/C",
+    "target_local_node": "repeated_actions/graph_review_0022/D",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "graph_review_0022"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0022",
+        "at_s": 45.7,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0022/D",
+    "target_local_node": "repeated_actions/graph_review_0022/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "graph_review_0022"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0022",
+        "at_s": 47.6,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0023/A",
+    "target_local_node": "repeated_actions/graph_review_0023/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 4,
+    "videos": [
+      "graph_review_0023"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0023",
+        "at_s": 12.1,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0023",
+        "at_s": 50.0,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0023",
+        "at_s": 84.5,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0023",
+        "at_s": 115.8,
+        "from_segment": 10,
+        "to_segment": 11,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0023/B",
+    "target_local_node": "repeated_actions/graph_review_0023/C",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 3,
+    "videos": [
+      "graph_review_0023"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0023",
+        "at_s": 22.9,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0023",
+        "at_s": 57.5,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0023",
+        "at_s": 91.7,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0023/C",
+    "target_local_node": "repeated_actions/graph_review_0023/A",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 3,
+    "videos": [
+      "graph_review_0023"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0023",
+        "at_s": 37.6,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0023",
+        "at_s": 71.3,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0023",
+        "at_s": 108.0,
+        "from_segment": 9,
+        "to_segment": 10,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0024/A",
+    "target_local_node": "repeated_actions/graph_review_0024/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "graph_review_0024"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0024",
+        "at_s": 10.3,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0024/B",
+    "target_local_node": "repeated_actions/graph_review_0024/C",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "graph_review_0024"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0024",
+        "at_s": 18.5,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0024/C",
+    "target_local_node": "repeated_actions/graph_review_0024/D",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "graph_review_0024"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0024",
+        "at_s": 38.9,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0024/D",
+    "target_local_node": "repeated_actions/graph_review_0024/A",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "graph_review_0024"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0024",
+        "at_s": 66.0,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0025/A",
+    "target_local_node": "repeated_actions/graph_review_0025/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 12,
+    "videos": [
+      "graph_review_0025"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 2.4,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 8.7,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 14.8,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 21.5,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 29.5,
+        "from_segment": 9,
+        "to_segment": 10,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 35.3,
+        "from_segment": 11,
+        "to_segment": 12,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 42.2,
+        "from_segment": 13,
+        "to_segment": 14,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 48.7,
+        "from_segment": 15,
+        "to_segment": 16,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 55.0,
+        "from_segment": 17,
+        "to_segment": 18,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 60.9,
+        "from_segment": 19,
+        "to_segment": 20,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 73.9,
+        "from_segment": 21,
+        "to_segment": 22,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 80.7,
+        "from_segment": 23,
+        "to_segment": 24,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0025/B",
+    "target_local_node": "repeated_actions/graph_review_0025/A",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 11,
+    "videos": [
+      "graph_review_0025"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 4.7,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 11.7,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 18.9,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 26.0,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 33.0,
+        "from_segment": 10,
+        "to_segment": 11,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 38.5,
+        "from_segment": 12,
+        "to_segment": 13,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 45.7,
+        "from_segment": 14,
+        "to_segment": 15,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 51.9,
+        "from_segment": 16,
+        "to_segment": 17,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 57.6,
+        "from_segment": 18,
+        "to_segment": 19,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 63.9,
+        "from_segment": 20,
+        "to_segment": 21,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 78.4,
+        "from_segment": 22,
+        "to_segment": 23,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0026/A",
+    "target_local_node": "repeated_actions/graph_review_0026/A",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "self_transition",
+    "count": 3,
+    "videos": [
+      "graph_review_0026"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0026",
+        "at_s": 12.0,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0026",
+        "at_s": 26.6,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0026",
+        "at_s": 37.1,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0027/A",
+    "target_local_node": "repeated_actions/graph_review_0027/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 3,
+    "videos": [
+      "graph_review_0027"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0027",
+        "at_s": 2.4,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0027",
+        "at_s": 42.8,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0027",
+        "at_s": 59.2,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0027/B",
+    "target_local_node": "repeated_actions/graph_review_0027/A",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 2,
+    "videos": [
+      "graph_review_0027"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0027",
+        "at_s": 30.6,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0027",
+        "at_s": 92.8,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0027/B",
+    "target_local_node": "repeated_actions/graph_review_0027/C",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "graph_review_0027"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0027",
+        "at_s": 45.3,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0027/C",
+    "target_local_node": "repeated_actions/graph_review_0027/D",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "graph_review_0027"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0027",
+        "at_s": 47.8,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0027/D",
+    "target_local_node": "repeated_actions/graph_review_0027/A",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "graph_review_0027"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0027",
+        "at_s": 51.2,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0028/A",
+    "target_local_node": "repeated_actions/graph_review_0028/A",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "internal_repeat",
+    "count": 1,
+    "videos": [
+      "graph_review_0028"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0028",
+        "at_s": 0.0,
+        "from_segment": 1,
+        "to_segment": 1,
+        "original_kind": "internal_repeat"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0029/A",
+    "target_local_node": "repeated_actions/graph_review_0029/A",
+    "edge_type": "exact_state_repeat",
+    "original_kind": "self_transition",
+    "count": 9,
+    "videos": [
+      "graph_review_0029"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0029",
+        "at_s": 6.7,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0029",
+        "at_s": 15.0,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0029",
+        "at_s": 24.3,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0029",
+        "at_s": 33.8,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0029",
+        "at_s": 43.2,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0029",
+        "at_s": 53.2,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0029",
+        "at_s": 64.6,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0029",
+        "at_s": 73.5,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0029",
+        "at_s": 82.2,
+        "from_segment": 9,
+        "to_segment": 10,
+        "original_kind": "self_transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0030/A",
+    "target_local_node": "repeated_actions/graph_review_0030/B",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 2,
+    "videos": [
+      "graph_review_0030"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0030",
+        "at_s": 34.9,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0030",
+        "at_s": 93.5,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0030/B",
+    "target_local_node": "repeated_actions/graph_review_0030/C",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 2,
+    "videos": [
+      "graph_review_0030"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0030",
+        "at_s": 38.6,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0030",
+        "at_s": 95.8,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0030/C",
+    "target_local_node": "repeated_actions/graph_review_0030/D",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "graph_review_0030"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0030",
+        "at_s": 42.0,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      }
+    ]
+  },
+  {
+    "source_local_node": "repeated_actions/graph_review_0030/D",
+    "target_local_node": "repeated_actions/graph_review_0030/A",
+    "edge_type": "intra_group_transition",
+    "original_kind": "transition",
+    "count": 1,
+    "videos": [
+      "graph_review_0030"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0030",
+        "at_s": 45.8,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      }
+    ]
+  }
+]

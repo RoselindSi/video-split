@@ -1,0 +1,138 @@
+{
+  "stage": "E0_complete_E1_waiting_for_features",
+  "config": {
+    "version": 1,
+    "scope": "development_pilot_only",
+    "target": "explicit_instance_relation",
+    "final_test_manifest_sha256": "d886a58154887093ac426e19b3e1bb2f1d138debbe260e077ab401bacef36a75",
+    "seed": 20260913,
+    "folds": 5,
+    "logistic_C": 1.0,
+    "threshold": 0.5,
+    "bootstrap_replicates": 1000,
+    "minimum_class_events": 15,
+    "minimum_class_recordings": 5,
+    "feature_groups": {
+      "visual": [
+        "conc_0.25s",
+        "conc_0.5s",
+        "conc_1.0s",
+        "peak_offset_s",
+        "peak_over_median",
+        "peak_width_s",
+        "side_change_left",
+        "side_change_right"
+      ],
+      "hand": [
+        "pre_motion_speed",
+        "post_motion_speed",
+        "direction_cosine_pre_vs_post",
+        "reversal_count",
+        "candidate_velocity_change",
+        "candidate_acceleration_peak",
+        "minimum_speed_near_candidate",
+        "stop_duration_near_candidate",
+        "stop_then_start_score",
+        "velocity_autocorrelation_max",
+        "autocorrelation_lag_s",
+        "dominant_frequency_strength",
+        "repeated_reversal_rate",
+        "hand_orientation_change",
+        "box_scale_change_across_candidate",
+        "inter_hand_distance_change",
+        "two_hand_synchrony",
+        "two_hand_presence_change"
+      ],
+      "quality": [
+        "hand_detect_coverage",
+        "candidate_centered_missing_gap_s",
+        "longest_missing_gap_s",
+        "interpolated_fraction",
+        "edge_touch_rate"
+      ]
+    },
+    "unavailable_cues": [
+      "validated_contact_release",
+      "hand_object_relative_motion",
+      "object_state_or_relation_change"
+    ],
+    "graph": "deferred_until_local_evidence_and_target_readiness"
+  },
+  "sources": {
+    "config": {
+      "path": "/Users/roselindsi/Documents/GitHub/video-split/configs/auditor/interaction_evidence_v1.json",
+      "sha256": "920dd5403c6de697b9dbce7d31b1a268f0bc3fd95708ec8ff98a859c2afc8a14"
+    },
+    "final_test_manifest": {
+      "path": "/Users/roselindsi/Documents/GitHub/video-split/data/splits/final_test_v1.json",
+      "sha256": "d886a58154887093ac426e19b3e1bb2f1d138debbe260e077ab401bacef36a75"
+    },
+    "relations": {
+      "path": "/Users/roselindsi/Documents/GitHub/video-split/data/gold/relation_audit_annotator1_filled.csv",
+      "sha256": "b08f142e9ebf9e84c5a42f21c6b9ac630093145e2e1ab17de7e01bc7e401a7c3"
+    },
+    "migrated": {
+      "path": "/Users/roselindsi/Documents/GitHub/video-split/data/gold/pair_schema_v2_migrated.csv",
+      "sha256": "50d7c0d9976d3c46702197fd83ae12875054ef304eef0013b0e44e1f603c465b"
+    },
+    "negative_subtypes": {
+      "path": "/Users/roselindsi/Documents/GitHub/video-split/data/gold/same_action_subtype_v1.csv",
+      "sha256": "699c58b4d790ad1f4f3aea08ff113c048cc462ec0fa89e314b6f09f0f0000028"
+    }
+  },
+  "code_sha256": "ebaa50836f943d104288fec2ec4d53c2f0cc86e63092604c403a96e4a7dd7a7b",
+  "python": "3.13.3 (main, Apr  8 2025, 13:54:08) [Clang 16.0.0 (clang-1600.0.26.6)]",
+  "target_audit": {
+    "scope": "development_only_not_a_new_confirmatory_gold",
+    "migrated_rows": 415,
+    "legacy_relation_counts": {
+      "cannot_determine": 33,
+      "same_instance": 149,
+      "UNKNOWN": 169,
+      "initial_action_start": 1,
+      "same_action_new_instance": 40,
+      "new_action": 18,
+      "terminal_action_end": 5
+    },
+    "legacy_source_counts": {
+      "double_48": 45,
+      "": 169,
+      "relation_audit_54": 54,
+      "legacy:batch3_pair_labels_v1_relabel_v1.csv": 83,
+      "ontology_37": 25,
+      "legacy:pair_labels_v1.csv": 39
+    },
+    "explicit_rows": 54,
+    "explicit_relation_counts": {
+      "same_action_new_instance": 16,
+      "new_action": 18,
+      "cannot_determine": 8,
+      "same_instance": 9,
+      "initial_action_start": 1,
+      "terminal_action_end": 2
+    },
+    "binary_support": {
+      "events_per_class": {
+        "0": 9,
+        "1": 34
+      },
+      "recordings_per_class": {
+        "0": 8,
+        "1": 30
+      },
+      "sufficient": false
+    },
+    "reannotation_queue_rows": 361,
+    "unmeasured_strata": [
+      "continuous_contact_transition",
+      "release_without_boundary",
+      "human_observability_at_candidate"
+    ],
+    "blocked_cues": [
+      "validated_contact_release",
+      "hand_object_relative_motion",
+      "object_state_or_relation_change"
+    ],
+    "protected_final_recordings": 48
+  }
+}

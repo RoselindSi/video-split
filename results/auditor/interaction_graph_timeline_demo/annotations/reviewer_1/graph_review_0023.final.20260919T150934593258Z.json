@@ -1,0 +1,278 @@
+{
+  "schema_version": "interaction_graph_timeline_v1",
+  "video_id": "graph_review_0023",
+  "events": [
+    {
+      "event_id": "A",
+      "description": "充电宝放回盒子，放下盒子"
+    },
+    {
+      "event_id": "B",
+      "description": "拿起盒子，拿出充电宝"
+    },
+    {
+      "event_id": "C",
+      "description": "inspect充电宝"
+    }
+  ],
+  "segments": [
+    {
+      "start_s": 0.0,
+      "end_s": 12.1,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 12.1,
+      "end_s": 22.9,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 22.9,
+      "end_s": 37.6,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 37.6,
+      "end_s": 50.0,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 50.0,
+      "end_s": 57.5,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 57.5,
+      "end_s": 71.3,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 71.3,
+      "end_s": 84.5,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 84.5,
+      "end_s": 91.7,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 91.7,
+      "end_s": 108.0,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 108.0,
+      "end_s": 115.8,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 115.8,
+      "end_s": 116.9,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    }
+  ],
+  "confirmed_full_video": true,
+  "manifest_sha256": "158a3af90dc1e7636fbcb54fd483b4113259e65dc5c60b0bc61dd9c39b4c9b29",
+  "annotator": "reviewer_1",
+  "saved_at": "2026-09-19T15:09:34.592717+00:00",
+  "status": "final",
+  "graph": {
+    "nodes": [
+      {
+        "event_id": "A",
+        "description": "充电宝放回盒子，放下盒子",
+        "segment_count": 4,
+        "total_duration_s": 45.5,
+        "segment_indices": [
+          1,
+          4,
+          7,
+          10
+        ]
+      },
+      {
+        "event_id": "B",
+        "description": "拿起盒子，拿出充电宝",
+        "segment_count": 4,
+        "total_duration_s": 26.6,
+        "segment_indices": [
+          2,
+          5,
+          8,
+          11
+        ]
+      },
+      {
+        "event_id": "C",
+        "description": "inspect充电宝",
+        "segment_count": 3,
+        "total_duration_s": 44.8,
+        "segment_indices": [
+          3,
+          6,
+          9
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "source": "A",
+        "target": "B",
+        "count": 4,
+        "kinds": {
+          "transition": 4
+        },
+        "times_s": [
+          12.1,
+          50.0,
+          84.5,
+          115.8
+        ]
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "count": 3,
+        "kinds": {
+          "transition": 3
+        },
+        "times_s": [
+          22.9,
+          57.5,
+          91.7
+        ]
+      },
+      {
+        "source": "C",
+        "target": "A",
+        "count": 3,
+        "kinds": {
+          "transition": 3
+        },
+        "times_s": [
+          37.6,
+          71.3,
+          108.0
+        ]
+      }
+    ],
+    "edge_occurrences": [
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 12.1,
+        "from_segment": 1,
+        "to_segment": 2
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 22.9,
+        "from_segment": 2,
+        "to_segment": 3
+      },
+      {
+        "source": "C",
+        "target": "A",
+        "kind": "transition",
+        "at_s": 37.6,
+        "from_segment": 3,
+        "to_segment": 4
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 50.0,
+        "from_segment": 4,
+        "to_segment": 5
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 57.5,
+        "from_segment": 5,
+        "to_segment": 6
+      },
+      {
+        "source": "C",
+        "target": "A",
+        "kind": "transition",
+        "at_s": 71.3,
+        "from_segment": 6,
+        "to_segment": 7
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 84.5,
+        "from_segment": 7,
+        "to_segment": 8
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 91.7,
+        "from_segment": 8,
+        "to_segment": 9
+      },
+      {
+        "source": "C",
+        "target": "A",
+        "kind": "transition",
+        "at_s": 108.0,
+        "from_segment": 9,
+        "to_segment": 10
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 115.8,
+        "from_segment": 10,
+        "to_segment": 11
+      }
+    ],
+    "event_sequence": [
+      "A",
+      "B",
+      "C",
+      "A",
+      "B",
+      "C",
+      "A",
+      "B",
+      "C",
+      "A",
+      "B"
+    ]
+  }
+}

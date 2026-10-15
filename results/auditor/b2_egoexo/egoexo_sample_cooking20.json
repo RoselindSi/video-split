@@ -1,0 +1,227 @@
+{
+  "seed": 20261011,
+  "window_s": 180.0,
+  "cap_per_take": 2,
+  "family": "cooking",
+  "family_keys": [
+    "cook",
+    "making",
+    "salad",
+    "omelet",
+    "noodle",
+    "egg",
+    "tea",
+    "coffee",
+    "latte",
+    "soup",
+    "sandwich",
+    "pasta",
+    "rice"
+  ],
+  "n_pool_windows": 806,
+  "n_picked": 20,
+  "selection": "task family chosen by what the tasks are; uniform random within it, capped per take. No per-scenario or per-take ranking by predicted branching was used.",
+  "windows": [
+    {
+      "take_uid": "af7f64f4-b423-4ede-8c5b-a083419dadae",
+      "take_name": "georgiatech_cooking_04_02_2",
+      "scenario": "Cooking Noodles",
+      "window_index": 5,
+      "start_s": 1027.06,
+      "end_s": 1204.96,
+      "n_keysteps": 12,
+      "n_distinct": 9
+    },
+    {
+      "take_uid": "07433534-77d9-452d-a1b6-f33ed24f67c6",
+      "take_name": "georgiatech_cooking_14_02_2",
+      "scenario": "Cooking Noodles",
+      "window_index": 0,
+      "start_s": 0.0,
+      "end_s": 178.31,
+      "n_keysteps": 18,
+      "n_distinct": 14
+    },
+    {
+      "take_uid": "2f61dd27-2ad2-4029-b36d-19a02ae8feec",
+      "take_name": "indiana_cooking_27_2",
+      "scenario": "Cooking Noodles",
+      "window_index": 2,
+      "start_s": 294.26,
+      "end_s": 433.06,
+      "n_keysteps": 6,
+      "n_distinct": 5
+    },
+    {
+      "take_uid": "2f61dd27-2ad2-4029-b36d-19a02ae8feec",
+      "take_name": "indiana_cooking_27_2",
+      "scenario": "Cooking Noodles",
+      "window_index": 5,
+      "start_s": 755.91,
+      "end_s": 927.26,
+      "n_keysteps": 9,
+      "n_distinct": 8
+    },
+    {
+      "take_uid": "99c10780-e9a9-431a-af53-fda0b4fae201",
+      "take_name": "upenn_0714_Cooking_1_2",
+      "scenario": "Cooking Noodles",
+      "window_index": 2,
+      "start_s": 358.34,
+      "end_s": 536.85,
+      "n_keysteps": 10,
+      "n_distinct": 9
+    },
+    {
+      "take_uid": "a57a2fd6-18dd-446e-b11c-fe8b127ebb5b",
+      "take_name": "minnesota_cooking_031_2",
+      "scenario": "Cooking Pasta",
+      "window_index": 0,
+      "start_s": 1.9,
+      "end_s": 179.72,
+      "n_keysteps": 18,
+      "n_distinct": 12
+    },
+    {
+      "take_uid": "206e9042-02a3-48ac-bed0-45861fe658cb",
+      "take_name": "uniandes_cooking_005_2",
+      "scenario": "Cooking Scrambled Eggs",
+      "window_index": 0,
+      "start_s": 1.44,
+      "end_s": 155.87,
+      "n_keysteps": 20,
+      "n_distinct": 18
+    },
+    {
+      "take_uid": "de9efe94-a548-4e07-8a37-7a60abb40dac",
+      "take_name": "georgiatech_cooking_14_01_2",
+      "scenario": "Cooking Tomato & Eggs",
+      "window_index": 5,
+      "start_s": 863.35,
+      "end_s": 990.71,
+      "n_keysteps": 13,
+      "n_distinct": 11
+    },
+    {
+      "take_uid": "eac4b49b-cf4f-4925-bdbe-5ab98d0bae74",
+      "take_name": "upenn_0712_Cooking_1_3",
+      "scenario": "Cooking Tomato & Eggs",
+      "window_index": 5,
+      "start_s": 854.36,
+      "end_s": 986.5,
+      "n_keysteps": 15,
+      "n_distinct": 11
+    },
+    {
+      "take_uid": "bf53c470-f60b-4f93-bb97-9b2a61a5ab89",
+      "take_name": "iiith_cooking_123_2",
+      "scenario": "Cooking an Omelet",
+      "window_index": 1,
+      "start_s": 176.62,
+      "end_s": 354.48,
+      "n_keysteps": 25,
+      "n_distinct": 19
+    },
+    {
+      "take_uid": "819523fa-f601-4ed3-aa1f-b1df5f0482bf",
+      "take_name": "iiith_cooking_28_1",
+      "scenario": "Cooking an Omelet",
+      "window_index": 1,
+      "start_s": 208.4,
+      "end_s": 336.38,
+      "n_keysteps": 14,
+      "n_distinct": 12
+    },
+    {
+      "take_uid": "515ec288-a236-4a94-9b3d-449667088c82",
+      "take_name": "utokyo_omelet_6_1001_4",
+      "scenario": "Cooking an Omelet",
+      "window_index": 3,
+      "start_s": 526.98,
+      "end_s": 701.47,
+      "n_keysteps": 21,
+      "n_distinct": 17
+    },
+    {
+      "take_uid": "699dde3f-cd23-4674-939e-42438faeb0da",
+      "take_name": "iiith_cooking_07_1",
+      "scenario": "Making Cucumber & Tomato Salad",
+      "window_index": 0,
+      "start_s": 27.08,
+      "end_s": 161.44,
+      "n_keysteps": 17,
+      "n_distinct": 16
+    },
+    {
+      "take_uid": "77e3b40d-7693-49f1-b480-d33fd798f870",
+      "take_name": "iiith_cooking_116_4",
+      "scenario": "Making Cucumber & Tomato Salad",
+      "window_index": 0,
+      "start_s": 0.0,
+      "end_s": 104.6,
+      "n_keysteps": 14,
+      "n_distinct": 13
+    },
+    {
+      "take_uid": "a9c72abf-f710-4854-8d9a-9ef98950eb24",
+      "take_name": "iiith_cooking_23_1",
+      "scenario": "Making Cucumber & Tomato Salad",
+      "window_index": 0,
+      "start_s": 19.31,
+      "end_s": 176.77,
+      "n_keysteps": 16,
+      "n_distinct": 16
+    },
+    {
+      "take_uid": "e1475f87-0c9d-4884-b932-140c2a0de3c3",
+      "take_name": "sfu_cooking023_4",
+      "scenario": "Making Cucumber & Tomato Salad",
+      "window_index": 0,
+      "start_s": 0.0,
+      "end_s": 46.77,
+      "n_keysteps": 7,
+      "n_distinct": 6
+    },
+    {
+      "take_uid": "05db9b5f-6904-43d2-99f8-62e6d3353afb",
+      "take_name": "upenn_0714_Cooking_7_3",
+      "scenario": "Making Milk Tea",
+      "window_index": 1,
+      "start_s": 194.49,
+      "end_s": 363.02,
+      "n_keysteps": 5,
+      "n_distinct": 4
+    },
+    {
+      "take_uid": "93a6cc04-f932-4555-93de-bf55a089ac80",
+      "take_name": "fair_cooking_07_2",
+      "scenario": "Making Sesame-Ginger Asian Salad",
+      "window_index": 0,
+      "start_s": 2.75,
+      "end_s": 160.34,
+      "n_keysteps": 9,
+      "n_distinct": 9
+    },
+    {
+      "take_uid": "a268acaf-1493-43ed-b368-346aa9a0f09f",
+      "take_name": "georgiatech_cooking_11_01_4",
+      "scenario": "Making Sesame-Ginger Asian Salad",
+      "window_index": 1,
+      "start_s": 179.17,
+      "end_s": 349.97,
+      "n_keysteps": 15,
+      "n_distinct": 12
+    },
+    {
+      "take_uid": "e4ddbe51-37d0-4937-816a-2508b20f2b63",
+      "take_name": "upenn_0714_Cooking_1_4",
+      "scenario": "Making Sesame-Ginger Asian Salad",
+      "window_index": 2,
+      "start_s": 375.19,
+      "end_s": 547.15,
+      "n_keysteps": 13,
+      "n_distinct": 10
+    }
+  ],
+  "sampling_bias_note": "每窗口 keystep 数：抽样中位 14，全池中位 12（偏高 17%）。单 take 上限改变了抽样权重，keystep 密集的 take 窗口多、被抽中机会大。方向上对产出有利，读 b2_yield 时要扣除。"
+}

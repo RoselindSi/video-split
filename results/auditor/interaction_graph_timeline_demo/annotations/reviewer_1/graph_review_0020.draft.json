@@ -1,0 +1,192 @@
+{
+  "schema_version": "interaction_graph_timeline_v1",
+  "video_id": "graph_review_0020",
+  "events": [
+    {
+      "event_id": "A",
+      "description": "扯开保鲜膜敷到碗上"
+    },
+    {
+      "event_id": "B",
+      "description": "整理碗上的保鲜膜"
+    },
+    {
+      "event_id": "C",
+      "description": "揭开保鲜膜"
+    },
+    {
+      "event_id": "D",
+      "description": "把保鲜膜扔到垃圾桶"
+    }
+  ],
+  "segments": [
+    {
+      "start_s": 0.0,
+      "end_s": 14.5,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 14.5,
+      "end_s": 47.6,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 47.6,
+      "end_s": 86.8,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 86.8,
+      "end_s": 98.4,
+      "event_id": "D",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 98.4,
+      "end_s": 100.0,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    }
+  ],
+  "confirmed_full_video": true,
+  "manifest_sha256": "158a3af90dc1e7636fbcb54fd483b4113259e65dc5c60b0bc61dd9c39b4c9b29",
+  "annotator": "reviewer_1",
+  "saved_at": "2026-09-19T09:30:07.579733+00:00",
+  "status": "draft",
+  "graph": {
+    "nodes": [
+      {
+        "event_id": "A",
+        "description": "扯开保鲜膜敷到碗上",
+        "segment_count": 2,
+        "total_duration_s": 16.1,
+        "segment_indices": [
+          1,
+          5
+        ]
+      },
+      {
+        "event_id": "B",
+        "description": "整理碗上的保鲜膜",
+        "segment_count": 1,
+        "total_duration_s": 33.1,
+        "segment_indices": [
+          2
+        ]
+      },
+      {
+        "event_id": "C",
+        "description": "揭开保鲜膜",
+        "segment_count": 1,
+        "total_duration_s": 39.2,
+        "segment_indices": [
+          3
+        ]
+      },
+      {
+        "event_id": "D",
+        "description": "把保鲜膜扔到垃圾桶",
+        "segment_count": 1,
+        "total_duration_s": 11.6,
+        "segment_indices": [
+          4
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "source": "A",
+        "target": "B",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          14.5
+        ]
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          47.6
+        ]
+      },
+      {
+        "source": "C",
+        "target": "D",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          86.8
+        ]
+      },
+      {
+        "source": "D",
+        "target": "A",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          98.4
+        ]
+      }
+    ],
+    "edge_occurrences": [
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 14.5,
+        "from_segment": 1,
+        "to_segment": 2
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 47.6,
+        "from_segment": 2,
+        "to_segment": 3
+      },
+      {
+        "source": "C",
+        "target": "D",
+        "kind": "transition",
+        "at_s": 86.8,
+        "from_segment": 3,
+        "to_segment": 4
+      },
+      {
+        "source": "D",
+        "target": "A",
+        "kind": "transition",
+        "at_s": 98.4,
+        "from_segment": 4,
+        "to_segment": 5
+      }
+    ],
+    "event_sequence": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "A"
+    ]
+  }
+}

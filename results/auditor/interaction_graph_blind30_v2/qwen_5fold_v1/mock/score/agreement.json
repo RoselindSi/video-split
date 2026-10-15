@@ -1,0 +1,2213 @@
+{
+  "schema_version": "interaction_graph_timeline_agreement_v1",
+  "manifest": "/Users/roselindsi/Documents/GitHub/video-split/results/auditor/interaction_graph_blind30_v2/manifest.json",
+  "manifest_sha256": "9cd7d33e36af2284ebe7277b32ba78f82764afc567e63fa3764862ff0142e30c",
+  "reviewer_1_source": {
+    "kind": "export_json",
+    "path": "/Users/roselindsi/Documents/GitHub/video-split/results/auditor/interaction_graph_blind30_v2/human/reviewer_1_final.json",
+    "sha256": "836a641e8fa6d9369a4b274b823ca9ffa327955e1a2db46479d2937e6a696aaa",
+    "manifest_sha256": "9cd7d33e36af2284ebe7277b32ba78f82764afc567e63fa3764862ff0142e30c",
+    "annotator": "reviewer_1"
+  },
+  "reviewer_2_source": {
+    "kind": "export_json",
+    "path": "/Users/roselindsi/Documents/GitHub/video-split/results/auditor/interaction_graph_blind30_v2/qwen_5fold_v1/mock/predictions.json",
+    "sha256": "8b593a9e149f7717da97ee99ea3bc8bf993dc6c2cf785b9a2d294da8051ceb18",
+    "manifest_sha256": null,
+    "annotator": "qwen_5fold_mock"
+  },
+  "n_expected_videos": 30,
+  "n_compared_videos": 30,
+  "missing_reviewer_1": [],
+  "missing_reviewer_2": [],
+  "extra_reviewer_1": [],
+  "extra_reviewer_2": [],
+  "metrics": {
+    "boundary_micro_by_tolerance_s": {
+      "0.25": {
+        "matches": 0,
+        "n_reviewer_1": 97,
+        "n_reviewer_2": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "0.5": {
+        "matches": 0,
+        "n_reviewer_1": 97,
+        "n_reviewer_2": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "1.0": {
+        "matches": 0,
+        "n_reviewer_1": 97,
+        "n_reviewer_2": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "2.0": {
+        "matches": 0,
+        "n_reviewer_1": 97,
+        "n_reviewer_2": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      }
+    },
+    "matched_relation_at_1s": {
+      "n": 0,
+      "n_agree": 0,
+      "agreement": null,
+      "confusion": {}
+    },
+    "median_temporal_type_partition_ari": 0.0,
+    "exact_normalized_path_videos": 2,
+    "internal_repeat_time_agreement": 0.6996358339402767,
+    "internal_repeat_time_kappa": -3.696256578104608e-16
+  },
+  "prespecified_gate": {
+    "thresholds_were_fixed_before_reviewer_2_results": true,
+    "checks": {
+      "all_manifest_videos_present_and_no_extras": true,
+      "boundary_f1_at_1s_gte_0_80": false,
+      "matched_relation_agreement_gte_0_80": false,
+      "median_temporal_partition_ari_gte_0_80": false,
+      "internal_repeat_time_agreement_gte_0_80": false
+    },
+    "passes_all": false
+  },
+  "interpretation_note": "This is model-vs-human out-of-fold agreement. It is not human inter-annotator reliability and descriptions are retained for audit but not automatically scored.",
+  "per_video": [
+    {
+      "video_id": "blind_graph_0001",
+      "duration_s": 120.0,
+      "n_segments_reviewer_1": 7,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 6,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 6,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 6,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 6,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 1.0,
+      "internal_repeat_time_agreement": 1.0,
+      "fold": 2
+    },
+    {
+      "video_id": "blind_graph_0002",
+      "duration_s": 120.0,
+      "n_segments_reviewer_1": 5,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 4,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 4,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 4,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 4,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        1,
+        2,
+        3,
+        3
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 0.0,
+      "internal_repeat_time_agreement": 1.0,
+      "fold": 3
+    },
+    {
+      "video_id": "blind_graph_0003",
+      "duration_s": 120.0,
+      "n_segments_reviewer_1": 4,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 3,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 3,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 3,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 3,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 1.0,
+      "internal_repeat_time_agreement": 1.0,
+      "fold": 2
+    },
+    {
+      "video_id": "blind_graph_0004",
+      "duration_s": 120.0,
+      "n_segments_reviewer_1": 1,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 0,
+          "n_reviewer_2": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 0,
+          "n_reviewer_2": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 0,
+          "n_reviewer_2": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 0,
+          "n_reviewer_2": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": true,
+      "temporal_type_partition_ari": 1.0,
+      "internal_repeat_time_agreement": 0.0,
+      "fold": 3
+    },
+    {
+      "video_id": "blind_graph_0005",
+      "duration_s": 120.0,
+      "n_segments_reviewer_1": 4,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 3,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 3,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 3,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 3,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 0.0,
+      "internal_repeat_time_agreement": 1.0,
+      "fold": 4
+    },
+    {
+      "video_id": "blind_graph_0006",
+      "duration_s": 120.0,
+      "n_segments_reviewer_1": 3,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 2,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 2,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 2,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 2,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        1,
+        2
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 0.0,
+      "internal_repeat_time_agreement": 0.775,
+      "fold": 4
+    },
+    {
+      "video_id": "blind_graph_0007",
+      "duration_s": 120.0,
+      "n_segments_reviewer_1": 5,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 4,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 4,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 4,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 4,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        1,
+        1,
+        0,
+        2
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 0.0,
+      "internal_repeat_time_agreement": 1.0,
+      "fold": 0
+    },
+    {
+      "video_id": "blind_graph_0008",
+      "duration_s": 120.0,
+      "n_segments_reviewer_1": 2,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        1
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 0.0,
+      "internal_repeat_time_agreement": 0.25,
+      "fold": 2
+    },
+    {
+      "video_id": "blind_graph_0009",
+      "duration_s": 120.0,
+      "n_segments_reviewer_1": 1,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 0,
+          "n_reviewer_2": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 0,
+          "n_reviewer_2": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 0,
+          "n_reviewer_2": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 0,
+          "n_reviewer_2": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": true,
+      "temporal_type_partition_ari": 1.0,
+      "internal_repeat_time_agreement": 0.0,
+      "fold": 3
+    },
+    {
+      "video_id": "blind_graph_0010",
+      "duration_s": 103.3,
+      "n_segments_reviewer_1": 9,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 8,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 8,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 8,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 8,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 0.0,
+      "internal_repeat_time_agreement": 1.0,
+      "fold": 4
+    },
+    {
+      "video_id": "blind_graph_0011",
+      "duration_s": 120.0,
+      "n_segments_reviewer_1": 2,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        0
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 1.0,
+      "internal_repeat_time_agreement": 1.0,
+      "fold": 0
+    },
+    {
+      "video_id": "blind_graph_0012",
+      "duration_s": 120.0,
+      "n_segments_reviewer_1": 2,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        1
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 0.0,
+      "internal_repeat_time_agreement": 0.42083333333333334,
+      "fold": 1
+    },
+    {
+      "video_id": "blind_graph_0013",
+      "duration_s": 120.0,
+      "n_segments_reviewer_1": 11,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 10,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 10,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 10,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 10,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 0.0,
+      "internal_repeat_time_agreement": 0.9458333333333333,
+      "fold": 4
+    },
+    {
+      "video_id": "blind_graph_0014",
+      "duration_s": 120.0,
+      "n_segments_reviewer_1": 9,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 8,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 8,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 8,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 8,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        5,
+        5,
+        5
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 0.0,
+      "internal_repeat_time_agreement": 1.0,
+      "fold": 2
+    },
+    {
+      "video_id": "blind_graph_0015",
+      "duration_s": 31.033,
+      "n_segments_reviewer_1": 3,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 2,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 2,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 2,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 2,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        1,
+        2
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 0.0,
+      "internal_repeat_time_agreement": 1.0,
+      "fold": 4
+    },
+    {
+      "video_id": "blind_graph_0016",
+      "duration_s": 120.0,
+      "n_segments_reviewer_1": 6,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 5,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 5,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 5,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 5,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        1,
+        0,
+        0,
+        2,
+        0
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 0.0,
+      "internal_repeat_time_agreement": 0.2791666666666667,
+      "fold": 0
+    },
+    {
+      "video_id": "blind_graph_0017",
+      "duration_s": 65.067,
+      "n_segments_reviewer_1": 2,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        1
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 0.0,
+      "internal_repeat_time_agreement": 1.0,
+      "fold": 1
+    },
+    {
+      "video_id": "blind_graph_0018",
+      "duration_s": 120.0,
+      "n_segments_reviewer_1": 5,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 4,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 4,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 4,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 4,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 1.0,
+      "internal_repeat_time_agreement": 1.0,
+      "fold": 0
+    },
+    {
+      "video_id": "blind_graph_0019",
+      "duration_s": 120.0,
+      "n_segments_reviewer_1": 5,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 4,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 4,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 4,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 4,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        1,
+        1,
+        1,
+        1
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 0.0,
+      "internal_repeat_time_agreement": 1.0,
+      "fold": 3
+    },
+    {
+      "video_id": "blind_graph_0020",
+      "duration_s": 120.0,
+      "n_segments_reviewer_1": 4,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 3,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 3,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 3,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 3,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 0.0,
+      "internal_repeat_time_agreement": 1.0,
+      "fold": 0
+    },
+    {
+      "video_id": "blind_graph_0021",
+      "duration_s": 120.0,
+      "n_segments_reviewer_1": 2,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        0
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 1.0,
+      "internal_repeat_time_agreement": 0.0,
+      "fold": 3
+    },
+    {
+      "video_id": "blind_graph_0022",
+      "duration_s": 120.0,
+      "n_segments_reviewer_1": 2,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        1
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 0.0,
+      "internal_repeat_time_agreement": 0.38333333333333336,
+      "fold": 1
+    },
+    {
+      "video_id": "blind_graph_0023",
+      "duration_s": 120.0,
+      "n_segments_reviewer_1": 7,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 6,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 6,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 6,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 6,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 0.0,
+      "internal_repeat_time_agreement": 1.0,
+      "fold": 1
+    },
+    {
+      "video_id": "blind_graph_0024",
+      "duration_s": 120.0,
+      "n_segments_reviewer_1": 3,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 2,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 2,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 2,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 2,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        1,
+        2
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 0.0,
+      "internal_repeat_time_agreement": 0.15416666666666667,
+      "fold": 3
+    },
+    {
+      "video_id": "blind_graph_0025",
+      "duration_s": 120.0,
+      "n_segments_reviewer_1": 8,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 7,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 7,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 7,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 7,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        2
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 0.0,
+      "internal_repeat_time_agreement": 0.2916666666666667,
+      "fold": 2
+    },
+    {
+      "video_id": "blind_graph_0026",
+      "duration_s": 112.0,
+      "n_segments_reviewer_1": 4,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 3,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 3,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 3,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 3,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 0.0,
+      "internal_repeat_time_agreement": 0.41964285714285715,
+      "fold": 1
+    },
+    {
+      "video_id": "blind_graph_0027",
+      "duration_s": 120.0,
+      "n_segments_reviewer_1": 4,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 3,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 3,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 3,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 3,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 1.0,
+      "internal_repeat_time_agreement": 1.0,
+      "fold": 4
+    },
+    {
+      "video_id": "blind_graph_0028",
+      "duration_s": 120.0,
+      "n_segments_reviewer_1": 2,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        1
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 0.0,
+      "internal_repeat_time_agreement": 1.0,
+      "fold": 1
+    },
+    {
+      "video_id": "blind_graph_0029",
+      "duration_s": 120.0,
+      "n_segments_reviewer_1": 3,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 2,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 2,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 2,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 2,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        1,
+        2
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 0.0,
+      "internal_repeat_time_agreement": 0.45,
+      "fold": 0
+    },
+    {
+      "video_id": "blind_graph_0030",
+      "duration_s": 120.0,
+      "n_segments_reviewer_1": 2,
+      "n_segments_reviewer_2": 1,
+      "boundary": {
+        "0.25": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "0.5": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "1.0": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        },
+        "2.0": {
+          "matches": 0,
+          "n_reviewer_1": 1,
+          "n_reviewer_2": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "mean_abs_error_s": null
+        }
+      },
+      "primary_matched_boundary_relation": {
+        "n": 0,
+        "n_agree": 0,
+        "agreement": null,
+        "confusion": {}
+      },
+      "normalized_event_path_reviewer_1": [
+        0,
+        1
+      ],
+      "normalized_event_path_reviewer_2": [
+        0
+      ],
+      "exact_normalized_path": false,
+      "temporal_type_partition_ari": 0.0,
+      "internal_repeat_time_agreement": 1.0,
+      "fold": 2
+    }
+  ],
+  "five_fold": {
+    "schema_version": "interaction_graph_qwen_5fold_v1",
+    "seed": "interaction-graph-qwen-5fold-v1-2026-09-22",
+    "by_fold": [
+      {
+        "fold": 0,
+        "n_videos": 6,
+        "boundary_micro_by_tolerance_s": {
+          "0.25": {
+            "matches": 0,
+            "n_gold": 19,
+            "n_pred": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "0.5": {
+            "matches": 0,
+            "n_gold": 19,
+            "n_pred": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "1.0": {
+            "matches": 0,
+            "n_gold": 19,
+            "n_pred": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "2.0": {
+            "matches": 0,
+            "n_gold": 19,
+            "n_pred": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          }
+        },
+        "matched_relation_at_1s": {
+          "n": 0,
+          "n_agree": 0,
+          "agreement": null
+        },
+        "median_temporal_type_partition_ari": 0.0,
+        "mean_internal_repeat_time_agreement": 0.7881944444444444
+      },
+      {
+        "fold": 1,
+        "n_videos": 6,
+        "boundary_micro_by_tolerance_s": {
+          "0.25": {
+            "matches": 0,
+            "n_gold": 13,
+            "n_pred": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "0.5": {
+            "matches": 0,
+            "n_gold": 13,
+            "n_pred": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "1.0": {
+            "matches": 0,
+            "n_gold": 13,
+            "n_pred": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "2.0": {
+            "matches": 0,
+            "n_gold": 13,
+            "n_pred": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          }
+        },
+        "matched_relation_at_1s": {
+          "n": 0,
+          "n_agree": 0,
+          "agreement": null
+        },
+        "median_temporal_type_partition_ari": 0.0,
+        "mean_internal_repeat_time_agreement": 0.703968253968254
+      },
+      {
+        "fold": 2,
+        "n_videos": 6,
+        "boundary_micro_by_tolerance_s": {
+          "0.25": {
+            "matches": 0,
+            "n_gold": 26,
+            "n_pred": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "0.5": {
+            "matches": 0,
+            "n_gold": 26,
+            "n_pred": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "1.0": {
+            "matches": 0,
+            "n_gold": 26,
+            "n_pred": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "2.0": {
+            "matches": 0,
+            "n_gold": 26,
+            "n_pred": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          }
+        },
+        "matched_relation_at_1s": {
+          "n": 0,
+          "n_agree": 0,
+          "agreement": null
+        },
+        "median_temporal_type_partition_ari": 0.0,
+        "mean_internal_repeat_time_agreement": 0.7569444444444444
+      },
+      {
+        "fold": 3,
+        "n_videos": 6,
+        "boundary_micro_by_tolerance_s": {
+          "0.25": {
+            "matches": 0,
+            "n_gold": 11,
+            "n_pred": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "0.5": {
+            "matches": 0,
+            "n_gold": 11,
+            "n_pred": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "1.0": {
+            "matches": 0,
+            "n_gold": 11,
+            "n_pred": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "2.0": {
+            "matches": 0,
+            "n_gold": 11,
+            "n_pred": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          }
+        },
+        "matched_relation_at_1s": {
+          "n": 0,
+          "n_agree": 0,
+          "agreement": null
+        },
+        "median_temporal_type_partition_ari": 0.5,
+        "mean_internal_repeat_time_agreement": 0.3590277777777778
+      },
+      {
+        "fold": 4,
+        "n_videos": 6,
+        "boundary_micro_by_tolerance_s": {
+          "0.25": {
+            "matches": 0,
+            "n_gold": 28,
+            "n_pred": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "0.5": {
+            "matches": 0,
+            "n_gold": 28,
+            "n_pred": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "1.0": {
+            "matches": 0,
+            "n_gold": 28,
+            "n_pred": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "2.0": {
+            "matches": 0,
+            "n_gold": 28,
+            "n_pred": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          }
+        },
+        "matched_relation_at_1s": {
+          "n": 0,
+          "n_agree": 0,
+          "agreement": null
+        },
+        "median_temporal_type_partition_ari": 0.0,
+        "mean_internal_repeat_time_agreement": 0.9534722222222223
+      }
+    ]
+  }
+}

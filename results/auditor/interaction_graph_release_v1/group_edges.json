@@ -1,0 +1,3743 @@
+[
+  {
+    "source_group": "pg_artificial_nail_finishing",
+    "target_group": "pg_artificial_nail_finishing",
+    "edge_type": "exact_state_repeat",
+    "count": 2,
+    "videos": [
+      "mosaic_graph_0025"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0025",
+        "at_s": 0.0,
+        "from_segment": 1,
+        "to_segment": 1,
+        "original_kind": "internal_repeat"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0025",
+        "at_s": 53.4,
+        "from_segment": 2,
+        "to_segment": 2,
+        "original_kind": "internal_repeat"
+      }
+    ],
+    "source_group_name": "修整假手指甲",
+    "target_group_name": "修整假手指甲"
+  },
+  {
+    "source_group": "pg_artificial_nail_finishing",
+    "target_group": "pg_artificial_nail_finishing",
+    "edge_type": "intra_group_transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0025"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0025",
+        "at_s": 53.4,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "修整假手指甲",
+    "target_group_name": "修整假手指甲"
+  },
+  {
+    "source_group": "pg_beverage_shelf_stocking",
+    "target_group": "pg_beverage_shelf_stocking",
+    "edge_type": "exact_state_repeat",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0015"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0015",
+        "at_s": 35.6,
+        "from_segment": 3,
+        "to_segment": 3,
+        "original_kind": "internal_repeat"
+      }
+    ],
+    "source_group_name": "饮料上架与记录",
+    "target_group_name": "饮料上架与记录"
+  },
+  {
+    "source_group": "pg_beverage_shelf_stocking",
+    "target_group": "pg_beverage_shelf_stocking",
+    "edge_type": "intra_group_transition",
+    "count": 6,
+    "videos": [
+      "mosaic_graph_0015"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0015",
+        "at_s": 28.0,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0015",
+        "at_s": 35.6,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0015",
+        "at_s": 69.5,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0015",
+        "at_s": 76.4,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0015",
+        "at_s": 80.2,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0015",
+        "at_s": 114.5,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "饮料上架与记录",
+    "target_group_name": "饮料上架与记录"
+  },
+  {
+    "source_group": "pg_black_component_processing",
+    "target_group": "pg_black_component_processing",
+    "edge_type": "exact_state_repeat",
+    "count": 4,
+    "videos": [
+      "mosaic_graph_0016"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0016",
+        "at_s": 63.9,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0016",
+        "at_s": 77.7,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0016",
+        "at_s": 97.8,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0016",
+        "at_s": 113.6,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "self_transition"
+      }
+    ],
+    "source_group_name": "加工黑色塑料件",
+    "target_group_name": "加工黑色塑料件"
+  },
+  {
+    "source_group": "pg_black_component_processing",
+    "target_group": "pg_black_component_processing",
+    "edge_type": "intra_group_transition",
+    "count": 2,
+    "videos": [
+      "mosaic_graph_0016"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0016",
+        "at_s": 18.5,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0016",
+        "at_s": 47.4,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "加工黑色塑料件",
+    "target_group_name": "加工黑色塑料件"
+  },
+  {
+    "source_group": "pg_bottle_washing_packing",
+    "target_group": "pg_bottle_washing_packing",
+    "edge_type": "exact_state_repeat",
+    "count": 5,
+    "videos": [
+      "mosaic_graph_0029"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0029",
+        "at_s": 78.3,
+        "from_segment": 6,
+        "to_segment": 6,
+        "original_kind": "internal_repeat"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0029",
+        "at_s": 9.2,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0029",
+        "at_s": 42.3,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0029",
+        "at_s": 50.9,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0029",
+        "at_s": 72.9,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "self_transition"
+      }
+    ],
+    "source_group_name": "清洗并收装玻璃瓶",
+    "target_group_name": "清洗并收装玻璃瓶"
+  },
+  {
+    "source_group": "pg_bottle_washing_packing",
+    "target_group": "pg_bottle_washing_packing",
+    "edge_type": "intra_group_transition",
+    "count": 2,
+    "videos": [
+      "mosaic_graph_0029"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0029",
+        "at_s": 78.3,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0029",
+        "at_s": 99.8,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "清洗并收装玻璃瓶",
+    "target_group_name": "清洗并收装玻璃瓶"
+  },
+  {
+    "source_group": "pg_bowl_plastic_wrap",
+    "target_group": "pg_bowl_plastic_wrap",
+    "edge_type": "intra_group_transition",
+    "count": 4,
+    "videos": [
+      "graph_review_0020"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0020",
+        "at_s": 14.5,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0020",
+        "at_s": 47.6,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0020",
+        "at_s": 86.8,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0020",
+        "at_s": 98.4,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "操作碗上保鲜膜",
+    "target_group_name": "操作碗上保鲜膜"
+  },
+  {
+    "source_group": "pg_charging_cable_management",
+    "target_group": "pg_charging_cable_management",
+    "edge_type": "intra_group_transition",
+    "count": 24,
+    "videos": [
+      "graph_review_0005",
+      "graph_review_0019",
+      "graph_review_0021",
+      "graph_review_0024"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0005",
+        "at_s": 6.0,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0005",
+        "at_s": 16.9,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0005",
+        "at_s": 40.4,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0005",
+        "at_s": 45.9,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0019",
+        "at_s": 4.6,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0019",
+        "at_s": 12.4,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0019",
+        "at_s": 20.2,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0019",
+        "at_s": 30.8,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0019",
+        "at_s": 37.1,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0019",
+        "at_s": 47.9,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0019",
+        "at_s": 53.2,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0019",
+        "at_s": 61.0,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0019",
+        "at_s": 69.8,
+        "from_segment": 9,
+        "to_segment": 10,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0019",
+        "at_s": 77.8,
+        "from_segment": 10,
+        "to_segment": 11,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0021",
+        "at_s": 27.7,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0021",
+        "at_s": 32.2,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0021",
+        "at_s": 37.7,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0021",
+        "at_s": 55.7,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0021",
+        "at_s": 79.8,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0021",
+        "at_s": 85.2,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0024",
+        "at_s": 10.3,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0024",
+        "at_s": 18.5,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0024",
+        "at_s": 38.9,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0024",
+        "at_s": 66.0,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "收放充电线",
+    "target_group_name": "收放充电线"
+  },
+  {
+    "source_group": "pg_collaboration_waiting",
+    "target_group": "pg_work_documentation",
+    "edge_type": "inter_group_transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0020"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0020",
+        "at_s": 55.1,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "等待协作者",
+    "target_group_name": "查看并记录工作信息"
+  },
+  {
+    "source_group": "pg_cooking_seasoning",
+    "target_group": "pg_cooking_seasoning",
+    "edge_type": "exact_state_repeat",
+    "count": 3,
+    "videos": [
+      "graph_review_0026"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0026",
+        "at_s": 12.0,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0026",
+        "at_s": 26.6,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0026",
+        "at_s": 37.1,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      }
+    ],
+    "source_group_name": "烹饪时添加调料",
+    "target_group_name": "烹饪时添加调料"
+  },
+  {
+    "source_group": "pg_drain_stopper_cleaning",
+    "target_group": "pg_drain_stopper_cleaning",
+    "edge_type": "exact_state_repeat",
+    "count": 27,
+    "videos": [
+      "graph_review_0001",
+      "graph_review_0008",
+      "graph_review_0013",
+      "graph_review_0029"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0001",
+        "at_s": 17.9,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0001",
+        "at_s": 45.0,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0008",
+        "at_s": 4.7,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0008",
+        "at_s": 15.5,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0008",
+        "at_s": 23.3,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0008",
+        "at_s": 33.1,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0008",
+        "at_s": 42.2,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0008",
+        "at_s": 50.9,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0008",
+        "at_s": 58.6,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0008",
+        "at_s": 67.0,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0008",
+        "at_s": 76.2,
+        "from_segment": 9,
+        "to_segment": 10,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0013",
+        "at_s": 4.6,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0013",
+        "at_s": 28.7,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0013",
+        "at_s": 42.4,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0013",
+        "at_s": 56.3,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0013",
+        "at_s": 73.3,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0013",
+        "at_s": 86.9,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0013",
+        "at_s": 100.1,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0029",
+        "at_s": 6.7,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0029",
+        "at_s": 15.0,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0029",
+        "at_s": 24.3,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0029",
+        "at_s": 33.8,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0029",
+        "at_s": 43.2,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0029",
+        "at_s": 53.2,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0029",
+        "at_s": 64.6,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0029",
+        "at_s": 73.5,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0029",
+        "at_s": 82.2,
+        "from_segment": 9,
+        "to_segment": 10,
+        "original_kind": "self_transition"
+      }
+    ],
+    "source_group_name": "清洗并复位下水道塞子",
+    "target_group_name": "清洗并复位下水道塞子"
+  },
+  {
+    "source_group": "pg_dried_fruit_weighing",
+    "target_group": "pg_dried_fruit_weighing",
+    "edge_type": "exact_state_repeat",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0026"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0026",
+        "at_s": 90.8,
+        "from_segment": 6,
+        "to_segment": 6,
+        "original_kind": "internal_repeat"
+      }
+    ],
+    "source_group_name": "准备容器并称量果干",
+    "target_group_name": "准备容器并称量果干"
+  },
+  {
+    "source_group": "pg_dried_fruit_weighing",
+    "target_group": "pg_dried_fruit_weighing",
+    "edge_type": "intra_group_transition",
+    "count": 5,
+    "videos": [
+      "mosaic_graph_0026"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0026",
+        "at_s": 10.1,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0026",
+        "at_s": 22.5,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0026",
+        "at_s": 67.5,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0026",
+        "at_s": 78.3,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0026",
+        "at_s": 90.8,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "准备容器并称量果干",
+    "target_group_name": "准备容器并称量果干"
+  },
+  {
+    "source_group": "pg_electric_scooter_arrangement",
+    "target_group": "pg_electric_scooter_arrangement",
+    "edge_type": "intra_group_transition",
+    "count": 2,
+    "videos": [
+      "mosaic_graph_0010"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0010",
+        "at_s": 69.0,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0010",
+        "at_s": 77.6,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "巡视并摆放电动车",
+    "target_group_name": "巡视并摆放电动车"
+  },
+  {
+    "source_group": "pg_electrical_assembly",
+    "target_group": "pg_collaboration_waiting",
+    "edge_type": "inter_group_transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0020"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0020",
+        "at_s": 33.6,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "组装线缆测试组件",
+    "target_group_name": "等待协作者"
+  },
+  {
+    "source_group": "pg_electrical_assembly",
+    "target_group": "pg_electrical_assembly",
+    "edge_type": "exact_state_repeat",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0020"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0020",
+        "at_s": 73.2,
+        "from_segment": 4,
+        "to_segment": 4,
+        "original_kind": "internal_repeat"
+      }
+    ],
+    "source_group_name": "组装线缆测试组件",
+    "target_group_name": "组装线缆测试组件"
+  },
+  {
+    "source_group": "pg_fan_assembly",
+    "target_group": "pg_fan_assembly",
+    "edge_type": "intra_group_transition",
+    "count": 2,
+    "videos": [
+      "mosaic_graph_0017"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0017",
+        "at_s": 20.1,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0017",
+        "at_s": 45.9,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "组装风扇",
+    "target_group_name": "组装风扇"
+  },
+  {
+    "source_group": "pg_fan_disassembly",
+    "target_group": "pg_fan_disassembly",
+    "edge_type": "exact_state_repeat",
+    "count": 2,
+    "videos": [
+      "mosaic_graph_0002"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0002",
+        "at_s": 0.0,
+        "from_segment": 1,
+        "to_segment": 1,
+        "original_kind": "internal_repeat"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0002",
+        "at_s": 47.1,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      }
+    ],
+    "source_group_name": "拆卸风扇",
+    "target_group_name": "拆卸风扇"
+  },
+  {
+    "source_group": "pg_fan_disassembly",
+    "target_group": "pg_fan_disassembly",
+    "edge_type": "intra_group_transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0002"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0002",
+        "at_s": 25.2,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "拆卸风扇",
+    "target_group_name": "拆卸风扇"
+  },
+  {
+    "source_group": "pg_fan_disassembly",
+    "target_group": "pg_support_item_retrieval",
+    "edge_type": "inter_group_transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0002"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0002",
+        "at_s": 58.0,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "拆卸风扇",
+    "target_group_name": "取用辅助物品"
+  },
+  {
+    "source_group": "pg_fastener_assembly_packing",
+    "target_group": "pg_fastener_assembly_packing",
+    "edge_type": "exact_state_repeat",
+    "count": 10,
+    "videos": [
+      "mosaic_graph_0012"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0012",
+        "at_s": 5.0,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0012",
+        "at_s": 14.1,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0012",
+        "at_s": 24.8,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0012",
+        "at_s": 33.8,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0012",
+        "at_s": 46.8,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0012",
+        "at_s": 56.8,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0012",
+        "at_s": 75.4,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0012",
+        "at_s": 84.9,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0012",
+        "at_s": 99.5,
+        "from_segment": 9,
+        "to_segment": 10,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0012",
+        "at_s": 111.9,
+        "from_segment": 10,
+        "to_segment": 11,
+        "original_kind": "self_transition"
+      }
+    ],
+    "source_group_name": "安装螺帽并装箱",
+    "target_group_name": "安装螺帽并装箱"
+  },
+  {
+    "source_group": "pg_garment_ironing",
+    "target_group": "pg_garment_ironing",
+    "edge_type": "exact_state_repeat",
+    "count": 3,
+    "videos": [
+      "mosaic_graph_0021"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0021",
+        "at_s": 0.0,
+        "from_segment": 1,
+        "to_segment": 1,
+        "original_kind": "internal_repeat"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0021",
+        "at_s": 9.8,
+        "from_segment": 2,
+        "to_segment": 2,
+        "original_kind": "internal_repeat"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0021",
+        "at_s": 9.8,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "self_transition"
+      }
+    ],
+    "source_group_name": "熨烫衣物",
+    "target_group_name": "熨烫衣物"
+  },
+  {
+    "source_group": "pg_heart_embroidery",
+    "target_group": "pg_heart_embroidery",
+    "edge_type": "intra_group_transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0028"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0028",
+        "at_s": 82.1,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "缝制爱心图案",
+    "target_group_name": "缝制爱心图案"
+  },
+  {
+    "source_group": "pg_hot_water_collection",
+    "target_group": "pg_hot_water_collection",
+    "edge_type": "intra_group_transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0006"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0006",
+        "at_s": 35.3,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "接取热水",
+    "target_group_name": "接取热水"
+  },
+  {
+    "source_group": "pg_inventory_collection",
+    "target_group": "pg_inventory_collection",
+    "edge_type": "exact_state_repeat",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0018"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0018",
+        "at_s": 53.9,
+        "from_segment": 5,
+        "to_segment": 5,
+        "original_kind": "internal_repeat"
+      }
+    ],
+    "source_group_name": "从货架收集物品",
+    "target_group_name": "从货架收集物品"
+  },
+  {
+    "source_group": "pg_inventory_collection",
+    "target_group": "pg_inventory_collection",
+    "edge_type": "intra_group_transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0018"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0018",
+        "at_s": 53.9,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "从货架收集物品",
+    "target_group_name": "从货架收集物品"
+  },
+  {
+    "source_group": "pg_kettle_repositioning",
+    "target_group": "pg_kettle_repositioning",
+    "edge_type": "exact_state_repeat",
+    "count": 19,
+    "videos": [
+      "graph_review_0016"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 4.4,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 7.7,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 12.2,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 15.7,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 20.6,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 23.8,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 28.2,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 31.4,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 36.1,
+        "from_segment": 9,
+        "to_segment": 10,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 40.2,
+        "from_segment": 10,
+        "to_segment": 11,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 44.8,
+        "from_segment": 11,
+        "to_segment": 12,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 48.5,
+        "from_segment": 12,
+        "to_segment": 13,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 52.4,
+        "from_segment": 13,
+        "to_segment": 14,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 55.9,
+        "from_segment": 14,
+        "to_segment": 15,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 60.8,
+        "from_segment": 15,
+        "to_segment": 16,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 64.9,
+        "from_segment": 16,
+        "to_segment": 17,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 69.1,
+        "from_segment": 17,
+        "to_segment": 18,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 73.0,
+        "from_segment": 18,
+        "to_segment": 19,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0016",
+        "at_s": 77.4,
+        "from_segment": 19,
+        "to_segment": 20,
+        "original_kind": "self_transition"
+      }
+    ],
+    "source_group_name": "移动水壶",
+    "target_group_name": "移动水壶"
+  },
+  {
+    "source_group": "pg_kitchenware_organization",
+    "target_group": "pg_kitchenware_organization",
+    "edge_type": "exact_state_repeat",
+    "count": 12,
+    "videos": [
+      "mosaic_graph_0006",
+      "mosaic_graph_0014",
+      "mosaic_graph_0019"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0006",
+        "at_s": 12.6,
+        "from_segment": 2,
+        "to_segment": 2,
+        "original_kind": "internal_repeat"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0014",
+        "at_s": 14.3,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0014",
+        "at_s": 23.1,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0014",
+        "at_s": 37.0,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0014",
+        "at_s": 64.7,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0014",
+        "at_s": 74.4,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0014",
+        "at_s": 84.0,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0014",
+        "at_s": 107.3,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0019",
+        "at_s": 79.2,
+        "from_segment": 5,
+        "to_segment": 5,
+        "original_kind": "internal_repeat"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0019",
+        "at_s": 13.0,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0019",
+        "at_s": 29.1,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0019",
+        "at_s": 54.7,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      }
+    ],
+    "source_group_name": "整理厨房餐具",
+    "target_group_name": "整理厨房餐具"
+  },
+  {
+    "source_group": "pg_kitchenware_organization",
+    "target_group": "pg_kitchenware_organization",
+    "edge_type": "intra_group_transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0019"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0019",
+        "at_s": 79.2,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "整理厨房餐具",
+    "target_group_name": "整理厨房餐具"
+  },
+  {
+    "source_group": "pg_kitchenware_organization",
+    "target_group": "pg_person_following",
+    "edge_type": "inter_group_transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0006"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0006",
+        "at_s": 19.0,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "整理厨房餐具",
+    "target_group_name": "跟随他人行走"
+  },
+  {
+    "source_group": "pg_machine_screw_adjustment",
+    "target_group": "pg_machine_screw_adjustment",
+    "edge_type": "exact_state_repeat",
+    "count": 3,
+    "videos": [
+      "mosaic_graph_0003"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0003",
+        "at_s": 0.0,
+        "from_segment": 1,
+        "to_segment": 1,
+        "original_kind": "internal_repeat"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0003",
+        "at_s": 54.3,
+        "from_segment": 3,
+        "to_segment": 3,
+        "original_kind": "internal_repeat"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0003",
+        "at_s": 99.6,
+        "from_segment": 5,
+        "to_segment": 5,
+        "original_kind": "internal_repeat"
+      }
+    ],
+    "source_group_name": "调整机器螺丝",
+    "target_group_name": "调整机器螺丝"
+  },
+  {
+    "source_group": "pg_machine_screw_adjustment",
+    "target_group": "pg_machine_screw_adjustment",
+    "edge_type": "intra_group_transition",
+    "count": 4,
+    "videos": [
+      "mosaic_graph_0003"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0003",
+        "at_s": 42.0,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0003",
+        "at_s": 54.3,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0003",
+        "at_s": 82.4,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0003",
+        "at_s": 99.6,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "调整机器螺丝",
+    "target_group_name": "调整机器螺丝"
+  },
+  {
+    "source_group": "pg_measuring_tape_operation",
+    "target_group": "pg_measuring_tape_operation",
+    "edge_type": "exact_state_repeat",
+    "count": 1,
+    "videos": [
+      "graph_review_0017"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0017",
+        "at_s": 0.0,
+        "from_segment": 1,
+        "to_segment": 1,
+        "original_kind": "internal_repeat"
+      }
+    ],
+    "source_group_name": "操作卷尺",
+    "target_group_name": "操作卷尺"
+  },
+  {
+    "source_group": "pg_metal_box_arrangement",
+    "target_group": "pg_metal_box_arrangement",
+    "edge_type": "intra_group_transition",
+    "count": 6,
+    "videos": [
+      "graph_review_0018"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0018",
+        "at_s": 5.7,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0018",
+        "at_s": 9.9,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0018",
+        "at_s": 23.0,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0018",
+        "at_s": 41.0,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0018",
+        "at_s": 55.5,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0018",
+        "at_s": 64.4,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "收放铁盒",
+    "target_group_name": "收放铁盒"
+  },
+  {
+    "source_group": "pg_motor_component_assembly",
+    "target_group": "pg_motor_component_assembly",
+    "edge_type": "exact_state_repeat",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0005"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0005",
+        "at_s": 0.0,
+        "from_segment": 1,
+        "to_segment": 1,
+        "original_kind": "internal_repeat"
+      }
+    ],
+    "source_group_name": "组装电机组件",
+    "target_group_name": "组装电机组件"
+  },
+  {
+    "source_group": "pg_paper_towel_handling",
+    "target_group": "pg_paper_towel_handling",
+    "edge_type": "exact_state_repeat",
+    "count": 5,
+    "videos": [
+      "graph_review_0006"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0006",
+        "at_s": 3.6,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0006",
+        "at_s": 22.7,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0006",
+        "at_s": 50.2,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0006",
+        "at_s": 70.9,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0006",
+        "at_s": 87.1,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "self_transition"
+      }
+    ],
+    "source_group_name": "整理纸巾",
+    "target_group_name": "整理纸巾"
+  },
+  {
+    "source_group": "pg_person_following",
+    "target_group": "pg_hot_water_collection",
+    "edge_type": "inter_group_transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0006"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0006",
+        "at_s": 30.5,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "跟随他人行走",
+    "target_group_name": "接取热水"
+  },
+  {
+    "source_group": "pg_phone_case_handling",
+    "target_group": "pg_phone_case_handling",
+    "edge_type": "intra_group_transition",
+    "count": 23,
+    "videos": [
+      "graph_review_0025"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 2.4,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 4.7,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 8.7,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 11.7,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 14.8,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 18.9,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 21.5,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 26.0,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 29.5,
+        "from_segment": 9,
+        "to_segment": 10,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 33.0,
+        "from_segment": 10,
+        "to_segment": 11,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 35.3,
+        "from_segment": 11,
+        "to_segment": 12,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 38.5,
+        "from_segment": 12,
+        "to_segment": 13,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 42.2,
+        "from_segment": 13,
+        "to_segment": 14,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 45.7,
+        "from_segment": 14,
+        "to_segment": 15,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 48.7,
+        "from_segment": 15,
+        "to_segment": 16,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 51.9,
+        "from_segment": 16,
+        "to_segment": 17,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 55.0,
+        "from_segment": 17,
+        "to_segment": 18,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 57.6,
+        "from_segment": 18,
+        "to_segment": 19,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 60.9,
+        "from_segment": 19,
+        "to_segment": 20,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 63.9,
+        "from_segment": 20,
+        "to_segment": 21,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 73.9,
+        "from_segment": 21,
+        "to_segment": 22,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 78.4,
+        "from_segment": 22,
+        "to_segment": 23,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0025",
+        "at_s": 80.7,
+        "from_segment": 23,
+        "to_segment": 24,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "装卸手机壳",
+    "target_group_name": "装卸手机壳"
+  },
+  {
+    "source_group": "pg_power_bank_inspection",
+    "target_group": "pg_power_bank_inspection",
+    "edge_type": "intra_group_transition",
+    "count": 21,
+    "videos": [
+      "graph_review_0004",
+      "graph_review_0009",
+      "graph_review_0023"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0004",
+        "at_s": 23.7,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0004",
+        "at_s": 33.3,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0004",
+        "at_s": 46.1,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0004",
+        "at_s": 55.4,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0004",
+        "at_s": 71.1,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0004",
+        "at_s": 83.4,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0009",
+        "at_s": 29.4,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0009",
+        "at_s": 36.6,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0009",
+        "at_s": 44.7,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0009",
+        "at_s": 55.0,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0009",
+        "at_s": 63.1,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0023",
+        "at_s": 12.1,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0023",
+        "at_s": 22.9,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0023",
+        "at_s": 37.6,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0023",
+        "at_s": 50.0,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0023",
+        "at_s": 57.5,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0023",
+        "at_s": 71.3,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0023",
+        "at_s": 84.5,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0023",
+        "at_s": 91.7,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0023",
+        "at_s": 108.0,
+        "from_segment": 9,
+        "to_segment": 10,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0023",
+        "at_s": 115.8,
+        "from_segment": 10,
+        "to_segment": 11,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "取放并检查充电宝",
+    "target_group_name": "取放并检查充电宝"
+  },
+  {
+    "source_group": "pg_robotic_arm_assembly",
+    "target_group": "pg_robotic_arm_assembly",
+    "edge_type": "exact_state_repeat",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0001"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0001",
+        "at_s": 6.0,
+        "from_segment": 2,
+        "to_segment": 2,
+        "original_kind": "internal_repeat"
+      }
+    ],
+    "source_group_name": "安装机械臂",
+    "target_group_name": "安装机械臂"
+  },
+  {
+    "source_group": "pg_router_cleaning",
+    "target_group": "pg_router_cleaning",
+    "edge_type": "exact_state_repeat",
+    "count": 1,
+    "videos": [
+      "graph_review_0014"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0014",
+        "at_s": 0.0,
+        "from_segment": 1,
+        "to_segment": 1,
+        "original_kind": "internal_repeat"
+      }
+    ],
+    "source_group_name": "清洁路由器",
+    "target_group_name": "清洁路由器"
+  },
+  {
+    "source_group": "pg_slipper_adjustment",
+    "target_group": "pg_slipper_adjustment",
+    "edge_type": "exact_state_repeat",
+    "count": 1,
+    "videos": [
+      "graph_review_0028"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0028",
+        "at_s": 0.0,
+        "from_segment": 1,
+        "to_segment": 1,
+        "original_kind": "internal_repeat"
+      }
+    ],
+    "source_group_name": "调整拖鞋位置",
+    "target_group_name": "调整拖鞋位置"
+  },
+  {
+    "source_group": "pg_slipper_storage",
+    "target_group": "pg_slipper_storage",
+    "edge_type": "intra_group_transition",
+    "count": 10,
+    "videos": [
+      "graph_review_0003",
+      "graph_review_0011"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0003",
+        "at_s": 10.4,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0003",
+        "at_s": 21.2,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0003",
+        "at_s": 32.2,
+        "from_segment": 9,
+        "to_segment": 10,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0003",
+        "at_s": 41.1,
+        "from_segment": 12,
+        "to_segment": 13,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0003",
+        "at_s": 52.4,
+        "from_segment": 15,
+        "to_segment": 16,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0003",
+        "at_s": 61.3,
+        "from_segment": 18,
+        "to_segment": 19,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0003",
+        "at_s": 71.3,
+        "from_segment": 21,
+        "to_segment": 22,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0011",
+        "at_s": 4.2,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0011",
+        "at_s": 12.6,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0011",
+        "at_s": 20.3,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "收放拖鞋",
+    "target_group_name": "收放拖鞋"
+  },
+  {
+    "source_group": "pg_spring_machine_loading",
+    "target_group": "pg_spring_machine_loading",
+    "edge_type": "exact_state_repeat",
+    "count": 31,
+    "videos": [
+      "mosaic_graph_0011"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 4.9,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 6.7,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 10.0,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 13.4,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 17.6,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 18.9,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 22.1,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 23.6,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 36.3,
+        "from_segment": 9,
+        "to_segment": 10,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 38.1,
+        "from_segment": 10,
+        "to_segment": 11,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 46.6,
+        "from_segment": 11,
+        "to_segment": 12,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 47.5,
+        "from_segment": 12,
+        "to_segment": 13,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 48.6,
+        "from_segment": 13,
+        "to_segment": 14,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 51.1,
+        "from_segment": 14,
+        "to_segment": 15,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 53.4,
+        "from_segment": 15,
+        "to_segment": 16,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 56.6,
+        "from_segment": 16,
+        "to_segment": 17,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 63.5,
+        "from_segment": 17,
+        "to_segment": 18,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 65.0,
+        "from_segment": 18,
+        "to_segment": 19,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 75.4,
+        "from_segment": 19,
+        "to_segment": 20,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 77.1,
+        "from_segment": 20,
+        "to_segment": 21,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 79.8,
+        "from_segment": 21,
+        "to_segment": 22,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 82.7,
+        "from_segment": 22,
+        "to_segment": 23,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 92.5,
+        "from_segment": 23,
+        "to_segment": 24,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 93.9,
+        "from_segment": 24,
+        "to_segment": 25,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 100.1,
+        "from_segment": 25,
+        "to_segment": 26,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 101.5,
+        "from_segment": 26,
+        "to_segment": 27,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 103.6,
+        "from_segment": 27,
+        "to_segment": 28,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 109.1,
+        "from_segment": 28,
+        "to_segment": 29,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 110.5,
+        "from_segment": 29,
+        "to_segment": 30,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 115.3,
+        "from_segment": 30,
+        "to_segment": 31,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0011",
+        "at_s": 116.6,
+        "from_segment": 31,
+        "to_segment": 32,
+        "original_kind": "self_transition"
+      }
+    ],
+    "source_group_name": "向机器投放弹簧",
+    "target_group_name": "向机器投放弹簧"
+  },
+  {
+    "source_group": "pg_support_item_retrieval",
+    "target_group": "pg_fan_disassembly",
+    "edge_type": "inter_group_transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0002"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0002",
+        "at_s": 96.7,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "取用辅助物品",
+    "target_group_name": "拆卸风扇"
+  },
+  {
+    "source_group": "pg_surface_cleaning",
+    "target_group": "pg_kitchenware_organization",
+    "edge_type": "inter_group_transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0006"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0006",
+        "at_s": 12.6,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "清洁表面",
+    "target_group_name": "整理厨房餐具"
+  },
+  {
+    "source_group": "pg_surface_cleaning",
+    "target_group": "pg_surface_cleaning",
+    "edge_type": "exact_state_repeat",
+    "count": 5,
+    "videos": [
+      "graph_review_0002",
+      "graph_review_0007",
+      "mosaic_graph_0006",
+      "mosaic_graph_0024"
+    ],
+    "batches": [
+      "mosaic_complement",
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0002",
+        "at_s": 7.4,
+        "from_segment": 4,
+        "to_segment": 4,
+        "original_kind": "internal_repeat"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0007",
+        "at_s": 8.4,
+        "from_segment": 4,
+        "to_segment": 4,
+        "original_kind": "internal_repeat"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0007",
+        "at_s": 54.8,
+        "from_segment": 8,
+        "to_segment": 8,
+        "original_kind": "internal_repeat"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0006",
+        "at_s": 0.0,
+        "from_segment": 1,
+        "to_segment": 1,
+        "original_kind": "internal_repeat"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0024",
+        "at_s": 5.0,
+        "from_segment": 2,
+        "to_segment": 2,
+        "original_kind": "internal_repeat"
+      }
+    ],
+    "source_group_name": "清洁表面",
+    "target_group_name": "清洁表面"
+  },
+  {
+    "source_group": "pg_surface_cleaning",
+    "target_group": "pg_surface_cleaning",
+    "edge_type": "intra_group_transition",
+    "count": 25,
+    "videos": [
+      "graph_review_0002",
+      "graph_review_0007",
+      "graph_review_0030",
+      "mosaic_graph_0024"
+    ],
+    "batches": [
+      "mosaic_complement",
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0002",
+        "at_s": 3.0,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0002",
+        "at_s": 5.0,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0002",
+        "at_s": 7.4,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0002",
+        "at_s": 58.7,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0002",
+        "at_s": 61.5,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0002",
+        "at_s": 65.6,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0002",
+        "at_s": 69.8,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0002",
+        "at_s": 119.3,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0002",
+        "at_s": 123.6,
+        "from_segment": 9,
+        "to_segment": 10,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0007",
+        "at_s": 3.2,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0007",
+        "at_s": 5.5,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0007",
+        "at_s": 8.4,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0007",
+        "at_s": 46.8,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0007",
+        "at_s": 49.8,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0007",
+        "at_s": 52.6,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0007",
+        "at_s": 54.8,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0007",
+        "at_s": 97.8,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0007",
+        "at_s": 101.3,
+        "from_segment": 9,
+        "to_segment": 10,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0030",
+        "at_s": 34.9,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0030",
+        "at_s": 38.6,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0030",
+        "at_s": 42.0,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0030",
+        "at_s": 45.8,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0030",
+        "at_s": 93.5,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0030",
+        "at_s": 95.8,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0024",
+        "at_s": 5.0,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "清洁表面",
+    "target_group_name": "清洁表面"
+  },
+  {
+    "source_group": "pg_tablecloth_delivery",
+    "target_group": "pg_cart_organization",
+    "edge_type": "inter_group_transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0030"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0030",
+        "at_s": 39.0,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "运送桌布",
+    "target_group_name": "整理推车"
+  },
+  {
+    "source_group": "pg_tablecloth_delivery",
+    "target_group": "pg_tablecloth_delivery",
+    "edge_type": "intra_group_transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0030"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0030",
+        "at_s": 19.1,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "运送桌布",
+    "target_group_name": "运送桌布"
+  },
+  {
+    "source_group": "pg_tableware_washing",
+    "target_group": "pg_tableware_washing",
+    "edge_type": "exact_state_repeat",
+    "count": 8,
+    "videos": [
+      "mosaic_graph_0023"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0023",
+        "at_s": 38.5,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0023",
+        "at_s": 49.4,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0023",
+        "at_s": 64.1,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0023",
+        "at_s": 72.4,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0023",
+        "at_s": 83.0,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0023",
+        "at_s": 92.8,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0023",
+        "at_s": 102.6,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0023",
+        "at_s": 112.2,
+        "from_segment": 9,
+        "to_segment": 10,
+        "original_kind": "self_transition"
+      }
+    ],
+    "source_group_name": "清洗餐具",
+    "target_group_name": "清洗餐具"
+  },
+  {
+    "source_group": "pg_tableware_washing",
+    "target_group": "pg_tableware_washing",
+    "edge_type": "intra_group_transition",
+    "count": 17,
+    "videos": [
+      "graph_review_0012",
+      "graph_review_0022",
+      "graph_review_0027"
+    ],
+    "batches": [
+      "repeated_actions"
+    ],
+    "provenance": [
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0012",
+        "at_s": 10.7,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0012",
+        "at_s": 17.5,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0022",
+        "at_s": 28.8,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0022",
+        "at_s": 37.0,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0022",
+        "at_s": 44.0,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0022",
+        "at_s": 45.7,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0022",
+        "at_s": 47.6,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0022",
+        "at_s": 55.3,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0022",
+        "at_s": 76.5,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0027",
+        "at_s": 2.4,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0027",
+        "at_s": 30.6,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0027",
+        "at_s": 42.8,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0027",
+        "at_s": 45.3,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0027",
+        "at_s": 47.8,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0027",
+        "at_s": 51.2,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0027",
+        "at_s": 59.2,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "repeated_actions",
+        "video_id": "graph_review_0027",
+        "at_s": 92.8,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "清洗餐具",
+    "target_group_name": "清洗餐具"
+  },
+  {
+    "source_group": "pg_tea_portioning",
+    "target_group": "pg_tea_portioning",
+    "edge_type": "intra_group_transition",
+    "count": 7,
+    "videos": [
+      "mosaic_graph_0022"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0022",
+        "at_s": 8.5,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0022",
+        "at_s": 25.0,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0022",
+        "at_s": 51.8,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0022",
+        "at_s": 68.5,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0022",
+        "at_s": 98.7,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0022",
+        "at_s": 102.7,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0022",
+        "at_s": 109.3,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "茶叶分装与称量",
+    "target_group_name": "茶叶分装与称量"
+  },
+  {
+    "source_group": "pg_wire_harness_quality_check",
+    "target_group": "pg_wire_harness_quality_check",
+    "edge_type": "exact_state_repeat",
+    "count": 2,
+    "videos": [
+      "mosaic_graph_0004"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0004",
+        "at_s": 0.0,
+        "from_segment": 1,
+        "to_segment": 1,
+        "original_kind": "internal_repeat"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0004",
+        "at_s": 102.0,
+        "from_segment": 2,
+        "to_segment": 2,
+        "original_kind": "internal_repeat"
+      }
+    ],
+    "source_group_name": "线束清理与称量",
+    "target_group_name": "线束清理与称量"
+  },
+  {
+    "source_group": "pg_wire_harness_quality_check",
+    "target_group": "pg_wire_harness_quality_check",
+    "edge_type": "intra_group_transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0004"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0004",
+        "at_s": 102.0,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "线束清理与称量",
+    "target_group_name": "线束清理与称量"
+  },
+  {
+    "source_group": "pg_wire_harness_tie_processing",
+    "target_group": "pg_wire_harness_tie_processing",
+    "edge_type": "exact_state_repeat",
+    "count": 10,
+    "videos": [
+      "mosaic_graph_0008"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0008",
+        "at_s": 8.8,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0008",
+        "at_s": 16.7,
+        "from_segment": 2,
+        "to_segment": 3,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0008",
+        "at_s": 22.8,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0008",
+        "at_s": 28.6,
+        "from_segment": 4,
+        "to_segment": 5,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0008",
+        "at_s": 56.9,
+        "from_segment": 7,
+        "to_segment": 8,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0008",
+        "at_s": 62.5,
+        "from_segment": 8,
+        "to_segment": 9,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0008",
+        "at_s": 74.6,
+        "from_segment": 9,
+        "to_segment": 10,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0008",
+        "at_s": 88.0,
+        "from_segment": 10,
+        "to_segment": 11,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0008",
+        "at_s": 97.7,
+        "from_segment": 11,
+        "to_segment": 12,
+        "original_kind": "self_transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0008",
+        "at_s": 116.4,
+        "from_segment": 12,
+        "to_segment": 13,
+        "original_kind": "self_transition"
+      }
+    ],
+    "source_group_name": "处理线束扎带",
+    "target_group_name": "处理线束扎带"
+  },
+  {
+    "source_group": "pg_wire_harness_tie_processing",
+    "target_group": "pg_wire_harness_tie_processing",
+    "edge_type": "intra_group_transition",
+    "count": 2,
+    "videos": [
+      "mosaic_graph_0008"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0008",
+        "at_s": 36.8,
+        "from_segment": 5,
+        "to_segment": 6,
+        "original_kind": "transition"
+      },
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0008",
+        "at_s": 43.1,
+        "from_segment": 6,
+        "to_segment": 7,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "处理线束扎带",
+    "target_group_name": "处理线束扎带"
+  },
+  {
+    "source_group": "pg_wire_terminal_processing",
+    "target_group": "pg_wire_terminal_processing",
+    "edge_type": "exact_state_repeat",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0007"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0007",
+        "at_s": 27.6,
+        "from_segment": 2,
+        "to_segment": 2,
+        "original_kind": "internal_repeat"
+      }
+    ],
+    "source_group_name": "加工电线接线端",
+    "target_group_name": "加工电线接线端"
+  },
+  {
+    "source_group": "pg_wire_terminal_processing",
+    "target_group": "pg_wire_terminal_processing",
+    "edge_type": "intra_group_transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0007"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0007",
+        "at_s": 27.6,
+        "from_segment": 1,
+        "to_segment": 2,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "加工电线接线端",
+    "target_group_name": "加工电线接线端"
+  },
+  {
+    "source_group": "pg_work_documentation",
+    "target_group": "pg_electrical_assembly",
+    "edge_type": "inter_group_transition",
+    "count": 1,
+    "videos": [
+      "mosaic_graph_0020"
+    ],
+    "batches": [
+      "mosaic_complement"
+    ],
+    "provenance": [
+      {
+        "batch_id": "mosaic_complement",
+        "video_id": "mosaic_graph_0020",
+        "at_s": 73.2,
+        "from_segment": 3,
+        "to_segment": 4,
+        "original_kind": "transition"
+      }
+    ],
+    "source_group_name": "查看并记录工作信息",
+    "target_group_name": "组装线缆测试组件"
+  }
+]

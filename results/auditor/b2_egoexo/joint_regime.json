@@ -1,0 +1,87 @@
+{
+  "min_hist": 3,
+  "rows": [
+    {
+      "label": "内部 release（人工合同、强制 id 复用）",
+      "n_units": 49,
+      "n_decisions": 322,
+      "p_support": 0.6366459627329193,
+      "hit_given_support": 0.9560975609756097,
+      "p_S_ge_2": 0.034161490683229816,
+      "n_S_ge_2": 11,
+      "n_vacuous": 9,
+      "p_g_branch": 0.006211180124223602,
+      "g_branch": 2,
+      "g_simple": 194,
+      "g_novel": 9,
+      "novel_per_branch": 4.5,
+      "S_dist": {
+        "0": 117,
+        "1": 194,
+        "2": 11
+      }
+    },
+    {
+      "label": "人工粗标 egoexo_b2_coarse",
+      "n_units": 20,
+      "n_decisions": 54,
+      "p_support": 0.07407407407407407,
+      "hit_given_support": 0.0,
+      "p_S_ge_2": 0.0,
+      "n_S_ge_2": 0,
+      "n_vacuous": 0,
+      "p_g_branch": 0.0,
+      "g_branch": 0,
+      "g_simple": 4,
+      "g_novel": 4,
+      "novel_per_branch": null,
+      "S_dist": {
+        "0": 50,
+        "1": 4
+      }
+    },
+    {
+      "label": "Ego-Exo4D keystep cooking",
+      "n_units": 20,
+      "n_decisions": 240,
+      "p_support": 0.15833333333333333,
+      "hit_given_support": 0.10526315789473684,
+      "p_S_ge_2": 0.0375,
+      "n_S_ge_2": 9,
+      "n_vacuous": 0,
+      "p_g_branch": 0.0375,
+      "g_branch": 9,
+      "g_simple": 29,
+      "g_novel": 34,
+      "novel_per_branch": 3.7777777777777777,
+      "S_dist": {
+        "0": 202,
+        "1": 29,
+        "2": 8,
+        "3": 1
+      }
+    },
+    {
+      "label": "Ego-Exo4D keystep antigen",
+      "n_units": 30,
+      "n_decisions": 356,
+      "p_support": 0.19101123595505617,
+      "hit_given_support": 0.10294117647058823,
+      "p_S_ge_2": 0.047752808988764044,
+      "n_S_ge_2": 17,
+      "n_vacuous": 0,
+      "p_g_branch": 0.047752808988764044,
+      "g_branch": 17,
+      "g_simple": 51,
+      "g_novel": 61,
+      "novel_per_branch": 3.588235294117647,
+      "S_dist": {
+        "0": 288,
+        "1": 51,
+        "2": 12,
+        "3": 4,
+        "4": 1
+      }
+    }
+  ]
+}

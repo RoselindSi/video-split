@@ -1,0 +1,640 @@
+{
+  "schema_version": "interaction_graph_timeline_offline_export_v1",
+  "annotator": "qwen_5fold_mock",
+  "batch_id": "interaction_graph_blind30_v2",
+  "fold_schema": "interaction_graph_qwen_5fold_v1",
+  "fold_seed": "interaction-graph-qwen-5fold-v1-2026-09-22",
+  "n_videos": 30,
+  "videos": [
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0001",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 120.0,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0002",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 120.0,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0003",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 120.0,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0004",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 120.0,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0005",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 120.0,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0006",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 120.0,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0007",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 120.0,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0008",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 120.0,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0009",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 120.0,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0010",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 103.3,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0011",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 120.0,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0012",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 120.0,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0013",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 120.0,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0014",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 120.0,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0015",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 31.033,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0016",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 120.0,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0017",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 65.067,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0018",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 120.0,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0019",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 120.0,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0020",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 120.0,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0021",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 120.0,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0022",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 120.0,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0023",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 120.0,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0024",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 120.0,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0025",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 120.0,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0026",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 112.0,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0027",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 120.0,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0028",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 120.0,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0029",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 120.0,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    },
+    {
+      "schema_version": "interaction_graph_timeline_v1",
+      "video_id": "blind_graph_0030",
+      "events": [
+        {
+          "event_id": "A",
+          "description": "mock only"
+        }
+      ],
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 120.0,
+          "event_id": "A",
+          "repeats_within_segment": false,
+          "note": ""
+        }
+      ],
+      "confirmed_full_video": true,
+      "status": "final"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "schema_version": "interaction_graph_timeline_v1",
+  "video_id": "mosaic_graph_0009",
+  "events": [
+    {
+      "event_id": "A",
+      "description": "跟随前面的人走路"
+    }
+  ],
+  "segments": [
+    {
+      "start_s": 0.0,
+      "end_s": 42.467,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    }
+  ],
+  "confirmed_full_video": true,
+  "manifest_sha256": "13ec96fbbfb20eba2cc431ddb116eaa964d95590461b309ef4e3430a91446700",
+  "annotator": "reviewer_1",
+  "saved_at": "2026-09-20T08:29:47.525237+00:00",
+  "status": "final",
+  "graph": {
+    "nodes": [
+      {
+        "event_id": "A",
+        "description": "跟随前面的人走路",
+        "segment_count": 1,
+        "total_duration_s": 42.467,
+        "segment_indices": [
+          1
+        ]
+      }
+    ],
+    "edges": [],
+    "edge_occurrences": [],
+    "event_sequence": [
+      "A"
+    ]
+  }
+}

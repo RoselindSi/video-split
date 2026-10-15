@@ -1,0 +1,476 @@
+{
+  "schema_version": "interaction_graph_timeline_v1",
+  "video_id": "graph_review_0003",
+  "events": [
+    {
+      "event_id": "A",
+      "description": "收拖鞋"
+    },
+    {
+      "event_id": "B",
+      "description": "idle"
+    },
+    {
+      "event_id": "C",
+      "description": "放拖鞋"
+    }
+  ],
+  "segments": [
+    {
+      "start_s": 0.0,
+      "end_s": 3.1,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 3.1,
+      "end_s": 7.8,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 7.8,
+      "end_s": 10.4,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 10.4,
+      "end_s": 13.3,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 13.3,
+      "end_s": 18.2,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 18.2,
+      "end_s": 21.2,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 21.2,
+      "end_s": 24.2,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 24.2,
+      "end_s": 30.5,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 30.5,
+      "end_s": 32.2,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 32.2,
+      "end_s": 33.4,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 33.4,
+      "end_s": 37.3,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 37.3,
+      "end_s": 41.1,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 41.1,
+      "end_s": 44.0,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 44.0,
+      "end_s": 49.9,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 49.9,
+      "end_s": 52.4,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 52.4,
+      "end_s": 54.8,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 54.8,
+      "end_s": 60.4,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 60.4,
+      "end_s": 61.3,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 61.3,
+      "end_s": 63.4,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 63.4,
+      "end_s": 69.9,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 69.9,
+      "end_s": 71.3,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 71.3,
+      "end_s": 74.0,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    }
+  ],
+  "confirmed_full_video": true,
+  "manifest_sha256": "158a3af90dc1e7636fbcb54fd483b4113259e65dc5c60b0bc61dd9c39b4c9b29",
+  "annotator": "reviewer_1",
+  "saved_at": "2026-09-19T03:27:32.629203+00:00",
+  "status": "draft",
+  "graph": {
+    "nodes": [
+      {
+        "event_id": "A",
+        "description": "收拖鞋",
+        "segment_count": 8,
+        "total_duration_s": 20.3,
+        "segment_indices": [
+          1,
+          4,
+          7,
+          10,
+          13,
+          16,
+          19,
+          22
+        ]
+      },
+      {
+        "event_id": "B",
+        "description": "idle",
+        "segment_count": 7,
+        "total_duration_s": 37.8,
+        "segment_indices": [
+          2,
+          5,
+          8,
+          11,
+          14,
+          17,
+          20
+        ]
+      },
+      {
+        "event_id": "C",
+        "description": "放拖鞋",
+        "segment_count": 7,
+        "total_duration_s": 15.9,
+        "segment_indices": [
+          3,
+          6,
+          9,
+          12,
+          15,
+          18,
+          21
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "source": "A",
+        "target": "B",
+        "count": 7,
+        "kinds": {
+          "transition": 7
+        },
+        "times_s": [
+          3.1,
+          13.3,
+          24.2,
+          33.4,
+          44.0,
+          54.8,
+          63.4
+        ]
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "count": 7,
+        "kinds": {
+          "transition": 7
+        },
+        "times_s": [
+          7.8,
+          18.2,
+          30.5,
+          37.3,
+          49.9,
+          60.4,
+          69.9
+        ]
+      },
+      {
+        "source": "C",
+        "target": "A",
+        "count": 7,
+        "kinds": {
+          "transition": 7
+        },
+        "times_s": [
+          10.4,
+          21.2,
+          32.2,
+          41.1,
+          52.4,
+          61.3,
+          71.3
+        ]
+      }
+    ],
+    "edge_occurrences": [
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 3.1,
+        "from_segment": 1,
+        "to_segment": 2
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 7.8,
+        "from_segment": 2,
+        "to_segment": 3
+      },
+      {
+        "source": "C",
+        "target": "A",
+        "kind": "transition",
+        "at_s": 10.4,
+        "from_segment": 3,
+        "to_segment": 4
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 13.3,
+        "from_segment": 4,
+        "to_segment": 5
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 18.2,
+        "from_segment": 5,
+        "to_segment": 6
+      },
+      {
+        "source": "C",
+        "target": "A",
+        "kind": "transition",
+        "at_s": 21.2,
+        "from_segment": 6,
+        "to_segment": 7
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 24.2,
+        "from_segment": 7,
+        "to_segment": 8
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 30.5,
+        "from_segment": 8,
+        "to_segment": 9
+      },
+      {
+        "source": "C",
+        "target": "A",
+        "kind": "transition",
+        "at_s": 32.2,
+        "from_segment": 9,
+        "to_segment": 10
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 33.4,
+        "from_segment": 10,
+        "to_segment": 11
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 37.3,
+        "from_segment": 11,
+        "to_segment": 12
+      },
+      {
+        "source": "C",
+        "target": "A",
+        "kind": "transition",
+        "at_s": 41.1,
+        "from_segment": 12,
+        "to_segment": 13
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 44.0,
+        "from_segment": 13,
+        "to_segment": 14
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 49.9,
+        "from_segment": 14,
+        "to_segment": 15
+      },
+      {
+        "source": "C",
+        "target": "A",
+        "kind": "transition",
+        "at_s": 52.4,
+        "from_segment": 15,
+        "to_segment": 16
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 54.8,
+        "from_segment": 16,
+        "to_segment": 17
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 60.4,
+        "from_segment": 17,
+        "to_segment": 18
+      },
+      {
+        "source": "C",
+        "target": "A",
+        "kind": "transition",
+        "at_s": 61.3,
+        "from_segment": 18,
+        "to_segment": 19
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 63.4,
+        "from_segment": 19,
+        "to_segment": 20
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 69.9,
+        "from_segment": 20,
+        "to_segment": 21
+      },
+      {
+        "source": "C",
+        "target": "A",
+        "kind": "transition",
+        "at_s": 71.3,
+        "from_segment": 21,
+        "to_segment": 22
+      }
+    ],
+    "event_sequence": [
+      "A",
+      "B",
+      "C",
+      "A",
+      "B",
+      "C",
+      "A",
+      "B",
+      "C",
+      "A",
+      "B",
+      "C",
+      "A",
+      "B",
+      "C",
+      "A",
+      "B",
+      "C",
+      "A",
+      "B",
+      "C",
+      "A"
+    ]
+  }
+}

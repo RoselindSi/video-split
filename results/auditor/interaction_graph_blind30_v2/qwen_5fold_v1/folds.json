@@ -1,0 +1,273 @@
+{
+  "schema_version": "interaction_graph_qwen_5fold_v1",
+  "seed": "interaction-graph-qwen-5fold-v1-2026-09-22",
+  "n_folds": 5,
+  "n_videos": 30,
+  "folds": [
+    {
+      "fold": 0,
+      "test_video_ids": [
+        "blind_graph_0007",
+        "blind_graph_0011",
+        "blind_graph_0016",
+        "blind_graph_0018",
+        "blind_graph_0020",
+        "blind_graph_0029"
+      ],
+      "train_video_ids": [
+        "blind_graph_0001",
+        "blind_graph_0002",
+        "blind_graph_0003",
+        "blind_graph_0004",
+        "blind_graph_0005",
+        "blind_graph_0006",
+        "blind_graph_0008",
+        "blind_graph_0009",
+        "blind_graph_0010",
+        "blind_graph_0012",
+        "blind_graph_0013",
+        "blind_graph_0014",
+        "blind_graph_0015",
+        "blind_graph_0017",
+        "blind_graph_0019",
+        "blind_graph_0021",
+        "blind_graph_0022",
+        "blind_graph_0023",
+        "blind_graph_0024",
+        "blind_graph_0025",
+        "blind_graph_0026",
+        "blind_graph_0027",
+        "blind_graph_0028",
+        "blind_graph_0030"
+      ],
+      "test_strata": {
+        "medium": 2,
+        "high": 2,
+        "low": 2
+      },
+      "demo_video_ids": [
+        "blind_graph_0010",
+        "blind_graph_0009",
+        "blind_graph_0002",
+        "blind_graph_0023",
+        "blind_graph_0027",
+        "blind_graph_0005",
+        "blind_graph_0012",
+        "blind_graph_0003"
+      ]
+    },
+    {
+      "fold": 1,
+      "test_video_ids": [
+        "blind_graph_0012",
+        "blind_graph_0017",
+        "blind_graph_0022",
+        "blind_graph_0023",
+        "blind_graph_0026",
+        "blind_graph_0028"
+      ],
+      "train_video_ids": [
+        "blind_graph_0001",
+        "blind_graph_0002",
+        "blind_graph_0003",
+        "blind_graph_0004",
+        "blind_graph_0005",
+        "blind_graph_0006",
+        "blind_graph_0007",
+        "blind_graph_0008",
+        "blind_graph_0009",
+        "blind_graph_0010",
+        "blind_graph_0011",
+        "blind_graph_0013",
+        "blind_graph_0014",
+        "blind_graph_0015",
+        "blind_graph_0016",
+        "blind_graph_0018",
+        "blind_graph_0019",
+        "blind_graph_0020",
+        "blind_graph_0021",
+        "blind_graph_0024",
+        "blind_graph_0025",
+        "blind_graph_0027",
+        "blind_graph_0029",
+        "blind_graph_0030"
+      ],
+      "test_strata": {
+        "high": 2,
+        "medium": 2,
+        "low": 2
+      },
+      "demo_video_ids": [
+        "blind_graph_0016",
+        "blind_graph_0009",
+        "blind_graph_0027",
+        "blind_graph_0006",
+        "blind_graph_0002",
+        "blind_graph_0001",
+        "blind_graph_0015",
+        "blind_graph_0025"
+      ]
+    },
+    {
+      "fold": 2,
+      "test_video_ids": [
+        "blind_graph_0001",
+        "blind_graph_0003",
+        "blind_graph_0008",
+        "blind_graph_0014",
+        "blind_graph_0025",
+        "blind_graph_0030"
+      ],
+      "train_video_ids": [
+        "blind_graph_0002",
+        "blind_graph_0004",
+        "blind_graph_0005",
+        "blind_graph_0006",
+        "blind_graph_0007",
+        "blind_graph_0009",
+        "blind_graph_0010",
+        "blind_graph_0011",
+        "blind_graph_0012",
+        "blind_graph_0013",
+        "blind_graph_0015",
+        "blind_graph_0016",
+        "blind_graph_0017",
+        "blind_graph_0018",
+        "blind_graph_0019",
+        "blind_graph_0020",
+        "blind_graph_0021",
+        "blind_graph_0022",
+        "blind_graph_0023",
+        "blind_graph_0024",
+        "blind_graph_0026",
+        "blind_graph_0027",
+        "blind_graph_0028",
+        "blind_graph_0029"
+      ],
+      "test_strata": {
+        "low": 2,
+        "high": 2,
+        "medium": 2
+      },
+      "demo_video_ids": [
+        "blind_graph_0016",
+        "blind_graph_0004",
+        "blind_graph_0024",
+        "blind_graph_0021",
+        "blind_graph_0017",
+        "blind_graph_0007",
+        "blind_graph_0028",
+        "blind_graph_0026"
+      ]
+    },
+    {
+      "fold": 3,
+      "test_video_ids": [
+        "blind_graph_0002",
+        "blind_graph_0004",
+        "blind_graph_0009",
+        "blind_graph_0019",
+        "blind_graph_0021",
+        "blind_graph_0024"
+      ],
+      "train_video_ids": [
+        "blind_graph_0001",
+        "blind_graph_0003",
+        "blind_graph_0005",
+        "blind_graph_0006",
+        "blind_graph_0007",
+        "blind_graph_0008",
+        "blind_graph_0010",
+        "blind_graph_0011",
+        "blind_graph_0012",
+        "blind_graph_0013",
+        "blind_graph_0014",
+        "blind_graph_0015",
+        "blind_graph_0016",
+        "blind_graph_0017",
+        "blind_graph_0018",
+        "blind_graph_0020",
+        "blind_graph_0022",
+        "blind_graph_0023",
+        "blind_graph_0025",
+        "blind_graph_0026",
+        "blind_graph_0027",
+        "blind_graph_0028",
+        "blind_graph_0029",
+        "blind_graph_0030"
+      ],
+      "test_strata": {
+        "medium": 2,
+        "low": 2,
+        "high": 2
+      },
+      "demo_video_ids": [
+        "blind_graph_0016",
+        "blind_graph_0008",
+        "blind_graph_0012",
+        "blind_graph_0007",
+        "blind_graph_0013",
+        "blind_graph_0025",
+        "blind_graph_0026",
+        "blind_graph_0029"
+      ]
+    },
+    {
+      "fold": 4,
+      "test_video_ids": [
+        "blind_graph_0005",
+        "blind_graph_0006",
+        "blind_graph_0010",
+        "blind_graph_0013",
+        "blind_graph_0015",
+        "blind_graph_0027"
+      ],
+      "train_video_ids": [
+        "blind_graph_0001",
+        "blind_graph_0002",
+        "blind_graph_0003",
+        "blind_graph_0004",
+        "blind_graph_0007",
+        "blind_graph_0008",
+        "blind_graph_0009",
+        "blind_graph_0011",
+        "blind_graph_0012",
+        "blind_graph_0014",
+        "blind_graph_0016",
+        "blind_graph_0017",
+        "blind_graph_0018",
+        "blind_graph_0019",
+        "blind_graph_0020",
+        "blind_graph_0021",
+        "blind_graph_0022",
+        "blind_graph_0023",
+        "blind_graph_0024",
+        "blind_graph_0025",
+        "blind_graph_0026",
+        "blind_graph_0028",
+        "blind_graph_0029",
+        "blind_graph_0030"
+      ],
+      "test_strata": {
+        "low": 2,
+        "medium": 2,
+        "high": 2
+      },
+      "demo_video_ids": [
+        "blind_graph_0016",
+        "blind_graph_0009",
+        "blind_graph_0030",
+        "blind_graph_0019",
+        "blind_graph_0021",
+        "blind_graph_0028",
+        "blind_graph_0002",
+        "blind_graph_0025"
+      ]
+    }
+  ],
+  "manifest": "/Users/roselindsi/Documents/GitHub/video-split/results/auditor/interaction_graph_blind30_v2/manifest.json",
+  "manifest_sha256": "9cd7d33e36af2284ebe7277b32ba78f82764afc567e63fa3764862ff0142e30c",
+  "gold": "/Users/roselindsi/Documents/GitHub/video-split/results/auditor/interaction_graph_blind30_v2/human/reviewer_1_final.json",
+  "gold_sha256": "836a641e8fa6d9369a4b274b823ca9ffa327955e1a2db46479d2937e6a696aaa",
+  "max_demos_per_fold": 8
+}

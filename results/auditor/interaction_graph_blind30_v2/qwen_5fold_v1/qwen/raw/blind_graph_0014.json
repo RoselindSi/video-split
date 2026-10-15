@@ -1,0 +1,135 @@
+{
+  "schema_version": "interaction_graph_qwen_5fold_v1",
+  "video_id": "blind_graph_0014",
+  "fold": 2,
+  "test_video_ids": [
+    "blind_graph_0001",
+    "blind_graph_0003",
+    "blind_graph_0008",
+    "blind_graph_0014",
+    "blind_graph_0025",
+    "blind_graph_0030"
+  ],
+  "demo_video_ids": [
+    "blind_graph_0016",
+    "blind_graph_0004",
+    "blind_graph_0024",
+    "blind_graph_0021",
+    "blind_graph_0017",
+    "blind_graph_0007",
+    "blind_graph_0028",
+    "blind_graph_0026"
+  ],
+  "target_gold_was_in_prompt": false,
+  "backend": "qwen",
+  "model_id": "/workspace/tr1/ckpts/Qwen3-VL-8B-Instruct",
+  "fps": 1.0,
+  "passes": 2,
+  "raw_passes": [
+    "{\"events\":[{\"event_id\":\"A\",\"description\":\"搬运金属板\"},{\"event_id\":\"B\",\"description\":\"在工作台放置金属板\"},{\"event_id\":\"C\",\"description\":\"搬运纸箱\"},{\"event_id\":\"D\",\"description\":\"在电脑上操作\"},{\"event_id\":\"E\",\"description\":\"打开纸箱\"},{\"event_id\":\"F\",\"description\":\"取出并整理金属板\"},{\"event_id\":\"G\",\"description\":\"整理纸箱内物品\"}],\"segments\":[{\"start_s\":0.0,\"end_s\":12.3,\"event_id\":\"A\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":12.3,\"end_s\":16.7,\"event_id\":\"B\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":16.7,\"end_s\":28.0,\"event_id\":\"C\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":28.0,\"end_s\":45.0,\"event_id\":\"D\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":45.0,\"end_s\":53.0,\"event_id\":\"E\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":53.0,\"end_s\":100.0,\"event_id\":\"F\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":100.0,\"end_s\":120.0,\"event_id\":\"G\",\"repeats_within_segment\":false,\"note\":\"\"}]}",
+    "{\"events\":[{\"event_id\":\"A\",\"description\":\"搬运金属板\"},{\"event_id\":\"B\",\"description\":\"在工作台放置金属板\"},{\"event_id\":\"C\",\"description\":\"搬运纸箱\"},{\"event_id\":\"D\",\"description\":\"在电脑上操作\"},{\"event_id\":\"E\",\"description\":\"打开纸箱\"},{\"event_id\":\"F\",\"description\":\"取出并整理金属板\"},{\"event_id\":\"G\",\"description\":\"整理纸箱内物品\"}],\"segments\":[{\"start_s\":0.0,\"end_s\":4.0,\"event_id\":\"A\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":4.0,\"end_s\":12.3,\"event_id\":\"A\",\"repeats_within_segment\":true,\"note\":\"\"},{\"start_s\":12.3,\"end_s\":16.7,\"event_id\":\"B\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":16.7,\"end_s\":28.0,\"event_id\":\"C\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":28.0,\"end_s\":45.0,\"event_id\":\"D\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":45.0,\"end_s\":53.0,\"event_id\":\"E\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":53.0,\"end_s\":79.0,\"event_id\":\"F\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":79.0,\"end_s\":100.0,\"event_id\":\"G\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":100.0,\"end_s\":120.0,\"event_id\":\"G\",\"repeats_within_segment\":true,\"note\":\"\"}],\"confirmed_full_video\":true,\"status\":\"final\"}"
+  ],
+  "used_pass": 2,
+  "prediction": {
+    "schema_version": "interaction_graph_timeline_v1",
+    "video_id": "blind_graph_0014",
+    "events": [
+      {
+        "event_id": "A",
+        "description": "搬运金属板"
+      },
+      {
+        "event_id": "B",
+        "description": "在工作台放置金属板"
+      },
+      {
+        "event_id": "C",
+        "description": "搬运纸箱"
+      },
+      {
+        "event_id": "D",
+        "description": "在电脑上操作"
+      },
+      {
+        "event_id": "E",
+        "description": "打开纸箱"
+      },
+      {
+        "event_id": "F",
+        "description": "取出并整理金属板"
+      },
+      {
+        "event_id": "G",
+        "description": "整理纸箱内物品"
+      }
+    ],
+    "segments": [
+      {
+        "start_s": 0.0,
+        "end_s": 4.0,
+        "event_id": "A",
+        "repeats_within_segment": false,
+        "note": ""
+      },
+      {
+        "start_s": 4.0,
+        "end_s": 12.3,
+        "event_id": "A",
+        "repeats_within_segment": true,
+        "note": ""
+      },
+      {
+        "start_s": 12.3,
+        "end_s": 16.7,
+        "event_id": "B",
+        "repeats_within_segment": false,
+        "note": ""
+      },
+      {
+        "start_s": 16.7,
+        "end_s": 28.0,
+        "event_id": "C",
+        "repeats_within_segment": false,
+        "note": ""
+      },
+      {
+        "start_s": 28.0,
+        "end_s": 45.0,
+        "event_id": "D",
+        "repeats_within_segment": false,
+        "note": ""
+      },
+      {
+        "start_s": 45.0,
+        "end_s": 53.0,
+        "event_id": "E",
+        "repeats_within_segment": false,
+        "note": ""
+      },
+      {
+        "start_s": 53.0,
+        "end_s": 79.0,
+        "event_id": "F",
+        "repeats_within_segment": false,
+        "note": ""
+      },
+      {
+        "start_s": 79.0,
+        "end_s": 100.0,
+        "event_id": "G",
+        "repeats_within_segment": false,
+        "note": ""
+      },
+      {
+        "start_s": 100.0,
+        "end_s": 120.0,
+        "event_id": "G",
+        "repeats_within_segment": true,
+        "note": ""
+      }
+    ],
+    "confirmed_full_video": true,
+    "status": "final"
+  },
+  "status": "ok"
+}

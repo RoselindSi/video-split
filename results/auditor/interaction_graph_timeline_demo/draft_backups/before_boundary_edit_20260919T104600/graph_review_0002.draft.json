@@ -1,0 +1,88 @@
+{
+  "schema_version": "interaction_graph_timeline_v1",
+  "video_id": "graph_review_0002",
+  "events": [],
+  "segments": [
+    {
+      "start_s": 0.0,
+      "end_s": 3.4,
+      "event_id": "",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 3.4,
+      "end_s": 5.4,
+      "event_id": "",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 5.4,
+      "end_s": 7.4,
+      "event_id": "",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 7.4,
+      "end_s": 58.7,
+      "event_id": "",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 58.7,
+      "end_s": 61.5,
+      "event_id": "",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 61.5,
+      "end_s": 67.6,
+      "event_id": "",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 67.6,
+      "end_s": 69.8,
+      "event_id": "",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 69.8,
+      "end_s": 121.1,
+      "event_id": "",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 121.1,
+      "end_s": 123.6,
+      "event_id": "",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 123.6,
+      "end_s": 125.0,
+      "event_id": "",
+      "repeats_within_segment": false,
+      "note": ""
+    }
+  ],
+  "confirmed_full_video": false,
+  "manifest_sha256": "158a3af90dc1e7636fbcb54fd483b4113259e65dc5c60b0bc61dd9c39b4c9b29",
+  "annotator": "reviewer_1",
+  "saved_at": "2026-09-19T02:41:45.915772+00:00",
+  "status": "draft",
+  "graph": {
+    "nodes": [],
+    "edges": [],
+    "edge_occurrences": [],
+    "event_sequence": []
+  }
+}

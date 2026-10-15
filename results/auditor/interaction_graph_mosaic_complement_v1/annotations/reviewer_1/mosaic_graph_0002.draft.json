@@ -1,0 +1,211 @@
+{
+  "schema_version": "interaction_graph_timeline_v1",
+  "video_id": "mosaic_graph_0002",
+  "events": [
+    {
+      "event_id": "A",
+      "description": "旋下风扇头"
+    },
+    {
+      "event_id": "B",
+      "description": "逐节拆下支撑杆"
+    },
+    {
+      "event_id": "C",
+      "description": "走路去另外一个房间取凳子再走回来"
+    },
+    {
+      "event_id": "D",
+      "description": "拆风扇头"
+    }
+  ],
+  "segments": [
+    {
+      "start_s": 0.0,
+      "end_s": 25.2,
+      "event_id": "A",
+      "repeats_within_segment": true,
+      "note": "反复旋转风扇头"
+    },
+    {
+      "start_s": 25.2,
+      "end_s": 47.1,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 47.1,
+      "end_s": 58.0,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 58.0,
+      "end_s": 96.7,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 96.7,
+      "end_s": 120.0,
+      "event_id": "D",
+      "repeats_within_segment": false,
+      "note": ""
+    }
+  ],
+  "confirmed_full_video": true,
+  "manifest_sha256": "13ec96fbbfb20eba2cc431ddb116eaa964d95590461b309ef4e3430a91446700",
+  "annotator": "reviewer_1",
+  "saved_at": "2026-09-20T06:10:08.838028+00:00",
+  "status": "draft",
+  "graph": {
+    "nodes": [
+      {
+        "event_id": "A",
+        "description": "旋下风扇头",
+        "segment_count": 1,
+        "total_duration_s": 25.2,
+        "segment_indices": [
+          1
+        ]
+      },
+      {
+        "event_id": "B",
+        "description": "逐节拆下支撑杆",
+        "segment_count": 2,
+        "total_duration_s": 32.8,
+        "segment_indices": [
+          2,
+          3
+        ]
+      },
+      {
+        "event_id": "C",
+        "description": "走路去另外一个房间取凳子再走回来",
+        "segment_count": 1,
+        "total_duration_s": 38.7,
+        "segment_indices": [
+          4
+        ]
+      },
+      {
+        "event_id": "D",
+        "description": "拆风扇头",
+        "segment_count": 1,
+        "total_duration_s": 23.3,
+        "segment_indices": [
+          5
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "source": "A",
+        "target": "A",
+        "count": 1,
+        "kinds": {
+          "internal_repeat": 1
+        },
+        "times_s": [
+          0.0
+        ]
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          25.2
+        ]
+      },
+      {
+        "source": "B",
+        "target": "B",
+        "count": 1,
+        "kinds": {
+          "self_transition": 1
+        },
+        "times_s": [
+          47.1
+        ]
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          58.0
+        ]
+      },
+      {
+        "source": "C",
+        "target": "D",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          96.7
+        ]
+      }
+    ],
+    "edge_occurrences": [
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "internal_repeat",
+        "at_s": 0.0,
+        "from_segment": 1,
+        "to_segment": 1
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 25.2,
+        "from_segment": 1,
+        "to_segment": 2
+      },
+      {
+        "source": "B",
+        "target": "B",
+        "kind": "self_transition",
+        "at_s": 47.1,
+        "from_segment": 2,
+        "to_segment": 3
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 58.0,
+        "from_segment": 3,
+        "to_segment": 4
+      },
+      {
+        "source": "C",
+        "target": "D",
+        "kind": "transition",
+        "at_s": 96.7,
+        "from_segment": 4,
+        "to_segment": 5
+      }
+    ],
+    "event_sequence": [
+      "A",
+      "B",
+      "B",
+      "C",
+      "D"
+    ]
+  }
+}

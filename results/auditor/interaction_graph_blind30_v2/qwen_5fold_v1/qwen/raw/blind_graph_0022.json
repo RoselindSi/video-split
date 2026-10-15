@@ -1,0 +1,95 @@
+{
+  "schema_version": "interaction_graph_qwen_5fold_v1",
+  "video_id": "blind_graph_0022",
+  "fold": 1,
+  "test_video_ids": [
+    "blind_graph_0012",
+    "blind_graph_0017",
+    "blind_graph_0022",
+    "blind_graph_0023",
+    "blind_graph_0026",
+    "blind_graph_0028"
+  ],
+  "demo_video_ids": [
+    "blind_graph_0016",
+    "blind_graph_0009",
+    "blind_graph_0027",
+    "blind_graph_0006",
+    "blind_graph_0002",
+    "blind_graph_0001",
+    "blind_graph_0015",
+    "blind_graph_0025"
+  ],
+  "target_gold_was_in_prompt": false,
+  "backend": "qwen",
+  "model_id": "/workspace/tr1/ckpts/Qwen3-VL-8B-Instruct",
+  "fps": 1.0,
+  "passes": 2,
+  "raw_passes": [
+    "{\"events\":[{\"event_id\":\"A\",\"description\":\"整理一件米色T恤\"},{\"event_id\":\"B\",\"description\":\"将米色T恤放入收纳筐\"},{\"event_id\":\"C\",\"description\":\"整理一件黑色T恤\"},{\"event_id\":\"D\",\"description\":\"熨烫黑色T恤\"}],\"segments\":[{\"start_s\":0.0,\"end_s\":37.8,\"event_id\":\"A\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":37.8,\"end_s\":47.8,\"event_id\":\"B\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":47.8,\"end_s\":63.8,\"event_id\":\"C\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":63.8,\"end_s\":104.8,\"event_id\":\"D\",\"repeats_within_segment\":true,\"note\":\"\"},{\"start_s\":104.8,\"end_s\":120.0,\"event_id\":\"D\",\"repeats_within_segment\":true,\"note\":\"\"}]}",
+    "{\"events\":[{\"event_id\":\"A\",\"description\":\"整理一件米色T恤\"},{\"event_id\":\"B\",\"description\":\"将米色T恤放入收纳筐\"},{\"event_id\":\"C\",\"description\":\"整理一件黑色T恤\"},{\"event_id\":\"D\",\"description\":\"熨烫黑色T恤\"}],\"segments\":[{\"start_s\":0.0,\"end_s\":37.8,\"event_id\":\"A\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":37.8,\"end_s\":47.8,\"event_id\":\"B\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":47.8,\"end_s\":63.8,\"event_id\":\"C\",\"repeats_within_segment\":false,\"note\":\"\"},{\"start_s\":63.8,\"end_s\":104.8,\"event_id\":\"D\",\"repeats_within_segment\":true,\"note\":\"\"},{\"start_s\":104.8,\"end_s\":120.0,\"event_id\":\"D\",\"repeats_within_segment\":true,\"note\":\"\"}],\"confirmed_full_video\":true,\"status\":\"final\"}"
+  ],
+  "used_pass": 2,
+  "prediction": {
+    "schema_version": "interaction_graph_timeline_v1",
+    "video_id": "blind_graph_0022",
+    "events": [
+      {
+        "event_id": "A",
+        "description": "整理一件米色T恤"
+      },
+      {
+        "event_id": "B",
+        "description": "将米色T恤放入收纳筐"
+      },
+      {
+        "event_id": "C",
+        "description": "整理一件黑色T恤"
+      },
+      {
+        "event_id": "D",
+        "description": "熨烫黑色T恤"
+      }
+    ],
+    "segments": [
+      {
+        "start_s": 0.0,
+        "end_s": 37.8,
+        "event_id": "A",
+        "repeats_within_segment": false,
+        "note": ""
+      },
+      {
+        "start_s": 37.8,
+        "end_s": 47.8,
+        "event_id": "B",
+        "repeats_within_segment": false,
+        "note": ""
+      },
+      {
+        "start_s": 47.8,
+        "end_s": 63.8,
+        "event_id": "C",
+        "repeats_within_segment": false,
+        "note": ""
+      },
+      {
+        "start_s": 63.8,
+        "end_s": 104.8,
+        "event_id": "D",
+        "repeats_within_segment": true,
+        "note": ""
+      },
+      {
+        "start_s": 104.8,
+        "end_s": 120.0,
+        "event_id": "D",
+        "repeats_within_segment": true,
+        "note": ""
+      }
+    ],
+    "confirmed_full_video": true,
+    "status": "final"
+  },
+  "status": "ok"
+}

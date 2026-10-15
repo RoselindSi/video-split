@@ -1,0 +1,234 @@
+{
+  "schema_version": "interaction_graph_timeline_v1",
+  "video_id": "mosaic_graph_0012",
+  "events": [
+    {
+      "event_id": "A",
+      "description": "往模具上安装螺丝帽，装好后放入箱子"
+    }
+  ],
+  "segments": [
+    {
+      "start_s": 0.0,
+      "end_s": 5.0,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 5.0,
+      "end_s": 14.1,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 14.1,
+      "end_s": 24.8,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 24.8,
+      "end_s": 33.8,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 33.8,
+      "end_s": 46.8,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 46.8,
+      "end_s": 56.8,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 56.8,
+      "end_s": 75.4,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 75.4,
+      "end_s": 84.9,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 84.9,
+      "end_s": 99.5,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 99.5,
+      "end_s": 111.9,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 111.9,
+      "end_s": 120.0,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    }
+  ],
+  "confirmed_full_video": true,
+  "manifest_sha256": "13ec96fbbfb20eba2cc431ddb116eaa964d95590461b309ef4e3430a91446700",
+  "annotator": "reviewer_1",
+  "saved_at": "2026-09-20T08:58:34.919040+00:00",
+  "status": "draft",
+  "graph": {
+    "nodes": [
+      {
+        "event_id": "A",
+        "description": "往模具上安装螺丝帽，装好后放入箱子",
+        "segment_count": 11,
+        "total_duration_s": 120.0,
+        "segment_indices": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "source": "A",
+        "target": "A",
+        "count": 10,
+        "kinds": {
+          "self_transition": 10
+        },
+        "times_s": [
+          5.0,
+          14.1,
+          24.8,
+          33.8,
+          46.8,
+          56.8,
+          75.4,
+          84.9,
+          99.5,
+          111.9
+        ]
+      }
+    ],
+    "edge_occurrences": [
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 5.0,
+        "from_segment": 1,
+        "to_segment": 2
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 14.1,
+        "from_segment": 2,
+        "to_segment": 3
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 24.8,
+        "from_segment": 3,
+        "to_segment": 4
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 33.8,
+        "from_segment": 4,
+        "to_segment": 5
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 46.8,
+        "from_segment": 5,
+        "to_segment": 6
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 56.8,
+        "from_segment": 6,
+        "to_segment": 7
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 75.4,
+        "from_segment": 7,
+        "to_segment": 8
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 84.9,
+        "from_segment": 8,
+        "to_segment": 9
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 99.5,
+        "from_segment": 9,
+        "to_segment": 10
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 111.9,
+        "from_segment": 10,
+        "to_segment": 11
+      }
+    ],
+    "event_sequence": [
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A"
+    ]
+  }
+}

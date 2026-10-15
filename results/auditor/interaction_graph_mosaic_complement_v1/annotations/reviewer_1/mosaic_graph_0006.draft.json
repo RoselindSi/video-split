@@ -1,0 +1,242 @@
+{
+  "schema_version": "interaction_graph_timeline_v1",
+  "video_id": "mosaic_graph_0006",
+  "events": [
+    {
+      "event_id": "A",
+      "description": "用抹布擦桌面"
+    },
+    {
+      "event_id": "B",
+      "description": "整理桌面和架子上的锅盖和盆"
+    },
+    {
+      "event_id": "C",
+      "description": "跟随别人走到厨房另一端"
+    },
+    {
+      "event_id": "D",
+      "description": "接过盆子，里面装着抹布"
+    },
+    {
+      "event_id": "E",
+      "description": "端盆子在热水机下接热水"
+    }
+  ],
+  "segments": [
+    {
+      "start_s": 0.0,
+      "end_s": 12.6,
+      "event_id": "A",
+      "repeats_within_segment": true,
+      "note": ""
+    },
+    {
+      "start_s": 12.6,
+      "end_s": 19.0,
+      "event_id": "B",
+      "repeats_within_segment": true,
+      "note": ""
+    },
+    {
+      "start_s": 19.0,
+      "end_s": 30.5,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 30.5,
+      "end_s": 35.3,
+      "event_id": "D",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 35.3,
+      "end_s": 44.067,
+      "event_id": "E",
+      "repeats_within_segment": false,
+      "note": ""
+    }
+  ],
+  "confirmed_full_video": true,
+  "manifest_sha256": "13ec96fbbfb20eba2cc431ddb116eaa964d95590461b309ef4e3430a91446700",
+  "annotator": "reviewer_1",
+  "saved_at": "2026-09-20T06:41:38.664168+00:00",
+  "status": "draft",
+  "graph": {
+    "nodes": [
+      {
+        "event_id": "A",
+        "description": "用抹布擦桌面",
+        "segment_count": 1,
+        "total_duration_s": 12.6,
+        "segment_indices": [
+          1
+        ]
+      },
+      {
+        "event_id": "B",
+        "description": "整理桌面和架子上的锅盖和盆",
+        "segment_count": 1,
+        "total_duration_s": 6.4,
+        "segment_indices": [
+          2
+        ]
+      },
+      {
+        "event_id": "C",
+        "description": "跟随别人走到厨房另一端",
+        "segment_count": 1,
+        "total_duration_s": 11.5,
+        "segment_indices": [
+          3
+        ]
+      },
+      {
+        "event_id": "D",
+        "description": "接过盆子，里面装着抹布",
+        "segment_count": 1,
+        "total_duration_s": 4.8,
+        "segment_indices": [
+          4
+        ]
+      },
+      {
+        "event_id": "E",
+        "description": "端盆子在热水机下接热水",
+        "segment_count": 1,
+        "total_duration_s": 8.767,
+        "segment_indices": [
+          5
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "source": "A",
+        "target": "A",
+        "count": 1,
+        "kinds": {
+          "internal_repeat": 1
+        },
+        "times_s": [
+          0.0
+        ]
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          12.6
+        ]
+      },
+      {
+        "source": "B",
+        "target": "B",
+        "count": 1,
+        "kinds": {
+          "internal_repeat": 1
+        },
+        "times_s": [
+          12.6
+        ]
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          19.0
+        ]
+      },
+      {
+        "source": "C",
+        "target": "D",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          30.5
+        ]
+      },
+      {
+        "source": "D",
+        "target": "E",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          35.3
+        ]
+      }
+    ],
+    "edge_occurrences": [
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "internal_repeat",
+        "at_s": 0.0,
+        "from_segment": 1,
+        "to_segment": 1
+      },
+      {
+        "source": "B",
+        "target": "B",
+        "kind": "internal_repeat",
+        "at_s": 12.6,
+        "from_segment": 2,
+        "to_segment": 2
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 12.6,
+        "from_segment": 1,
+        "to_segment": 2
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 19.0,
+        "from_segment": 2,
+        "to_segment": 3
+      },
+      {
+        "source": "C",
+        "target": "D",
+        "kind": "transition",
+        "at_s": 30.5,
+        "from_segment": 3,
+        "to_segment": 4
+      },
+      {
+        "source": "D",
+        "target": "E",
+        "kind": "transition",
+        "at_s": 35.3,
+        "from_segment": 4,
+        "to_segment": 5
+      }
+    ],
+    "event_sequence": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ]
+  }
+}

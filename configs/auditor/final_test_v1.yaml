@@ -1,0 +1,77 @@
+# Frozen before any final-test recording was selected or viewed.
+version: 1
+frozen: true
+frozen_on: 2026-09-12
+
+research_question: >
+  Can a taxonomy-free segmentation pipeline distinguish predictable repetition
+  within one interaction instance from a new instance of the same action after
+  an observable disengagement, release, reset, or restart?
+
+selection:
+  unit: recording
+  n_recordings: 48
+  salt: taxonomy-free-episode-boundary-final-v1-2026-09-12
+  algorithm: ascending_sha256_of_salt_and_recording_id
+  natural_sample: true
+  stratify_by_action_or_label: false
+  minimum_duration_s: 30.0
+  technical_inputs_allowed: [recording_id, mid_mp4_exists, mid_mp4_size,
+                             ffprobe_duration]
+  forbidden_inputs: [segments_json, action_label, boundary_count,
+                     candidate_count, model_score, task_category]
+  exclusion_rule: >
+    Exclude every recording ID appearing anywhere in data/gold before this file
+    was frozen. This includes all prior development, audit, batch4, bridge,
+    semantic, repeated-action, and ROLAN-reviewed recordings. Also exclude IDs
+    in data/splits/final_test_v1_manual_exclusions.txt; recording_000003 is
+    listed there because its segments.json was opened while the remote corpus
+    layout was being inspected, before the first split was generated.
+
+test_isolation:
+  may_before_gold_freeze: [run_frozen_method, cache_method_output]
+  may_not_before_gold_freeze: [inspect_method_output, tune_threshold,
+                               choose_architecture, select_failure_cases]
+  may_after_gold_freeze: [score_once, grouped_bootstrap, prespecified_subgroups]
+  final_recordings_may_not_contribute_to: [training, pca, feature_scaler,
+    class_weighting, early_stopping, threshold_selection, duration_prior,
+    hyperparameter_selection, loss_weight_tuning]
+
+annotation:
+  coverage: exhaustive_full_timeline
+  boundary_tolerance_s: 1.0
+  timeline_event_labels: [new_action, same_action_new_instance,
+                          initial_action_start, terminal_action_end,
+                          cannot_determine]
+  candidate_audit_labels: [new_action, same_action_new_instance,
+                           same_instance, cannot_determine]
+  same_instance_sampling: frozen_union_candidate_pool_only
+  repeated_negative_subtypes: [periodic_repetition, direction_reversal,
+                               regrasp_reposition, spatial_phase_shift, other]
+  positive_rule: observable_disengagement_release_reset_or_restart
+  negative_rule: continuous_same_hand_object_interaction
+  missing_evidence: cannot_determine
+
+evaluation:
+  proposal_primary: [recall_at_0_5s, recall_at_1_0s,
+                     recall_proposal_budget_auc, proposals_per_minute]
+  shared_candidate_primary: [within_recording_pair_accuracy,
+                             average_precision]
+  end_to_end_primary: [boundary_f1_at_1_0s, precision_at_1_0s,
+                       recall_at_1_0s, cuts_per_minute]
+  repetition_primary: [same_action_new_instance_recall_on_exhaustive_timeline,
+                       same_instance_false_split_rate_on_shared_candidates]
+  always_report: [new_action_recall, micro, macro_by_recording,
+                  paired_recording_bootstrap_95ci]
+  threshold_source: development_only
+
+comparison:
+  shared_candidate_pool: union_and_deduplicate_within_1s
+  proposal_budget_matching: required
+  arms: [current_p1, abd_self_similarity, gebd_tsm,
+         predictive_continuity, rolan, vidparse, proposed_pipeline]
+
+ablation:
+  arms: [combined_binary, action_change_only, instance_reset_only,
+         factorized_two_head, factorized_plus_hand_object_reset,
+         full_joint_policy]

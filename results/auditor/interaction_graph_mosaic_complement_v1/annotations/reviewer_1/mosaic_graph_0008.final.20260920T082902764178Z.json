@@ -1,0 +1,302 @@
+{
+  "schema_version": "interaction_graph_timeline_v1",
+  "video_id": "mosaic_graph_0008",
+  "events": [
+    {
+      "event_id": "A",
+      "description": "收起上一束电线，拿出下一束电线"
+    },
+    {
+      "event_id": "B",
+      "description": "给一根电线"
+    }
+  ],
+  "segments": [
+    {
+      "start_s": 0.0,
+      "end_s": 8.8,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 8.8,
+      "end_s": 16.7,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 16.7,
+      "end_s": 22.8,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 22.8,
+      "end_s": 28.6,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 28.6,
+      "end_s": 36.8,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 36.8,
+      "end_s": 43.1,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 43.1,
+      "end_s": 56.9,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 56.9,
+      "end_s": 62.5,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 62.5,
+      "end_s": 74.6,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 74.6,
+      "end_s": 88.0,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 88.0,
+      "end_s": 97.7,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 97.7,
+      "end_s": 116.4,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 116.4,
+      "end_s": 120.0,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    }
+  ],
+  "confirmed_full_video": true,
+  "manifest_sha256": "13ec96fbbfb20eba2cc431ddb116eaa964d95590461b309ef4e3430a91446700",
+  "annotator": "reviewer_1",
+  "saved_at": "2026-09-20T08:29:02.764006+00:00",
+  "status": "final",
+  "graph": {
+    "nodes": [
+      {
+        "event_id": "A",
+        "description": "收起上一束电线，拿出下一束电线",
+        "segment_count": 1,
+        "total_duration_s": 6.3,
+        "segment_indices": [
+          6
+        ]
+      },
+      {
+        "event_id": "B",
+        "description": "给一根电线",
+        "segment_count": 12,
+        "total_duration_s": 113.7,
+        "segment_indices": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "source": "A",
+        "target": "B",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          43.1
+        ]
+      },
+      {
+        "source": "B",
+        "target": "A",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          36.8
+        ]
+      },
+      {
+        "source": "B",
+        "target": "B",
+        "count": 10,
+        "kinds": {
+          "self_transition": 10
+        },
+        "times_s": [
+          8.8,
+          16.7,
+          22.8,
+          28.6,
+          56.9,
+          62.5,
+          74.6,
+          88.0,
+          97.7,
+          116.4
+        ]
+      }
+    ],
+    "edge_occurrences": [
+      {
+        "source": "B",
+        "target": "B",
+        "kind": "self_transition",
+        "at_s": 8.8,
+        "from_segment": 1,
+        "to_segment": 2
+      },
+      {
+        "source": "B",
+        "target": "B",
+        "kind": "self_transition",
+        "at_s": 16.7,
+        "from_segment": 2,
+        "to_segment": 3
+      },
+      {
+        "source": "B",
+        "target": "B",
+        "kind": "self_transition",
+        "at_s": 22.8,
+        "from_segment": 3,
+        "to_segment": 4
+      },
+      {
+        "source": "B",
+        "target": "B",
+        "kind": "self_transition",
+        "at_s": 28.6,
+        "from_segment": 4,
+        "to_segment": 5
+      },
+      {
+        "source": "B",
+        "target": "A",
+        "kind": "transition",
+        "at_s": 36.8,
+        "from_segment": 5,
+        "to_segment": 6
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 43.1,
+        "from_segment": 6,
+        "to_segment": 7
+      },
+      {
+        "source": "B",
+        "target": "B",
+        "kind": "self_transition",
+        "at_s": 56.9,
+        "from_segment": 7,
+        "to_segment": 8
+      },
+      {
+        "source": "B",
+        "target": "B",
+        "kind": "self_transition",
+        "at_s": 62.5,
+        "from_segment": 8,
+        "to_segment": 9
+      },
+      {
+        "source": "B",
+        "target": "B",
+        "kind": "self_transition",
+        "at_s": 74.6,
+        "from_segment": 9,
+        "to_segment": 10
+      },
+      {
+        "source": "B",
+        "target": "B",
+        "kind": "self_transition",
+        "at_s": 88.0,
+        "from_segment": 10,
+        "to_segment": 11
+      },
+      {
+        "source": "B",
+        "target": "B",
+        "kind": "self_transition",
+        "at_s": 97.7,
+        "from_segment": 11,
+        "to_segment": 12
+      },
+      {
+        "source": "B",
+        "target": "B",
+        "kind": "self_transition",
+        "at_s": 116.4,
+        "from_segment": 12,
+        "to_segment": 13
+      }
+    ],
+    "event_sequence": [
+      "B",
+      "B",
+      "B",
+      "B",
+      "B",
+      "A",
+      "B",
+      "B",
+      "B",
+      "B",
+      "B",
+      "B",
+      "B"
+    ]
+  }
+}

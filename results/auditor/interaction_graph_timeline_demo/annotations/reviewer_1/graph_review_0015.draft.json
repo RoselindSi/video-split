@@ -1,0 +1,42 @@
+{
+  "schema_version": "interaction_graph_timeline_v1",
+  "video_id": "graph_review_0015",
+  "events": [
+    {
+      "event_id": "A",
+      "description": "看不到动作"
+    }
+  ],
+  "segments": [
+    {
+      "start_s": 0.0,
+      "end_s": 96.0,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    }
+  ],
+  "confirmed_full_video": true,
+  "manifest_sha256": "158a3af90dc1e7636fbcb54fd483b4113259e65dc5c60b0bc61dd9c39b4c9b29",
+  "annotator": "reviewer_1",
+  "saved_at": "2026-09-19T09:19:24.432587+00:00",
+  "status": "draft",
+  "graph": {
+    "nodes": [
+      {
+        "event_id": "A",
+        "description": "看不到动作",
+        "segment_count": 1,
+        "total_duration_s": 96.0,
+        "segment_indices": [
+          1
+        ]
+      }
+    ],
+    "edges": [],
+    "edge_occurrences": [],
+    "event_sequence": [
+      "A"
+    ]
+  }
+}

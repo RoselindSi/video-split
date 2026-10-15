@@ -24,6 +24,7 @@ of the pipeline does not change.
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
 import random
 
@@ -118,14 +119,22 @@ class QwenVLBackend(VisionBackend):
         except Exception:  # older transformers
             from transformers import AutoModelForVision2Seq as _AutoVLM
         torch_dtype = getattr(torch, dtype)
-        kw = {"device_map": device}
+        use_device_map = importlib.util.find_spec("accelerate") is not None
+        kw = {"device_map": device} if use_device_map else {}
         if attn:
             kw["attn_implementation"] = attn
         self._torch = torch
         try:
-            self.model = _AutoVLM.from_pretrained(model_id, dtype=torch_dtype, **kw).eval()
+            self.model = _AutoVLM.from_pretrained(
+                model_id, dtype=torch_dtype, **kw
+            )
         except TypeError:  # transformers < ~4.56 used torch_dtype instead of dtype
-            self.model = _AutoVLM.from_pretrained(model_id, torch_dtype=torch_dtype, **kw).eval()
+            self.model = _AutoVLM.from_pretrained(
+                model_id, torch_dtype=torch_dtype, **kw
+            )
+        if not use_device_map:
+            self.model = self.model.to(device)
+        self.model.eval()
         self.processor = AutoProcessor.from_pretrained(model_id)
 
     def _content(self, video, images, fps):

@@ -1,0 +1,225 @@
+{
+  "schema_version": "interaction_graph_timeline_v1",
+  "video_id": "mosaic_graph_0029",
+  "events": [
+    {
+      "event_id": "A",
+      "description": "在水龙头下洗玻璃瓶"
+    },
+    {
+      "event_id": "B",
+      "description": "逐个给玻璃瓶扭上盖子"
+    },
+    {
+      "event_id": "C",
+      "description": "收起玻璃瓶走到另一个房间"
+    }
+  ],
+  "segments": [
+    {
+      "start_s": 0.0,
+      "end_s": 9.2,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 9.2,
+      "end_s": 42.3,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 42.3,
+      "end_s": 50.9,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 50.9,
+      "end_s": 72.9,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 72.9,
+      "end_s": 78.3,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 78.3,
+      "end_s": 99.8,
+      "event_id": "B",
+      "repeats_within_segment": true,
+      "note": ""
+    },
+    {
+      "start_s": 99.8,
+      "end_s": 120.0,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    }
+  ],
+  "confirmed_full_video": true,
+  "manifest_sha256": "13ec96fbbfb20eba2cc431ddb116eaa964d95590461b309ef4e3430a91446700",
+  "annotator": "reviewer_1",
+  "saved_at": "2026-09-20T11:04:42.037373+00:00",
+  "status": "final",
+  "graph": {
+    "nodes": [
+      {
+        "event_id": "A",
+        "description": "在水龙头下洗玻璃瓶",
+        "segment_count": 5,
+        "total_duration_s": 78.3,
+        "segment_indices": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      {
+        "event_id": "B",
+        "description": "逐个给玻璃瓶扭上盖子",
+        "segment_count": 1,
+        "total_duration_s": 21.5,
+        "segment_indices": [
+          6
+        ]
+      },
+      {
+        "event_id": "C",
+        "description": "收起玻璃瓶走到另一个房间",
+        "segment_count": 1,
+        "total_duration_s": 20.2,
+        "segment_indices": [
+          7
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "source": "A",
+        "target": "A",
+        "count": 4,
+        "kinds": {
+          "self_transition": 4
+        },
+        "times_s": [
+          9.2,
+          42.3,
+          50.9,
+          72.9
+        ]
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          78.3
+        ]
+      },
+      {
+        "source": "B",
+        "target": "B",
+        "count": 1,
+        "kinds": {
+          "internal_repeat": 1
+        },
+        "times_s": [
+          78.3
+        ]
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "count": 1,
+        "kinds": {
+          "transition": 1
+        },
+        "times_s": [
+          99.8
+        ]
+      }
+    ],
+    "edge_occurrences": [
+      {
+        "source": "B",
+        "target": "B",
+        "kind": "internal_repeat",
+        "at_s": 78.3,
+        "from_segment": 6,
+        "to_segment": 6
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 9.2,
+        "from_segment": 1,
+        "to_segment": 2
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 42.3,
+        "from_segment": 2,
+        "to_segment": 3
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 50.9,
+        "from_segment": 3,
+        "to_segment": 4
+      },
+      {
+        "source": "A",
+        "target": "A",
+        "kind": "self_transition",
+        "at_s": 72.9,
+        "from_segment": 4,
+        "to_segment": 5
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 78.3,
+        "from_segment": 5,
+        "to_segment": 6
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 99.8,
+        "from_segment": 6,
+        "to_segment": 7
+      }
+    ],
+    "event_sequence": [
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "B",
+      "C"
+    ]
+  }
+}

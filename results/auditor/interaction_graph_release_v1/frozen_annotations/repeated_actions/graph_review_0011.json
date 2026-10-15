@@ -1,0 +1,260 @@
+{
+  "schema_version": "interaction_graph_timeline_v1",
+  "video_id": "graph_review_0011",
+  "events": [
+    {
+      "event_id": "A",
+      "description": "idle"
+    },
+    {
+      "event_id": "B",
+      "description": "抽出拖鞋"
+    },
+    {
+      "event_id": "C",
+      "description": "放入拖鞋"
+    }
+  ],
+  "segments": [
+    {
+      "start_s": 0.0,
+      "end_s": 1.6,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 1.6,
+      "end_s": 4.2,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 4.2,
+      "end_s": 6.1,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 6.1,
+      "end_s": 9.9,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 9.9,
+      "end_s": 12.6,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 12.6,
+      "end_s": 14.4,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 14.4,
+      "end_s": 17.5,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 17.5,
+      "end_s": 20.3,
+      "event_id": "B",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 20.3,
+      "end_s": 22.0,
+      "event_id": "C",
+      "repeats_within_segment": false,
+      "note": ""
+    },
+    {
+      "start_s": 22.0,
+      "end_s": 24.8,
+      "event_id": "A",
+      "repeats_within_segment": false,
+      "note": ""
+    }
+  ],
+  "confirmed_full_video": true,
+  "manifest_sha256": "158a3af90dc1e7636fbcb54fd483b4113259e65dc5c60b0bc61dd9c39b4c9b29",
+  "annotator": "reviewer_1",
+  "saved_at": "2026-09-19T08:58:07.954741+00:00",
+  "status": "final",
+  "graph": {
+    "nodes": [
+      {
+        "event_id": "A",
+        "description": "idle",
+        "segment_count": 4,
+        "total_duration_s": 11.3,
+        "segment_indices": [
+          1,
+          4,
+          7,
+          10
+        ]
+      },
+      {
+        "event_id": "B",
+        "description": "抽出拖鞋",
+        "segment_count": 3,
+        "total_duration_s": 8.1,
+        "segment_indices": [
+          2,
+          5,
+          8
+        ]
+      },
+      {
+        "event_id": "C",
+        "description": "放入拖鞋",
+        "segment_count": 3,
+        "total_duration_s": 5.4,
+        "segment_indices": [
+          3,
+          6,
+          9
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "source": "A",
+        "target": "B",
+        "count": 3,
+        "kinds": {
+          "transition": 3
+        },
+        "times_s": [
+          1.6,
+          9.9,
+          17.5
+        ]
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "count": 3,
+        "kinds": {
+          "transition": 3
+        },
+        "times_s": [
+          4.2,
+          12.6,
+          20.3
+        ]
+      },
+      {
+        "source": "C",
+        "target": "A",
+        "count": 3,
+        "kinds": {
+          "transition": 3
+        },
+        "times_s": [
+          6.1,
+          14.4,
+          22.0
+        ]
+      }
+    ],
+    "edge_occurrences": [
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 1.6,
+        "from_segment": 1,
+        "to_segment": 2
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 4.2,
+        "from_segment": 2,
+        "to_segment": 3
+      },
+      {
+        "source": "C",
+        "target": "A",
+        "kind": "transition",
+        "at_s": 6.1,
+        "from_segment": 3,
+        "to_segment": 4
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 9.9,
+        "from_segment": 4,
+        "to_segment": 5
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 12.6,
+        "from_segment": 5,
+        "to_segment": 6
+      },
+      {
+        "source": "C",
+        "target": "A",
+        "kind": "transition",
+        "at_s": 14.4,
+        "from_segment": 6,
+        "to_segment": 7
+      },
+      {
+        "source": "A",
+        "target": "B",
+        "kind": "transition",
+        "at_s": 17.5,
+        "from_segment": 7,
+        "to_segment": 8
+      },
+      {
+        "source": "B",
+        "target": "C",
+        "kind": "transition",
+        "at_s": 20.3,
+        "from_segment": 8,
+        "to_segment": 9
+      },
+      {
+        "source": "C",
+        "target": "A",
+        "kind": "transition",
+        "at_s": 22.0,
+        "from_segment": 9,
+        "to_segment": 10
+      }
+    ],
+    "event_sequence": [
+      "A",
+      "B",
+      "C",
+      "A",
+      "B",
+      "C",
+      "A",
+      "B",
+      "C",
+      "A"
+    ]
+  }
+}

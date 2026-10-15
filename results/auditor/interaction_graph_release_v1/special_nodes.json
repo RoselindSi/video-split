@@ -1,0 +1,229 @@
+[
+  {
+    "local_node_id": "repeated_actions/graph_review_0001/B",
+    "batch_id": "repeated_actions",
+    "video_id": "graph_review_0001",
+    "event_id": "B",
+    "description": "未开始",
+    "segment_count": 1,
+    "total_duration_s": 3.2,
+    "segment_indices": [
+      1
+    ]
+  },
+  {
+    "local_node_id": "repeated_actions/graph_review_0003/B",
+    "batch_id": "repeated_actions",
+    "video_id": "graph_review_0003",
+    "event_id": "B",
+    "description": "idle",
+    "segment_count": 7,
+    "total_duration_s": 37.8,
+    "segment_indices": [
+      2,
+      5,
+      8,
+      11,
+      14,
+      17,
+      20
+    ]
+  },
+  {
+    "local_node_id": "repeated_actions/graph_review_0004/A",
+    "batch_id": "repeated_actions",
+    "video_id": "graph_review_0004",
+    "event_id": "A",
+    "description": "未开始",
+    "segment_count": 1,
+    "total_duration_s": 11.1,
+    "segment_indices": [
+      1
+    ]
+  },
+  {
+    "local_node_id": "repeated_actions/graph_review_0009/A",
+    "batch_id": "repeated_actions",
+    "video_id": "graph_review_0009",
+    "event_id": "A",
+    "description": "未开始",
+    "segment_count": 1,
+    "total_duration_s": 7.9,
+    "segment_indices": [
+      1
+    ]
+  },
+  {
+    "local_node_id": "repeated_actions/graph_review_0010/A",
+    "batch_id": "repeated_actions",
+    "video_id": "graph_review_0010",
+    "event_id": "A",
+    "description": "无内容",
+    "segment_count": 1,
+    "total_duration_s": 70.0,
+    "segment_indices": [
+      1
+    ]
+  },
+  {
+    "local_node_id": "repeated_actions/graph_review_0011/A",
+    "batch_id": "repeated_actions",
+    "video_id": "graph_review_0011",
+    "event_id": "A",
+    "description": "idle",
+    "segment_count": 4,
+    "total_duration_s": 11.3,
+    "segment_indices": [
+      1,
+      4,
+      7,
+      10
+    ]
+  },
+  {
+    "local_node_id": "repeated_actions/graph_review_0012/A",
+    "batch_id": "repeated_actions",
+    "video_id": "graph_review_0012",
+    "event_id": "A",
+    "description": "未开始",
+    "segment_count": 1,
+    "total_duration_s": 5.1,
+    "segment_indices": [
+      1
+    ]
+  },
+  {
+    "local_node_id": "repeated_actions/graph_review_0015/A",
+    "batch_id": "repeated_actions",
+    "video_id": "graph_review_0015",
+    "event_id": "A",
+    "description": "看不到动作",
+    "segment_count": 1,
+    "total_duration_s": 96.0,
+    "segment_indices": [
+      1
+    ]
+  },
+  {
+    "local_node_id": "repeated_actions/graph_review_0021/A",
+    "batch_id": "repeated_actions",
+    "video_id": "graph_review_0021",
+    "event_id": "A",
+    "description": "未开始",
+    "segment_count": 1,
+    "total_duration_s": 3.3,
+    "segment_indices": [
+      1
+    ]
+  },
+  {
+    "local_node_id": "mosaic_complement/mosaic_graph_0001/A",
+    "batch_id": "mosaic_complement",
+    "video_id": "mosaic_graph_0001",
+    "event_id": "A",
+    "description": "特殊事件",
+    "segment_count": 2,
+    "total_duration_s": 63.7,
+    "segment_indices": [
+      1,
+      3
+    ]
+  },
+  {
+    "local_node_id": "mosaic_complement/mosaic_graph_0013/A",
+    "batch_id": "mosaic_complement",
+    "video_id": "mosaic_graph_0013",
+    "event_id": "A",
+    "description": "特殊事件",
+    "segment_count": 1,
+    "total_duration_s": 5.9,
+    "segment_indices": [
+      1
+    ]
+  },
+  {
+    "local_node_id": "mosaic_complement/mosaic_graph_0015/E",
+    "batch_id": "mosaic_complement",
+    "video_id": "mosaic_graph_0015",
+    "event_id": "E",
+    "description": "特殊事件",
+    "segment_count": 1,
+    "total_duration_s": 21.8,
+    "segment_indices": [
+      7
+    ]
+  },
+  {
+    "local_node_id": "mosaic_complement/mosaic_graph_0017/D",
+    "batch_id": "mosaic_complement",
+    "video_id": "mosaic_graph_0017",
+    "event_id": "D",
+    "description": "特殊事件",
+    "segment_count": 1,
+    "total_duration_s": 68.7,
+    "segment_indices": [
+      4
+    ]
+  },
+  {
+    "local_node_id": "mosaic_complement/mosaic_graph_0018/A",
+    "batch_id": "mosaic_complement",
+    "video_id": "mosaic_graph_0018",
+    "event_id": "A",
+    "description": "特殊事件",
+    "segment_count": 2,
+    "total_duration_s": 34.6,
+    "segment_indices": [
+      1,
+      3
+    ]
+  },
+  {
+    "local_node_id": "mosaic_complement/mosaic_graph_0023/A",
+    "batch_id": "mosaic_complement",
+    "video_id": "mosaic_graph_0023",
+    "event_id": "A",
+    "description": "特殊事件",
+    "segment_count": 1,
+    "total_duration_s": 24.0,
+    "segment_indices": [
+      1
+    ]
+  },
+  {
+    "local_node_id": "mosaic_complement/mosaic_graph_0024/A",
+    "batch_id": "mosaic_complement",
+    "video_id": "mosaic_graph_0024",
+    "event_id": "A",
+    "description": "特殊事件",
+    "segment_count": 1,
+    "total_duration_s": 8.9,
+    "segment_indices": [
+      3
+    ]
+  },
+  {
+    "local_node_id": "mosaic_complement/mosaic_graph_0027/A",
+    "batch_id": "mosaic_complement",
+    "video_id": "mosaic_graph_0027",
+    "event_id": "A",
+    "description": "看不到内容",
+    "segment_count": 1,
+    "total_duration_s": 17.233,
+    "segment_indices": [
+      1
+    ]
+  },
+  {
+    "local_node_id": "mosaic_complement/mosaic_graph_0028/B",
+    "batch_id": "mosaic_complement",
+    "video_id": "mosaic_graph_0028",
+    "event_id": "B",
+    "description": "特殊事件",
+    "segment_count": 1,
+    "total_duration_s": 20.9,
+    "segment_indices": [
+      2
+    ]
+  }
+]
