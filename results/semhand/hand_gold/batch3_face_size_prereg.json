@@ -1,0 +1,23 @@
+{
+ "threshold_biggest_face": 0.01,
+ "unit": "面积占比",
+ "frozen": "2026-10-15",
+ "rationale": "下界取自 R26_0831_134109 已人工验证的纯 FP 簇(0.0038-0.0057)；上界取自 R26_0828_124431 已验证真脸(0.0198)",
+ "predictions": {
+  "R26_0825_153426": {
+   "raw_grid_pct": 7.9,
+   "filtered_grid_pct": 7.9,
+   "predict_other_hand_present": true
+  },
+  "R26_0828_141519": {
+   "raw_grid_pct": 0.0,
+   "filtered_grid_pct": 0.0,
+   "predict_other_hand_present": false
+  },
+  "R26_0908_170216": {
+   "raw_grid_pct": 2.5,
+   "filtered_grid_pct": 2.5,
+   "predict_other_hand_present": true
+  }
+ }
+}
