@@ -36,15 +36,6 @@
   "sampled": 20
  },
  {
-  "rec": "R26_0826_101558",
-  "bag": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/2227aa6a5100434b87a6916045e64f06/databag-26_0826_101558",
-  "too_short": false,
-  "n_frames": 3967,
-  "face_frames": 6,
-  "faces": 8,
-  "sampled": 20
- },
- {
   "rec": "R26_0827_133140",
   "bag": "/shared/datasets/.incoming/video_1520p_raw/qingyu005_202608202101/raw_databag/d2eac104b1144b62b155af3336330eac/databag-26_0827_133140",
   "too_short": false,

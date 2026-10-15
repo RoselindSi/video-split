@@ -1,0 +1,182 @@
+
+## 手部线 — 94 项, 0.40 MB
+
+- `[新]` data/splits/
+- `[新]` results/semhand/hand_gold/batch3/R26_0825_113022.json
+- `[新]` results/semhand/hand_gold/batch3/R26_0826_102657.json
+- `[新]` results/semhand/hand_gold/batch3/R26_0826_115154.json
+- `[新]` results/semhand/hand_gold/batch3/R26_0827_133140.json
+- `[新]` results/semhand/hand_gold/batch3/R26_0828_132741.json
+- `[新]` results/semhand/hand_gold/batch3_excluded.json
+- `[改]` results/semhand/hand_gold/batch3_pick.json
+- `[新]` results/semhand/hand_gold/batch3_window_check.json
+- `[新]` scripts/apply_handness_review.py
+- `[新]` scripts/apply_handness_spatial_teacher.py
+- `[新]` scripts/apply_handness_spatial_track_review.py
+- `[新]` scripts/augment_handness_manifest_with_track_review.py
+- `[新]` scripts/build_episode_identity_progress_doc.py
+- `[新]` scripts/build_handness_distill_manifest.py
+- `[新]` scripts/build_handness_review_packet.py
+- `[新]` scripts/build_handness_spatial_manifest.py
+- `[新]` scripts/build_handness_spatial_track_candidates.py
+- `[新]` scripts/build_handness_track_feature_manifest.py
+- `[新]` scripts/build_handness_track_review_packet.py
+- `[新]` scripts/build_handness_trackpkg_manifest.py
+- `[新]` scripts/combine_handness_feature_caches.py
+- `[新]` scripts/crowd10_jobs.txt
+- `[新]` scripts/crowd10_v2_jobs.txt
+- `[新]` scripts/evaluate_hand_sampling.py
+- `[新]` scripts/evaluate_handness_hardneg_cv.py
+- `[新]` scripts/evaluate_handness_manifest_tracks.py
+- `[新]` scripts/evaluate_handness_teacher_tracks.py
+- `[新]` scripts/evaluate_handness_track_packet.py
+- `[新]` scripts/evaluate_handness_tracks.py
+- `[新]` scripts/expand_handness_temporal_negatives.py
+- `[新]` scripts/expand_handness_track_review.py
+- `[新]` scripts/extract_candidate_frames.py
+- `[新]` scripts/extract_handness_qwen_features.py
+- `[新]` scripts/fastpipe_validation_job.txt
+- `[新]` scripts/mine_handness_hard_negative_tracks.py
+- `[新]` scripts/prepare_handness_teacher_queue.py
+- `[新]` scripts/rank_crowded_segments.py
+- `[新]` scripts/render_crowd10_current_pipeline.sh
+- `[新]` scripts/render_handness_spatial_probe.py
+- `[新]` scripts/render_track_fusion_review.py
+- `[新]` scripts/rerender_0825_context_fused_nomosaic.sh
+- `[新]` scripts/rerender_0825_context_nomosaic.sh
+- `[新]` scripts/rerender_0825_semantic_gate.sh
+- `[新]` scripts/rerender_ten_ship_capfix.sh
+- `[新]` scripts/run_handness_feature_pilot.sh
+- `[新]` scripts/run_handness_pixel_twofold.sh
+- `[新]` scripts/run_handness_round2_twofold.sh
+- `[新]` scripts/run_handness_spatial_student.sh
+- `[新]` scripts/score_handness_spatial_vllm.py
+- `[新]` scripts/score_handness_vllm.py
+- `[新]` scripts/select_handness_spatial_probe.py
+- `[新]` scripts/select_handness_threshold.py
+- `[新]` scripts/summarize_handness_recording_tracks.py
+- `[新]` tests/test_apply_handness_review.py
+- `[新]` tests/test_apply_handness_spatial_teacher.py
+- `[新]` tests/test_apply_handness_spatial_track_review.py
+- `[新]` tests/test_augment_handness_manifest_with_track_review.py
+- `[新]` tests/test_build_handness_review_packet.py
+- `[新]` tests/test_build_handness_spatial_manifest.py
+- `[新]` tests/test_build_handness_spatial_track_candidates.py
+- `[新]` tests/test_build_handness_track_feature_manifest.py
+- `[新]` tests/test_build_handness_track_review_packet.py
+- `[新]` tests/test_build_handness_trackpkg_manifest.py
+- `[新]` tests/test_combine_handness_feature_caches.py
+- `[新]` tests/test_demo_video_owner_cap.py
+- `[新]` tests/test_demo_video_semantic_gate.py
+- `[新]` tests/test_evaluate_handness_hardneg_cv.py
+- `[新]` tests/test_evaluate_handness_manifest_tracks.py
+- `[新]` tests/test_evaluate_handness_teacher_tracks.py
+- `[新]` tests/test_evaluate_handness_track_packet.py
+- `[新]` tests/test_evaluate_handness_tracks.py
+- `[新]` tests/test_expand_handness_temporal_negatives.py
+- `[新]` tests/test_expand_handness_track_review.py
+- `[新]` tests/test_hand_detect_batch.py
+- `[新]` tests/test_handness_distill_manifest.py
+- `[新]` tests/test_handness_head.py
+- `[新]` tests/test_mine_handness_hard_negative_tracks.py
+- `[新]` tests/test_pixel_feature_student.py
+- `[新]` tests/test_pixel_student.py
+- `[新]` tests/test_post_pass_track_fusion.py
+- `[新]` tests/test_prepare_handness_teacher_queue.py
+- `[新]` tests/test_qwen_feature_head.py
+- `[新]` tests/test_range_static_server.py
+- `[新]` tests/test_score_handness_spatial_vllm.py
+- `[新]` tests/test_score_handness_vllm.py
+- `[新]` tests/test_select_handness_spatial_probe.py
+- `[新]` tests/test_select_handness_threshold.py
+- `[新]` tests/test_semantic_owner_gate.py
+- `[新]` tests/test_spatial_student.py
+- `[新]` tests/test_summarize_handness_recording_tracks.py
+- `[新]` tests/test_three_probe_sampling.py
+- `[新]` tests/test_track_cache.py
+- `[新]` tests/test_track_fusion.py
+
+## graph / auditor 线 — 82 项, 5.39 MB
+
+- `[新]` configs/auditor/final_test_v1.yaml
+- `[新]` configs/auditor/interaction_evidence_v1.json
+- `[新]` configs/auditor/interaction_graph_procedure_groups_v1.json
+- `[改]` configs/auditor/ontology_v1_constitution.yaml
+- `[新]` results/auditor/b2_egoexo/
+- `[新]` results/auditor/e2_rescore/
+- `[新]` results/auditor/epic_b2_sample20 2.json
+- `[新]` results/auditor/interaction_evidence_v1_20260913_e0/
+- `[新]` results/auditor/interaction_evidence_v1_20260913_e0_verified/
+- `[新]` results/auditor/interaction_evidence_v1_20260913_pilot/
+- `[新]` results/auditor/interaction_evidence_v2_20260914_review/
+- `[新]` results/auditor/interaction_evidence_v2_20260914_review150/
+- `[新]` results/auditor/interaction_evidence_v2_20260914_review150_verified/
+- `[新]` results/auditor/interaction_graph_blind30_v2/
+- `[新]` results/auditor/interaction_graph_contract_v1_agreement_20260918/
+- `[新]` results/auditor/interaction_graph_double_validation_v1/
+- `[新]` results/auditor/interaction_graph_e1a/
+- `[新]` results/auditor/interaction_graph_e1b/
+- `[新]` results/auditor/interaction_graph_expD_online 2.json
+- `[新]` results/auditor/interaction_graph_expD_online_soft 2.json
+- `[新]` results/auditor/interaction_graph_g1b.json
+- `[新]` results/auditor/interaction_graph_g1b_summary.json
+- `[新]` results/auditor/interaction_graph_ladder 2.json
+- `[新]` results/auditor/interaction_graph_mosaic_complement_v1/
+- `[新]` results/auditor/interaction_graph_release_v1/
+- `[新]` results/auditor/interaction_graph_schema_v2/
+- `[新]` results/auditor/interaction_graph_timeline_databags/
+- `[新]` results/auditor/interaction_graph_timeline_demo/
+- `[新]` results/auditor/paper_fig4_e2_from_doc.json
+- `[新]` results/auditor/paper_fig4_e2_measured.json
+- `[新]` src/auditor/boundary/b2_build_packet.py
+- `[改]` src/auditor/boundary/b2_coarse_page.html
+- `[新]` src/auditor/boundary/b2_grain_compare.py
+- `[新]` src/auditor/boundary/b2_grain_fold.py
+- `[新]` src/auditor/boundary/b2_joint_regime.py
+- `[新]` src/auditor/boundary/b2_make_page.py
+- `[新]` src/auditor/boundary/b2_yield 2.py
+- `[新]` src/auditor/boundary/build_e0_trial_manifest.py
+- `[新]` src/auditor/boundary/build_e1a_audit.py
+- `[改]` src/auditor/boundary/build_graph_timeline_offline_packet.py
+- `[新]` src/auditor/boundary/build_uncertain_probe.py
+- `[新]` src/auditor/boundary/build_v21_seed_draft.py
+- `[新]` src/auditor/boundary/e1a_freeze_sample.py
+- `[新]` src/auditor/boundary/e1a_run.py
+- `[新]` src/auditor/boundary/e1a_score.py
+- `[新]` src/auditor/boundary/e1b_build.py
+- `[新]` src/auditor/boundary/e1b_paired.py
+- `[新]` src/auditor/boundary/e1b_run.py
+- `[新]` src/auditor/boundary/e1b_score.py
+- `[新]` src/auditor/boundary/e2_build.py
+- `[新]` src/auditor/boundary/e2_run.py
+- `[新]` src/auditor/boundary/e2_score.py
+- `[新]` src/auditor/boundary/egoexo_cut_clips.py
+- `[新]` src/auditor/boundary/egoexo_sample_windows.py
+- `[新]` src/auditor/boundary/egoexo_topology_prescreen 2.py
+- `[新]` src/auditor/boundary/epic_build_manifest 2.py
+- `[新]` src/auditor/boundary/epic_fetch_clips 2.py
+- `[新]` src/auditor/boundary/epic_sample_windows 2.py
+- `[新]` src/auditor/boundary/epic_topology_prescreen 2.py
+- `[新]` src/auditor/boundary/g1_embed.py
+- `[新]` src/auditor/boundary/g1_fuse.py
+- `[新]` src/auditor/boundary/g1_ladder 2.py
+- `[新]` src/auditor/boundary/g1_online 2.py
+- `[新]` src/auditor/boundary/g1_probe.py
+- `[改]` src/auditor/boundary/g1b_support.py
+- `[新]` src/auditor/boundary/interaction_graph_case_sheet.py
+- `[新]` src/auditor/boundary/interaction_graph_e0_agreement.py
+- `[新]` src/auditor/boundary/interaction_graph_qwen_cv.py
+- `[新]` src/auditor/boundary/interaction_graph_structure_census.py
+- `[改]` src/auditor/boundary/interaction_graph_timeline_agreement.py
+- `[新]` src/auditor/boundary/interaction_graph_timeline_v2_offline_page.html
+- `[新]` src/auditor/boundary/paper_figures.py
+- `[新]` src/auditor/boundary/paper_regime_figure.py
+- `[新]` src/auditor/boundary/paper_regime_scatter.py
+- `[新]` src/auditor/boundary/serve_packet.py
+- `[改]` src/auditor/vision_backends.py
+- `[新]` tests/test_interaction_graph_complement_prepare.py
+- `[新]` tests/test_interaction_graph_normalize.py
+- `[新]` tests/test_interaction_graph_qwen_cv.py
+- `[新]` tests/test_interaction_graph_release.py
+- `[新]` tests/test_interaction_graph_timeline.py
+- `[新]` tests/test_interaction_graph_timeline_agreement.py

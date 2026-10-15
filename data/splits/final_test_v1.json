@@ -1,0 +1,363 @@
+{
+  "schema_version": "episode_boundary_final_test_split_v1",
+  "frozen": true,
+  "selection_salt": "taxonomy-free-episode-boundary-final-v1-2026-09-12",
+  "selection_algorithm": "ascending sha256(salt + NUL + recording_id)",
+  "label_blind_guarantee": "Selection did not open segments.json and did not use action labels, boundaries, candidates, model outputs, or task categories.",
+  "n_corpus_recordings": 471,
+  "n_excluded_recordings_present_in_corpus": 330,
+  "n_eligible_recordings": 141,
+  "n_selected_recordings": 48,
+  "minimum_duration_s": 30.0,
+  "exclusion_provenance": {
+    "scanned_sources": [],
+    "source_files": [],
+    "explicit_id_files": [
+      {
+        "path": "/tmp/final_test_v1_excluded_recordings.txt",
+        "sha256": "a46bf0abadcb8bad3728db29ff0d23841ea167395f325b756e9810efd096f44a"
+      }
+    ],
+    "aggregate_sha256": "44fdea120969d5c7903e6a3e43ce2c2cf34bf1c36c1caf5ee3bcc15a48537a42",
+    "n_excluded_recordings": 330
+  },
+  "technical_rejects": [],
+  "selected": [
+    {
+      "recording_id": "recording_000314",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000314/mid.mp4",
+      "video_bytes": 162120075,
+      "duration_s": 654.2,
+      "selection_rank": "0480ea9bfe9a6f899d4e2f5b4cfbb88ff68a410ffe51ae5a6f02061c9482a702"
+    },
+    {
+      "recording_id": "recording_000247",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000247/mid.mp4",
+      "video_bytes": 143215054,
+      "duration_s": 655.3,
+      "selection_rank": "0781c68635d6aaed791634ab8587c911b89f0a114ad862b761001cf300846314"
+    },
+    {
+      "recording_id": "recording_000383",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000383/mid.mp4",
+      "video_bytes": 10974730,
+      "duration_s": 66.0,
+      "selection_rank": "0aa3082aff8e4be2a8923908a814bcedeceebb445efb1d9e7f94cdc5cd27ec32"
+    },
+    {
+      "recording_id": "recording_000321",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000321/mid.mp4",
+      "video_bytes": 145583048,
+      "duration_s": 657.0,
+      "selection_rank": "0c285c0abd74aa06f0ef310686a0ea990a77e878e93a76eeae964648cb60ee6c"
+    },
+    {
+      "recording_id": "recording_000346",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000346/mid.mp4",
+      "video_bytes": 160068786,
+      "duration_s": 683.3,
+      "selection_rank": "0d9e849b423a3c82c033abd6b44e6a70917bf569f5248b7cc4680f92ea48f142"
+    },
+    {
+      "recording_id": "recording_000315",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000315/mid.mp4",
+      "video_bytes": 173592100,
+      "duration_s": 707.9,
+      "selection_rank": "0e95d5f9acf3a2d4cda8883c2d57ec304e299e8be031b57a66a937f4ff28f0b0"
+    },
+    {
+      "recording_id": "recording_000467",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000467/mid.mp4",
+      "video_bytes": 135401016,
+      "duration_s": 644.9,
+      "selection_rank": "1414bf33638bdd3181f5282a6c24a0d83d5c5a68263938575b81e8948ac0463e"
+    },
+    {
+      "recording_id": "recording_000454",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000454/mid.mp4",
+      "video_bytes": 178920835,
+      "duration_s": 822.8,
+      "selection_rank": "149d4167fecc147ba0827eb411f02ad40cffe5ef6fc72059337036d799275fbf"
+    },
+    {
+      "recording_id": "recording_000359",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000359/mid.mp4",
+      "video_bytes": 160115714,
+      "duration_s": 653.2,
+      "selection_rank": "14dcaa85a7a6d08d3cf83a44c0ab9c8c0ded88eb770f79c194d8c9737a97250a"
+    },
+    {
+      "recording_id": "recording_000317",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000317/mid.mp4",
+      "video_bytes": 161653413,
+      "duration_s": 654.6,
+      "selection_rank": "16eba1f93edc5f83c221ca75ef58cda8bd4732d36bccce856040d36e4a24902a"
+    },
+    {
+      "recording_id": "recording_000316",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000316/mid.mp4",
+      "video_bytes": 163253144,
+      "duration_s": 704.4,
+      "selection_rank": "17fd36cd7d564454f9f8419bcc20e7016acf58694a28ff0d0dcd279015fadf4c"
+    },
+    {
+      "recording_id": "recording_000428",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000428/mid.mp4",
+      "video_bytes": 140019139,
+      "duration_s": 669.9,
+      "selection_rank": "18271c316a44cdced9aa8cffa238afdbf57972d1876bc88e8f63b9ed425ff089"
+    },
+    {
+      "recording_id": "recording_000365",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000365/mid.mp4",
+      "video_bytes": 152413940,
+      "duration_s": 651.9,
+      "selection_rank": "1a11f09597b278a60bd5c329de2ddd72001e492bb51e4233892425fb029c07d5"
+    },
+    {
+      "recording_id": "recording_000396",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000396/mid.mp4",
+      "video_bytes": 120247001,
+      "duration_s": 679.3,
+      "selection_rank": "1b89dabb37bcb97ae6c5ea80bc7ab6c7e812944674a7fa46a9b0a68e2f9b45c5"
+    },
+    {
+      "recording_id": "recording_000334",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000334/mid.mp4",
+      "video_bytes": 118823022,
+      "duration_s": 652.5,
+      "selection_rank": "1e7783481fcf387f70f142c1cba55481c4dafc43978f375020e3af96e0fcbbb3"
+    },
+    {
+      "recording_id": "recording_000401",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000401/mid.mp4",
+      "video_bytes": 127035535,
+      "duration_s": 639.6,
+      "selection_rank": "2b3b6e31d7991ae248140a2dabe67cad43c4e0b1104532fb9a40469686cf90d2"
+    },
+    {
+      "recording_id": "recording_000461",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000461/mid.mp4",
+      "video_bytes": 156877660,
+      "duration_s": 740.7,
+      "selection_rank": "2e9425dc1290688202badd19a71ede828910eeb475b5dac1e1d881086648bdcb"
+    },
+    {
+      "recording_id": "recording_000408",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000408/mid.mp4",
+      "video_bytes": 139287211,
+      "duration_s": 671.7,
+      "selection_rank": "2eb72533aa1af3a0bd3abd764de3aeef683061d9914db6dcad1771efee8e2a48"
+    },
+    {
+      "recording_id": "recording_000451",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000451/mid.mp4",
+      "video_bytes": 133152609,
+      "duration_s": 783.9,
+      "selection_rank": "2f4177345af666c93a72b6f2a5d4cb352642a8a0866f5d642ec89b6c30470f1a"
+    },
+    {
+      "recording_id": "recording_000358",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000358/mid.mp4",
+      "video_bytes": 171893532,
+      "duration_s": 748.7,
+      "selection_rank": "32374b02a73d4393ac91a18158798a57084b7bb9df16dc730f7d301c7fe16802"
+    },
+    {
+      "recording_id": "recording_000233",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000233/mid.mp4",
+      "video_bytes": 4495880,
+      "duration_s": 38.9,
+      "selection_rank": "34eef4a3fbfefac00c319828274c2d03fd5d41dc080a28a7fcf5100989fe1786"
+    },
+    {
+      "recording_id": "recording_000459",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000459/mid.mp4",
+      "video_bytes": 196910055,
+      "duration_s": 907.2,
+      "selection_rank": "3658b7fb2d45fb99525575cefc019d82e61f4f538e2b5e439be5276f0cfb7cd0"
+    },
+    {
+      "recording_id": "recording_000310",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000310/mid.mp4",
+      "video_bytes": 158868799,
+      "duration_s": 659.9,
+      "selection_rank": "385939f9dc1513d543fc0432f44b9339fda9a7ea83f1fd9c69107177dabf97ee"
+    },
+    {
+      "recording_id": "recording_000379",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000379/mid.mp4",
+      "video_bytes": 154924927,
+      "duration_s": 647.0,
+      "selection_rank": "3d0b67e2d3a7d205aa04f192f5947169f51fee7698356fcd28765cdf5ed08944"
+    },
+    {
+      "recording_id": "recording_000457",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000457/mid.mp4",
+      "video_bytes": 153151541,
+      "duration_s": 773.0,
+      "selection_rank": "3ddcd589aba5af710c80278937d3598fc5d01b317244f1c9bdb1c6fe2a0620b4"
+    },
+    {
+      "recording_id": "recording_000397",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000397/mid.mp4",
+      "video_bytes": 165919607,
+      "duration_s": 711.0,
+      "selection_rank": "3e427bd852dd67abfe4a5fab104c4b5f787b7999bc459fdb9acb6a7b76f8c6a3"
+    },
+    {
+      "recording_id": "recording_000274",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000274/mid.mp4",
+      "video_bytes": 127549923,
+      "duration_s": 618.3,
+      "selection_rank": "3f216eb2af95513df4701ea32e559c13cb9e955703ed997c4a92ea4aa751fd28"
+    },
+    {
+      "recording_id": "recording_000458",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000458/mid.mp4",
+      "video_bytes": 185179616,
+      "duration_s": 771.2,
+      "selection_rank": "407f91f285caf245ef3b93e3638d4875880a7c2ee3003ba7fafe4292c3d2e3d9"
+    },
+    {
+      "recording_id": "recording_000324",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000324/mid.mp4",
+      "video_bytes": 154695719,
+      "duration_s": 632.4,
+      "selection_rank": "40bb8e21be266ac8eaf3205eb10ef5cd776147d219406b3cd6d52b409934d238"
+    },
+    {
+      "recording_id": "recording_000470",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000470/mid.mp4",
+      "video_bytes": 178286452,
+      "duration_s": 820.2,
+      "selection_rank": "41da581f4817180fc4e9c09126ff3ae4f224c642b027ea8ea70ed050f464ae7d"
+    },
+    {
+      "recording_id": "recording_000259",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000259/mid.mp4",
+      "video_bytes": 119847081,
+      "duration_s": 561.3,
+      "selection_rank": "428b4acc184931ae48b38a4a603cbfdaf1e7cb1e99cc919ea9e958ee53873e17"
+    },
+    {
+      "recording_id": "recording_000403",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000403/mid.mp4",
+      "video_bytes": 131415665,
+      "duration_s": 655.2,
+      "selection_rank": "4360fe5b45bbde81143a95ac3f1d034ff71bdc0c535447d5e46e520b5af34401"
+    },
+    {
+      "recording_id": "recording_000378",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000378/mid.mp4",
+      "video_bytes": 150491367,
+      "duration_s": 637.6,
+      "selection_rank": "4472c05d5ccc0718213bdb32d0ec34eb5702c824e22e104347d431585c806ebb"
+    },
+    {
+      "recording_id": "recording_000268",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000268/mid.mp4",
+      "video_bytes": 135182410,
+      "duration_s": 655.4,
+      "selection_rank": "48f5454386e3bd5e8e1c29ef46660856459e616336f069294dce03febf16f05b"
+    },
+    {
+      "recording_id": "recording_000136",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_01/recordings/recording_000136/mid.mp4",
+      "video_bytes": 22370747,
+      "duration_s": 92.4,
+      "selection_rank": "4b9a3855de4a66ca9f3edde038a6536a00ae4f6607a7eb5e8e8a2e9fc754eec7"
+    },
+    {
+      "recording_id": "recording_000326",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000326/mid.mp4",
+      "video_bytes": 153273700,
+      "duration_s": 642.9,
+      "selection_rank": "4d1ee407c4a555961078f2df9058f9b787c2bc418afe08955acd9549eea94bf5"
+    },
+    {
+      "recording_id": "recording_000307",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000307/mid.mp4",
+      "video_bytes": 140509863,
+      "duration_s": 643.1,
+      "selection_rank": "4e5af953a0f4dbe5ec57b53d2290f5d4c05602752a12784e72fd581a5d3e271a"
+    },
+    {
+      "recording_id": "recording_000468",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000468/mid.mp4",
+      "video_bytes": 180957239,
+      "duration_s": 798.4,
+      "selection_rank": "5118dc3fe7e90e363d92732880190801c470e2b7771f579dc1740a2c97eccb2c"
+    },
+    {
+      "recording_id": "recording_000349",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000349/mid.mp4",
+      "video_bytes": 154177695,
+      "duration_s": 691.2,
+      "selection_rank": "548434707e991ebd8cc1e1c42ada0e17966412adb87d61cf8165ba72c20015dc"
+    },
+    {
+      "recording_id": "recording_000375",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000375/mid.mp4",
+      "video_bytes": 152203138,
+      "duration_s": 647.9,
+      "selection_rank": "552e641b1579596812bcfa33570fd7cd645ef35db8a15160a06e9fd09e78ebe8"
+    },
+    {
+      "recording_id": "recording_000429",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000429/mid.mp4",
+      "video_bytes": 152249898,
+      "duration_s": 663.0,
+      "selection_rank": "566bf5108bd54e201cbb1f97ab203eb6b030e891975b73139cb463f1a310aedf"
+    },
+    {
+      "recording_id": "recording_000456",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000456/mid.mp4",
+      "video_bytes": 171939252,
+      "duration_s": 760.8,
+      "selection_rank": "59f02c7cb2d9eebb0f28da745714440982431aeb47527b511f053398e2f002f5"
+    },
+    {
+      "recording_id": "recording_000350",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000350/mid.mp4",
+      "video_bytes": 159268976,
+      "duration_s": 688.6,
+      "selection_rank": "5afb537bf08f8ff663aaccf25c0572d1afe3bccbe4e45673d20786e9d4339ab5"
+    },
+    {
+      "recording_id": "recording_000449",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000449/mid.mp4",
+      "video_bytes": 153035145,
+      "duration_s": 677.4,
+      "selection_rank": "5b28b1e7b99ab1f76001cbe44db9e99694f64ea19a7f11eff621281c992a8907"
+    },
+    {
+      "recording_id": "recording_000420",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000420/mid.mp4",
+      "video_bytes": 129293520,
+      "duration_s": 630.1,
+      "selection_rank": "60152243de0fdec774c30570f2fe9f79fd05e2fb9266f6aa40e2c67b68ed3863"
+    },
+    {
+      "recording_id": "recording_000409",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000409/mid.mp4",
+      "video_bytes": 146180028,
+      "duration_s": 657.2,
+      "selection_rank": "602717c725ea2de00cb5330012163efc25e3592d30382e6554280d4eecfbed7e"
+    },
+    {
+      "recording_id": "recording_000319",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000319/mid.mp4",
+      "video_bytes": 6310113,
+      "duration_s": 31.2,
+      "selection_rank": "6052fe3e2c15527d32ad4eb8a5aff72627bcfd08e8d17f031e5426ec659a9ba0"
+    },
+    {
+      "recording_id": "recording_000390",
+      "video": "/shared/datasets/datasets/human_ego_recording_segmentation_10fps_r01_part_02/recordings/recording_000390/mid.mp4",
+      "video_bytes": 168611768,
+      "duration_s": 708.1,
+      "selection_rank": "60f99e26805b114dfa7afcff202cdcb4d5262ab465b89fdd9901ca4e62f604d9"
+    }
+  ]
+}
