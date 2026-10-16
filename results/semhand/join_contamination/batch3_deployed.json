@@ -514,8 +514,9 @@
    "target_anchors": {
     "total": 71,
     "kept": 56,
-    "undetected": 14,
-    "handness_filtered": 1
+    "undetected": 12,
+    "handness_filtered": 1,
+    "detected_untracked": 2
    },
    "fragments": 24,
    "groups": 20,
@@ -804,7 +805,7 @@
      "tid": null,
      "frag_label": null,
      "reached": [],
-     "fate": "undetected"
+     "fate": "detected_untracked"
     },
     {
      "recording": "R26_0825_113022",
@@ -1857,7 +1858,7 @@
      "tid": null,
      "frag_label": null,
      "reached": [],
-     "fate": "undetected"
+     "fate": "detected_untracked"
     },
     {
      "recording": "R26_0825_113022",
@@ -2474,7 +2475,7 @@
      "tid": null,
      "frag_label": null,
      "reached": [],
-     "fate": "handness_filtered"
+     "fate": "detected_untracked"
     },
     {
      "recording": "R26_0825_113022",
@@ -2516,7 +2517,7 @@
      "tid": null,
      "frag_label": null,
      "reached": [],
-     "fate": "handness_filtered"
+     "fate": "detected_untracked"
     },
     {
      "recording": "R26_0825_113022",
@@ -2558,7 +2559,7 @@
      "tid": null,
      "frag_label": null,
      "reached": [],
-     "fate": "handness_filtered"
+     "fate": "detected_untracked"
     },
     {
      "recording": "R26_0825_113022",
@@ -2600,7 +2601,7 @@
      "tid": null,
      "frag_label": null,
      "reached": [],
-     "fate": "undetected"
+     "fate": "detected_untracked"
     },
     {
      "recording": "R26_0825_113022",
@@ -3065,7 +3066,7 @@
      "tid": null,
      "frag_label": null,
      "reached": [],
-     "fate": "undetected"
+     "fate": "detected_untracked"
     },
     {
      "recording": "R26_0825_153426",
@@ -3305,7 +3306,8 @@
    "target_anchors": {
     "total": 69,
     "kept": 49,
-    "undetected": 19,
+    "detected_untracked": 11,
+    "undetected": 8,
     "handness_filtered": 1
    },
    "fragments": 38,
@@ -3756,7 +3758,8 @@
    "target_anchors": {
     "total": 60,
     "kept": 56,
-    "undetected": 4
+    "undetected": 3,
+    "detected_untracked": 1
    },
    "fragments": 19,
    "groups": 14,
@@ -3886,7 +3889,8 @@
    ],
    "target_anchors": {
     "total": 80,
-    "undetected": 5,
+    "undetected": 2,
+    "detected_untracked": 3,
     "kept": 75
    },
    "fragments": 7,
@@ -5668,8 +5672,9 @@
    ],
    "target_anchors": {
     "total": 40,
-    "undetected": 10,
-    "kept": 30
+    "undetected": 6,
+    "kept": 30,
+    "detected_untracked": 4
    },
    "fragments": 27,
    "groups": 18,
@@ -6294,7 +6299,7 @@
    "target_anchors": {
     "total": 66,
     "kept": 65,
-    "undetected": 1
+    "detected_untracked": 1
    },
    "fragments": 19,
    "groups": 15,
@@ -6494,7 +6499,7 @@
    "target_anchors": {
     "total": 80,
     "kept": 76,
-    "undetected": 4
+    "detected_untracked": 4
    },
    "fragments": 11,
    "groups": 7,
@@ -6789,7 +6794,7 @@
      "tid": null,
      "frag_label": null,
      "reached": [],
-     "fate": "handness_filtered"
+     "fate": "detected_untracked"
     },
     {
      "recording": "R26_0828_132741",
@@ -6927,8 +6932,9 @@
    "target_anchors": {
     "total": 77,
     "kept": 56,
-    "undetected": 18,
-    "handness_filtered": 3
+    "undetected": 17,
+    "detected_untracked": 3,
+    "handness_filtered": 1
    },
    "fragments": 29,
    "groups": 19,
@@ -7158,7 +7164,8 @@
    "target_anchors": {
     "total": 55,
     "kept": 50,
-    "undetected": 5
+    "undetected": 2,
+    "detected_untracked": 3
    },
    "fragments": 17,
    "groups": 9,
@@ -7212,7 +7219,7 @@
    "target_anchors": {
     "total": 80,
     "kept": 79,
-    "undetected": 1
+    "detected_untracked": 1
    },
    "fragments": 2,
    "groups": 2,

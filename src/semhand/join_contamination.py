@@ -56,6 +56,7 @@ from rig.track_join import (DIST_FACTOR, WINDOW, centre,  # noqa: E402
 TARGET = ("A", "B")
 NONTARGET = ("other_hand", "not_hand", "unsure")
 UNKNOWN = ("blind", "unmatched", "tie")
+MISSING = ("undetected", "handness_filtered", "detected_untracked", "absent_unscored")
 STAGES = ("detected", "c1", "c2", "c3", "c4", "joined")
 
 
@@ -193,10 +194,14 @@ def match_box(pre, frame, box, min_iou):
 
 
 def read_scores(path, thr):
-    """-> {frame: [(box, p)]}，部署那一臂在 tracker 之前用的逐框 hand-ness。"""
-    out = collections.defaultdict(list)
+    """-> {frame: [(box, p)]}，部署那一臂在 tracker 之前用的逐框 hand-ness；没给就是 None。
+
+    这份打分是 detect1 那一遍对**全部原始检测框**打的（blur_check --handness_models），
+    在 tracker 之前、在过滤之前，所以它同时也是「检测器到底出没出这个框」的记录。
+    """
     if not path or not os.path.exists(path):
-        return out
+        return None
+    out = collections.defaultdict(list)
     for line in open(path, encoding="utf-8"):
         if line.strip():
             r = json.loads(line)
@@ -206,11 +211,27 @@ def read_scores(path, thr):
 
 
 def why_missing(scores, frame, box, min_iou, thr):
-    """一个 gold 框在 detect2 里找不到碎片：是 hand-ness 在 tracker 前摘掉的，还是检测器本来就没给。"""
-    for b, p in scores.get(frame, []):
-        if iou(box, b) >= min_iou and p < thr:
-            return "handness_filtered"
-    return "undetected"
+    """一个 gold 框在 detect2 里找不到碎片，是在哪一层丢的。
+
+      undetected          检测器根本没出这个框（原始检测里没有 IoU 够的）
+      handness_filtered   出了框，但同位置的框 hand-ness 全部 < 门槛，在 tracker 前被摘掉
+      detected_untracked  出了框、hand-ness 也过了门槛，却没进任何轨迹
+                          —— 丢在 tracker：新建门槛、关联，或两遍检测之间的抖动
+      absent_unscored     没有逐框打分，分不出是上面哪一种（stage 1 那一臂）
+
+    第一版只分了前两种，把第三种也记成了「没检出」，于是 batch3 部署臂上
+    「94 个漏掉的 anchor 里 89 个是检测器没检出」实际是检测器 58、tracker 33、过滤 3。
+    「被摘掉」也从「同位置任一个框 < 门槛」改成了「全部 < 门槛」：只要有一个框过了门槛，
+    过滤就会放行它，丢失就不是过滤造成的。
+    """
+    if scores is None:
+        return "absent_unscored"
+    ps = [p for b, p in scores.get(frame, []) if iou(box, b) >= min_iou]
+    if not ps:
+        return "undetected"
+    if max(ps) < thr:
+        return "handness_filtered"
+    return "detected_untracked"
 
 
 def run_one(gold_path, detect2_dir, window, dist_factor, min_iou,
@@ -331,10 +352,12 @@ def main():
             continue
         fate = collections.Counter(b["fate"] for b in ks)
         print("\n  %s：%d 个框（%d 条录像）" % (kind, len(ks), len({b["recording"] for b in ks})))
-        print("    未检出 %d / hand-ness 在 tracker 前摘掉 %d / tracker 自身混入目标碎片 %d"
-              " / 在非目标碎片里 %d"
-              % (fate["undetected"], fate["handness_filtered"], fate["tracker_mixed"],
-                 fate["clean"] + fate["join_into_target"]))
+        print("    不在 detect2 里 %d（检测器没出框 %d / hand-ness 在 tracker 前摘掉 %d"
+              " / 出了框没成轨迹 %d / 无打分分不出 %d）"
+              % (sum(fate[k] for k in MISSING), fate["undetected"], fate["handness_filtered"],
+                 fate["detected_untracked"], fate["absent_unscored"]))
+        print("    tracker 自身混入目标碎片 %d / 在非目标碎片里 %d"
+              % (fate["tracker_mixed"], fate["clean"] + fate["join_into_target"]))
         nt = [b for b in ks if b["fate"] in ("clean", "join_into_target")]
         for s in STAGES[1:]:
             hit = [b for b in nt if s in b["reached"]]
@@ -365,8 +388,10 @@ def main():
     an = collections.Counter()
     for r in res:
         an.update(r["target_anchors"])
-    print("  佩戴者的手（gold anchor）：%d 个，仍在 detect2 里 %d，被 hand-ness 摘掉 %d，未检出 %d"
-          % (an["total"], an["kept"], an["handness_filtered"], an["undetected"]))
+    print("  佩戴者的手（gold anchor）：%d 个，仍在 detect2 里 %d；不在的 %d 个里"
+          " 检测器没出框 %d / hand-ness 摘掉 %d / 出了框没成轨迹 %d / 无打分分不出 %d"
+          % (an["total"], an["kept"], sum(an[k] for k in MISSING), an["undetected"],
+             an["handness_filtered"], an["detected_untracked"], an["absent_unscored"]))
 
     print("\n  %-16s %5s %5s %5s %6s %6s %6s" % ("录像", "碎片", "合并后", "目标组", "受污染", "判不了", "互换"))
     for r in res:

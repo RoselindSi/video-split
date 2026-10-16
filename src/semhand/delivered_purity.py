@@ -20,7 +20,9 @@ detect2，`decisions` 吃 join 之后的。两者只差 join 这一步，所以�
 作用 —— 带进来的错框，和把碎片连起来以后多交付（或少交付）的真手，都在里面。
 
 **召回**是另一面：gold 的 anchor（佩戴者的手）在同帧有没有被一个交付框盖住。没盖住的
-再分成「detect2 里就没有这个框」（没检出或被 hand-ness 摘掉）和「有框但判成了 own=0」。
+先分成「有框但判成了 own=0」和「detect2 里就没有这个框」，后者再用 detect1 那一遍对全部原始
+检测框打的分拆成三层（`join_contamination.why_missing`）：检测器没出框 / 出了框但 hand-ness
+在 tracker 前摘掉 / 出了框也过了门槛却没成轨迹。最后一层丢在 tracker，不是检测器。
 
 置信区间按录像聚类 bootstrap：同一条录像里的帧高度相关，按帧算会把区间算窄。
 """
@@ -38,8 +40,8 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from semhand.hand_level_metrics import iou  # noqa: E402
-from semhand.join_contamination import (NONTARGET, TARGET,  # noqa: E402
-                                        label_fragments)
+from semhand.join_contamination import (MISSING, NONTARGET, TARGET,  # noqa: E402
+                                        label_fragments, read_scores, why_missing)
 from semhand.join_window_sweep import read_pre_join  # noqa: E402
 
 
@@ -72,9 +74,10 @@ def box_label(ev, frame, box, min_iou):
     return lab
 
 
-def run_one(gold_path, arm, min_iou):
+def run_one(gold_path, arm, min_iou, thr=0.10):
     gold = json.load(open(gold_path, encoding="utf-8"))
     rec = gold["recording"]
+    scores = read_scores(os.path.join(arm, "scores", rec + ".jsonl"), thr)
     d2_path = os.path.join(arm, "detect2", rec + ".detect2.csv")
     rows = list(csv.DictReader(open(d2_path, encoding="utf-8-sig")))
     pre = read_pre_join(d2_path)
@@ -142,6 +145,7 @@ def run_one(gold_path, arm, min_iou):
                     c["anchor_own0"] += 1
                 else:
                     c["anchor_absent"] += 1
+                    c["absent_" + why_missing(scores, f, box, min_iou, thr)] += 1
     return out
 
 
@@ -199,6 +203,8 @@ def main():
         print("    召回：anchor %d 个，被交付 %d（%.1f%% [%.1f%%, %.1f%%]），有框但判 own=0 %d，detect2 里没有 %d"
               % (T["anchors"], T["anchor_delivered"], 100 * rec_, 100 * lo, 100 * hi,
                  T["anchor_own0"], T["anchor_absent"]))
+        print("      detect2 里没有的：检测器没出框 %d / hand-ness 摘掉 %d / 出了框没成轨迹 %d / 无打分分不出 %d"
+              % tuple(T["absent_" + k] for k in MISSING))
 
     def delta(s, key, den):
         return ratio(s, "after", key, den) - ratio(s, "before", key, den)

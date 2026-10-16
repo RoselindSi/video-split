@@ -555,7 +555,7 @@
    "target_anchors": {
     "total": 71,
     "kept": 57,
-    "undetected": 14
+    "absent_unscored": 14
    },
    "fragments": 35,
    "groups": 27,
@@ -2967,7 +2967,7 @@
    "target_anchors": {
     "total": 74,
     "kept": 66,
-    "undetected": 8
+    "absent_unscored": 8
    },
    "fragments": 18,
    "groups": 14,
@@ -3442,7 +3442,7 @@
    "target_anchors": {
     "total": 69,
     "kept": 51,
-    "undetected": 18
+    "absent_unscored": 18
    },
    "fragments": 45,
    "groups": 39,
@@ -3906,7 +3906,7 @@
    "target_anchors": {
     "total": 60,
     "kept": 56,
-    "undetected": 4
+    "absent_unscored": 4
    },
    "fragments": 21,
    "groups": 13,
@@ -4036,7 +4036,7 @@
    ],
    "target_anchors": {
     "total": 80,
-    "undetected": 5,
+    "absent_unscored": 5,
     "kept": 75
    },
    "fragments": 7,
@@ -5880,7 +5880,7 @@
    ],
    "target_anchors": {
     "total": 40,
-    "undetected": 10,
+    "absent_unscored": 10,
     "kept": 30
    },
    "fragments": 30,
@@ -6581,7 +6581,7 @@
    "target_anchors": {
     "total": 66,
     "kept": 65,
-    "undetected": 1
+    "absent_unscored": 1
    },
    "fragments": 21,
    "groups": 17,
@@ -6781,7 +6781,7 @@
    "target_anchors": {
     "total": 80,
     "kept": 76,
-    "undetected": 4
+    "absent_unscored": 4
    },
    "fragments": 11,
    "groups": 7,
@@ -7234,7 +7234,7 @@
    "target_anchors": {
     "total": 77,
     "kept": 56,
-    "undetected": 21
+    "absent_unscored": 21
    },
    "fragments": 32,
    "groups": 21,
@@ -7479,7 +7479,7 @@
    "target_anchors": {
     "total": 55,
     "kept": 50,
-    "undetected": 5
+    "absent_unscored": 5
    },
    "fragments": 18,
    "groups": 11,
@@ -7533,7 +7533,7 @@
    "target_anchors": {
     "total": 80,
     "kept": 79,
-    "undetected": 1
+    "absent_unscored": 1
    },
    "fragments": 2,
    "groups": 2,
