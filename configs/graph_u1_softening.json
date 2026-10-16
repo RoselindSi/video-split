@@ -1,0 +1,6 @@
+{
+  "memories": ["support", "cache"],
+  "arms": ["P", "B", "M"],
+  "uniform_mix_grid": [0.0, 0.25, 0.5, 0.75, 1.0],
+  "note": "M mixes point-history prior with uniform including NEW; select all parameters only on inner recordings. It receives extra search budget as a conservative competing explanation."
+}

@@ -1,0 +1,587 @@
+{
+  "controls": {
+    "memories": [
+      "support",
+      "cache"
+    ],
+    "arms": [
+      "P",
+      "B",
+      "M"
+    ],
+    "uniform_mix_grid": [
+      0.0,
+      0.25,
+      0.5,
+      0.75,
+      1.0
+    ],
+    "note": "M mixes point-history prior with uniform including NEW; select all parameters only on inner recordings. It receives extra search budget as a conservative competing explanation."
+  },
+  "folds": [
+    [
+      "graph_review_0003",
+      "mosaic_graph_0022",
+      "graph_review_0021",
+      "mosaic_graph_0015",
+      "graph_review_0001",
+      "mosaic_graph_0007",
+      "graph_review_0029",
+      "graph_review_0019",
+      "graph_review_0023",
+      "mosaic_graph_0012"
+    ],
+    [
+      "mosaic_graph_0026",
+      "graph_review_0005",
+      "graph_review_0026",
+      "graph_review_0018",
+      "graph_review_0002",
+      "mosaic_graph_0008",
+      "graph_review_0012",
+      "mosaic_graph_0014",
+      "mosaic_graph_0029",
+      "mosaic_graph_0016"
+    ],
+    [
+      "mosaic_graph_0030",
+      "graph_review_0027",
+      "graph_review_0008",
+      "mosaic_graph_0019",
+      "mosaic_graph_0025",
+      "graph_review_0025",
+      "graph_review_0004",
+      "graph_review_0007",
+      "mosaic_graph_0003",
+      "mosaic_graph_0028"
+    ],
+    [
+      "graph_review_0016",
+      "graph_review_0006",
+      "mosaic_graph_0018",
+      "graph_review_0020",
+      "mosaic_graph_0020",
+      "mosaic_graph_0002",
+      "graph_review_0022",
+      "graph_review_0013",
+      "mosaic_graph_0024",
+      "graph_review_0009"
+    ],
+    [
+      "mosaic_graph_0021",
+      "mosaic_graph_0011",
+      "graph_review_0011",
+      "graph_review_0024",
+      "mosaic_graph_0004",
+      "graph_review_0030",
+      "mosaic_graph_0017",
+      "mosaic_graph_0006",
+      "mosaic_graph_0023"
+    ]
+  ],
+  "selection": [
+    {
+      "fold": 0,
+      "memory": "support",
+      "arm": "P",
+      "parameters": [
+        0.1,
+        0.9,
+        0.0
+      ],
+      "uniform_mix": 0.0,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.7195121951219512
+    },
+    {
+      "fold": 0,
+      "memory": "support",
+      "arm": "B",
+      "parameters": [
+        0.1,
+        0.9,
+        0.05
+      ],
+      "uniform_mix": 0.0,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.7235772357723578
+    },
+    {
+      "fold": 0,
+      "memory": "support",
+      "arm": "M",
+      "parameters": [
+        0.1,
+        0.9,
+        0.0
+      ],
+      "uniform_mix": 0.0,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.7195121951219512
+    },
+    {
+      "fold": 0,
+      "memory": "cache",
+      "arm": "P",
+      "parameters": [
+        0.1,
+        0.9,
+        0.0
+      ],
+      "uniform_mix": 0.0,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.7195121951219512
+    },
+    {
+      "fold": 0,
+      "memory": "cache",
+      "arm": "B",
+      "parameters": [
+        0.1,
+        0.9,
+        0.05
+      ],
+      "uniform_mix": 0.0,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.7235772357723578
+    },
+    {
+      "fold": 0,
+      "memory": "cache",
+      "arm": "M",
+      "parameters": [
+        0.1,
+        0.9,
+        0.0
+      ],
+      "uniform_mix": 0.0,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.7195121951219512
+    },
+    {
+      "fold": 1,
+      "memory": "support",
+      "arm": "P",
+      "parameters": [
+        0.1,
+        0.9,
+        0.0
+      ],
+      "uniform_mix": 0.0,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.7404580152671756
+    },
+    {
+      "fold": 1,
+      "memory": "support",
+      "arm": "B",
+      "parameters": [
+        0.1,
+        0.9,
+        0.0
+      ],
+      "uniform_mix": 0.0,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.7404580152671756
+    },
+    {
+      "fold": 1,
+      "memory": "support",
+      "arm": "M",
+      "parameters": [
+        0.1,
+        0.9,
+        0.0
+      ],
+      "uniform_mix": 0.0,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.7404580152671756
+    },
+    {
+      "fold": 1,
+      "memory": "cache",
+      "arm": "P",
+      "parameters": [
+        0.1,
+        0.9,
+        0.0
+      ],
+      "uniform_mix": 0.0,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.7404580152671756
+    },
+    {
+      "fold": 1,
+      "memory": "cache",
+      "arm": "B",
+      "parameters": [
+        0.1,
+        0.9,
+        0.0
+      ],
+      "uniform_mix": 0.0,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.7404580152671756
+    },
+    {
+      "fold": 1,
+      "memory": "cache",
+      "arm": "M",
+      "parameters": [
+        0.1,
+        0.9,
+        0.0
+      ],
+      "uniform_mix": 0.0,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.7404580152671756
+    },
+    {
+      "fold": 2,
+      "memory": "support",
+      "arm": "P",
+      "parameters": [
+        0.1,
+        0.9,
+        0.0
+      ],
+      "uniform_mix": 0.0,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.7755905511811023
+    },
+    {
+      "fold": 2,
+      "memory": "support",
+      "arm": "B",
+      "parameters": [
+        0.1,
+        0.9,
+        0.05
+      ],
+      "uniform_mix": 0.0,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.8031496062992126
+    },
+    {
+      "fold": 2,
+      "memory": "support",
+      "arm": "M",
+      "parameters": [
+        0.1,
+        0.9,
+        0.05
+      ],
+      "uniform_mix": 0.25,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.7874015748031497
+    },
+    {
+      "fold": 2,
+      "memory": "cache",
+      "arm": "P",
+      "parameters": [
+        0.1,
+        0.9,
+        0.0
+      ],
+      "uniform_mix": 0.0,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.7755905511811023
+    },
+    {
+      "fold": 2,
+      "memory": "cache",
+      "arm": "B",
+      "parameters": [
+        0.1,
+        0.9,
+        0.05
+      ],
+      "uniform_mix": 0.0,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.8031496062992126
+    },
+    {
+      "fold": 2,
+      "memory": "cache",
+      "arm": "M",
+      "parameters": [
+        0.1,
+        0.9,
+        0.05
+      ],
+      "uniform_mix": 0.25,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.7874015748031497
+    },
+    {
+      "fold": 3,
+      "memory": "support",
+      "arm": "P",
+      "parameters": [
+        0.1,
+        0.9,
+        0.0
+      ],
+      "uniform_mix": 0.0,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.7169811320754716
+    },
+    {
+      "fold": 3,
+      "memory": "support",
+      "arm": "B",
+      "parameters": [
+        0.25,
+        0.9,
+        0.05
+      ],
+      "uniform_mix": 0.0,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.7396226415094339
+    },
+    {
+      "fold": 3,
+      "memory": "support",
+      "arm": "M",
+      "parameters": [
+        0.25,
+        0.9,
+        0.05
+      ],
+      "uniform_mix": 0.5,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.7245283018867924
+    },
+    {
+      "fold": 3,
+      "memory": "cache",
+      "arm": "P",
+      "parameters": [
+        0.1,
+        0.9,
+        0.0
+      ],
+      "uniform_mix": 0.0,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.7169811320754716
+    },
+    {
+      "fold": 3,
+      "memory": "cache",
+      "arm": "B",
+      "parameters": [
+        0.25,
+        0.9,
+        0.05
+      ],
+      "uniform_mix": 0.0,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.7396226415094339
+    },
+    {
+      "fold": 3,
+      "memory": "cache",
+      "arm": "M",
+      "parameters": [
+        0.25,
+        0.9,
+        0.05
+      ],
+      "uniform_mix": 0.5,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.7245283018867924
+    },
+    {
+      "fold": 4,
+      "memory": "support",
+      "arm": "P",
+      "parameters": [
+        0.1,
+        0.9,
+        0.0
+      ],
+      "uniform_mix": 0.0,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.6973180076628352
+    },
+    {
+      "fold": 4,
+      "memory": "support",
+      "arm": "B",
+      "parameters": [
+        0.1,
+        0.9,
+        0.05
+      ],
+      "uniform_mix": 0.0,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.7088122605363985
+    },
+    {
+      "fold": 4,
+      "memory": "support",
+      "arm": "M",
+      "parameters": [
+        0.1,
+        0.9,
+        0.0
+      ],
+      "uniform_mix": 0.0,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.6973180076628352
+    },
+    {
+      "fold": 4,
+      "memory": "cache",
+      "arm": "P",
+      "parameters": [
+        0.1,
+        0.9,
+        0.0
+      ],
+      "uniform_mix": 0.0,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.6973180076628352
+    },
+    {
+      "fold": 4,
+      "memory": "cache",
+      "arm": "B",
+      "parameters": [
+        0.1,
+        0.9,
+        0.05
+      ],
+      "uniform_mix": 0.0,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.7088122605363985
+    },
+    {
+      "fold": 4,
+      "memory": "cache",
+      "arm": "M",
+      "parameters": [
+        0.1,
+        0.9,
+        0.0
+      ],
+      "uniform_mix": 0.0,
+      "query_temperature": 0.05,
+      "inner_accuracy": 0.6973180076628352
+    }
+  ],
+  "summary": {
+    "support:P": {
+      "n": 322,
+      "accuracy": 0.7267080745341615,
+      "rescue": 0,
+      "override": 0,
+      "mean_gate": 0.21853962136386257,
+      "mean_weight": 0.0,
+      "predecessor_accuracy": 0.7404580152671756,
+      "mean_gold_mass": 0.6178418513831935
+    },
+    "support:B": {
+      "n": 322,
+      "accuracy": 0.7391304347826086,
+      "rescue": 4,
+      "override": 0,
+      "mean_gate": 0.21853962136386257,
+      "mean_weight": 0.040683229813664595,
+      "predecessor_accuracy": 0.7404580152671756,
+      "mean_gold_mass": 0.6178418513831935
+    },
+    "support:M": {
+      "n": 322,
+      "accuracy": 0.7204968944099379,
+      "rescue": 3,
+      "override": 5,
+      "mean_gate": 0.21853962136386257,
+      "mean_weight": 0.019409937888198756,
+      "predecessor_accuracy": 0.7404580152671756,
+      "mean_gold_mass": 0.6178418513831935
+    },
+    "cache:P": {
+      "n": 322,
+      "accuracy": 0.7267080745341615,
+      "rescue": 0,
+      "override": 0,
+      "mean_gate": 0.21853962136386257,
+      "mean_weight": 0.0,
+      "predecessor_accuracy": 0.7404580152671756,
+      "mean_gold_mass": 0.6178418513831935
+    },
+    "cache:B": {
+      "n": 322,
+      "accuracy": 0.7391304347826086,
+      "rescue": 4,
+      "override": 0,
+      "mean_gate": 0.21853962136386257,
+      "mean_weight": 0.040683229813664595,
+      "predecessor_accuracy": 0.7404580152671756,
+      "mean_gold_mass": 0.6178418513831935
+    },
+    "cache:M": {
+      "n": 322,
+      "accuracy": 0.7204968944099379,
+      "rescue": 3,
+      "override": 5,
+      "mean_gate": 0.21853962136386257,
+      "mean_weight": 0.019409937888198756,
+      "predecessor_accuracy": 0.7404580152671756,
+      "mean_gold_mass": 0.6178418513831935
+    }
+  },
+  "contrasts": {
+    "support:B-M": {
+      "delta": 0.018633540372670808,
+      "ci": [
+        0.0030120481927710845,
+        0.038461538461538464
+      ]
+    },
+    "support:B-P": {
+      "delta": 0.012422360248447204,
+      "ci": [
+        0.0027395388876412905,
+        0.02592924357582339
+      ]
+    },
+    "cache:B-M": {
+      "delta": 0.018633540372670808,
+      "ci": [
+        0.0030120481927710845,
+        0.038461538461538464
+      ]
+    },
+    "cache:B-P": {
+      "delta": 0.012422360248447204,
+      "ci": [
+        0.0027395388876412905,
+        0.02592924357582339
+      ]
+    },
+    "P:support-cache": {
+      "delta": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ]
+    },
+    "B:support-cache": {
+      "delta": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ]
+    },
+    "M:support-cache": {
+      "delta": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ]
+    }
+  }
+}

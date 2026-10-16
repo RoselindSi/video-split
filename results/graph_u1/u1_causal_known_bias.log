@@ -1,0 +1,84 @@
+{
+  "config": {
+    "bias_grid": [
+      -0.2,
+      -0.1,
+      -0.05,
+      0.0,
+      0.05,
+      0.1,
+      0.2
+    ],
+    "units": "additive score after visual temperature scaling",
+    "selection": "joint visual T, NEW tau, known bias via the same inner video folds",
+    "note": "No transition content, no predecessor-dependent gate; fixed known-state bias only. Diagnostic on repeatedly inspected benchmark."
+  },
+  "selection": [
+    {
+      "fold": 0,
+      "temperature": 0.25,
+      "tau": 0.9,
+      "bias": -0.1,
+      "inner_accuracy": 0.7276422764227642,
+      "effective_cosine_threshold": 0.925
+    },
+    {
+      "fold": 1,
+      "temperature": 0.1,
+      "tau": 0.9,
+      "bias": -0.2,
+      "inner_accuracy": 0.7404580152671756,
+      "effective_cosine_threshold": 0.92
+    },
+    {
+      "fold": 2,
+      "temperature": 0.1,
+      "tau": 0.9,
+      "bias": 0.05,
+      "inner_accuracy": 0.7913385826771654,
+      "effective_cosine_threshold": 0.895
+    },
+    {
+      "fold": 3,
+      "temperature": 0.1,
+      "tau": 0.9,
+      "bias": -0.1,
+      "inner_accuracy": 0.7245283018867924,
+      "effective_cosine_threshold": 0.91
+    },
+    {
+      "fold": 4,
+      "temperature": 0.1,
+      "tau": 0.9,
+      "bias": 0.05,
+      "inner_accuracy": 0.7088122605363985,
+      "effective_cosine_threshold": 0.895
+    }
+  ],
+  "summary": {
+    "n": 322,
+    "accuracy": 0.7267080745341615,
+    "rescue": 7,
+    "override": 7,
+    "mean_gate": 0.07058777920025432,
+    "mean_weight": 0.0,
+    "predecessor_accuracy": 0.7404580152671756,
+    "mean_gold_mass": 0.5187000109746231
+  },
+  "contrasts": {
+    "K-V": {
+      "delta": 0.0,
+      "ci": [
+        -0.020409655090106216,
+        0.018867924528301886
+      ]
+    },
+    "B-K": {
+      "delta": 0.012422360248447204,
+      "ci": [
+        -0.009966777408637873,
+        0.039735099337748346
+      ]
+    }
+  }
+}

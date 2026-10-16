@@ -1,0 +1,41 @@
+{
+  "status": "writing_only_U1_closed",
+  "date": "2026-10-16",
+  "verified": [
+    "G1b denominator 116/25",
+    "ladder denominator 322/49 and 19 net successes",
+    "U1 four rescues",
+    "shuffled mean 73.60 percent",
+    "E2 label-permutation contrast direction"
+  ],
+  "files": [
+    {
+      "path": "docs/graph_manuscript_working_draft.md",
+      "sha256": "0e472d8ab7dc88b1b2a91344833bbe630a6d255fbaf5675d5b7db8a2532c57a3"
+    },
+    {
+      "path": "docs/graph_manuscript_evidence_index.md",
+      "sha256": "a2090087f9ab9ac7666bfbc2a6ba52a2147d76d7280a7929962d2a655cdee43d"
+    },
+    {
+      "path": "results/auditor/interaction_graph_g1b_summary.json",
+      "sha256": "2d8ae726de6435614ab9e6adb3b26fd9f98887fda76fc57da44ea56b709576f1"
+    },
+    {
+      "path": "results/auditor/interaction_graph_ladder 2.json",
+      "sha256": "b60d4f73277dc22b10e4c9de84d0e003948d2572ed1d599a68e6672f3a4ff24a"
+    },
+    {
+      "path": "results/auditor/paper_fig4_e2_measured.json",
+      "sha256": "8cb53279d20db7aaa28f9add75af292b72905ab786eb43773b1e9683667d06c2"
+    },
+    {
+      "path": "results/graph_u1/u1_causal_nested_calibrated.json",
+      "sha256": "740477167f3a9b6b0fc4d6319980aab9f41c88e5e3bde46a756f5772c86aa463"
+    },
+    {
+      "path": "results/graph_u1/u1_causal_memory_null.json",
+      "sha256": "d716af8735867f49b2dc0278378427af41e285de8d418bc53b057ccd50b9ef5c"
+    }
+  ]
+}

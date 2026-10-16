@@ -1,0 +1,163 @@
+{
+  "date": "2026-10-16",
+  "status": "closed_no_more_U1",
+  "python": "3.10.22 (main, Oct  3 2026, 01:02:33) [MSC v.1944 64 bit (AMD64)]",
+  "numpy": "2.2.6",
+  "files": [
+    {
+      "path": "scripts/graph_u1_calibration.py",
+      "bytes": 4021,
+      "sha256": "00aa7983ffcaf6902b59ddbb638349ffa34854e3cc9988f7fc40498163b30d6c"
+    },
+    {
+      "path": "scripts/graph_u1_diagnostics.py",
+      "bytes": 5350,
+      "sha256": "335d95694bdf3f2a23081e12d9964f4e6e8ed98eae171a5f4d846af6eca1a5c6"
+    },
+    {
+      "path": "scripts/graph_u1_known_bias.py",
+      "bytes": 2571,
+      "sha256": "d20e182d5744e158375883922e472b79630f6bc4753a1aa8cd59d86a87291249"
+    },
+    {
+      "path": "scripts/graph_u1_memory_null.py",
+      "bytes": 4973,
+      "sha256": "45ad171fdaca9cb228726db964132eb2a4d63053897ae36a467027d538ef499f"
+    },
+    {
+      "path": "scripts/graph_u1_query.py",
+      "bytes": 11922,
+      "sha256": "79256d1f325869dbb892c1897754f26053482178b3bfe0b9af6ea80e82ac4f29"
+    },
+    {
+      "path": "scripts/graph_u1_rescue_audit.py",
+      "bytes": 3720,
+      "sha256": "24516d6224ff556ba8c0807fbe17e7ae97a69b17f5e7d348cbc1fc6f471728f3"
+    },
+    {
+      "path": "scripts/graph_u1_softening.py",
+      "bytes": 4064,
+      "sha256": "5ac794db3f97d8495e850aa7b858e36f5c174bda90d795e272db19a7dbd12098"
+    },
+    {
+      "path": "configs/graph_u1_known_bias.json",
+      "bytes": 349,
+      "sha256": "5446fc9dac95c5a57fff09ecd82d60d61ee0518c7e3087f800181453f0c864b4"
+    },
+    {
+      "path": "configs/graph_u1_memory_null.json",
+      "bytes": 533,
+      "sha256": "dff74d46fbe955cbced0688b1192c58955918b3c60ed9d8a6d36d7661d19bd3e"
+    },
+    {
+      "path": "configs/graph_u1_query.json",
+      "bytes": 670,
+      "sha256": "7ee051d2887780331a75b79714c2f871dcb9a572ca0765d54dca2a0832b24ff4"
+    },
+    {
+      "path": "configs/graph_u1_softening.json",
+      "bytes": 307,
+      "sha256": "d3c1e7fa8734ba4bc3890fb26d4309b281253f14ffb4488dca8ce7575e590968"
+    },
+    {
+      "path": "docs/graph_u1_baseline_reproduction.md",
+      "bytes": 2063,
+      "sha256": "109fa0b77a9ad14aacf69dc056a9326a071e1701a5b165142e11d201f1246835"
+    },
+    {
+      "path": "docs/graph_u1_calibration_result.md",
+      "bytes": 2416,
+      "sha256": "2bd8fd71453192acea5f356c34de4d413f8c51da2a2ffa92561fd4227a5226b6"
+    },
+    {
+      "path": "docs/graph_u1_causal_result.md",
+      "bytes": 2621,
+      "sha256": "1cdede15da24693a69832b4da03784a6a80c13a23ea611fb3bc0a7c17449645a"
+    },
+    {
+      "path": "docs/graph_u1_execution_plan.md",
+      "bytes": 5537,
+      "sha256": "fc956c4fa2098fdac61af39039cc1b481289979805cbc336daa3721c50600ac0"
+    },
+    {
+      "path": "docs/graph_u1_final_result.md",
+      "bytes": 8508,
+      "sha256": "7a223c598d1b14893db76180fef222ff28b8b850d3c2145a2d36b74ef5ea0c91"
+    },
+    {
+      "path": "docs/graph_u1_known_bias_result.md",
+      "bytes": 2115,
+      "sha256": "0c3de1c2e067ba392c2a39fec70edd811be256302ea803576499eb5aa86be423"
+    },
+    {
+      "path": "docs/graph_u1_matched_diagnostics.md",
+      "bytes": 2711,
+      "sha256": "53bb31672d32145c755523e305764b0a3a7cb58f7aabd495acb1e082a3bd3c11"
+    },
+    {
+      "path": "docs/graph_u1_memory_null_result.md",
+      "bytes": 2488,
+      "sha256": "dcaa07fb5e017350546d972288fea89609b9a512631ee2a6a9a66d0cfb1e2773"
+    },
+    {
+      "path": "docs/graph_u1_query_pilot.md",
+      "bytes": 1714,
+      "sha256": "44573014cc0dc895f79638f3d0dd0c863672fe515a20dafc9ef45662102de05b"
+    },
+    {
+      "path": "docs/graph_u1_rescue_audit.md",
+      "bytes": 3106,
+      "sha256": "a540ef5ffcc34c0f2cacb464022999727d86a2ff4c9e85c2393ea1bfcf1f331f"
+    },
+    {
+      "path": "docs/graph_u1_softening_cache_result.md",
+      "bytes": 2520,
+      "sha256": "0816e1bdabfb4993372dc31dc4d3d2743844ba4f31dd14c0f96e1ea9e98c6885"
+    },
+    {
+      "path": "docs/graph_line_manuscript_status.md",
+      "bytes": 6441,
+      "sha256": "e897fa232598d9ff88bcbc01e2dbf2f935efdbf0eecca91c1c2b970207ef2602"
+    },
+    {
+      "path": "results/graph_u1/u1_causal_nested_calibrated.json",
+      "bytes": 878642,
+      "sha256": "740477167f3a9b6b0fc4d6319980aab9f41c88e5e3bde46a756f5772c86aa463"
+    },
+    {
+      "path": "results/graph_u1/u1_causal_softening.json",
+      "bytes": 875497,
+      "sha256": "5608519000909b530cdefbb26f0ed699176305b1433443809adaf53a5bdbdedf"
+    },
+    {
+      "path": "results/graph_u1/u1_causal_rescue_audit.json",
+      "bytes": 2918772,
+      "sha256": "14491d26ec53b16d5f7939c64bd37939f24d2eba0af155bc93dc3e209961bed5"
+    },
+    {
+      "path": "results/graph_u1/u1_causal_memory_null.json",
+      "bytes": 6380179,
+      "sha256": "d716af8735867f49b2dc0278378427af41e285de8d418bc53b057ccd50b9ef5c"
+    },
+    {
+      "path": "results/graph_u1/u1_causal_known_bias.json",
+      "bytes": 136200,
+      "sha256": "ebd26ddecf07fd4d20c3b1b79ac2a297ae5983b174a0c92b873677ff9326c566"
+    },
+    {
+      "path": "results/graph_u1/input_hashes.json",
+      "bytes": 604,
+      "sha256": "867223f4960437c8d1650a06a1570a0d639d5fdff1be172b6c3ab949bc0bf1c2"
+    },
+    {
+      "path": "results/graph_u1/release_hashes.json",
+      "bytes": 19406,
+      "sha256": "56dc3de9abcf0bfa955e6a472503a88ee3e2b7195d13f6d9c93ddb5f809b4ed5"
+    },
+    {
+      "path": "results/graph_u1/u1_final_summary.json",
+      "bytes": 54078,
+      "sha256": "2aff888a5ca9101747d28d18a1fea6cf183f5a9501057d8834d6b4474141f3d7"
+    }
+  ]
+}

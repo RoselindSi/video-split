@@ -1,0 +1,306 @@
+[
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\CHECKSUMS.sha256",
+    "Hash": "D2AA83908DF54F91D2660AAC1B577441F23811C6F8841B5DD4CB1CB7AF7387DE"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\fine_edges.csv",
+    "Hash": "6FEECEB49D452A0AD86C7F923B82DEC023AC5B1A171105EEF3BFA964C93C41B5"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\fine_edges.json",
+    "Hash": "044077900EE5C05C89B75A79C20B4AFEE11FFE7A1FB4D22FD6AFC4B2D38424C5"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\freeze_manifest.json",
+    "Hash": "0F2C695E334F9F03915124F52373E44EC70395FFDD58459CC1FEC4DA92A0CD02"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\graph_explorer.html",
+    "Hash": "0EC0B11FEC11416E759EA406571466F0BF3F05F4B03345FF2D2D7004C7E1367D"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\graph_release.json",
+    "Hash": "3EA7D53556981BD6316B35F08A11279B55F698526E7AC1BD7809C125509576AB"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\group_edges.csv",
+    "Hash": "EA348C185D43A1F765997E9005EECFD6FD975C417921631041AA0B3635320A8F"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\group_edges.json",
+    "Hash": "1F86559193D57F5D6F9F3E9F321DB4F1AC7DE58AB42EFDE513A4A250BA279612"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\local_nodes.csv",
+    "Hash": "0012648D270C91AA6312E3D01B8E3D1317BBE6A40FD0946EC261B0EE23F8F545"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\local_nodes.json",
+    "Hash": "C27EF24D8868553C211C839A45A5AAE479BC3331C5AF98C4FA0578C01CC39F67"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\procedure_groups.json",
+    "Hash": "A78E4CBA1A8006F94FC3738E829415516F960307D078F1B83A68394B3E848367"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\qa_report.json",
+    "Hash": "5A5E5132CFF2C686850C29E8010BFE3566D5C1F94500B758118D879F656382E7"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\release_report.md",
+    "Hash": "0172358A3C667BC63E7A34DDF2BF8DF51C685960268416DDD3C9FE3766619969"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\review_queue.csv",
+    "Hash": "910396CE90E95EE4C8ABAA56ACAB8373A0F930CD4312AFB18034D00359DAEA3C"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\review_queue.json",
+    "Hash": "D5C60428523CEC778D3EFCCE1FFB56684BBD00C03995DAF3CFC525ACEFBD762F"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\special_nodes.json",
+    "Hash": "D64C2FC295961A824301FEB06BA418EA29795BC081A7AA71703B99A6CECD643C"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0001.json",
+    "Hash": "3668744F04FC0E4A1EC7DFABBC3A75805388E529BE6069F54D35D283E8D50D3D"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0002.json",
+    "Hash": "5213903ADC4568163022863F547F279C3282743C640C554E3031B9A4C1890EAA"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0003.json",
+    "Hash": "F67434D51AE75A760B362E3B72BFAC3FC833A3110E5008DC452A57581D9DFC84"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0004.json",
+    "Hash": "E10C8D38383019AB8B29FFF4D6CC6599A07A670C4D264AD8EC4BC64EF766DB15"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0005.json",
+    "Hash": "8C96E37B283730B1B1FAB849AC93634A0DA64372DDB66B603F20B1F6C2B353D8"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0006.json",
+    "Hash": "2C390D169BCD0F8778B0C2C3C1AC60ECF39C0CF28E2133907CA510CB4E19B75A"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0007.json",
+    "Hash": "61A47B78F1C65E9D1E591A12EBB2C8F8CC405494AD432BB0F7B46CE633443607"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0008.json",
+    "Hash": "37C2440EBDD4FDAE35FA738D7DD944E52DB3429E5D68C3CFC62FDC85E435DE90"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0009.json",
+    "Hash": "1295C5988B9131F794D6530A6DAD3B8533D1CC7BAB11CABF4183663BBCAA2C92"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0010.json",
+    "Hash": "9F05F81F486FB8A59E6F61D53171160B005251C886CA93BD67419FB9A740E6C4"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0011.json",
+    "Hash": "7C47979CDA7278086CDABD65528B084B8DCE58813491ED782C8B903A4A32F3D6"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0012.json",
+    "Hash": "D1ECE30F96F3C9BDBA7EE5B05FAD7FEAE315C5D8BB5B90BA19A3FDD68418D305"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0013.json",
+    "Hash": "A1EDBA602B50C77870A71CE4A8CF198CFAB0E9E48F33926EC878543DBBD83BC5"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0014.json",
+    "Hash": "C1E5E90A2ED94C01B6602600F9FC15EF5956171A7B6ADA59CB41932B6BA9FA8C"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0015.json",
+    "Hash": "2216B678D2FA0E95C71636B9A4B2D9F8FD7B6C4600376A87250AEE2731F8BC53"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0016.json",
+    "Hash": "3295B7BFCF51D313274DC141EDF94ABD890CF490AF185C23E167A48D857F65E7"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0017.json",
+    "Hash": "01EDF4BED85FB08E9B8454ADDCDA685AAE2643A79ADA1E98D98683EF43B54B02"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0018.json",
+    "Hash": "08BB36C3D77F252BDD0466F17B4AF7F4F841BC981017F3B9D1EC32DCA97CC6B6"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0019.json",
+    "Hash": "673C13AB6216D8A189277F96728ACCA9D0352F99D71E455670405A65268AA311"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0020.json",
+    "Hash": "ED09302FACA0DEB9428A01231EF9059E03BF01E7F20244A911649BE18A5438B9"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0021.json",
+    "Hash": "F5217BEE28B83BCCE56A0EF20D3DC4C72E15205954FF268F8911CE277D417798"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0022.json",
+    "Hash": "B4899CAD47BBD44DA4624F4114FE2FB1015A59516172E23427A8CE7BC60DEC00"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0023.json",
+    "Hash": "5DD54D236683CF37FA816150802128F127430EC1AD95390EB4037F7573B6E992"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0024.json",
+    "Hash": "335DD99935A4D4636A7CD540077D3B26B5DEFA4CF743BF38AA65D6F0F2FD52A0"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0025.json",
+    "Hash": "41D8DF5D3FF4A3409DD4D8D7774A82CCFDF0816069D1EF8FD70E8E05FDC328FA"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0026.json",
+    "Hash": "23E2618ABD10A3C311CE71E74D7C1722E5088EFC556D3D1B72146CB358D88AFB"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0027.json",
+    "Hash": "2A08FE8709C15FE9D9D38486FACA5FEE143EA8624729AFF7CB8748BFE053408C"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0028.json",
+    "Hash": "D16598C72C537F9692F4F93E0B491AC52D7EDD5190E8F9603756F1019AE0E81C"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0029.json",
+    "Hash": "4055AC664F1EBC747497904E54985BF8B75E4845236F416AD11E247A817707B6"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\mosaic_complement\\mosaic_graph_0030.json",
+    "Hash": "A461B4AA079E92F745AC49757E04A039B0F98C818F9C6CA3B7D220948CF19026"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0001.json",
+    "Hash": "738D91C7F2870939C549011342027982AC798886F6FA960F32137398B3A8A5DB"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0002.json",
+    "Hash": "AD1DCC5518D4E94804AEAD392ADBEC418A5EEFBCE18F4CAE5428B2BDC88FA291"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0003.json",
+    "Hash": "B4E1B775C91EEC2934D8099BF5F20C5209C568FC42F995116B767462AB036943"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0004.json",
+    "Hash": "09971A2314818D8DD5BCD5DD3F34C641B26BDBD91EFC2D5D5D74550E32DE1AD3"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0005.json",
+    "Hash": "1496868A01EA3843516D5CF9C7C3E712DF0908F008A41D74A26F152777BF176A"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0006.json",
+    "Hash": "76A83FC5908DC898AF4FF8CDC1B8C4AA8CA56F1794B1EAD8DDDCAD0B9AD9B72A"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0007.json",
+    "Hash": "29CB5DEDDD56A307A30CDF5A9398BFE694C89F4C52B98426A29D081850F8C81A"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0008.json",
+    "Hash": "23570E41B4F9EE6E94BC191D1DEA08C094CCC4A4F9ED7470269BF44189371ABB"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0009.json",
+    "Hash": "2381C932906CA722A415D74DC17FBCACBD8F013AAD5722051E7A4F289CA8B27F"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0010.json",
+    "Hash": "CE5ABE243140B15031155CA9200B3A3FF3EBB69FEA24307C2CC7717D41A68B8B"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0011.json",
+    "Hash": "EF9CFD43110613576AB6F264CF321514B48FD7EA30712C851256B52C089241CD"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0012.json",
+    "Hash": "D9EE9C0CBF966A25DF756013F70F298C445B5D4804ED14345BBE7F16521CE058"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0013.json",
+    "Hash": "5F8836818C5F4C79A89EC25FE3802BF83FCEC67A8F6016E5FDCF1961006CAF33"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0014.json",
+    "Hash": "42689878E3986E253E0490997A7D9791C644A0693473DB157D7EC6D931557ADB"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0015.json",
+    "Hash": "EFB2B499F100DB321E64CC75E5D4719C657A545DE4C923FDB420AF1A5E033202"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0016.json",
+    "Hash": "2E0EB4564138FA5F541095137CB5B18DD9530B627F637D84CFA99073D6054BB9"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0017.json",
+    "Hash": "68055904ECE04E616E7E1F692128FF444B0BDBD454003F54758D8EA8A9CA28F7"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0018.json",
+    "Hash": "03291D9E323BB37D08D6575E55A93DBA4BCA5F1BFBA0F2464027983640B977CF"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0019.json",
+    "Hash": "8C765DEF61A3B13668C46A5106A09CF36513CC7FE2CF304D84ECA594C9371C6E"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0020.json",
+    "Hash": "FD70A63049E6F3C90A1595DB69367AC54843F1E9CDE7E1368D4F2B77ECA02493"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0021.json",
+    "Hash": "A059A4D910A0F18DA8FE1CBBD203FF9C2F27D5D49492674834FFCFC588457BB0"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0022.json",
+    "Hash": "5B0BFEE860105746BCC41751F34CB35530724D4D056F3896DCEEE64867C0BAAA"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0023.json",
+    "Hash": "85AE6A7CF168BB0569C6D159A3B03FB11BE835C8C5D09E5B0D7D598C66F273F1"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0024.json",
+    "Hash": "3F8A23510706BD6CA853B01075B87627F5F7EC5E385FBF705A498A158F8D337F"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0025.json",
+    "Hash": "141FA5F2FEE4C99DFB38B1081F61192D37A16174E0F742B8DC9684E999BCB52C"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0026.json",
+    "Hash": "39880C343A215066BE11AD0FA421FAFEF43A12C60B84734679D056D49A0FEF13"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0027.json",
+    "Hash": "E6774A30BE63261DDC54FBCFB50352CDD4B15409C8A09CE1B458054BC629439C"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0028.json",
+    "Hash": "67810D5FE7D21310446362B76DE73CCB05616BF79BD6DFAABC78096A1C4CBC95"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0029.json",
+    "Hash": "228743A15F2A865299CAB8DC29391D1694E2E80D5C448FE336D185A5603DFCB2"
+  },
+  {
+    "Path": "C:\\Users\\EDY\\Documents\\GitHub\\video-split\\results\\auditor\\interaction_graph_release_v1\\frozen_annotations\\repeated_actions\\graph_review_0030.json",
+    "Hash": "E2427A77882373BF10E618F69325DEBD9EE2119728B22A769F9C047BFFB3E85C"
+  }
+]

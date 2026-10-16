@@ -1,0 +1,957 @@
+{
+  "settings": {
+    "rates": [
+      0,
+      0.1,
+      0.2,
+      0.3,
+      0.4
+    ],
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "kinds": [
+      "confident_swap",
+      "uncertain"
+    ],
+    "parameters_from": "P inner-CV selection",
+    "note": "Synthetic posterior perturbation, not a calibrated sensor model. Rate is intervention probability, not actual predecessor error."
+  },
+  "matched_summary": {
+    "P:V": {
+      "n": 322,
+      "accuracy": 0.7267080745341615,
+      "rescue": 0,
+      "override": 0,
+      "mean_gate": 0.026401264856254138,
+      "mean_weight": 0.0,
+      "predecessor_accuracy": 0.9837133550488599,
+      "mean_gold_mass": 0.4837097158480449
+    },
+    "P:O": {
+      "n": 322,
+      "accuracy": 0.8167701863354038,
+      "rescue": 35,
+      "override": 6,
+      "mean_gate": 0.026401264856254138,
+      "mean_weight": 0.14937888198757762,
+      "predecessor_accuracy": 0.9837133550488599,
+      "mean_gold_mass": 0.4837097158480449
+    },
+    "P:P": {
+      "n": 322,
+      "accuracy": 0.8074534161490683,
+      "rescue": 34,
+      "override": 8,
+      "mean_gate": 0.026401264856254138,
+      "mean_weight": 0.14937888198757762,
+      "predecessor_accuracy": 0.9837133550488599,
+      "mean_gold_mass": 0.4837097158480449
+    },
+    "P:B": {
+      "n": 322,
+      "accuracy": 0.7298136645962733,
+      "rescue": 10,
+      "override": 9,
+      "mean_gate": 0.026401264856254138,
+      "mean_weight": 0.14937888198757762,
+      "predecessor_accuracy": 0.9837133550488599,
+      "mean_gold_mass": 0.4837097158480449
+    },
+    "P:PG": {
+      "n": 322,
+      "accuracy": 0.7453416149068323,
+      "rescue": 6,
+      "override": 0,
+      "mean_gate": 0.026401264856254138,
+      "mean_weight": 0.0012875286454040254,
+      "predecessor_accuracy": 0.9837133550488599,
+      "mean_gold_mass": 0.4837097158480449
+    },
+    "P:BG": {
+      "n": 322,
+      "accuracy": 0.7298136645962733,
+      "rescue": 1,
+      "override": 0,
+      "mean_gate": 0.026401264856254138,
+      "mean_weight": 0.0012858657981930175,
+      "predecessor_accuracy": 0.9837133550488599,
+      "mean_gold_mass": 0.4837097158480449
+    },
+    "B:V": {
+      "n": 322,
+      "accuracy": 0.7267080745341615,
+      "rescue": 0,
+      "override": 0,
+      "mean_gate": 0.12462958313578991,
+      "mean_weight": 0.0,
+      "predecessor_accuracy": 0.9837133550488599,
+      "mean_gold_mass": 0.6040646364381634
+    },
+    "B:O": {
+      "n": 322,
+      "accuracy": 0.8105590062111802,
+      "rescue": 31,
+      "override": 4,
+      "mean_gate": 0.12462958313578991,
+      "mean_weight": 0.08167701863354036,
+      "predecessor_accuracy": 0.9837133550488599,
+      "mean_gold_mass": 0.6040646364381634
+    },
+    "B:P": {
+      "n": 322,
+      "accuracy": 0.8012422360248447,
+      "rescue": 30,
+      "override": 6,
+      "mean_gate": 0.12462958313578991,
+      "mean_weight": 0.08167701863354036,
+      "predecessor_accuracy": 0.9837133550488599,
+      "mean_gold_mass": 0.6040646364381634
+    },
+    "B:B": {
+      "n": 322,
+      "accuracy": 0.7484472049689441,
+      "rescue": 10,
+      "override": 3,
+      "mean_gate": 0.12462958313578991,
+      "mean_weight": 0.08167701863354036,
+      "predecessor_accuracy": 0.9837133550488599,
+      "mean_gold_mass": 0.6040646364381634
+    },
+    "B:PG": {
+      "n": 322,
+      "accuracy": 0.7453416149068323,
+      "rescue": 6,
+      "override": 0,
+      "mean_gate": 0.12462958313578991,
+      "mean_weight": 0.0035215309555296677,
+      "predecessor_accuracy": 0.9837133550488599,
+      "mean_gold_mass": 0.6040646364381634
+    },
+    "B:BG": {
+      "n": 322,
+      "accuracy": 0.7329192546583851,
+      "rescue": 2,
+      "override": 0,
+      "mean_gate": 0.12462958313578991,
+      "mean_weight": 0.003406847676326295,
+      "predecessor_accuracy": 0.9837133550488599,
+      "mean_gold_mass": 0.6040646364381634
+    }
+  },
+  "contrasts": {
+    "P:B-P": {
+      "delta": -0.07763975155279502,
+      "ci": [
+        -0.15385196374622356,
+        -0.02005730659025788
+      ]
+    },
+    "P:BG-PG": {
+      "delta": -0.015527950310559006,
+      "ci": [
+        -0.02922077922077922,
+        -0.0036363636363636364
+      ]
+    },
+    "P:BG-P": {
+      "delta": -0.07763975155279502,
+      "ci": [
+        -0.15790699575024517,
+        -0.014387972380716115
+      ]
+    },
+    "B:B-P": {
+      "delta": -0.052795031055900624,
+      "ci": [
+        -0.11831354518294339,
+        -0.0062691026645768
+      ]
+    },
+    "B:BG-PG": {
+      "delta": -0.012422360248447204,
+      "ci": [
+        -0.025069637883008356,
+        -0.002976190476190476
+      ]
+    },
+    "B:BG-P": {
+      "delta": -0.06832298136645963,
+      "ci": [
+        -0.14052542892156863,
+        -0.010525395656974601
+      ]
+    }
+  },
+  "noise_summary": [
+    {
+      "kind": "confident_swap",
+      "rate": 0,
+      "arm": "P",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.8074534161490682,
+        "rescue": 34.0,
+        "override": 8.0,
+        "mean_gate": 0.026401264856254138,
+        "mean_weight": 0.14937888198757762,
+        "predecessor_accuracy": 0.9837133550488598,
+        "mean_gold_mass": 0.4837097158480449
+      },
+      "accuracy_seed_range": [
+        0.8074534161490683,
+        0.8074534161490683
+      ]
+    },
+    {
+      "kind": "confident_swap",
+      "rate": 0,
+      "arm": "B",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7298136645962733,
+        "rescue": 10.0,
+        "override": 9.0,
+        "mean_gate": 0.026401264856254138,
+        "mean_weight": 0.14937888198757762,
+        "predecessor_accuracy": 0.9837133550488598,
+        "mean_gold_mass": 0.4837097158480449
+      },
+      "accuracy_seed_range": [
+        0.7298136645962733,
+        0.7298136645962733
+      ]
+    },
+    {
+      "kind": "confident_swap",
+      "rate": 0,
+      "arm": "PG",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7453416149068322,
+        "rescue": 6.0,
+        "override": 0.0,
+        "mean_gate": 0.026401264856254138,
+        "mean_weight": 0.0012875286454040254,
+        "predecessor_accuracy": 0.9837133550488598,
+        "mean_gold_mass": 0.4837097158480449
+      },
+      "accuracy_seed_range": [
+        0.7453416149068323,
+        0.7453416149068323
+      ]
+    },
+    {
+      "kind": "confident_swap",
+      "rate": 0,
+      "arm": "BG",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7298136645962733,
+        "rescue": 1.0,
+        "override": 0.0,
+        "mean_gate": 0.026401264856254138,
+        "mean_weight": 0.0012858657981930175,
+        "predecessor_accuracy": 0.9837133550488598,
+        "mean_gold_mass": 0.4837097158480449
+      },
+      "accuracy_seed_range": [
+        0.7298136645962733,
+        0.7298136645962733
+      ]
+    },
+    {
+      "kind": "confident_swap",
+      "rate": 0.1,
+      "arm": "P",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7881987577639751,
+        "rescue": 30.3,
+        "override": 10.5,
+        "mean_gate": 0.026401264856254138,
+        "mean_weight": 0.14937888198757762,
+        "predecessor_accuracy": 0.8866449511400651,
+        "mean_gold_mass": 0.4686386272359548
+      },
+      "accuracy_seed_range": [
+        0.7701863354037267,
+        0.8074534161490683
+      ]
+    },
+    {
+      "kind": "confident_swap",
+      "rate": 0.1,
+      "arm": "B",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7276397515527949,
+        "rescue": 9.7,
+        "override": 9.4,
+        "mean_gate": 0.026401264856254138,
+        "mean_weight": 0.14937888198757762,
+        "predecessor_accuracy": 0.8866449511400651,
+        "mean_gold_mass": 0.4686386272359548
+      },
+      "accuracy_seed_range": [
+        0.7236024844720497,
+        0.7298136645962733
+      ]
+    },
+    {
+      "kind": "confident_swap",
+      "rate": 0.1,
+      "arm": "PG",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.741614906832298,
+        "rescue": 4.8,
+        "override": 0.0,
+        "mean_gate": 0.026401264856254138,
+        "mean_weight": 0.00124790159297193,
+        "predecessor_accuracy": 0.8866449511400651,
+        "mean_gold_mass": 0.4686386272359548
+      },
+      "accuracy_seed_range": [
+        0.7360248447204969,
+        0.7453416149068323
+      ]
+    },
+    {
+      "kind": "confident_swap",
+      "rate": 0.1,
+      "arm": "BG",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.729503105590062,
+        "rescue": 0.9,
+        "override": 0.0,
+        "mean_gate": 0.026401264856254138,
+        "mean_weight": 0.0012928821745904616,
+        "predecessor_accuracy": 0.8866449511400651,
+        "mean_gold_mass": 0.4686386272359548
+      },
+      "accuracy_seed_range": [
+        0.7267080745341615,
+        0.7298136645962733
+      ]
+    },
+    {
+      "kind": "confident_swap",
+      "rate": 0.2,
+      "arm": "P",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7692546583850932,
+        "rescue": 27.5,
+        "override": 13.8,
+        "mean_gate": 0.026401264856254138,
+        "mean_weight": 0.14937888198757762,
+        "predecessor_accuracy": 0.786970684039088,
+        "mean_gold_mass": 0.45348567127516404
+      },
+      "accuracy_seed_range": [
+        0.7484472049689441,
+        0.7888198757763976
+      ]
+    },
+    {
+      "kind": "confident_swap",
+      "rate": 0.2,
+      "arm": "B",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7248447204968944,
+        "rescue": 9.7,
+        "override": 10.3,
+        "mean_gate": 0.026401264856254138,
+        "mean_weight": 0.14937888198757762,
+        "predecessor_accuracy": 0.786970684039088,
+        "mean_gold_mass": 0.45348567127516404
+      },
+      "accuracy_seed_range": [
+        0.717391304347826,
+        0.7298136645962733
+      ]
+    },
+    {
+      "kind": "confident_swap",
+      "rate": 0.2,
+      "arm": "PG",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7400621118012422,
+        "rescue": 4.4,
+        "override": 0.1,
+        "mean_gate": 0.026401264856254138,
+        "mean_weight": 0.0011888675737878093,
+        "predecessor_accuracy": 0.786970684039088,
+        "mean_gold_mass": 0.45348567127516404
+      },
+      "accuracy_seed_range": [
+        0.7360248447204969,
+        0.7453416149068323
+      ]
+    },
+    {
+      "kind": "confident_swap",
+      "rate": 0.2,
+      "arm": "BG",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.729503105590062,
+        "rescue": 0.9,
+        "override": 0.0,
+        "mean_gate": 0.026401264856254138,
+        "mean_weight": 0.0013017988689792918,
+        "predecessor_accuracy": 0.786970684039088,
+        "mean_gold_mass": 0.45348567127516404
+      },
+      "accuracy_seed_range": [
+        0.7267080745341615,
+        0.7298136645962733
+      ]
+    },
+    {
+      "kind": "confident_swap",
+      "rate": 0.3,
+      "arm": "P",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7552795031055901,
+        "rescue": 24.2,
+        "override": 15.0,
+        "mean_gate": 0.026401264856254138,
+        "mean_weight": 0.14937888198757762,
+        "predecessor_accuracy": 0.6928338762214984,
+        "mean_gold_mass": 0.4393476728813523
+      },
+      "accuracy_seed_range": [
+        0.7391304347826086,
+        0.7795031055900621
+      ]
+    },
+    {
+      "kind": "confident_swap",
+      "rate": 0.3,
+      "arm": "B",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7217391304347827,
+        "rescue": 9.4,
+        "override": 11.0,
+        "mean_gate": 0.026401264856254138,
+        "mean_weight": 0.14937888198757762,
+        "predecessor_accuracy": 0.6928338762214984,
+        "mean_gold_mass": 0.4393476728813523
+      },
+      "accuracy_seed_range": [
+        0.7111801242236024,
+        0.7267080745341615
+      ]
+    },
+    {
+      "kind": "confident_swap",
+      "rate": 0.3,
+      "arm": "PG",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7378881987577639,
+        "rescue": 3.7,
+        "override": 0.1,
+        "mean_gate": 0.026401264856254138,
+        "mean_weight": 0.0011099356812687747,
+        "predecessor_accuracy": 0.6928338762214984,
+        "mean_gold_mass": 0.4393476728813523
+      },
+      "accuracy_seed_range": [
+        0.7360248447204969,
+        0.7453416149068323
+      ]
+    },
+    {
+      "kind": "confident_swap",
+      "rate": 0.3,
+      "arm": "BG",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7288819875776398,
+        "rescue": 0.7,
+        "override": 0.0,
+        "mean_gate": 0.026401264856254138,
+        "mean_weight": 0.0012963538737479534,
+        "predecessor_accuracy": 0.6928338762214984,
+        "mean_gold_mass": 0.4393476728813523
+      },
+      "accuracy_seed_range": [
+        0.7267080745341615,
+        0.7298136645962733
+      ]
+    },
+    {
+      "kind": "confident_swap",
+      "rate": 0.4,
+      "arm": "P",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7372670807453415,
+        "rescue": 20.4,
+        "override": 17.0,
+        "mean_gate": 0.026401264856254138,
+        "mean_weight": 0.14937888198757762,
+        "predecessor_accuracy": 0.5908794788273617,
+        "mean_gold_mass": 0.42388466911071127
+      },
+      "accuracy_seed_range": [
+        0.7204968944099379,
+        0.7546583850931677
+      ]
+    },
+    {
+      "kind": "confident_swap",
+      "rate": 0.4,
+      "arm": "B",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7192546583850932,
+        "rescue": 9.1,
+        "override": 11.5,
+        "mean_gate": 0.026401264856254138,
+        "mean_weight": 0.14937888198757762,
+        "predecessor_accuracy": 0.5908794788273617,
+        "mean_gold_mass": 0.42388466911071127
+      },
+      "accuracy_seed_range": [
+        0.7111801242236024,
+        0.7267080745341615
+      ]
+    },
+    {
+      "kind": "confident_swap",
+      "rate": 0.4,
+      "arm": "PG",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7354037267080745,
+        "rescue": 3.0,
+        "override": 0.2,
+        "mean_gate": 0.026401264856254138,
+        "mean_weight": 0.0010477868513607022,
+        "predecessor_accuracy": 0.5908794788273617,
+        "mean_gold_mass": 0.42388466911071127
+      },
+      "accuracy_seed_range": [
+        0.7329192546583851,
+        0.7422360248447205
+      ]
+    },
+    {
+      "kind": "confident_swap",
+      "rate": 0.4,
+      "arm": "BG",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7282608695652174,
+        "rescue": 0.5,
+        "override": 0.0,
+        "mean_gate": 0.026401264856254138,
+        "mean_weight": 0.0013080971404758365,
+        "predecessor_accuracy": 0.5908794788273617,
+        "mean_gold_mass": 0.42388466911071127
+      },
+      "accuracy_seed_range": [
+        0.7267080745341615,
+        0.7298136645962733
+      ]
+    },
+    {
+      "kind": "uncertain",
+      "rate": 0,
+      "arm": "P",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.8074534161490682,
+        "rescue": 34.0,
+        "override": 8.0,
+        "mean_gate": 0.026401264856254138,
+        "mean_weight": 0.14937888198757762,
+        "predecessor_accuracy": 0.9837133550488598,
+        "mean_gold_mass": 0.4837097158480449
+      },
+      "accuracy_seed_range": [
+        0.8074534161490683,
+        0.8074534161490683
+      ]
+    },
+    {
+      "kind": "uncertain",
+      "rate": 0,
+      "arm": "B",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7298136645962733,
+        "rescue": 10.0,
+        "override": 9.0,
+        "mean_gate": 0.026401264856254138,
+        "mean_weight": 0.14937888198757762,
+        "predecessor_accuracy": 0.9837133550488598,
+        "mean_gold_mass": 0.4837097158480449
+      },
+      "accuracy_seed_range": [
+        0.7298136645962733,
+        0.7298136645962733
+      ]
+    },
+    {
+      "kind": "uncertain",
+      "rate": 0,
+      "arm": "PG",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7453416149068322,
+        "rescue": 6.0,
+        "override": 0.0,
+        "mean_gate": 0.026401264856254138,
+        "mean_weight": 0.0012875286454040254,
+        "predecessor_accuracy": 0.9837133550488598,
+        "mean_gold_mass": 0.4837097158480449
+      },
+      "accuracy_seed_range": [
+        0.7453416149068323,
+        0.7453416149068323
+      ]
+    },
+    {
+      "kind": "uncertain",
+      "rate": 0,
+      "arm": "BG",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7298136645962733,
+        "rescue": 1.0,
+        "override": 0.0,
+        "mean_gate": 0.026401264856254138,
+        "mean_weight": 0.0012858657981930175,
+        "predecessor_accuracy": 0.9837133550488598,
+        "mean_gold_mass": 0.4837097158480449
+      },
+      "accuracy_seed_range": [
+        0.7298136645962733,
+        0.7298136645962733
+      ]
+    },
+    {
+      "kind": "uncertain",
+      "rate": 0.1,
+      "arm": "P",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7881987577639751,
+        "rescue": 30.3,
+        "override": 10.5,
+        "mean_gate": 0.024490606172546083,
+        "mean_weight": 0.14937888198757762,
+        "predecessor_accuracy": 0.8866449511400651,
+        "mean_gold_mass": 0.4718270546050219
+      },
+      "accuracy_seed_range": [
+        0.7701863354037267,
+        0.8074534161490683
+      ]
+    },
+    {
+      "kind": "uncertain",
+      "rate": 0.1,
+      "arm": "B",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7276397515527949,
+        "rescue": 9.7,
+        "override": 9.4,
+        "mean_gate": 0.024490606172546083,
+        "mean_weight": 0.14937888198757762,
+        "predecessor_accuracy": 0.8866449511400651,
+        "mean_gold_mass": 0.4718270546050219
+      },
+      "accuracy_seed_range": [
+        0.7236024844720497,
+        0.7298136645962733
+      ]
+    },
+    {
+      "kind": "uncertain",
+      "rate": 0.1,
+      "arm": "PG",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.741614906832298,
+        "rescue": 4.8,
+        "override": 0.0,
+        "mean_gate": 0.024490606172546083,
+        "mean_weight": 0.001195004325704814,
+        "predecessor_accuracy": 0.8866449511400651,
+        "mean_gold_mass": 0.4718270546050219
+      },
+      "accuracy_seed_range": [
+        0.7360248447204969,
+        0.7453416149068323
+      ]
+    },
+    {
+      "kind": "uncertain",
+      "rate": 0.1,
+      "arm": "BG",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.729503105590062,
+        "rescue": 0.9,
+        "override": 0.0,
+        "mean_gate": 0.024490606172546083,
+        "mean_weight": 0.0012022778610935787,
+        "predecessor_accuracy": 0.8866449511400651,
+        "mean_gold_mass": 0.4718270546050219
+      },
+      "accuracy_seed_range": [
+        0.7267080745341615,
+        0.7298136645962733
+      ]
+    },
+    {
+      "kind": "uncertain",
+      "rate": 0.2,
+      "arm": "P",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7692546583850932,
+        "rescue": 27.5,
+        "override": 13.8,
+        "mean_gate": 0.02240206872524017,
+        "mean_weight": 0.14937888198757762,
+        "predecessor_accuracy": 0.786970684039088,
+        "mean_gold_mass": 0.45983601184945433
+      },
+      "accuracy_seed_range": [
+        0.7484472049689441,
+        0.7888198757763976
+      ]
+    },
+    {
+      "kind": "uncertain",
+      "rate": 0.2,
+      "arm": "B",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7251552795031055,
+        "rescue": 9.7,
+        "override": 10.2,
+        "mean_gate": 0.02240206872524017,
+        "mean_weight": 0.14937888198757762,
+        "predecessor_accuracy": 0.786970684039088,
+        "mean_gold_mass": 0.45983601184945433
+      },
+      "accuracy_seed_range": [
+        0.7204968944099379,
+        0.7298136645962733
+      ]
+    },
+    {
+      "kind": "uncertain",
+      "rate": 0.2,
+      "arm": "PG",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7400621118012422,
+        "rescue": 4.4,
+        "override": 0.1,
+        "mean_gate": 0.02240206872524017,
+        "mean_weight": 0.0010723516247426713,
+        "predecessor_accuracy": 0.786970684039088,
+        "mean_gold_mass": 0.45983601184945433
+      },
+      "accuracy_seed_range": [
+        0.7360248447204969,
+        0.7453416149068323
+      ]
+    },
+    {
+      "kind": "uncertain",
+      "rate": 0.2,
+      "arm": "BG",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.729503105590062,
+        "rescue": 0.9,
+        "override": 0.0,
+        "mean_gate": 0.02240206872524017,
+        "mean_weight": 0.0010997318251743473,
+        "predecessor_accuracy": 0.786970684039088,
+        "mean_gold_mass": 0.45983601184945433
+      },
+      "accuracy_seed_range": [
+        0.7267080745341615,
+        0.7298136645962733
+      ]
+    },
+    {
+      "kind": "uncertain",
+      "rate": 0.3,
+      "arm": "P",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7552795031055901,
+        "rescue": 24.2,
+        "override": 15.0,
+        "mean_gate": 0.020585240527698646,
+        "mean_weight": 0.14937888198757762,
+        "predecessor_accuracy": 0.6928338762214984,
+        "mean_gold_mass": 0.44860047960932964
+      },
+      "accuracy_seed_range": [
+        0.7391304347826086,
+        0.7795031055900621
+      ]
+    },
+    {
+      "kind": "uncertain",
+      "rate": 0.3,
+      "arm": "B",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7226708074534162,
+        "rescue": 9.4,
+        "override": 10.7,
+        "mean_gate": 0.020585240527698646,
+        "mean_weight": 0.14937888198757762,
+        "predecessor_accuracy": 0.6928338762214984,
+        "mean_gold_mass": 0.44860047960932964
+      },
+      "accuracy_seed_range": [
+        0.7142857142857143,
+        0.7267080745341615
+      ]
+    },
+    {
+      "kind": "uncertain",
+      "rate": 0.3,
+      "arm": "PG",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7378881987577639,
+        "rescue": 3.7,
+        "override": 0.1,
+        "mean_gate": 0.020585240527698646,
+        "mean_weight": 0.0009586952786354681,
+        "predecessor_accuracy": 0.6928338762214984,
+        "mean_gold_mass": 0.44860047960932964
+      },
+      "accuracy_seed_range": [
+        0.7360248447204969,
+        0.7453416149068323
+      ]
+    },
+    {
+      "kind": "uncertain",
+      "rate": 0.3,
+      "arm": "BG",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7288819875776398,
+        "rescue": 0.7,
+        "override": 0.0,
+        "mean_gate": 0.020585240527698646,
+        "mean_weight": 0.0010087868725374215,
+        "predecessor_accuracy": 0.6928338762214984,
+        "mean_gold_mass": 0.44860047960932964
+      },
+      "accuracy_seed_range": [
+        0.7267080745341615,
+        0.7298136645962733
+      ]
+    },
+    {
+      "kind": "uncertain",
+      "rate": 0.4,
+      "arm": "P",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7372670807453415,
+        "rescue": 20.4,
+        "override": 17.0,
+        "mean_gate": 0.018433798063665078,
+        "mean_weight": 0.14937888198757762,
+        "predecessor_accuracy": 0.5908794788273617,
+        "mean_gold_mass": 0.4362531497955853
+      },
+      "accuracy_seed_range": [
+        0.7204968944099379,
+        0.7546583850931677
+      ]
+    },
+    {
+      "kind": "uncertain",
+      "rate": 0.4,
+      "arm": "B",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7204968944099379,
+        "rescue": 9.1,
+        "override": 11.1,
+        "mean_gate": 0.018433798063665078,
+        "mean_weight": 0.14937888198757762,
+        "predecessor_accuracy": 0.5908794788273617,
+        "mean_gold_mass": 0.4362531497955853
+      },
+      "accuracy_seed_range": [
+        0.7142857142857143,
+        0.7267080745341615
+      ]
+    },
+    {
+      "kind": "uncertain",
+      "rate": 0.4,
+      "arm": "PG",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7357142857142857,
+        "rescue": 3.0,
+        "override": 0.1,
+        "mean_gate": 0.018433798063665078,
+        "mean_weight": 0.0008364926105864995,
+        "predecessor_accuracy": 0.5908794788273617,
+        "mean_gold_mass": 0.4362531497955853
+      },
+      "accuracy_seed_range": [
+        0.7329192546583851,
+        0.7422360248447205
+      ]
+    },
+    {
+      "kind": "uncertain",
+      "rate": 0.4,
+      "arm": "BG",
+      "means": {
+        "n": 322.0,
+        "accuracy": 0.7282608695652174,
+        "rescue": 0.5,
+        "override": 0.0,
+        "mean_gate": 0.018433798063665078,
+        "mean_weight": 0.0009081500490665742,
+        "predecessor_accuracy": 0.5908794788273617,
+        "mean_gold_mass": 0.4362531497955853
+      },
+      "accuracy_seed_range": [
+        0.7267080745341615,
+        0.7298136645962733
+      ]
+    }
+  ]
+}

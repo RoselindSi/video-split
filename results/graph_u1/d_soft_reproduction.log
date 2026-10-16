@@ -1,0 +1,25 @@
+决策 322；录像 49 条；有嵌入的段 378
+融合 soft；oracle 下 CV 选出 lam=0.10 tau=0.90（identity top-1 0.768）
+
+=== Experiment D：oracle → 自维护状态 ===
+  模式         identity      NEW判别       同态连上       异态分开     最长错串      恢复率
+  visual        0.730      0.826      0.848      0.824       12    0.529
+  oracle        0.789      0.820      0.869      0.935        4    0.588
+  prev          0.745      0.811      0.875      0.958        9    0.439
+  full          0.615      0.814      0.743      0.802        8    0.508
+
+  相对视觉-only 的增益（这才是判据的口径）：
+    oracle +0.059 / 只换前驱 +0.016 / 自维护 -0.115
+    自维护保留了 oracle 增益的 -195%
+  绝对值 oracle − full = -0.174
+  只换前驱身份的那一步损失 -0.043；再换掉 edges 和原型又损失 -0.130
+  prior 把视觉本来对的答案排除掉：oracle 0 / prev 12 / full 0 次
+
+  「同态连上」才是 identity 要的那一半；「异态分开」会被大量负例抬高，不能当更严的口径读。
+
+=== 按录像聚类配对 bootstrap（4000 次，录像为单位）===
+  oracle   − visual  +0.059  CI [+0.013, +0.125]  不跨零
+  prev     − visual  +0.016  CI [-0.046, +0.092]  跨零
+  full     − visual  -0.115  CI [-0.226, -0.025]  不跨零
+
+-> C:/Users/EDY/Documents/GitHub/video-split/results/graph_u1/d_soft_reproduction.json

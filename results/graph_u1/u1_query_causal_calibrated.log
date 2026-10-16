@@ -1,0 +1,444 @@
+{
+  "query_temperature_grid": [
+    0.01,
+    0.02,
+    0.05,
+    0.1,
+    0.25,
+    0.5,
+    1.0,
+    2.0
+  ],
+  "selection": [
+    {
+      "fold": 0,
+      "visual_parameters": [
+        0.1,
+        0.9,
+        0.0
+      ],
+      "query_temperature": 0.05,
+      "train_nll_grid": [
+        [
+          1.033224840145854,
+          0.01
+        ],
+        [
+          0.6550921079236081,
+          0.02
+        ],
+        [
+          0.5911270567999408,
+          0.05
+        ],
+        [
+          0.682066050747876,
+          0.1
+        ],
+        [
+          0.7997175635443491,
+          0.25
+        ],
+        [
+          0.8575268241214112,
+          0.5
+        ],
+        [
+          0.8911941506672022,
+          1.0
+        ],
+        [
+          0.9092557275737455,
+          2.0
+        ]
+      ],
+      "held_before": {
+        "n": 59,
+        "nll": 0.7618887308969403,
+        "ece": 0.22659590810579855,
+        "accuracy": 0.7457627118644068,
+        "confidence": 0.5419021514712766
+      },
+      "held_after": {
+        "n": 59,
+        "nll": 0.6861424206906089,
+        "ece": 0.12682072164800243,
+        "accuracy": 0.7457627118644068,
+        "confidence": 0.6509947855412813
+      }
+    },
+    {
+      "fold": 1,
+      "visual_parameters": [
+        0.1,
+        0.9,
+        0.0
+      ],
+      "query_temperature": 0.05,
+      "train_nll_grid": [
+        [
+          1.1663543684909612,
+          0.01
+        ],
+        [
+          0.7273653286895654,
+          0.02
+        ],
+        [
+          0.6286137255422052,
+          0.05
+        ],
+        [
+          0.706669251395392,
+          0.1
+        ],
+        [
+          0.8173536571533674,
+          0.25
+        ],
+        [
+          0.8724664730366457,
+          0.5
+        ],
+        [
+          0.9045956504396463,
+          1.0
+        ],
+        [
+          0.9218948007991509,
+          2.0
+        ]
+      ],
+      "held_before": {
+        "n": 50,
+        "nll": 0.6764274527618613,
+        "ece": 0.16828312935169928,
+        "accuracy": 0.72,
+        "confidence": 0.5635320190556846
+      },
+      "held_after": {
+        "n": 50,
+        "nll": 0.5572969123701226,
+        "ece": 0.10675541398658038,
+        "accuracy": 0.72,
+        "confidence": 0.6773648103828888
+      }
+    },
+    {
+      "fold": 2,
+      "visual_parameters": [
+        0.1,
+        0.9,
+        0.0
+      ],
+      "query_temperature": 0.05,
+      "train_nll_grid": [
+        [
+          0.8101723053510499,
+          0.01
+        ],
+        [
+          0.5254546344747542,
+          0.02
+        ],
+        [
+          0.5187695266872162,
+          0.05
+        ],
+        [
+          0.6296112025507594,
+          0.1
+        ],
+        [
+          0.764054856054129,
+          0.25
+        ],
+        [
+          0.8312809944529779,
+          0.5
+        ],
+        [
+          0.8710479093501987,
+          1.0
+        ],
+        [
+          0.8925624482132261,
+          2.0
+        ]
+      ],
+      "held_before": {
+        "n": 58,
+        "nll": 0.9511009234041111,
+        "ece": 0.14246903248475123,
+        "accuracy": 0.5344827586206896,
+        "confidence": 0.48241529237325015
+      },
+      "held_after": {
+        "n": 58,
+        "nll": 0.9513029236962379,
+        "ece": 0.10928118939882861,
+        "accuracy": 0.5344827586206896,
+        "confidence": 0.5817319056366954
+      }
+    },
+    {
+      "fold": 3,
+      "visual_parameters": [
+        0.1,
+        0.9,
+        0.0
+      ],
+      "query_temperature": 0.05,
+      "train_nll_grid": [
+        [
+          1.1953312357167634,
+          0.01
+        ],
+        [
+          0.7539541688313647,
+          0.02
+        ],
+        [
+          0.6532465200509294,
+          0.05
+        ],
+        [
+          0.7290532296991706,
+          0.1
+        ],
+        [
+          0.8392959301545508,
+          0.25
+        ],
+        [
+          0.896516227704947,
+          0.5
+        ],
+        [
+          0.9306024772343802,
+          1.0
+        ],
+        [
+          0.9490918220293386,
+          2.0
+        ]
+      ],
+      "held_before": {
+        "n": 46,
+        "nll": 0.5778125495439022,
+        "ece": 0.19324964297362276,
+        "accuracy": 0.8043478260869565,
+        "confidence": 0.6175724418757701
+      },
+      "held_after": {
+        "n": 46,
+        "nll": 0.4579344977847908,
+        "ece": 0.17325464875757038,
+        "accuracy": 0.8043478260869565,
+        "confidence": 0.7401074340624582
+      }
+    },
+    {
+      "fold": 4,
+      "visual_parameters": [
+        0.1,
+        0.9,
+        0.0
+      ],
+      "query_temperature": 0.05,
+      "train_nll_grid": [
+        [
+          1.3217170078018077,
+          0.01
+        ],
+        [
+          0.8186334855870017,
+          0.02
+        ],
+        [
+          0.6886846657136044,
+          0.05
+        ],
+        [
+          0.756036916331052,
+          0.1
+        ],
+        [
+          0.8594121983371045,
+          0.25
+        ],
+        [
+          0.9132187422035825,
+          0.5
+        ],
+        [
+          0.9452308469459525,
+          1.0
+        ],
+        [
+          0.9625839528087328,
+          2.0
+        ]
+      ],
+      "held_before": {
+        "n": 49,
+        "nll": 0.4505957208876751,
+        "ece": 0.3181333878545755,
+        "accuracy": 0.9387755102040817,
+        "confidence": 0.6635494010202124
+      },
+      "held_after": {
+        "n": 49,
+        "nll": 0.29840391139910927,
+        "ece": 0.16009288908075,
+        "accuracy": 0.9387755102040817,
+        "confidence": 0.793613880088588
+      }
+    }
+  ],
+  "summary": {
+    "before:V": {
+      "n": 322,
+      "accuracy": 0.7267080745341615,
+      "rescue": 0,
+      "override": 0,
+      "mean_gate": 0.08587129574691714,
+      "mean_weight": 0.0,
+      "predecessor_accuracy": 0.7404580152671756,
+      "mean_gold_mass": 0.5335223867124476
+    },
+    "before:P": {
+      "n": 322,
+      "accuracy": 0.7267080745341615,
+      "rescue": 0,
+      "override": 0,
+      "mean_gate": 0.08587129574691714,
+      "mean_weight": 0.0,
+      "predecessor_accuracy": 0.7404580152671756,
+      "mean_gold_mass": 0.5335223867124476
+    },
+    "before:B": {
+      "n": 322,
+      "accuracy": 0.7267080745341615,
+      "rescue": 0,
+      "override": 0,
+      "mean_gate": 0.08587129574691714,
+      "mean_weight": 0.0,
+      "predecessor_accuracy": 0.7404580152671756,
+      "mean_gold_mass": 0.5335223867124476
+    },
+    "before:PG": {
+      "n": 322,
+      "accuracy": 0.7267080745341615,
+      "rescue": 0,
+      "override": 0,
+      "mean_gate": 0.08587129574691714,
+      "mean_weight": 0.0,
+      "predecessor_accuracy": 0.7404580152671756,
+      "mean_gold_mass": 0.5335223867124476
+    },
+    "before:BG": {
+      "n": 322,
+      "accuracy": 0.7267080745341615,
+      "rescue": 0,
+      "override": 0,
+      "mean_gate": 0.08587129574691714,
+      "mean_weight": 0.0,
+      "predecessor_accuracy": 0.7404580152671756,
+      "mean_gold_mass": 0.5335223867124476
+    },
+    "after:V": {
+      "n": 322,
+      "accuracy": 0.7267080745341615,
+      "rescue": 0,
+      "override": 0,
+      "mean_gate": 0.21853962136386257,
+      "mean_weight": 0.0,
+      "predecessor_accuracy": 0.7404580152671756,
+      "mean_gold_mass": 0.6178418513831935
+    },
+    "after:P": {
+      "n": 322,
+      "accuracy": 0.7267080745341615,
+      "rescue": 0,
+      "override": 0,
+      "mean_gate": 0.21853962136386257,
+      "mean_weight": 0.0,
+      "predecessor_accuracy": 0.7404580152671756,
+      "mean_gold_mass": 0.6178418513831935
+    },
+    "after:B": {
+      "n": 322,
+      "accuracy": 0.7267080745341615,
+      "rescue": 0,
+      "override": 0,
+      "mean_gate": 0.21853962136386257,
+      "mean_weight": 0.0,
+      "predecessor_accuracy": 0.7404580152671756,
+      "mean_gold_mass": 0.6178418513831935
+    },
+    "after:PG": {
+      "n": 322,
+      "accuracy": 0.7267080745341615,
+      "rescue": 0,
+      "override": 0,
+      "mean_gate": 0.21853962136386257,
+      "mean_weight": 0.0,
+      "predecessor_accuracy": 0.7404580152671756,
+      "mean_gold_mass": 0.6178418513831935
+    },
+    "after:BG": {
+      "n": 322,
+      "accuracy": 0.7267080745341615,
+      "rescue": 0,
+      "override": 0,
+      "mean_gate": 0.21853962136386257,
+      "mean_weight": 0.0,
+      "predecessor_accuracy": 0.7404580152671756,
+      "mean_gold_mass": 0.6178418513831935
+    }
+  },
+  "contrasts": {
+    "after:B-after:P": {
+      "delta": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ]
+    },
+    "after:BG-after:PG": {
+      "delta": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ]
+    },
+    "after:BG-after:P": {
+      "delta": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ]
+    },
+    "after:B-before:B": {
+      "delta": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ]
+    },
+    "after:BG-before:BG": {
+      "delta": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "causal": true,
+  "limitations": [
+    "Oracle-prefix identities and transition memory remain in use.",
+    "Causal mode preserves predecessor NEW mass without oracle alignment; first predecessor without a saved decision falls back to uniform.",
+    "Not recursive online tracking; posterior is visual-only and memory writes remain oracle."
+  ]
+}

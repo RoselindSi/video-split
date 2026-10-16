@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "seed": 20261016,
+  "outer_folds": 5,
+  "inner_folds": 4,
+  "temperature_grid": [0.1, 0.25, 0.5, 1.0],
+  "tau_grid": [0.5, 0.7, 0.9],
+  "lambda_grid": [0.0, 0.05, 0.1, 0.2],
+  "epsilon": 0.001,
+  "kappa": 2.0,
+  "arms": ["V", "O", "P", "B", "PG", "BG"],
+  "memory": "support",
+  "bootstrap_repetitions": 4000,
+  "query": "previous_observation_visual_posterior_against_current_oracle_prefix_prototypes",
+  "new_logit": "tau / temperature",
+  "fallback": "uniform_including_NEW",
+  "note": "Query-only diagnostic with oracle prefix identities, prototypes and edges; not online deployment. Cache and controlled corruption are subsequent experiments."
+}

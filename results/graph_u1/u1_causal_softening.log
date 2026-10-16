@@ -1,0 +1,120 @@
+softening fold 0 complete
+softening fold 1 complete
+softening fold 2 complete
+softening fold 3 complete
+softening fold 4 complete
+{
+  "summary": {
+    "support:P": {
+      "n": 322,
+      "accuracy": 0.7267080745341615,
+      "rescue": 0,
+      "override": 0,
+      "mean_gate": 0.21853962136386257,
+      "mean_weight": 0.0,
+      "predecessor_accuracy": 0.7404580152671756,
+      "mean_gold_mass": 0.6178418513831935
+    },
+    "support:B": {
+      "n": 322,
+      "accuracy": 0.7391304347826086,
+      "rescue": 4,
+      "override": 0,
+      "mean_gate": 0.21853962136386257,
+      "mean_weight": 0.040683229813664595,
+      "predecessor_accuracy": 0.7404580152671756,
+      "mean_gold_mass": 0.6178418513831935
+    },
+    "support:M": {
+      "n": 322,
+      "accuracy": 0.7204968944099379,
+      "rescue": 3,
+      "override": 5,
+      "mean_gate": 0.21853962136386257,
+      "mean_weight": 0.019409937888198756,
+      "predecessor_accuracy": 0.7404580152671756,
+      "mean_gold_mass": 0.6178418513831935
+    },
+    "cache:P": {
+      "n": 322,
+      "accuracy": 0.7267080745341615,
+      "rescue": 0,
+      "override": 0,
+      "mean_gate": 0.21853962136386257,
+      "mean_weight": 0.0,
+      "predecessor_accuracy": 0.7404580152671756,
+      "mean_gold_mass": 0.6178418513831935
+    },
+    "cache:B": {
+      "n": 322,
+      "accuracy": 0.7391304347826086,
+      "rescue": 4,
+      "override": 0,
+      "mean_gate": 0.21853962136386257,
+      "mean_weight": 0.040683229813664595,
+      "predecessor_accuracy": 0.7404580152671756,
+      "mean_gold_mass": 0.6178418513831935
+    },
+    "cache:M": {
+      "n": 322,
+      "accuracy": 0.7204968944099379,
+      "rescue": 3,
+      "override": 5,
+      "mean_gate": 0.21853962136386257,
+      "mean_weight": 0.019409937888198756,
+      "predecessor_accuracy": 0.7404580152671756,
+      "mean_gold_mass": 0.6178418513831935
+    }
+  },
+  "contrasts": {
+    "support:B-M": {
+      "delta": 0.018633540372670808,
+      "ci": [
+        0.0030120481927710845,
+        0.038461538461538464
+      ]
+    },
+    "support:B-P": {
+      "delta": 0.012422360248447204,
+      "ci": [
+        0.0027395388876412905,
+        0.02592924357582339
+      ]
+    },
+    "cache:B-M": {
+      "delta": 0.018633540372670808,
+      "ci": [
+        0.0030120481927710845,
+        0.038461538461538464
+      ]
+    },
+    "cache:B-P": {
+      "delta": 0.012422360248447204,
+      "ci": [
+        0.0027395388876412905,
+        0.02592924357582339
+      ]
+    },
+    "P:support-cache": {
+      "delta": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ]
+    },
+    "B:support-cache": {
+      "delta": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ]
+    },
+    "M:support-cache": {
+      "delta": 0.0,
+      "ci": [
+        0.0,
+        0.0
+      ]
+    }
+  }
+}

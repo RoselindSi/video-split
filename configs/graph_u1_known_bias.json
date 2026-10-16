@@ -1,0 +1,6 @@
+{
+  "bias_grid": [-0.2, -0.1, -0.05, 0.0, 0.05, 0.1, 0.2],
+  "units": "additive score after visual temperature scaling",
+  "selection": "joint visual T, NEW tau, known bias via the same inner video folds",
+  "note": "No transition content, no predecessor-dependent gate; fixed known-state bias only. Diagnostic on repeatedly inspected benchmark."
+}
