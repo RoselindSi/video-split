@@ -1,0 +1,877 @@
+{
+ "min_iou": 0.3,
+ "recordings": [
+  {
+   "recording": "R26_0824_173607",
+   "before": {
+    "delivered": 57,
+    "correct": 56,
+    "wrong": 1,
+    "wrong_not_hand": 1,
+    "mech_ownership": 1,
+    "anchors": 71,
+    "anchor_delivered": 56,
+    "anchor_absent": 15
+   },
+   "after": {
+    "delivered": 57,
+    "correct": 56,
+    "wrong": 1,
+    "wrong_not_hand": 1,
+    "mech_ownership": 1,
+    "anchors": 71,
+    "anchor_delivered": 56,
+    "anchor_absent": 15
+   },
+   "wrong": [
+    {
+     "arm": "before",
+     "frame": 580,
+     "tid": "13",
+     "joined_tid": "13",
+     "label": "not_hand",
+     "fragment_label": "not_hand",
+     "mechanism": "ownership",
+     "box": [
+      512,
+      1362,
+      800,
+      1520
+     ]
+    },
+    {
+     "arm": "after",
+     "frame": 580,
+     "tid": "13",
+     "joined_tid": "13",
+     "label": "not_hand",
+     "fragment_label": "not_hand",
+     "mechanism": "ownership",
+     "box": [
+      512,
+      1362,
+      800,
+      1520
+     ]
+    }
+   ]
+  },
+  {
+   "recording": "R26_0825_113022",
+   "before": {
+    "delivered": 81,
+    "correct": 80,
+    "wrong": 1,
+    "wrong_other_hand": 1,
+    "mech_ownership": 1,
+    "anchors": 80,
+    "anchor_delivered": 80
+   },
+   "after": {
+    "delivered": 81,
+    "correct": 80,
+    "wrong": 1,
+    "wrong_other_hand": 1,
+    "mech_ownership": 1,
+    "anchors": 80,
+    "anchor_delivered": 80
+   },
+   "wrong": [
+    {
+     "arm": "before",
+     "frame": 470,
+     "tid": "9",
+     "joined_tid": "9",
+     "label": "other_hand",
+     "fragment_label": "other_hand",
+     "mechanism": "ownership",
+     "box": [
+      0,
+      783,
+      129,
+      1262
+     ]
+    },
+    {
+     "arm": "after",
+     "frame": 470,
+     "tid": "9",
+     "joined_tid": "9",
+     "label": "other_hand",
+     "fragment_label": "other_hand",
+     "mechanism": "ownership",
+     "box": [
+      0,
+      783,
+      129,
+      1262
+     ]
+    }
+   ]
+  },
+  {
+   "recording": "R26_0825_113216",
+   "before": {
+    "delivered": 67,
+    "correct": 66,
+    "wrong": 1,
+    "wrong_not_hand": 1,
+    "mech_ownership": 1,
+    "anchors": 74,
+    "anchor_delivered": 66,
+    "anchor_absent": 8
+   },
+   "after": {
+    "delivered": 67,
+    "correct": 66,
+    "wrong": 1,
+    "wrong_not_hand": 1,
+    "mech_ownership": 1,
+    "anchors": 74,
+    "anchor_delivered": 66,
+    "anchor_absent": 8
+   },
+   "wrong": [
+    {
+     "arm": "before",
+     "frame": 590,
+     "tid": "6",
+     "joined_tid": "6",
+     "label": "not_hand",
+     "fragment_label": "not_hand",
+     "mechanism": "ownership",
+     "box": [
+      992,
+      1145,
+      1682,
+      1520
+     ]
+    },
+    {
+     "arm": "after",
+     "frame": 590,
+     "tid": "6",
+     "joined_tid": "6",
+     "label": "not_hand",
+     "fragment_label": "not_hand",
+     "mechanism": "ownership",
+     "box": [
+      992,
+      1145,
+      1682,
+      1520
+     ]
+    }
+   ]
+  },
+  {
+   "recording": "R26_0825_153426",
+   "before": {
+    "delivered": 54,
+    "correct": 49,
+    "wrong": 5,
+    "wrong_not_hand": 5,
+    "mech_ownership": 5,
+    "anchors": 69,
+    "anchor_delivered": 49,
+    "anchor_absent": 20
+   },
+   "after": {
+    "delivered": 54,
+    "correct": 49,
+    "wrong": 5,
+    "wrong_not_hand": 5,
+    "mech_ownership": 5,
+    "anchors": 69,
+    "anchor_delivered": 49,
+    "anchor_absent": 20
+   },
+   "wrong": [
+    {
+     "arm": "before",
+     "frame": 440,
+     "tid": "2",
+     "joined_tid": "2",
+     "label": "not_hand",
+     "fragment_label": "not_hand",
+     "mechanism": "ownership",
+     "box": [
+      821,
+      859,
+      1355,
+      1520
+     ]
+    },
+    {
+     "arm": "after",
+     "frame": 440,
+     "tid": "2",
+     "joined_tid": "2",
+     "label": "not_hand",
+     "fragment_label": "not_hand",
+     "mechanism": "ownership",
+     "box": [
+      821,
+      859,
+      1355,
+      1520
+     ]
+    },
+    {
+     "arm": "before",
+     "frame": 470,
+     "tid": "4",
+     "joined_tid": "4",
+     "label": "not_hand",
+     "fragment_label": "not_hand",
+     "mechanism": "ownership",
+     "box": [
+      891,
+      1120,
+      1408,
+      1519
+     ]
+    },
+    {
+     "arm": "after",
+     "frame": 470,
+     "tid": "4",
+     "joined_tid": "4",
+     "label": "not_hand",
+     "fragment_label": "not_hand",
+     "mechanism": "ownership",
+     "box": [
+      891,
+      1120,
+      1408,
+      1519
+     ]
+    },
+    {
+     "arm": "before",
+     "frame": 480,
+     "tid": "4",
+     "joined_tid": "4",
+     "label": "not_hand",
+     "fragment_label": "not_hand",
+     "mechanism": "ownership",
+     "box": [
+      894,
+      875,
+      1417,
+      1520
+     ]
+    },
+    {
+     "arm": "after",
+     "frame": 480,
+     "tid": "4",
+     "joined_tid": "4",
+     "label": "not_hand",
+     "fragment_label": "not_hand",
+     "mechanism": "ownership",
+     "box": [
+      894,
+      875,
+      1417,
+      1520
+     ]
+    },
+    {
+     "arm": "before",
+     "frame": 530,
+     "tid": "8",
+     "joined_tid": "8",
+     "label": "not_hand",
+     "fragment_label": "not_hand",
+     "mechanism": "ownership",
+     "box": [
+      750,
+      1164,
+      903,
+      1322
+     ]
+    },
+    {
+     "arm": "after",
+     "frame": 530,
+     "tid": "8",
+     "joined_tid": "8",
+     "label": "not_hand",
+     "fragment_label": "not_hand",
+     "mechanism": "ownership",
+     "box": [
+      750,
+      1164,
+      903,
+      1322
+     ]
+    },
+    {
+     "arm": "before",
+     "frame": 550,
+     "tid": "8",
+     "joined_tid": "8",
+     "label": "not_hand",
+     "fragment_label": "not_hand",
+     "mechanism": "ownership",
+     "box": [
+      757,
+      1169,
+      891,
+      1326
+     ]
+    },
+    {
+     "arm": "after",
+     "frame": 550,
+     "tid": "8",
+     "joined_tid": "8",
+     "label": "not_hand",
+     "fragment_label": "not_hand",
+     "mechanism": "ownership",
+     "box": [
+      757,
+      1169,
+      891,
+      1326
+     ]
+    }
+   ]
+  },
+  {
+   "recording": "R26_0825_183156",
+   "before": {
+    "delivered": 56,
+    "correct": 56,
+    "anchors": 60,
+    "anchor_delivered": 56,
+    "anchor_absent": 4
+   },
+   "after": {
+    "delivered": 56,
+    "correct": 56,
+    "anchors": 60,
+    "anchor_delivered": 56,
+    "anchor_absent": 4
+   },
+   "wrong": []
+  },
+  {
+   "recording": "R26_0826_102657",
+   "before": {
+    "delivered": 75,
+    "correct": 75,
+    "anchors": 80,
+    "anchor_absent": 5,
+    "anchor_delivered": 75
+   },
+   "after": {
+    "delivered": 75,
+    "correct": 75,
+    "anchors": 80,
+    "anchor_absent": 5,
+    "anchor_delivered": 75
+   },
+   "wrong": []
+  },
+  {
+   "recording": "R26_0826_110805",
+   "before": {
+    "delivered": 80,
+    "correct": 80,
+    "anchors": 80,
+    "anchor_delivered": 80
+   },
+   "after": {
+    "delivered": 80,
+    "correct": 80,
+    "anchors": 80,
+    "anchor_delivered": 80
+   },
+   "wrong": []
+  },
+  {
+   "recording": "R26_0826_115154",
+   "before": {
+    "delivered": 30,
+    "correct": 30,
+    "anchors": 40,
+    "anchor_absent": 10,
+    "anchor_delivered": 30
+   },
+   "after": {
+    "delivered": 30,
+    "correct": 30,
+    "anchors": 40,
+    "anchor_absent": 10,
+    "anchor_delivered": 30
+   },
+   "wrong": []
+  },
+  {
+   "recording": "R26_0827_133140",
+   "before": {
+    "delivered": 65,
+    "correct": 65,
+    "anchors": 66,
+    "anchor_delivered": 65,
+    "anchor_absent": 1
+   },
+   "after": {
+    "delivered": 65,
+    "correct": 65,
+    "anchors": 66,
+    "anchor_delivered": 65,
+    "anchor_absent": 1
+   },
+   "wrong": []
+  },
+  {
+   "recording": "R26_0828_124431",
+   "before": {
+    "delivered": 77,
+    "correct": 76,
+    "wrong": 1,
+    "wrong_not_hand": 1,
+    "mech_ownership": 1,
+    "anchors": 80,
+    "anchor_delivered": 76,
+    "anchor_absent": 4
+   },
+   "after": {
+    "delivered": 82,
+    "correct": 76,
+    "wrong": 6,
+    "wrong_not_hand": 6,
+    "mech_ownership": 1,
+    "mech_join": 5,
+    "anchors": 80,
+    "anchor_delivered": 76,
+    "anchor_absent": 4
+   },
+   "wrong": [
+    {
+     "arm": "before",
+     "frame": 420,
+     "tid": "2",
+     "joined_tid": "2",
+     "label": "not_hand",
+     "fragment_label": "not_hand",
+     "mechanism": "ownership",
+     "box": [
+      899,
+      599,
+      1551,
+      1238
+     ]
+    },
+    {
+     "arm": "after",
+     "frame": 420,
+     "tid": "2",
+     "joined_tid": "2",
+     "label": "not_hand",
+     "fragment_label": "not_hand",
+     "mechanism": "ownership",
+     "box": [
+      899,
+      599,
+      1551,
+      1238
+     ]
+    },
+    {
+     "arm": "after",
+     "frame": 670,
+     "tid": "7",
+     "joined_tid": "1",
+     "label": "not_hand",
+     "fragment_label": "not_hand",
+     "mechanism": "join",
+     "box": [
+      1617,
+      1177,
+      1826,
+      1352
+     ]
+    },
+    {
+     "arm": "after",
+     "frame": 680,
+     "tid": "7",
+     "joined_tid": "1",
+     "label": "not_hand",
+     "fragment_label": "not_hand",
+     "mechanism": "join",
+     "box": [
+      1625,
+      1176,
+      1832,
+      1362
+     ]
+    },
+    {
+     "arm": "after",
+     "frame": 690,
+     "tid": "7",
+     "joined_tid": "1",
+     "label": "not_hand",
+     "fragment_label": "not_hand",
+     "mechanism": "join",
+     "box": [
+      1637,
+      1183,
+      1838,
+      1365
+     ]
+    },
+    {
+     "arm": "after",
+     "frame": 740,
+     "tid": "8",
+     "joined_tid": "1",
+     "label": "not_hand",
+     "fragment_label": "not_hand",
+     "mechanism": "join",
+     "box": [
+      1638,
+      1218,
+      1833,
+      1398
+     ]
+    },
+    {
+     "arm": "after",
+     "frame": 790,
+     "tid": "10",
+     "joined_tid": "1",
+     "label": "not_hand",
+     "fragment_label": "not_hand",
+     "mechanism": "join",
+     "box": [
+      1585,
+      1255,
+      1786,
+      1428
+     ]
+    }
+   ]
+  },
+  {
+   "recording": "R26_0828_132741",
+   "before": {
+    "delivered": 63,
+    "correct": 54,
+    "wrong": 7,
+    "wrong_other_hand": 3,
+    "mech_ownership": 5,
+    "wrong_not_hand": 4,
+    "mech_tracker": 2,
+    "unlabelled": 2,
+    "anchors": 77,
+    "anchor_delivered": 56,
+    "anchor_absent": 21
+   },
+   "after": {
+    "delivered": 59,
+    "correct": 53,
+    "wrong": 4,
+    "wrong_not_hand": 4,
+    "mech_ownership": 2,
+    "mech_tracker": 2,
+    "unlabelled": 2,
+    "anchors": 77,
+    "anchor_delivered": 55,
+    "anchor_absent": 21,
+    "anchor_own0": 1
+   },
+   "wrong": [
+    {
+     "arm": "before",
+     "frame": 600,
+     "tid": "16",
+     "joined_tid": "5",
+     "label": "other_hand",
+     "fragment_label": "other_hand",
+     "mechanism": "ownership",
+     "box": [
+      1677,
+      1145,
+      1765,
+      1238
+     ]
+    },
+    {
+     "arm": "before",
+     "frame": 610,
+     "tid": "16",
+     "joined_tid": "5",
+     "label": "other_hand",
+     "fragment_label": "other_hand",
+     "mechanism": "ownership",
+     "box": [
+      1752,
+      1147,
+      1832,
+      1226
+     ]
+    },
+    {
+     "arm": "before",
+     "frame": 620,
+     "tid": "16",
+     "joined_tid": "5",
+     "label": "other_hand",
+     "fragment_label": "other_hand",
+     "mechanism": "ownership",
+     "box": [
+      1766,
+      1037,
+      1859,
+      1178
+     ]
+    },
+    {
+     "arm": "before",
+     "frame": 650,
+     "tid": "18",
+     "joined_tid": "18",
+     "label": "not_hand",
+     "fragment_label": "not_hand",
+     "mechanism": "ownership",
+     "box": [
+      923,
+      1114,
+      1362,
+      1495
+     ]
+    },
+    {
+     "arm": "after",
+     "frame": 650,
+     "tid": "18",
+     "joined_tid": "18",
+     "label": "not_hand",
+     "fragment_label": "not_hand",
+     "mechanism": "ownership",
+     "box": [
+      923,
+      1114,
+      1362,
+      1495
+     ]
+    },
+    {
+     "arm": "before",
+     "frame": 660,
+     "tid": "18",
+     "joined_tid": "18",
+     "label": "not_hand",
+     "fragment_label": "not_hand",
+     "mechanism": "ownership",
+     "box": [
+      1003,
+      1084,
+      1519,
+      1506
+     ]
+    },
+    {
+     "arm": "after",
+     "frame": 660,
+     "tid": "18",
+     "joined_tid": "18",
+     "label": "not_hand",
+     "fragment_label": "not_hand",
+     "mechanism": "ownership",
+     "box": [
+      1003,
+      1084,
+      1519,
+      1506
+     ]
+    },
+    {
+     "arm": "before",
+     "frame": 680,
+     "tid": "22",
+     "joined_tid": "22",
+     "label": "not_hand",
+     "fragment_label": "A",
+     "mechanism": "tracker",
+     "box": [
+      818,
+      593,
+      1708,
+      1344
+     ]
+    },
+    {
+     "arm": "after",
+     "frame": 680,
+     "tid": "22",
+     "joined_tid": "22",
+     "label": "not_hand",
+     "fragment_label": "A",
+     "mechanism": "tracker",
+     "box": [
+      818,
+      593,
+      1708,
+      1344
+     ]
+    },
+    {
+     "arm": "before",
+     "frame": 690,
+     "tid": "22",
+     "joined_tid": "22",
+     "label": "not_hand",
+     "fragment_label": "A",
+     "mechanism": "tracker",
+     "box": [
+      522,
+      498,
+      1566,
+      1443
+     ]
+    },
+    {
+     "arm": "after",
+     "frame": 690,
+     "tid": "22",
+     "joined_tid": "22",
+     "label": "not_hand",
+     "fragment_label": "A",
+     "mechanism": "tracker",
+     "box": [
+      522,
+      498,
+      1566,
+      1443
+     ]
+    }
+   ]
+  },
+  {
+   "recording": "R26_0828_141519",
+   "before": {
+    "delivered": 52,
+    "correct": 50,
+    "wrong": 2,
+    "wrong_not_hand": 2,
+    "mech_tracker": 2,
+    "anchors": 55,
+    "anchor_delivered": 50,
+    "anchor_absent": 5
+   },
+   "after": {
+    "delivered": 52,
+    "correct": 50,
+    "wrong": 2,
+    "wrong_not_hand": 2,
+    "mech_tracker": 2,
+    "anchors": 55,
+    "anchor_delivered": 50,
+    "anchor_absent": 5
+   },
+   "wrong": [
+    {
+     "arm": "before",
+     "frame": 550,
+     "tid": "6",
+     "joined_tid": "0",
+     "label": "not_hand",
+     "fragment_label": "B",
+     "mechanism": "tracker",
+     "box": [
+      971,
+      1038,
+      1100,
+      1138
+     ]
+    },
+    {
+     "arm": "after",
+     "frame": 550,
+     "tid": "6",
+     "joined_tid": "0",
+     "label": "not_hand",
+     "fragment_label": "B",
+     "mechanism": "tracker",
+     "box": [
+      971,
+      1038,
+      1100,
+      1138
+     ]
+    },
+    {
+     "arm": "before",
+     "frame": 710,
+     "tid": "11",
+     "joined_tid": "11",
+     "label": "not_hand",
+     "fragment_label": "B",
+     "mechanism": "tracker",
+     "box": [
+      972,
+      1079,
+      1096,
+      1178
+     ]
+    },
+    {
+     "arm": "after",
+     "frame": 710,
+     "tid": "11",
+     "joined_tid": "11",
+     "label": "not_hand",
+     "fragment_label": "B",
+     "mechanism": "tracker",
+     "box": [
+      972,
+      1079,
+      1096,
+      1178
+     ]
+    }
+   ]
+  },
+  {
+   "recording": "R26_0831_134109",
+   "before": {
+    "delivered": 79,
+    "correct": 79,
+    "anchors": 80,
+    "anchor_delivered": 79,
+    "anchor_absent": 1
+   },
+   "after": {
+    "delivered": 79,
+    "correct": 79,
+    "anchors": 80,
+    "anchor_delivered": 79,
+    "anchor_absent": 1
+   },
+   "wrong": []
+  },
+  {
+   "recording": "R26_0908_170216",
+   "before": {
+    "delivered": 80,
+    "correct": 80,
+    "anchors": 80,
+    "anchor_delivered": 80
+   },
+   "after": {
+    "delivered": 80,
+    "correct": 80,
+    "anchors": 80,
+    "anchor_delivered": 80
+   },
+   "wrong": []
+  }
+ ]
+}
