@@ -1,0 +1,7600 @@
+{
+ "window": 150,
+ "dist_factor": 3.0,
+ "min_iou": 0.3,
+ "recordings": [
+  {
+   "recording": "R26_0824_173607",
+   "boxes": [
+    {
+     "recording": "R26_0824_173607",
+     "frame": 400,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 400,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 410,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 410,
+     "kind": "not_hand",
+     "tid": "4",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 410,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 420,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 420,
+     "kind": "not_hand",
+     "tid": "4",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 430,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 430,
+     "kind": "other_hand",
+     "tid": "5",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 440,
+     "kind": "other_hand",
+     "tid": "5",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 440,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 450,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 450,
+     "kind": "not_hand",
+     "tid": "6",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 450,
+     "kind": "other_hand",
+     "tid": "5",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 460,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 460,
+     "kind": "not_hand",
+     "tid": "6",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 470,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 470,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 480,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 480,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 490,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 580,
+     "kind": "not_hand",
+     "tid": "14",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 590,
+     "kind": "not_hand",
+     "tid": "17",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 600,
+     "kind": "not_hand",
+     "tid": "20",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 620,
+     "kind": "not_hand",
+     "tid": "22",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 630,
+     "kind": "not_hand",
+     "tid": "22",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 630,
+     "kind": "not_hand",
+     "tid": "24",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 640,
+     "kind": "not_hand",
+     "tid": "25",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 660,
+     "kind": "not_hand",
+     "tid": "26",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0824_173607",
+     "frame": 750,
+     "kind": "not_hand",
+     "tid": "33",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    }
+   ],
+   "target_groups": [
+    {
+     "recording": "R26_0824_173607",
+     "group": "0",
+     "hands": [
+      "B"
+     ],
+     "fragments": 1,
+     "labels": {
+      "B": 1
+     },
+     "rows_total": 60,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0824_173607",
+     "group": "10",
+     "hands": [
+      "A"
+     ],
+     "fragments": 1,
+     "labels": {
+      "A": 1
+     },
+     "rows_total": 76,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0824_173607",
+     "group": "11",
+     "hands": [
+      "B"
+     ],
+     "fragments": 1,
+     "labels": {
+      "B": 1
+     },
+     "rows_total": 27,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0824_173607",
+     "group": "15",
+     "hands": [
+      "A"
+     ],
+     "fragments": 1,
+     "labels": {
+      "A": 1
+     },
+     "rows_total": 32,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0824_173607",
+     "group": "19",
+     "hands": [
+      "B"
+     ],
+     "fragments": 1,
+     "labels": {
+      "B": 1
+     },
+     "rows_total": 71,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0824_173607",
+     "group": "23",
+     "hands": [
+      "A"
+     ],
+     "fragments": 1,
+     "labels": {
+      "A": 1
+     },
+     "rows_total": 47,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0824_173607",
+     "group": "28",
+     "hands": [
+      "B"
+     ],
+     "fragments": 1,
+     "labels": {
+      "B": 1
+     },
+     "rows_total": 121,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0824_173607",
+     "group": "3",
+     "hands": [
+      "A"
+     ],
+     "fragments": 1,
+     "labels": {
+      "A": 1
+     },
+     "rows_total": 61,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0824_173607",
+     "group": "31",
+     "hands": [
+      "A"
+     ],
+     "fragments": 2,
+     "labels": {
+      "A": 2
+     },
+     "rows_total": 83,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    }
+   ],
+   "target_anchors": {
+    "total": 71,
+    "kept": 57,
+    "undetected": 14
+   },
+   "fragments": 35,
+   "groups": 27,
+   "target_fragments": 10,
+   "target_fragments_tracker_mixed": 0,
+   "fragment_labels": {
+    "B": 4,
+    "other_hand": 4,
+    "A": 6,
+    "not_hand": 10,
+    "blind": 11
+   },
+   "rounds": 3
+  },
+  {
+   "recording": "R26_0825_113022",
+   "boxes": [
+    {
+     "recording": "R26_0825_113022",
+     "frame": 400,
+     "kind": "other_hand",
+     "tid": "0",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 400,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 400,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 410,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 410,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 410,
+     "kind": "other_hand",
+     "tid": "0",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 420,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 420,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 420,
+     "kind": "other_hand",
+     "tid": "5",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 430,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 430,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 440,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 440,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 450,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 450,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 450,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 450,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 460,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 460,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 460,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 460,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 470,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 470,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 470,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 470,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 470,
+     "kind": "other_hand",
+     "tid": "9",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 480,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 480,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 480,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 480,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 490,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 490,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 490,
+     "kind": "other_hand",
+     "tid": "10",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 490,
+     "kind": "other_hand",
+     "tid": "11",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 490,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 490,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 500,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 500,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 500,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 500,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 510,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 510,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 510,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 520,
+     "kind": "other_hand",
+     "tid": "14",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 520,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 520,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 520,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 520,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 530,
+     "kind": "other_hand",
+     "tid": "14",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 530,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 530,
+     "kind": "other_hand",
+     "tid": "13",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 530,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 530,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 540,
+     "kind": "other_hand",
+     "tid": "13",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 540,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 540,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 540,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 540,
+     "kind": "other_hand",
+     "tid": "14",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 540,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 550,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 550,
+     "kind": "other_hand",
+     "tid": "13",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 550,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 550,
+     "kind": "other_hand",
+     "tid": "15",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 550,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 550,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 550,
+     "kind": "other_hand",
+     "tid": "14",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 560,
+     "kind": "other_hand",
+     "tid": "13",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 560,
+     "kind": "other_hand",
+     "tid": "14",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 560,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 560,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 560,
+     "kind": "other_hand",
+     "tid": "15",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 560,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 560,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 570,
+     "kind": "other_hand",
+     "tid": "13",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 570,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 570,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 570,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 570,
+     "kind": "other_hand",
+     "tid": "15",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 570,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 570,
+     "kind": "unsure",
+     "tid": "16",
+     "frag_label": "unsure",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 580,
+     "kind": "other_hand",
+     "tid": "13",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 580,
+     "kind": "other_hand",
+     "tid": "18",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 580,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 580,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 580,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 580,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 590,
+     "kind": "other_hand",
+     "tid": "18",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 590,
+     "kind": "other_hand",
+     "tid": "13",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 590,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 590,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 590,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 590,
+     "kind": "other_hand",
+     "tid": "15",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 590,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 600,
+     "kind": "other_hand",
+     "tid": "18",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 600,
+     "kind": "other_hand",
+     "tid": "13",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 600,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 600,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 600,
+     "kind": "other_hand",
+     "tid": "15",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 600,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 600,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 610,
+     "kind": "other_hand",
+     "tid": "13",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 610,
+     "kind": "other_hand",
+     "tid": "18",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 610,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 610,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 610,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 610,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 620,
+     "kind": "other_hand",
+     "tid": "18",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 620,
+     "kind": "other_hand",
+     "tid": "13",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 620,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 620,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 620,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 620,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 630,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 630,
+     "kind": "other_hand",
+     "tid": "13",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 630,
+     "kind": "other_hand",
+     "tid": "18",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 630,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 630,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 630,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 640,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 640,
+     "kind": "other_hand",
+     "tid": "13",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 640,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 640,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 640,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 650,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 650,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 650,
+     "kind": "other_hand",
+     "tid": "13",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 650,
+     "kind": "other_hand",
+     "tid": "19",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 650,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 650,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 660,
+     "kind": "other_hand",
+     "tid": "13",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 660,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 660,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 660,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 660,
+     "kind": "other_hand",
+     "tid": "19",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 670,
+     "kind": "other_hand",
+     "tid": "13",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 670,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 670,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 670,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 680,
+     "kind": "other_hand",
+     "tid": "13",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 680,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 680,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 690,
+     "kind": "other_hand",
+     "tid": "13",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 690,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 690,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 690,
+     "kind": "other_hand",
+     "tid": "20",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 700,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 700,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 700,
+     "kind": "other_hand",
+     "tid": "13",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 700,
+     "kind": "other_hand",
+     "tid": "21",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 710,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 710,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 710,
+     "kind": "other_hand",
+     "tid": "22",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 710,
+     "kind": "other_hand",
+     "tid": "21",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 710,
+     "kind": "other_hand",
+     "tid": "13",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 720,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 720,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 720,
+     "kind": "other_hand",
+     "tid": "21",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 720,
+     "kind": "other_hand",
+     "tid": "23",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 730,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 730,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 730,
+     "kind": "other_hand",
+     "tid": "22",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 730,
+     "kind": "other_hand",
+     "tid": "13",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 730,
+     "kind": "other_hand",
+     "tid": "21",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 730,
+     "kind": "other_hand",
+     "tid": "23",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 740,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 740,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 740,
+     "kind": "other_hand",
+     "tid": "22",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 740,
+     "kind": "other_hand",
+     "tid": "13",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 740,
+     "kind": "other_hand",
+     "tid": "23",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 740,
+     "kind": "other_hand",
+     "tid": "21",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 750,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 750,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 750,
+     "kind": "other_hand",
+     "tid": "23",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 750,
+     "kind": "other_hand",
+     "tid": "21",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 750,
+     "kind": "other_hand",
+     "tid": "13",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 760,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 760,
+     "kind": "other_hand",
+     "tid": "21",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 760,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 760,
+     "kind": "other_hand",
+     "tid": "23",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 770,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 770,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 770,
+     "kind": "other_hand",
+     "tid": "21",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 770,
+     "kind": "other_hand",
+     "tid": "23",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 780,
+     "kind": "other_hand",
+     "tid": "24",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 780,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 780,
+     "kind": "other_hand",
+     "tid": "21",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 780,
+     "kind": "other_hand",
+     "tid": "23",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 790,
+     "kind": "other_hand",
+     "tid": "24",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 790,
+     "kind": "other_hand",
+     "tid": "21",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 790,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 790,
+     "kind": "other_hand",
+     "tid": "23",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113022",
+     "frame": 790,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    }
+   ],
+   "target_groups": [
+    {
+     "recording": "R26_0825_113022",
+     "group": "2",
+     "hands": [
+      "A"
+     ],
+     "fragments": 1,
+     "labels": {
+      "A": 1
+     },
+     "rows_total": 395,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0825_113022",
+     "group": "4",
+     "hands": [
+      "B"
+     ],
+     "fragments": 1,
+     "labels": {
+      "B": 1
+     },
+     "rows_total": 400,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    }
+   ],
+   "target_anchors": {
+    "total": 80,
+    "kept": 80
+   },
+   "fragments": 25,
+   "groups": 18,
+   "target_fragments": 2,
+   "target_fragments_tracker_mixed": 0,
+   "fragment_labels": {
+    "other_hand": 19,
+    "A": 1,
+    "B": 1,
+    "blind": 3,
+    "unsure": 1
+   },
+   "rounds": 3
+  },
+  {
+   "recording": "R26_0825_113216",
+   "boxes": [
+    {
+     "recording": "R26_0825_113216",
+     "frame": 410,
+     "kind": "not_hand",
+     "tid": "2",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113216",
+     "frame": 420,
+     "kind": "not_hand",
+     "tid": "2",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113216",
+     "frame": 430,
+     "kind": "not_hand",
+     "tid": "3",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113216",
+     "frame": 440,
+     "kind": "not_hand",
+     "tid": "4",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113216",
+     "frame": 450,
+     "kind": "not_hand",
+     "tid": "4",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113216",
+     "frame": 480,
+     "kind": "not_hand",
+     "tid": "4",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113216",
+     "frame": 590,
+     "kind": "not_hand",
+     "tid": "7",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113216",
+     "frame": 690,
+     "kind": "not_hand",
+     "tid": "13",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113216",
+     "frame": 700,
+     "kind": "not_hand",
+     "tid": "13",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113216",
+     "frame": 770,
+     "kind": "other_hand",
+     "tid": "16",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113216",
+     "frame": 780,
+     "kind": "other_hand",
+     "tid": "16",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_113216",
+     "frame": 790,
+     "kind": "other_hand",
+     "tid": "16",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    }
+   ],
+   "target_groups": [
+    {
+     "recording": "R26_0825_113216",
+     "group": "0",
+     "hands": [
+      "B"
+     ],
+     "fragments": 2,
+     "labels": {
+      "B": 2
+     },
+     "rows_total": 184,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0825_113216",
+     "group": "1",
+     "hands": [
+      "A"
+     ],
+     "fragments": 1,
+     "labels": {
+      "A": 1
+     },
+     "rows_total": 193,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0825_113216",
+     "group": "10",
+     "hands": [
+      "A"
+     ],
+     "fragments": 1,
+     "labels": {
+      "A": 1
+     },
+     "rows_total": 147,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0825_113216",
+     "group": "11",
+     "hands": [
+      "B"
+     ],
+     "fragments": 1,
+     "labels": {
+      "B": 1
+     },
+     "rows_total": 146,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    }
+   ],
+   "target_anchors": {
+    "total": 74,
+    "kept": 66,
+    "undetected": 8
+   },
+   "fragments": 18,
+   "groups": 14,
+   "target_fragments": 5,
+   "target_fragments_tracker_mixed": 0,
+   "fragment_labels": {
+    "B": 3,
+    "A": 2,
+    "not_hand": 5,
+    "blind": 7,
+    "other_hand": 1
+   },
+   "rounds": 3
+  },
+  {
+   "recording": "R26_0825_153426",
+   "boxes": [
+    {
+     "recording": "R26_0825_153426",
+     "frame": 440,
+     "kind": "not_hand",
+     "tid": "2",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_153426",
+     "frame": 470,
+     "kind": "not_hand",
+     "tid": "4",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_153426",
+     "frame": 480,
+     "kind": "not_hand",
+     "tid": "4",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_153426",
+     "frame": 530,
+     "kind": "unsure",
+     "tid": "9",
+     "frag_label": "unsure",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_153426",
+     "frame": 530,
+     "kind": "not_hand",
+     "tid": "7",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_153426",
+     "frame": 550,
+     "kind": "not_hand",
+     "tid": "7",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_153426",
+     "frame": 570,
+     "kind": "not_hand",
+     "tid": "15",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_153426",
+     "frame": 590,
+     "kind": "not_hand",
+     "tid": "15",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_153426",
+     "frame": 600,
+     "kind": "not_hand",
+     "tid": "20",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_153426",
+     "frame": 640,
+     "kind": "not_hand",
+     "tid": "23",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_153426",
+     "frame": 660,
+     "kind": "not_hand",
+     "tid": "26",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_153426",
+     "frame": 660,
+     "kind": "not_hand",
+     "tid": "24",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_153426",
+     "frame": 660,
+     "kind": "not_hand",
+     "tid": "21",
+     "frag_label": "A",
+     "reached": [
+      "detected"
+     ],
+     "fate": "tracker_mixed"
+    },
+    {
+     "recording": "R26_0825_153426",
+     "frame": 670,
+     "kind": "not_hand",
+     "tid": "26",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_153426",
+     "frame": 680,
+     "kind": "not_hand",
+     "tid": "26",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_153426",
+     "frame": 740,
+     "kind": "not_hand",
+     "tid": "37",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_153426",
+     "frame": 760,
+     "kind": "not_hand",
+     "tid": "41",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_153426",
+     "frame": 770,
+     "kind": "not_hand",
+     "tid": "41",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_153426",
+     "frame": 780,
+     "kind": "not_hand",
+     "tid": "41",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    }
+   ],
+   "target_groups": [
+    {
+     "recording": "R26_0825_153426",
+     "group": "0",
+     "hands": [
+      "A"
+     ],
+     "fragments": 1,
+     "labels": {
+      "A": 1
+     },
+     "rows_total": 38,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0825_153426",
+     "group": "1",
+     "hands": [
+      "B"
+     ],
+     "fragments": 1,
+     "labels": {
+      "B": 1
+     },
+     "rows_total": 56,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0825_153426",
+     "group": "13",
+     "hands": [
+      "B"
+     ],
+     "fragments": 1,
+     "labels": {
+      "B": 1
+     },
+     "rows_total": 25,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0825_153426",
+     "group": "18",
+     "hands": [
+      "B"
+     ],
+     "fragments": 1,
+     "labels": {
+      "B": 1
+     },
+     "rows_total": 42,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0825_153426",
+     "group": "27",
+     "hands": [
+      "B"
+     ],
+     "fragments": 1,
+     "labels": {
+      "B": 1
+     },
+     "rows_total": 36,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0825_153426",
+     "group": "28",
+     "hands": [
+      "A"
+     ],
+     "fragments": 1,
+     "labels": {
+      "A": 1
+     },
+     "rows_total": 14,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0825_153426",
+     "group": "3",
+     "hands": [
+      "A"
+     ],
+     "fragments": 4,
+     "labels": {
+      "A": 2,
+      "blind": 2
+     },
+     "rows_total": 186,
+     "rows_nontarget": 0,
+     "rows_unknown": 9,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0825_153426",
+     "group": "32",
+     "hands": [
+      "B"
+     ],
+     "fragments": 1,
+     "labels": {
+      "B": 1
+     },
+     "rows_total": 38,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0825_153426",
+     "group": "34",
+     "hands": [
+      "A"
+     ],
+     "fragments": 1,
+     "labels": {
+      "A": 1
+     },
+     "rows_total": 18,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0825_153426",
+     "group": "38",
+     "hands": [
+      "B"
+     ],
+     "fragments": 1,
+     "labels": {
+      "B": 1
+     },
+     "rows_total": 14,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0825_153426",
+     "group": "43",
+     "hands": [
+      "B"
+     ],
+     "fragments": 1,
+     "labels": {
+      "B": 1
+     },
+     "rows_total": 33,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0825_153426",
+     "group": "5",
+     "hands": [
+      "B"
+     ],
+     "fragments": 1,
+     "labels": {
+      "B": 1
+     },
+     "rows_total": 21,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    }
+   ],
+   "target_anchors": {
+    "total": 69,
+    "kept": 51,
+    "undetected": 18
+   },
+   "fragments": 45,
+   "groups": 39,
+   "target_fragments": 13,
+   "target_fragments_tracker_mixed": 1,
+   "fragment_labels": {
+    "A": 5,
+    "B": 8,
+    "not_hand": 10,
+    "blind": 20,
+    "unsure": 1,
+    "tie": 1
+   },
+   "rounds": 3
+  },
+  {
+   "recording": "R26_0825_183156",
+   "boxes": [
+    {
+     "recording": "R26_0825_183156",
+     "frame": 400,
+     "kind": "not_hand",
+     "tid": "2",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 580,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 590,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 600,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 610,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 610,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 620,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 620,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 630,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 630,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 640,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 640,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 640,
+     "kind": "other_hand",
+     "tid": "10",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 650,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 650,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 660,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 660,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 670,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 670,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 680,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 680,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 690,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 700,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 700,
+     "kind": "other_hand",
+     "tid": "15",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 710,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 720,
+     "kind": "other_hand",
+     "tid": "7",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 730,
+     "kind": "other_hand",
+     "tid": "18",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 740,
+     "kind": "other_hand",
+     "tid": "18",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 750,
+     "kind": "other_hand",
+     "tid": "18",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0825_183156",
+     "frame": 780,
+     "kind": "not_hand",
+     "tid": "20",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    }
+   ],
+   "target_groups": [
+    {
+     "recording": "R26_0825_183156",
+     "group": "0",
+     "hands": [
+      "B"
+     ],
+     "fragments": 3,
+     "labels": {
+      "B": 3
+     },
+     "rows_total": 223,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0825_183156",
+     "group": "1",
+     "hands": [
+      "A"
+     ],
+     "fragments": 1,
+     "labels": {
+      "A": 1
+     },
+     "rows_total": 37,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0825_183156",
+     "group": "3",
+     "hands": [
+      "A"
+     ],
+     "fragments": 4,
+     "labels": {
+      "A": 4
+     },
+     "rows_total": 304,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    }
+   ],
+   "target_anchors": {
+    "total": 60,
+    "kept": 56,
+    "undetected": 4
+   },
+   "fragments": 21,
+   "groups": 13,
+   "target_fragments": 8,
+   "target_fragments_tracker_mixed": 0,
+   "fragment_labels": {
+    "B": 3,
+    "A": 5,
+    "not_hand": 2,
+    "blind": 6,
+    "other_hand": 5
+   },
+   "rounds": 3
+  },
+  {
+   "recording": "R26_0826_102657",
+   "boxes": [
+    {
+     "recording": "R26_0826_102657",
+     "frame": 410,
+     "kind": "not_hand",
+     "tid": "1",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3",
+      "c4"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_102657",
+     "frame": 420,
+     "kind": "not_hand",
+     "tid": "1",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3",
+      "c4"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_102657",
+     "frame": 430,
+     "kind": "not_hand",
+     "tid": "1",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3",
+      "c4"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_102657",
+     "frame": 440,
+     "kind": "not_hand",
+     "tid": "1",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3",
+      "c4"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_102657",
+     "frame": 450,
+     "kind": "not_hand",
+     "tid": "1",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3",
+      "c4"
+     ],
+     "fate": "clean"
+    }
+   ],
+   "target_groups": [
+    {
+     "recording": "R26_0826_102657",
+     "group": "0",
+     "hands": [
+      "B"
+     ],
+     "fragments": 2,
+     "labels": {
+      "B": 2
+     },
+     "rows_total": 374,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0826_102657",
+     "group": "3",
+     "hands": [
+      "A"
+     ],
+     "fragments": 1,
+     "labels": {
+      "A": 1
+     },
+     "rows_total": 375,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    }
+   ],
+   "target_anchors": {
+    "total": 80,
+    "undetected": 5,
+    "kept": 75
+   },
+   "fragments": 7,
+   "groups": 6,
+   "target_fragments": 3,
+   "target_fragments_tracker_mixed": 0,
+   "fragment_labels": {
+    "B": 2,
+    "not_hand": 1,
+    "blind": 3,
+    "A": 1
+   },
+   "rounds": 2
+  },
+  {
+   "recording": "R26_0826_110805",
+   "boxes": [
+    {
+     "recording": "R26_0826_110805",
+     "frame": 420,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 420,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 430,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 430,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 440,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 440,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 450,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 450,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 460,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 460,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 470,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 470,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 480,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 480,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 490,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 490,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 500,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 500,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 510,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 510,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 520,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 520,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 530,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 530,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 540,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 540,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 550,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 550,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 560,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 560,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 570,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 570,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 580,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 580,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 590,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 590,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 600,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 600,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 610,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 610,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 620,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 620,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 630,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 630,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 640,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 640,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 650,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 650,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 660,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 660,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 670,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 670,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 680,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 680,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 690,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 690,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 700,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 700,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 710,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 710,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 710,
+     "kind": "other_hand",
+     "tid": "4",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 720,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 720,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 730,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 730,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 740,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 740,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 750,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 750,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 760,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 760,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 770,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 770,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 780,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 780,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 790,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_110805",
+     "frame": 790,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    }
+   ],
+   "target_groups": [
+    {
+     "recording": "R26_0826_110805",
+     "group": "0",
+     "hands": [
+      "B"
+     ],
+     "fragments": 1,
+     "labels": {
+      "B": 1
+     },
+     "rows_total": 400,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0826_110805",
+     "group": "1",
+     "hands": [
+      "A"
+     ],
+     "fragments": 1,
+     "labels": {
+      "A": 1
+     },
+     "rows_total": 400,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    }
+   ],
+   "target_anchors": {
+    "total": 80,
+    "kept": 80
+   },
+   "fragments": 5,
+   "groups": 5,
+   "target_fragments": 2,
+   "target_fragments_tracker_mixed": 0,
+   "fragment_labels": {
+    "B": 1,
+    "A": 1,
+    "other_hand": 3
+   },
+   "rounds": 1
+  },
+  {
+   "recording": "R26_0826_115154",
+   "boxes": [
+    {
+     "recording": "R26_0826_115154",
+     "frame": 400,
+     "kind": "other_hand",
+     "tid": "0",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 400,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 400,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 410,
+     "kind": "other_hand",
+     "tid": "0",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 410,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 410,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 420,
+     "kind": "other_hand",
+     "tid": "0",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 420,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 420,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 430,
+     "kind": "other_hand",
+     "tid": "0",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 430,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 430,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 430,
+     "kind": "unsure",
+     "tid": "4",
+     "frag_label": "unsure",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 440,
+     "kind": "other_hand",
+     "tid": "0",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 440,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 440,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 450,
+     "kind": "other_hand",
+     "tid": "0",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 450,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 450,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 460,
+     "kind": "other_hand",
+     "tid": "0",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 460,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 460,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 460,
+     "kind": "other_hand",
+     "tid": "6",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 460,
+     "kind": "other_hand",
+     "tid": "5",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 470,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 470,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 470,
+     "kind": "other_hand",
+     "tid": "0",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 470,
+     "kind": "other_hand",
+     "tid": "6",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 470,
+     "kind": "other_hand",
+     "tid": "5",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 480,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 480,
+     "kind": "not_hand",
+     "tid": "7",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 490,
+     "kind": "not_hand",
+     "tid": "7",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 490,
+     "kind": "not_hand",
+     "tid": "8",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 510,
+     "kind": "other_hand",
+     "tid": "12",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 510,
+     "kind": "other_hand",
+     "tid": "10",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 520,
+     "kind": "other_hand",
+     "tid": "13",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 520,
+     "kind": "other_hand",
+     "tid": "12",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 520,
+     "kind": "other_hand",
+     "tid": "10",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 530,
+     "kind": "other_hand",
+     "tid": "13",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 530,
+     "kind": "other_hand",
+     "tid": "10",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 530,
+     "kind": "other_hand",
+     "tid": "12",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 540,
+     "kind": "other_hand",
+     "tid": "14",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 550,
+     "kind": "other_hand",
+     "tid": "14",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 550,
+     "kind": "other_hand",
+     "tid": "15",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 560,
+     "kind": "other_hand",
+     "tid": "14",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 560,
+     "kind": "other_hand",
+     "tid": "15",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 570,
+     "kind": "other_hand",
+     "tid": "14",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 570,
+     "kind": "other_hand",
+     "tid": "15",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 580,
+     "kind": "other_hand",
+     "tid": "14",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 580,
+     "kind": "other_hand",
+     "tid": "15",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 590,
+     "kind": "other_hand",
+     "tid": "14",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 590,
+     "kind": "other_hand",
+     "tid": "15",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 600,
+     "kind": "other_hand",
+     "tid": "14",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 600,
+     "kind": "other_hand",
+     "tid": "15",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 610,
+     "kind": "other_hand",
+     "tid": "14",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 610,
+     "kind": "other_hand",
+     "tid": "15",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 620,
+     "kind": "other_hand",
+     "tid": "14",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 620,
+     "kind": "other_hand",
+     "tid": "15",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 630,
+     "kind": "other_hand",
+     "tid": "14",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 630,
+     "kind": "other_hand",
+     "tid": "15",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 640,
+     "kind": "other_hand",
+     "tid": "16",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 650,
+     "kind": "other_hand",
+     "tid": "16",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 650,
+     "kind": "other_hand",
+     "tid": "17",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 660,
+     "kind": "other_hand",
+     "tid": "17",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 660,
+     "kind": "other_hand",
+     "tid": "16",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 700,
+     "kind": "not_hand",
+     "tid": "25",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 710,
+     "kind": "not_hand",
+     "tid": "26",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 750,
+     "kind": "not_hand",
+     "tid": "27",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0826_115154",
+     "frame": 790,
+     "kind": "other_hand",
+     "tid": "29",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    }
+   ],
+   "target_groups": [
+    {
+     "recording": "R26_0826_115154",
+     "group": "11",
+     "hands": [
+      "B"
+     ],
+     "fragments": 1,
+     "labels": {
+      "B": 1
+     },
+     "rows_total": 290,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0826_115154",
+     "group": "21",
+     "hands": [
+      "A"
+     ],
+     "fragments": 2,
+     "labels": {
+      "blind": 1,
+      "A": 1
+     },
+     "rows_total": 16,
+     "rows_nontarget": 0,
+     "rows_unknown": 3,
+     "nontarget_kinds": [],
+     "swap": false
+    }
+   ],
+   "target_anchors": {
+    "total": 40,
+    "undetected": 10,
+    "kept": 30
+   },
+   "fragments": 30,
+   "groups": 22,
+   "target_fragments": 2,
+   "target_fragments_tracker_mixed": 0,
+   "fragment_labels": {
+    "other_hand": 13,
+    "blind": 9,
+    "unsure": 1,
+    "not_hand": 5,
+    "B": 1,
+    "A": 1
+   },
+   "rounds": 3
+  },
+  {
+   "recording": "R26_0827_133140",
+   "boxes": [
+    {
+     "recording": "R26_0827_133140",
+     "frame": 400,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 410,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 420,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 430,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 440,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 450,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 450,
+     "kind": "other_hand",
+     "tid": "1",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 460,
+     "kind": "other_hand",
+     "tid": "5",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 460,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 470,
+     "kind": "other_hand",
+     "tid": "5",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 470,
+     "kind": "other_hand",
+     "tid": "6",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 470,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 480,
+     "kind": "other_hand",
+     "tid": "6",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 480,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 490,
+     "kind": "other_hand",
+     "tid": "6",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 490,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 500,
+     "kind": "other_hand",
+     "tid": "6",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 500,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 510,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 510,
+     "kind": "other_hand",
+     "tid": "6",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 520,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 520,
+     "kind": "other_hand",
+     "tid": "6",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 530,
+     "kind": "other_hand",
+     "tid": "6",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 530,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 540,
+     "kind": "other_hand",
+     "tid": "6",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 540,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 550,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 560,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 570,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 580,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 590,
+     "kind": "other_hand",
+     "tid": "11",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 590,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 600,
+     "kind": "not_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 610,
+     "kind": "other_hand",
+     "tid": "12",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 620,
+     "kind": "other_hand",
+     "tid": "12",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 640,
+     "kind": "other_hand",
+     "tid": "12",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 670,
+     "kind": "not_hand",
+     "tid": "13",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 690,
+     "kind": "other_hand",
+     "tid": "14",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 700,
+     "kind": "other_hand",
+     "tid": "16",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 700,
+     "kind": "other_hand",
+     "tid": "15",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 700,
+     "kind": "other_hand",
+     "tid": "14",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 710,
+     "kind": "other_hand",
+     "tid": "16",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 710,
+     "kind": "other_hand",
+     "tid": "14",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 720,
+     "kind": "other_hand",
+     "tid": "14",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 730,
+     "kind": "other_hand",
+     "tid": "14",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 740,
+     "kind": "other_hand",
+     "tid": "14",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 750,
+     "kind": "other_hand",
+     "tid": "14",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0827_133140",
+     "frame": 770,
+     "kind": "not_hand",
+     "tid": "20",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    }
+   ],
+   "target_groups": [
+    {
+     "recording": "R26_0827_133140",
+     "group": "0",
+     "hands": [
+      "A"
+     ],
+     "fragments": 4,
+     "labels": {
+      "A": 3,
+      "blind": 1
+     },
+     "rows_total": 290,
+     "rows_nontarget": 0,
+     "rows_unknown": 1,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0827_133140",
+     "group": "2",
+     "hands": [
+      "B"
+     ],
+     "fragments": 1,
+     "labels": {
+      "B": 1
+     },
+     "rows_total": 59,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0827_133140",
+     "group": "7",
+     "hands": [
+      "B"
+     ],
+     "fragments": 1,
+     "labels": {
+      "B": 1
+     },
+     "rows_total": 289,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    }
+   ],
+   "target_anchors": {
+    "total": 66,
+    "kept": 65,
+    "undetected": 1
+   },
+   "fragments": 21,
+   "groups": 17,
+   "target_fragments": 5,
+   "target_fragments_tracker_mixed": 0,
+   "fragment_labels": {
+    "A": 3,
+    "other_hand": 9,
+    "B": 2,
+    "blind": 5,
+    "not_hand": 2
+   },
+   "rounds": 3
+  },
+  {
+   "recording": "R26_0828_124431",
+   "boxes": [
+    {
+     "recording": "R26_0828_124431",
+     "frame": 420,
+     "kind": "not_hand",
+     "tid": "2",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0828_124431",
+     "frame": 670,
+     "kind": "not_hand",
+     "tid": "7",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3",
+      "c4",
+      "joined"
+     ],
+     "fate": "join_into_target"
+    },
+    {
+     "recording": "R26_0828_124431",
+     "frame": 680,
+     "kind": "not_hand",
+     "tid": "7",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3",
+      "c4",
+      "joined"
+     ],
+     "fate": "join_into_target"
+    },
+    {
+     "recording": "R26_0828_124431",
+     "frame": 690,
+     "kind": "not_hand",
+     "tid": "7",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3",
+      "c4",
+      "joined"
+     ],
+     "fate": "join_into_target"
+    },
+    {
+     "recording": "R26_0828_124431",
+     "frame": 740,
+     "kind": "not_hand",
+     "tid": "8",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3",
+      "c4",
+      "joined"
+     ],
+     "fate": "join_into_target"
+    },
+    {
+     "recording": "R26_0828_124431",
+     "frame": 790,
+     "kind": "not_hand",
+     "tid": "10",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3",
+      "c4",
+      "joined"
+     ],
+     "fate": "join_into_target"
+    }
+   ],
+   "target_groups": [
+    {
+     "recording": "R26_0828_124431",
+     "group": "0",
+     "hands": [
+      "A"
+     ],
+     "fragments": 1,
+     "labels": {
+      "A": 1
+     },
+     "rows_total": 199,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0828_124431",
+     "group": "1",
+     "hands": [
+      "B"
+     ],
+     "fragments": 5,
+     "labels": {
+      "B": 1,
+      "not_hand": 3,
+      "blind": 1
+     },
+     "rows_total": 246,
+     "rows_nontarget": 47,
+     "rows_unknown": 4,
+     "nontarget_kinds": [
+      "not_hand"
+     ],
+     "swap": false
+    },
+    {
+     "recording": "R26_0828_124431",
+     "group": "3",
+     "hands": [
+      "B"
+     ],
+     "fragments": 1,
+     "labels": {
+      "B": 1
+     },
+     "rows_total": 12,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0828_124431",
+     "group": "5",
+     "hands": [
+      "A"
+     ],
+     "fragments": 1,
+     "labels": {
+      "A": 1
+     },
+     "rows_total": 189,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0828_124431",
+     "group": "6",
+     "hands": [
+      "B"
+     ],
+     "fragments": 1,
+     "labels": {
+      "B": 1
+     },
+     "rows_total": 168,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    }
+   ],
+   "target_anchors": {
+    "total": 80,
+    "kept": 76,
+    "undetected": 4
+   },
+   "fragments": 11,
+   "groups": 7,
+   "target_fragments": 5,
+   "target_fragments_tracker_mixed": 0,
+   "fragment_labels": {
+    "A": 2,
+    "B": 3,
+    "not_hand": 4,
+    "blind": 2
+   },
+   "rounds": 5
+  },
+  {
+   "recording": "R26_0828_132741",
+   "boxes": [
+    {
+     "recording": "R26_0828_132741",
+     "frame": 400,
+     "kind": "other_hand",
+     "tid": "2",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0828_132741",
+     "frame": 430,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3",
+      "c4",
+      "joined"
+     ],
+     "fate": "join_into_target"
+    },
+    {
+     "recording": "R26_0828_132741",
+     "frame": 430,
+     "kind": "other_hand",
+     "tid": "4",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0828_132741",
+     "frame": 440,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3",
+      "c4",
+      "joined"
+     ],
+     "fate": "join_into_target"
+    },
+    {
+     "recording": "R26_0828_132741",
+     "frame": 440,
+     "kind": "other_hand",
+     "tid": "4",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0828_132741",
+     "frame": 450,
+     "kind": "other_hand",
+     "tid": "3",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3",
+      "c4",
+      "joined"
+     ],
+     "fate": "join_into_target"
+    },
+    {
+     "recording": "R26_0828_132741",
+     "frame": 450,
+     "kind": "other_hand",
+     "tid": "4",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0828_132741",
+     "frame": 530,
+     "kind": "other_hand",
+     "tid": "11",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0828_132741",
+     "frame": 540,
+     "kind": "other_hand",
+     "tid": "11",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0828_132741",
+     "frame": 550,
+     "kind": "other_hand",
+     "tid": "11",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0828_132741",
+     "frame": 560,
+     "kind": "not_hand",
+     "tid": "15",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0828_132741",
+     "frame": 570,
+     "kind": "not_hand",
+     "tid": "17",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0828_132741",
+     "frame": 600,
+     "kind": "other_hand",
+     "tid": "18",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0828_132741",
+     "frame": 610,
+     "kind": "other_hand",
+     "tid": "18",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0828_132741",
+     "frame": 620,
+     "kind": "other_hand",
+     "tid": "18",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0828_132741",
+     "frame": 640,
+     "kind": "other_hand",
+     "tid": "21",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0828_132741",
+     "frame": 650,
+     "kind": "other_hand",
+     "tid": "21",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0828_132741",
+     "frame": 650,
+     "kind": "not_hand",
+     "tid": "20",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0828_132741",
+     "frame": 660,
+     "kind": "not_hand",
+     "tid": "20",
+     "frag_label": "not_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0828_132741",
+     "frame": 680,
+     "kind": "not_hand",
+     "tid": "24",
+     "frag_label": "A",
+     "reached": [
+      "detected"
+     ],
+     "fate": "tracker_mixed"
+    },
+    {
+     "recording": "R26_0828_132741",
+     "frame": 680,
+     "kind": "not_hand",
+     "tid": "25",
+     "frag_label": "A",
+     "reached": [
+      "detected"
+     ],
+     "fate": "tracker_mixed"
+    },
+    {
+     "recording": "R26_0828_132741",
+     "frame": 690,
+     "kind": "not_hand",
+     "tid": "25",
+     "frag_label": "A",
+     "reached": [
+      "detected"
+     ],
+     "fate": "tracker_mixed"
+    },
+    {
+     "recording": "R26_0828_132741",
+     "frame": 690,
+     "kind": "not_hand",
+     "tid": "24",
+     "frag_label": "A",
+     "reached": [
+      "detected"
+     ],
+     "fate": "tracker_mixed"
+    }
+   ],
+   "target_groups": [
+    {
+     "recording": "R26_0828_132741",
+     "group": "0",
+     "hands": [
+      "B"
+     ],
+     "fragments": 1,
+     "labels": {
+      "B": 1
+     },
+     "rows_total": 162,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0828_132741",
+     "group": "1",
+     "hands": [
+      "A"
+     ],
+     "fragments": 4,
+     "labels": {
+      "A": 4
+     },
+     "rows_total": 204,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0828_132741",
+     "group": "24",
+     "hands": [
+      "A"
+     ],
+     "fragments": 1,
+     "labels": {
+      "A": 1
+     },
+     "rows_total": 17,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0828_132741",
+     "group": "25",
+     "hands": [
+      "A"
+     ],
+     "fragments": 1,
+     "labels": {
+      "A": 1
+     },
+     "rows_total": 12,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0828_132741",
+     "group": "27",
+     "hands": [
+      "A"
+     ],
+     "fragments": 1,
+     "labels": {
+      "A": 1
+     },
+     "rows_total": 85,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0828_132741",
+     "group": "28",
+     "hands": [
+      "B"
+     ],
+     "fragments": 1,
+     "labels": {
+      "B": 1
+     },
+     "rows_total": 70,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0828_132741",
+     "group": "3",
+     "hands": [
+      "B"
+     ],
+     "fragments": 2,
+     "labels": {
+      "other_hand": 1,
+      "B": 1
+     },
+     "rows_total": 41,
+     "rows_nontarget": 30,
+     "rows_unknown": 0,
+     "nontarget_kinds": [
+      "other_hand"
+     ],
+     "swap": false
+    }
+   ],
+   "target_anchors": {
+    "total": 77,
+    "kept": 56,
+    "undetected": 21
+   },
+   "fragments": 32,
+   "groups": 21,
+   "target_fragments": 10,
+   "target_fragments_tracker_mixed": 2,
+   "fragment_labels": {
+    "B": 3,
+    "A": 7,
+    "other_hand": 6,
+    "blind": 13,
+    "not_hand": 3
+   },
+   "rounds": 5
+  },
+  {
+   "recording": "R26_0828_141519",
+   "boxes": [
+    {
+     "recording": "R26_0828_141519",
+     "frame": 550,
+     "kind": "not_hand",
+     "tid": "6",
+     "frag_label": "B",
+     "reached": [
+      "detected"
+     ],
+     "fate": "tracker_mixed"
+    },
+    {
+     "recording": "R26_0828_141519",
+     "frame": 580,
+     "kind": "other_hand",
+     "tid": "8",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0828_141519",
+     "frame": 710,
+     "kind": "not_hand",
+     "tid": "11",
+     "frag_label": "B",
+     "reached": [
+      "detected"
+     ],
+     "fate": "tracker_mixed"
+    },
+    {
+     "recording": "R26_0828_141519",
+     "frame": 710,
+     "kind": "other_hand",
+     "tid": "12",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0828_141519",
+     "frame": 720,
+     "kind": "other_hand",
+     "tid": "12",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0828_141519",
+     "frame": 730,
+     "kind": "other_hand",
+     "tid": "14",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    },
+    {
+     "recording": "R26_0828_141519",
+     "frame": 730,
+     "kind": "other_hand",
+     "tid": "12",
+     "frag_label": "other_hand",
+     "reached": [
+      "detected",
+      "c1",
+      "c2",
+      "c3"
+     ],
+     "fate": "clean"
+    }
+   ],
+   "target_groups": [
+    {
+     "recording": "R26_0828_141519",
+     "group": "0",
+     "hands": [
+      "B"
+     ],
+     "fragments": 2,
+     "labels": {
+      "B": 2
+     },
+     "rows_total": 145,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0828_141519",
+     "group": "1",
+     "hands": [
+      "A"
+     ],
+     "fragments": 1,
+     "labels": {
+      "A": 1
+     },
+     "rows_total": 7,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0828_141519",
+     "group": "10",
+     "hands": [
+      "A"
+     ],
+     "fragments": 1,
+     "labels": {
+      "A": 1
+     },
+     "rows_total": 50,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0828_141519",
+     "group": "11",
+     "hands": [
+      "B"
+     ],
+     "fragments": 3,
+     "labels": {
+      "B": 1,
+      "blind": 2
+     },
+     "rows_total": 73,
+     "rows_nontarget": 0,
+     "rows_unknown": 8,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0828_141519",
+     "group": "2",
+     "hands": [
+      "A"
+     ],
+     "fragments": 1,
+     "labels": {
+      "A": 1
+     },
+     "rows_total": 12,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0828_141519",
+     "group": "3",
+     "hands": [
+      "A"
+     ],
+     "fragments": 2,
+     "labels": {
+      "blind": 1,
+      "A": 1
+     },
+     "rows_total": 54,
+     "rows_nontarget": 0,
+     "rows_unknown": 2,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0828_141519",
+     "group": "4",
+     "hands": [
+      "A"
+     ],
+     "fragments": 2,
+     "labels": {
+      "A": 2
+     },
+     "rows_total": 156,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0828_141519",
+     "group": "9",
+     "hands": [
+      "B"
+     ],
+     "fragments": 1,
+     "labels": {
+      "B": 1
+     },
+     "rows_total": 44,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    }
+   ],
+   "target_anchors": {
+    "total": 55,
+    "kept": 50,
+    "undetected": 5
+   },
+   "fragments": 18,
+   "groups": 11,
+   "target_fragments": 10,
+   "target_fragments_tracker_mixed": 2,
+   "fragment_labels": {
+    "B": 4,
+    "A": 6,
+    "blind": 5,
+    "other_hand": 3
+   },
+   "rounds": 3
+  },
+  {
+   "recording": "R26_0831_134109",
+   "boxes": [],
+   "target_groups": [
+    {
+     "recording": "R26_0831_134109",
+     "group": "0",
+     "hands": [
+      "A"
+     ],
+     "fragments": 1,
+     "labels": {
+      "A": 1
+     },
+     "rows_total": 400,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0831_134109",
+     "group": "1",
+     "hands": [
+      "B"
+     ],
+     "fragments": 1,
+     "labels": {
+      "B": 1
+     },
+     "rows_total": 399,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    }
+   ],
+   "target_anchors": {
+    "total": 80,
+    "kept": 79,
+    "undetected": 1
+   },
+   "fragments": 2,
+   "groups": 2,
+   "target_fragments": 2,
+   "target_fragments_tracker_mixed": 0,
+   "fragment_labels": {
+    "A": 1,
+    "B": 1
+   },
+   "rounds": 1
+  },
+  {
+   "recording": "R26_0908_170216",
+   "boxes": [],
+   "target_groups": [
+    {
+     "recording": "R26_0908_170216",
+     "group": "0",
+     "hands": [
+      "B"
+     ],
+     "fragments": 1,
+     "labels": {
+      "B": 1
+     },
+     "rows_total": 400,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    },
+    {
+     "recording": "R26_0908_170216",
+     "group": "1",
+     "hands": [
+      "A"
+     ],
+     "fragments": 1,
+     "labels": {
+      "A": 1
+     },
+     "rows_total": 400,
+     "rows_nontarget": 0,
+     "rows_unknown": 0,
+     "nontarget_kinds": [],
+     "swap": false
+    }
+   ],
+   "target_anchors": {
+    "total": 80,
+    "kept": 80
+   },
+   "fragments": 2,
+   "groups": 2,
+   "target_fragments": 2,
+   "target_fragments_tracker_mixed": 0,
+   "fragment_labels": {
+    "B": 1,
+    "A": 1
+   },
+   "rounds": 1
+  }
+ ]
+}
